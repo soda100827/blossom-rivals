@@ -10,19 +10,9 @@ dependencies = []
 [[package]]
 name = "k0105/blossom-scripts"
 version = "0.1.0"
-dependencies = [["fastsignal", "lucasmzreal/fastsignal@10.4.0"], ["fusion", "realdeedy/fusion@0.3.0"], ["iris", "xswezan/iris@2.0.5"], ["promise", "evaera/promise@4.0.0"]]
+dependencies = [["fastsignal", "lucasmzreal/fastsignal@10.4.0"], ["promise", "evaera/promise@4.0.0"]]
 
 [[package]]
 name = "lucasmzreal/fastsignal"
 version = "10.4.0"
-dependencies = []
-
-[[package]]
-name = "realdeedy/fusion"
-version = "0.3.0"
-dependencies = []
-
-[[package]]
-name = "xswezan/iris"
-version = "2.0.5"
 dependencies = []
