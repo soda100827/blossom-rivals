@@ -1,35 +1,25 @@
-local Blossom = {
-    Version = "1.0.0",
-    Loaded = false
-}
+-- Blossom Loader
+-- This script bootstrapping the environment and loads the core from GitHub.
 
--- 환경 감지 및 기본 설정
-local function getEnvironment()
-    if identifyexecutor then
-        return identifyexecutor()
-    end
-    return "Unknown"
-end
+local Repo = "https://raw.githubusercontent.com/soda100827/blossom-rivals/main/"
 
-function Blossom:Boot()
-    if self.Loaded then
-        warn("[Blossom] Already loaded!")
-        return
-    end
-    
-    print(string.format("[Blossom] Loader initialized. Environment: %s", getEnvironment()))
-    
-    -- 실제 로직은 src/init.lua에서 처리
-    -- 개발 환경에서는 로컬 파일을 require 모듈로 불러오는 것을 가정합니다.
-    -- 실제 배포시에는 loadstring + game:HttpGet 등을 사용합니다.
-    
+getgenv().BlossomImport = function(path)
+    local url = Repo .. path
     local success, result = pcall(function()
-        return require(script.Parent.src.init)
+        return game:HttpGet(url)
     end)
     
     if not success then
-        warn("[Blossom] Failed to load core:", result)
+        error("[Blossom]: Failed to fetch: " .. path .. "\nError: " .. tostring(result))
     end
+    
+    local func, err = loadstring(result)
+    if not func then
+        error("[Blossom]: Syntax error in: " .. path .. "\nError: " .. tostring(err))
+    end
+    
+    return func()
 end
 
-return Blossom:Boot()
+-- Initialize Code
+BlossomImport("src/init.lua")

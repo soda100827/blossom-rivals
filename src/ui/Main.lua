@@ -1,6 +1,6 @@
-local Fusion = require(script.Parent.Vendor.Fusion)
-local Window = require(script.Parent.UI.Components.Window)
-local Toggle = require(script.Parent.UI.Components.Toggle)
+local Fusion = BlossomImport("src/Vendor/Fusion.lua")
+local Window = BlossomImport("src/UI/Components/Window.lua")
+local Toggle = BlossomImport("src/UI/Components/Toggle.lua")
 
 local New = Fusion.New
 local Children = Fusion.Children
@@ -20,10 +20,6 @@ function UI:CreateInterface()
     -- Cleanup old UI
     local old = self.Target:FindFirstChild("BlossomUI")
     if old then old:Destroy() end
-    
-    -- Feature States (Bridging Module -> UI)
-    -- In a real reactive app, you might use a State object passed to modules,
-    -- but here we just wrap the callbacks.
     
     local App = New "ScreenGui" {
         Name = "BlossomUI",

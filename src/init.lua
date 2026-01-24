@@ -1,16 +1,17 @@
-local Logger = require(script.Parent.Core.Logger)
-local EventManager = require(script.Parent.Core.EventManager)
+local Logger = BlossomImport("src/Core/Logger.lua")
+local EventManager = BlossomImport("src/Core/EventManager.lua")
 
 local Client = {
+    Version = "1.0.0",
     Logger = Logger.new("Core"),
     Events = EventManager.new(),
     Modules = {},
     IsRunning = false
 }
 
-function Client:LoadModule(name, modulePath)
+function Client:LoadModule(name, path)
     local success, result = pcall(function()
-        return require(modulePath)
+        return BlossomImport(path)
     end)
     
     if success then
@@ -30,11 +31,10 @@ function Client:Start()
     
     self.Logger:Log("Starting Blossom Client...")
     
-    -- Load Features
-    -- In a real scenario, you might iterate over a folder
-    self:LoadModule("Movement", script.Parent.Features.Movement)
-    self:LoadModule("Visuals", script.Parent.Features.Visuals)
-    self:LoadModule("UI", script.Parent.UI.Main)
+    -- Load Features via Web Import paths
+    self:LoadModule("Movement", "src/Features/Movement.lua")
+    self:LoadModule("Visuals", "src/Features/Visuals.lua")
+    self:LoadModule("UI", "src/UI/Main.lua")
     
     self.Events:Fire("ClientStarted")
 end
@@ -52,4 +52,4 @@ function Client:Stop()
     self.Logger:Log("Client Stopped.")
 end
 
-return Client
+return Client:Start()
