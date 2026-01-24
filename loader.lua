@@ -1,7 +1,10 @@
 local Repo = "https://raw.githubusercontent.com/soda100827/blossom-rivals/main/"
 
 getgenv().BlossomImport = function(path)
-    local url = Repo .. path
+    -- Add a random number to bypass executor caching (Critical for 404 fixes)
+    local url = Repo .. path .. "?v=" .. tostring(math.random(1, 10000))
+    
+    print("[Blossom] Fetching: " .. url) -- Debug print
     
     local success, result = pcall(function()
         return game:HttpGet(url)
@@ -12,7 +15,7 @@ getgenv().BlossomImport = function(path)
     end
     
     if string.find(result, "404: Not Found") then
-        error("[Blossom]: 404 Not Found for: " .. path .. "\nCheck casing (src/Core vs src/core)!")
+        error("[Blossom]: 404 Not Found for: " .. path .. "\nFull URL: " .. url)
     end
     
     local func, err = loadstring(result)
