@@ -1,5 +1,5 @@
 ---@diagnostic disable: undefined-global, unknown-symbol
-local Fusion = BlossomImport("src/lib/Fusion.lua")
+local Fusion = BlossomImport("src/F/Fusion.lua")
 local Theme = BlossomImport("src/ui/Theme/Default.lua")
 
 local New = Fusion.New
