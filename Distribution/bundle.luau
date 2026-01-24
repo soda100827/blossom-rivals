@@ -1,34 +1,40 @@
-type Connection__DARKLUA_TYPE_a={Disconnect:(self:Connection__DARKLUA_TYPE_a)->(
-),Connected:boolean}type Fusion__DARKLUA_TYPE_b=Types.Fusion type
-Animatable__DARKLUA_TYPE_c=Types.Animatable type UsedAs__DARKLUA_TYPE_d<T> =
-Types.UsedAs<T>type Child__DARKLUA_TYPE_e=Types.Child type
-Computed__DARKLUA_TYPE_f<T> =Types.Computed<T>type Contextual__DARKLUA_TYPE_g<T>
-=Types.Contextual<T>type GraphObject__DARKLUA_TYPE_h=Types.GraphObject type
-For__DARKLUA_TYPE_i<KO,VO> =Types.For<KO,VO>type Observer__DARKLUA_TYPE_j=Types.
-Observer type PropertyTable__DARKLUA_TYPE_k=Types.PropertyTable type
-Scope__DARKLUA_TYPE_l<Constructors=Fusion__DARKLUA_TYPE_b> =Types.Scope<
-Constructors>type ScopedObject__DARKLUA_TYPE_m=Types.ScopedObject type
-SpecialKey__DARKLUA_TYPE_n=Types.SpecialKey type Spring__DARKLUA_TYPE_o<T> =
-Types.Spring<T>type StateObject__DARKLUA_TYPE_p<T> =Types.StateObject<T>type
-Task__DARKLUA_TYPE_q=Types.Task type Tween__DARKLUA_TYPE_r<T> =Types.Tween<T>
-type Use__DARKLUA_TYPE_s=Types.Use type Value__DARKLUA_TYPE_t<T,S=T> =Types.
-Value<T,S>type Version__DARKLUA_TYPE_u=Types.Version local a={cache={}::any}do
-do local function __modImpl()local b={}b.__index=b function b.new(c:string)
-return setmetatable({Source=c or'System'},b)end function b.Info(c,...)print(
-string.format('[\27[34m%s\27[0m] ',c.Source),...)end function b.Warn(c,...)warn(
-string.format('[%s] ',c.Source),...)end function b.Error(c,...)error(string.
-format('[%s] ',c.Source).. ...,0)end return b end function a.a():typeof(
-__modImpl())local b=a.cache.a if not b then b={c=__modImpl()}a.cache.a=b end
-return b.c end end do local function __modImpl()local b={}b.__index=b function b
-.new()return setmetatable({_callbacks={}},b)end function b.Connect(c,d:(...any
-)->())local e={Connected=true,Disconnect=function(e)if not e.Connected then
-return end e.Connected=false for f,g in ipairs(e._signal._callbacks)do if g==e
-then table.remove(e._signal._callbacks,f)break end end end,_callback=d,_signal=c
-}table.insert(c._callbacks,e)return e end function b.Fire(c,...)for d,e in
-ipairs(c._callbacks)do if e.Connected then task.spawn(e._callback,...)end end
-end function b.Destroy(c)c._callbacks={}end return b end function a.b():typeof(
-__modImpl())local b=a.cache.b if not b then b={c=__modImpl()}a.cache.b=b end
-return b.c end end do local function __modImpl()local b={Enabled=false,
+type ScriptSignal__DARKLUA_TYPE_a<T...> ={IsActive:(self:
+ScriptSignal__DARKLUA_TYPE_a<T...>)->boolean,Fire:(self:
+ScriptSignal__DARKLUA_TYPE_a<T...>,T...)->(),Connect:(self:
+ScriptSignal__DARKLUA_TYPE_a<T...>,callback:(T...)->())->
+ScriptConnection__DARKLUA_TYPE_b,Once:(self:ScriptSignal__DARKLUA_TYPE_a<T...>,
+callback:(T...)->())->ScriptConnection__DARKLUA_TYPE_b,DisconnectAll:(self:
+ScriptSignal__DARKLUA_TYPE_a<T...>)->(),Destroy:(self:
+ScriptSignal__DARKLUA_TYPE_a<T...>)->(),Wait:(self:ScriptSignal__DARKLUA_TYPE_a<
+T...>)->T...}type ScriptConnection__DARKLUA_TYPE_b={Disconnect:(self:
+ScriptConnection__DARKLUA_TYPE_b)->(),Connected:boolean}type
+Class__DARKLUA_TYPE_c=ScriptSignal__DARKLUA_TYPE_a<...any>type
+Fusion__DARKLUA_TYPE_d=Types.Fusion type Animatable__DARKLUA_TYPE_e=Types.
+Animatable type UsedAs__DARKLUA_TYPE_f<T> =Types.UsedAs<T>type
+Child__DARKLUA_TYPE_g=Types.Child type Computed__DARKLUA_TYPE_h<T> =Types.
+Computed<T>type Contextual__DARKLUA_TYPE_i<T> =Types.Contextual<T>type
+GraphObject__DARKLUA_TYPE_j=Types.GraphObject type For__DARKLUA_TYPE_k<KO,VO> =
+Types.For<KO,VO>type Observer__DARKLUA_TYPE_l=Types.Observer type
+PropertyTable__DARKLUA_TYPE_m=Types.PropertyTable type Scope__DARKLUA_TYPE_n<
+Constructors=Fusion__DARKLUA_TYPE_d> =Types.Scope<Constructors>type
+ScopedObject__DARKLUA_TYPE_o=Types.ScopedObject type SpecialKey__DARKLUA_TYPE_p=
+Types.SpecialKey type Spring__DARKLUA_TYPE_q<T> =Types.Spring<T>type
+StateObject__DARKLUA_TYPE_r<T> =Types.StateObject<T>type Task__DARKLUA_TYPE_s=
+Types.Task type Tween__DARKLUA_TYPE_t<T> =Types.Tween<T>type Use__DARKLUA_TYPE_u
+=Types.Use type Value__DARKLUA_TYPE_v<T,S=T> =Types.Value<T,S>type
+Version__DARKLUA_TYPE_w=Types.Version local a={cache={}::any}do do
+local function __modImpl()local b={}b.__index=b function b.new(c:string)return
+setmetatable({Source=c or'System'},b)end function b.Info(c,...)print(string.
+format('[\27[34m%s\27[0m] ',c.Source),...)end function b.Warn(c,...)warn(string.
+format('[%s] ',c.Source),...)end function b.Error(c,...)error(string.format(
+'[%s] ',c.Source).. ...,0)end return b end function a.a():typeof(__modImpl())
+local b=a.cache.a if not b then b={c=__modImpl()}a.cache.a=b end return b.c end
+end do local function __modImpl()local b:boolean do b=false local c=Instance.new
+'BindableEvent'local d=false c.Event:Connect(function()d=true end)c:Fire()c:
+Destroy()if d==false then b=true end end local c:typeof(require(script.Docs))=b
+and require(script.Deferred)or require(script.Immediate)return c end function a.
+b():typeof(__modImpl())local b=a.cache.b if not b then b={c=__modImpl()}a.cache.
+b=b end return b.c end end do local function __modImpl()local b={Enabled=false,
 Connections={}}function b.Init(c,d)c.Client=d c.Logger=d.Logger c.Logger:Info
 'Movement loaded'end function b.Toggle(c,d:boolean)c.Enabled=d if d then c.
 Logger:Info'Movement Enabled'else c.Logger:Info'Movement Disabled'end end
@@ -45,7 +51,7 @@ ipairs(d.Connections)do f:Disconnect()end d.Connections={}end function c.Cleanup
 .d if not b then b={c=__modImpl()}a.cache.d=b end return b.c end end do
 local function __modImpl()local b=require(script.Types)local c=require(script.
 External)do local d=require(script.RobloxExternal)c.setExternalProvider(d)end
-local d:Fusion__DARKLUA_TYPE_b=table.freeze{version={major=0,minor=3,isRelease=
+local d:Fusion__DARKLUA_TYPE_d=table.freeze{version={major=0,minor=3,isRelease=
 true},Contextual=require(script.Utility.Contextual),Safe=require(script.Utility.
 Safe),cleanup=require(script.Memory.legacyCleanup),deriveScope=require(script.
 Memory.deriveScope),doCleanup=require(script.Memory.doCleanup),innerScope=
