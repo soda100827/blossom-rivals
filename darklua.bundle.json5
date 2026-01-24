@@ -9,4 +9,5 @@
     },
     excludes: ["@lune/**"],
   },
+  rules: ["remove_types"],
 }

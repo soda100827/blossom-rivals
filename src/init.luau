@@ -6,7 +6,7 @@ local Services = {
 }
 
 local Logger = require("src/utils/Logger")
-local Signal = require("@pkg/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal")
+local Signal = require("@pkg/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
 
 type BlossomClient = {
 	Version: string,
