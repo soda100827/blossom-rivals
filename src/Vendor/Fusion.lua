@@ -1,26 +1,17 @@
+---@diagnostic disable: undefined-global, lowercase-global
+
 -- Fusion Loader Module
--- This module acts as a bridge to load Fusion.
--- In a production build script, this file would be replaced by the actual Fusion bundle.
+-- Loads a bundled version of Fusion 0.2 suitable for exploit environments.
 
 local success, Fusion = pcall(function()
-    -- Loading Fusion v0.2 (common for exploits) or v0.3
-    -- Using a reliable mirrored source or official repo
-    -- Note: In a real environment, you should save this to file or use a build tool
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/dphfox/Fusion/main/src/init.luau"))()
+    -- Uses a community bundled version of Fusion 0.2 (Single file)
+    -- Original Source: https://github.com/Elttob/Fusion
+    -- Bundle maintained by community for easy loadstring usage
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/julek655/Fusion/master/Fusion.lua"))()
 end)
 
-if not success then
-    -- Mock Fusion for local syntax checking / fallback
-    warn("[Blossom] Failed to download Fusion. If you are in VS Code, this is expected.")
-    
-    -- Minimal mock for local editor to not stroke out (Optional)
-    Fusion = {
-        New = function() return function() end end,
-        Value = function() end,
-        Computed = function() end,
-        Children = {},
-        OnEvent = function() end,
-    }
+if not success or typeof(Fusion) ~= "table" then
+    error("[Blossom] Critical Error: Failed to load Fusion Library.\nPossible causes:\n1. No internet connection\n2. HTTP requests blocked\n3. Executor does not support loadstring/HttpGet\n\nError details: " .. tostring(Fusion))
 end
 
 return Fusion

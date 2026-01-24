@@ -1,34 +1,55 @@
+---@diagnostic disable: undefined-global, unknown-symbol
+local UserInputService = game:GetService("UserInputService")
 local Fusion = require(script.Parent.Parent.Vendor.Fusion)
 local Theme = require(script.Parent.Parent.Theme.Default)
 
 local New = Fusion.New
 local Children = Fusion.Children
 local OnEvent = Fusion.OnEvent
-local Value = Fusion.Value
+local State = Fusion.Value
 
 local function Window(props)
-    local position = Value(UDim2.new(0.5, -250, 0.5, -175))
+    local position = State(UDim2.new(0.5, -250, 0.5, -175))
     
-    local isDragging = Value(false)
-    local dragStart = Value(Vector2.new(0,0))
-    local startPos = Value(UDim2.new(0,0,0,0))
+    local isDragging = false
+    local dragStart = Vector2.new(0, 0)
+    local startPos = UDim2.new(0, 0, 0, 0)
     
-    -- Drag Logic
-    local function messageToLogic(msg)
-        -- Fusion usually handles logic inside components or controllers.
-        -- For dragging, we can attach Input events to the header.
+    -- Function to handle dragging logic
+    local function InputBegan(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = true
+            dragStart = input.Position
+            startPos = position:get()
+        end
     end
+    
+    -- Global input monitoring for drag
+    -- Note: In a pure component we might want to clean this up, 
+    -- but for the main window it's acceptable to persist.
+    UserInputService.InputChanged:Connect(function(input)
+        if isDragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            local newPos = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+            position:set(newPos)
+        end
+    end)
+    
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            isDragging = false
+        end
+    end)
     
     return New "Frame" {
         Name = "MainWindow",
         Size = props.Size or UDim2.new(0, 500, 0, 350),
-        Position = position, -- Bound to state
+        Position = position,
         BackgroundColor3 = Theme.Background,
         BorderSizePixel = 0,
-        
-        -- Simple Drag Implementation via InputChanged on Header is tricky in pure declarative style without logic wrapping
-        -- For brevity, we will rely on a wrapper or just simple existing logic. 
-        -- But let's try to do it "Fusion Way" lightly.
         
         [Children] = {
             New "UICorner" { CornerRadius = UDim.new(0, 8) },
@@ -40,30 +61,13 @@ local function Window(props)
                 Size = UDim2.new(1, 0, 0, 40),
                 BackgroundColor3 = Theme.Header,
                 
-                -- Input Handling for Drag
-                [OnEvent "InputBegan"] = function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        isDragging:set(true)
-                        dragStart:set(input.Position)
-                        startPos:set(position:get())
-                    end
-                end,
-                
-                [OnEvent "InputChanged"] = function(input)
-                     if input.UserInputType == Enum.UserInputType.MouseMovement then
-                         -- We need a global input changed listener effectively, 
-                         -- usually you'd bind this to UserInputService or a transparent full-screen frame.
-                         -- For local component containment, we often use the object itself if it captures mouse.
-                     end
-                end,
-                -- Note: Proper drag in Fusion often needs a service connection. 
-                -- We will skip the complex drag logic implementation here for brevity 
-                -- or add a simple "Draggable" utility later.
+                -- Capture click on header to start drag
+                [OnEvent "InputBegan"] = InputBegan,
                 
                 [Children] = {
                     New "UICorner" { CornerRadius = UDim.new(0, 8) },
                     
-                    -- Square off bottom
+                    -- Square off bottom corners of header
                      New "Frame" {
                         Size = UDim2.new(1, 0, 0, 10),
                         Position = UDim2.new(0, 0, 1, -10),
@@ -94,6 +98,7 @@ local function Window(props)
                 ScrollBarImageColor3 = Theme.Accent,
                 AutomaticCanvasSize = Enum.AutomaticSize.Y,
                 CanvasSize = UDim2.new(0,0,0,0),
+                BorderSizePixel = 0,
                 
                 [Children] = {
                     New "UIListLayout" {
