@@ -17,6 +17,24 @@ function Interface:Init(Client)
 	self:Mount()
 end
 
+local function applySilentMode(library, enabled)
+	if enabled then
+		library.Notify = library.Notify or function() end
+		library._blossomNotify = library._blossomNotify or library.Notify
+		library.Notify = function() end
+		pcall(function()
+			library:SetWatermarkVisibility(false)
+		end)
+		pcall(function()
+			library:Toggle()
+		end)
+	else
+		if library._blossomNotify then
+			library.Notify = library._blossomNotify
+		end
+	end
+end
+
 function Interface:Mount()
 	local Library = loadRemote("Library.lua")
 	local ThemeManager = loadRemote("addons/ThemeManager.lua")
@@ -35,6 +53,7 @@ function Interface:Mount()
 	local tabs = {
 		Main = window:AddTab("Main"),
 		["UI Settings"] = window:AddTab("UI Settings"),
+		Misc = window:AddTab("Misc"),
 	}
 
 	local mainGroup = tabs.Main:AddLeftGroupbox("Main")
@@ -80,6 +99,27 @@ function Interface:Mount()
 	SaveManager:SetFolder("Blossom")
 	SaveManager:BuildConfigSection(tabs["UI Settings"])
 	ThemeManager:ApplyToTab(tabs["UI Settings"])
+
+	local miscGroup = tabs.Misc:AddLeftGroupbox("Auto Load")
+	miscGroup:AddToggle("AutoLoad", {
+		Text = "Auto Load",
+		Default = false,
+		Callback = function(enabled)
+			if enabled then
+				pcall(function()
+					SaveManager:LoadAutoloadConfig()
+				end)
+			end
+		end,
+	})
+
+	miscGroup:AddToggle("SilentMode", {
+		Text = "Silent Mode",
+		Default = false,
+		Callback = function(enabled)
+			applySilentMode(Library, enabled)
+		end,
+	})
 
 	self.Logger:Info("UI mounted successfully")
 end
