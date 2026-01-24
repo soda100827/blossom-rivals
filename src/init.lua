@@ -36,7 +36,7 @@ function Client:Start()
     -- Load Features via Web Import paths (Case Sensitive!)
     self:LoadModule("Movement", "src/features/Movement.lua")
     self:LoadModule("Visuals", "src/features/Visuals.lua")
-    self:LoadModule("UI", "src/ui/Main.lua")
+    self:LoadModule("UI", "src/ui/Interface.lua")
     
     self.Events:Fire("ClientStarted")
 end
