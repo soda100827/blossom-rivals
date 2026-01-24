@@ -70,6 +70,7 @@ function Interface:Mount()
 		NoUI = true,
 		Text = "Menu keybind",
 	})
+	Library.ToggleKeybind = Options.MenuKeybind
 
 	ThemeManager:SetLibrary(Library)
 	SaveManager:SetLibrary(Library)

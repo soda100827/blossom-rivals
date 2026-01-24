@@ -1,12 +1,15 @@
 local __DARKLUA_BUNDLE_MODULES={cache={}}do do local function __modImpl()local
 Logger={}Logger.__index=Logger function Logger.new(source)return setmetatable({
-Source=source or'System'},Logger)end function Logger:Info(...)print(string.
-format('[\27[34m%s\27[0m] ',self.Source),...)end function Logger:Warn(...)warn(
-string.format('[%s] ',self.Source),...)end function Logger:Error(...)error(
-string.format('[%s] ',self.Source).. ...,0)end return Logger end function
-__DARKLUA_BUNDLE_MODULES.a()local v=__DARKLUA_BUNDLE_MODULES.cache.a if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.a=v end return v.c end end
-do local function __modImpl()local ScriptSignal={}ScriptSignal.__index=
+Source=source or'System'},Logger)end local function formatMessage(level,source,
+...)local parts={...}for i,value in ipairs(parts)do parts[i]=tostring(value)end
+local message=table.concat(parts,' ')local timestamp=os.date('%H:%M:%S')return
+string.format('[%s][%s][%s] %s',timestamp,source,level,message)end function
+Logger:Info(...)print(formatMessage('INFO',self.Source,...))end function Logger:
+Warn(...)warn(formatMessage('WARN',self.Source,...))end function Logger:Error(
+...)error(formatMessage('ERROR',self.Source,...),0)end return Logger end
+function __DARKLUA_BUNDLE_MODULES.a()local v=__DARKLUA_BUNDLE_MODULES.cache.a if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.a=v end return v.c
+end end do local function __modImpl()local ScriptSignal={}ScriptSignal.__index=
 ScriptSignal local ScriptConnection={}ScriptConnection.__index=ScriptConnection
 function ScriptSignal.new()return setmetatable({_active=true,_head=nil},
 ScriptSignal)end function ScriptSignal.Is(object)return typeof(object)=='table'
@@ -77,16 +80,17 @@ mod:Toggle(state)end end})mainGroup:AddToggle('VisualsToggle',{Text=
 Modules.Visuals if mod and mod.Toggle then mod:Toggle(state)end end})local
 menuGroup=tabs['UI Settings']:AddLeftGroupbox('Menu')menuGroup:AddButton(
 'Unload',function()Library:Unload()end)menuGroup:AddLabel('Menu bind'):
-AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})
-ThemeManager:SetLibrary(Library)SaveManager:SetLibrary(Library)SaveManager:
-IgnoreThemeSettings()SaveManager:SetIgnoreIndexes({'MenuKeybind'})ThemeManager:
-SetFolder('Blossom')SaveManager:SetFolder('Blossom')SaveManager:
-BuildConfigSection(tabs['UI Settings'])ThemeManager:ApplyToTab(tabs[
-'UI Settings'])self.Logger:Info('UI mounted successfully')end function Interface
-:Cleanup()if self.Library then self.Library:Unload()end end return Interface end
-function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
-end end end local Services={Players=game:GetService('Players'),RunService=game:
+AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})Library
+.ToggleKeybind=Options.MenuKeybind ThemeManager:SetLibrary(Library)SaveManager:
+SetLibrary(Library)SaveManager:IgnoreThemeSettings()SaveManager:
+SetIgnoreIndexes({'MenuKeybind'})ThemeManager:SetFolder('Blossom')SaveManager:
+SetFolder('Blossom')SaveManager:BuildConfigSection(tabs['UI Settings'])
+ThemeManager:ApplyToTab(tabs['UI Settings'])self.Logger:Info(
+'UI mounted successfully')end function Interface:Cleanup()if self.Library then
+self.Library:Unload()end end return Interface end function
+__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
+end local Services={Players=game:GetService('Players'),RunService=game:
 GetService('RunService'),UserInputService=game:GetService('UserInputService')}
 local Logger=__DARKLUA_BUNDLE_MODULES.a()local Signal=__DARKLUA_BUNDLE_MODULES.
 b()local Client={Version='1.0.0',Logger=Logger.new('Blossom'),Events={Started=

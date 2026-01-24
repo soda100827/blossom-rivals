@@ -8,16 +8,26 @@ function Logger.new(source: string)
 	}, Logger)
 end
 
+local function formatMessage(level: string, source: string, ...)
+	local parts = { ... }
+	for i, value in ipairs(parts) do
+		parts[i] = tostring(value)
+	end
+	local message = table.concat(parts, " ")
+	local timestamp = os.date("%H:%M:%S")
+	return string.format("[%s][%s][%s] %s", timestamp, source, level, message)
+end
+
 function Logger:Info(...)
-	print(string.format("[\27[34m%s\27[0m] ", self.Source), ...)
+	print(formatMessage("INFO", self.Source, ...))
 end
 
 function Logger:Warn(...)
-	warn(string.format("[%s] ", self.Source), ...)
+	warn(formatMessage("WARN", self.Source, ...))
 end
 
 function Logger:Error(...)
-	error(string.format("[%s] ", self.Source) .. ..., 0)
+	error(formatMessage("ERROR", self.Source, ...), 0)
 end
 
 return Logger
