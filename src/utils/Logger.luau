@@ -14,8 +14,7 @@ local function formatMessage(level: string, source: string, ...)
 		parts[i] = tostring(value)
 	end
 	local message = table.concat(parts, " ")
-	local timestamp = os.date("%H:%M:%S")
-	return string.format("[%s][%s][%s] %s", timestamp, source, level, message)
+	return string.format("[🌸] %s", message)
 end
 
 function Logger:Info(...)

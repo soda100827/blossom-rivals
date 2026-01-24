@@ -67,13 +67,20 @@ local function loadRemote(path)local source=game:HttpGet(repo..path)local chunk,
 err=loadstring(source)if not chunk then error('[Blossom] UI load failed: '..
 tostring(err))end return chunk()end local Interface={}function Interface:Init(
 Client)self.Client=Client self.Logger=Client.Logger self:Mount()end
-local function applySilentMode(library,enabled)if enabled then library.Notify=
+local function setNotifyMuted(library,enabled)if enabled then library.Notify=
 library.Notify or function()end library._blossomNotify=library._blossomNotify or
-library.Notify library.Notify=function()end pcall(function()library:
-SetWatermarkVisibility(false)end)pcall(function()library:Toggle()end)else if
-library._blossomNotify then library.Notify=library._blossomNotify end end end
-function Interface:Mount()local Library=loadRemote('Library.lua')local
-ThemeManager=loadRemote('addons/ThemeManager.lua')local SaveManager=loadRemote(
+library.Notify library.Notify=function()end else if library._blossomNotify then
+library.Notify=library._blossomNotify end end end local function
+getLibraryVisible(library)if type(library.Opened)=='boolean'then return library.
+Opened end if type(library.Visible)=='boolean'then return library.Visible end if
+type(library.IsOpen)=='boolean'then return library.IsOpen end return true end
+local function runAutoload(library,saveManager,silent)local wasVisible=
+getLibraryVisible(library)if silent then setNotifyMuted(library,true)if
+wasVisible then pcall(function()library:Toggle()end)end end pcall(function()
+saveManager:LoadAutoloadConfig()end)if silent then if wasVisible then pcall(
+function()library:Toggle()end)end setNotifyMuted(library,false)end end function
+Interface:Mount()local Library=loadRemote('Library.lua')local ThemeManager=
+loadRemote('addons/ThemeManager.lua')local SaveManager=loadRemote(
 'addons/SaveManager.lua')self.Library=Library local window=Library:CreateWindow(
 {Title='Blossom '..self.Client.Version,Center=true,AutoShow=true,TabPadding=8,
 MenuFadeTime=0.2})local tabs={Main=window:AddTab('Main'),['UI Settings']=window:
@@ -93,11 +100,12 @@ SetFolder('Blossom')SaveManager:SetFolder('Blossom')SaveManager:
 BuildConfigSection(tabs['UI Settings'])ThemeManager:ApplyToTab(tabs[
 'UI Settings'])local miscGroup=tabs.Misc:AddLeftGroupbox('Auto Load')miscGroup:
 AddToggle('AutoLoad',{Text='Auto Load',Default=false,Callback=function(enabled)
-if enabled then pcall(function()SaveManager:LoadAutoloadConfig()end)end end})
-miscGroup:AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=
-function(enabled)applySilentMode(Library,enabled)end})self.Logger:Info(
-'UI mounted successfully')end function Interface:Cleanup()if self.Library then
-self.Library:Unload()end end return Interface end function
+if enabled then local silent=Toggles.SilentMode and Toggles.SilentMode.Value or
+false runAutoload(Library,SaveManager,silent)end end})miscGroup:AddToggle(
+'SilentMode',{Text='Silent Mode',Default=false,Callback=function(enabled)if
+enabled then setNotifyMuted(Library,true)else setNotifyMuted(Library,false)end
+end})self.Logger:Info('UI mounted successfully')end function Interface:Cleanup()
+if self.Library then self.Library:Unload()end end return Interface end function
 __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
 end local Services={Players=game:GetService('Players'),RunService=game:

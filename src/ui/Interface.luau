@@ -17,21 +17,53 @@ function Interface:Init(Client)
 	self:Mount()
 end
 
-local function applySilentMode(library, enabled)
+local function setNotifyMuted(library, enabled)
 	if enabled then
 		library.Notify = library.Notify or function() end
 		library._blossomNotify = library._blossomNotify or library.Notify
 		library.Notify = function() end
-		pcall(function()
-			library:SetWatermarkVisibility(false)
-		end)
-		pcall(function()
-			library:Toggle()
-		end)
 	else
 		if library._blossomNotify then
 			library.Notify = library._blossomNotify
 		end
+	end
+end
+
+local function getLibraryVisible(library)
+	if type(library.Opened) == "boolean" then
+		return library.Opened
+	end
+	if type(library.Visible) == "boolean" then
+		return library.Visible
+	end
+	if type(library.IsOpen) == "boolean" then
+		return library.IsOpen
+	end
+	return true
+end
+
+local function runAutoload(library, saveManager, silent)
+	local wasVisible = getLibraryVisible(library)
+	if silent then
+		setNotifyMuted(library, true)
+		if wasVisible then
+			pcall(function()
+				library:Toggle()
+			end)
+		end
+	end
+
+	pcall(function()
+		saveManager:LoadAutoloadConfig()
+	end)
+
+	if silent then
+		if wasVisible then
+			pcall(function()
+				library:Toggle()
+			end)
+		end
+		setNotifyMuted(library, false)
 	end
 end
 
@@ -52,8 +84,8 @@ function Interface:Mount()
 
 	local tabs = {
 		Main = window:AddTab("Main"),
-		["UI Settings"] = window:AddTab("UI Settings"),
 		Misc = window:AddTab("Misc"),
+		["UI Settings"] = window:AddTab("UI Settings"),
 	}
 
 	local mainGroup = tabs.Main:AddLeftGroupbox("Main")
@@ -106,9 +138,8 @@ function Interface:Mount()
 		Default = false,
 		Callback = function(enabled)
 			if enabled then
-				pcall(function()
-					SaveManager:LoadAutoloadConfig()
-				end)
+				local silent = Toggles.SilentMode and Toggles.SilentMode.Value or false
+				runAutoload(Library, SaveManager, silent)
 			end
 		end,
 	})
@@ -117,7 +148,11 @@ function Interface:Mount()
 		Text = "Silent Mode",
 		Default = false,
 		Callback = function(enabled)
-			applySilentMode(Library, enabled)
+			if enabled then
+				setNotifyMuted(Library, true)
+			else
+				setNotifyMuted(Library, false)
+			end
 		end,
 	})
 
