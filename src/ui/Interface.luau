@@ -1,8 +1,8 @@
 --!strict
 local RunService = game:GetService("RunService")
-local Fusion = require(script.Parent.Parent.Parent.Packages.fusion)
-local Window = require(script.Parent.components.Window)
-local Toggle = require(script.Parent.components.Toggle)
+local Fusion = require("@pkg/fusion")
+local Window = require("src/ui/components/Window")
+local Toggle = require("src/ui/components/Toggle")
 
 local New = Fusion.New
 local Children = Fusion.Children

@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, unknown-symbol
-local Fusion = require(script.Parent.Parent.Parent.Parent.Packages.fusion)
-local Theme = require(script.Parent.Parent.Themes)
+local Fusion = require("@pkg/fusion")
+local Theme = require("src/ui/Themes")
 
 local New = Fusion.New
 local Children = Fusion.Children

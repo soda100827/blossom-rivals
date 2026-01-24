@@ -16,35 +16,26 @@ local function ensureDir(path)
 	fs.writeDir(path)
 end
 
-local function minifyTree(inputRoot, outputRoot)
-	ensureDir(outputRoot)
-
-	local function walk(relativePath)
-		local currentInput = relativePath == "" and inputRoot or joinPath(inputRoot, relativePath)
-		for _, name in ipairs(fs.readDir(currentInput)) do
-			local nextRelative = relativePath == "" and name or joinPath(relativePath, name)
-			local inputPath = joinPath(inputRoot, nextRelative)
-			local outputPath = joinPath(outputRoot, nextRelative)
-
-			if fs.isDir(inputPath) then
-				ensureDir(outputPath)
-				walk(nextRelative)
-			elseif inputPath:sub(-5) == ".luau" then
-				local result = process.exec("darklua", { "minify", inputPath, outputPath })
-				if not result.ok or result.code ~= 0 then
-					error(("darklua failed for %s\n%s"):format(inputPath, result.stderr or ""))
-				end
-			end
-		end
-	end
-
-	walk("")
-end
-
 local root = type(process.cwd) == "function" and process.cwd() or process.cwd
 local outputRoot = joinPath(root, "Distribution")
 
-minifyTree(joinPath(root, "src"), joinPath(outputRoot, "src"))
-minifyTree(joinPath(root, "scripts"), joinPath(outputRoot, "scripts"))
+ensureDir(outputRoot)
 
-print("darklua minify complete -> " .. outputRoot)
+do
+	local bundleConfig = joinPath(root, "darklua.bundle.json5")
+	local bundleOutput = joinPath(outputRoot, "bundle.luau")
+	local result = process.exec("darklua", {
+		"process",
+		"--format",
+		"dense",
+		"-c",
+		bundleConfig,
+		joinPath(root, "src", "init.luau"),
+		bundleOutput,
+	})
+	if not result.ok or result.code ~= 0 then
+		error(("darklua bundle failed\n%s"):format(result.stderr or ""))
+	end
+end
+
+print("darklua bundle complete -> " .. outputRoot)
