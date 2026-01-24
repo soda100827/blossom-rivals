@@ -137,6 +137,7 @@ function Interface:Mount()
 		Text = "Auto Load",
 		Default = false,
 		Callback = function(enabled)
+			self.Client:SetTeleportQueue(enabled)
 			if enabled then
 				local silent = Toggles.SilentMode and Toggles.SilentMode.Value or false
 				runAutoload(Library, SaveManager, silent)

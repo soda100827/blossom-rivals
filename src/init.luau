@@ -15,8 +15,10 @@ type BlossomClient = {
 	Modules: { [string]: any },
 	IsRunning: boolean,
 	LoadModule: (self: BlossomClient, name: string, moduleOrPath: any) -> (),
+	SetTeleportQueue: (self: BlossomClient, enabled: boolean) -> (),
 	Start: (self: BlossomClient) -> (),
 	Stop: (self: BlossomClient) -> (),
+	_TeleportQueueConn: any?,
 }
 
 local Client: BlossomClient = {
@@ -28,6 +30,7 @@ local Client: BlossomClient = {
 	},
 	Modules = {},
 	IsRunning = false,
+	_TeleportQueueConn = nil,
 }
 
 function Client:LoadModule(name, moduleOrPath)
@@ -51,6 +54,39 @@ function Client:LoadModule(name, moduleOrPath)
 	else
 		self.Logger:Warn("Failed to load module:", name, result)
 	end
+end
+
+function Client:SetTeleportQueue(enabled: boolean)
+	if self._TeleportQueueConn then
+		self._TeleportQueueConn:Disconnect()
+		self._TeleportQueueConn = nil
+	end
+
+	if not enabled then
+		return
+	end
+
+	local queueOnTeleport = queue_on_teleport or queueonteleport or (syn and syn.queue_on_teleport)
+	if not queueOnTeleport then
+		self.Logger:Warn("queue_on_teleport not available.")
+		return
+	end
+
+	local success, player = pcall(function()
+		return game:GetService("Players").LocalPlayer
+	end)
+	if not success or not player then
+		self.Logger:Warn("LocalPlayer not available for teleport queue.")
+		return
+	end
+
+	self._TeleportQueueConn = player.OnTeleport:Connect(function(state)
+		if state == Enum.TeleportState.Started then
+			queueOnTeleport([[
+loadstring(game:HttpGet("https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"))()
+]])
+		end
+	end)
 end
 
 function Client:Start()
