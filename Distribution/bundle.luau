@@ -95,34 +95,33 @@ Toggle(state)end end})local menuGroup=tabs['UI Settings']:AddLeftGroupbox('Menu'
 'Menu bind'):AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text=
 'Menu keybind'})Library.ToggleKeybind=Options.MenuKeybind ThemeManager:
 SetLibrary(Library)SaveManager:SetLibrary(Library)SaveManager:
-IgnoreThemeSettings()SaveManager:SetIgnoreIndexes({'MenuKeybind'})ThemeManager:
-SetFolder('Blossom')SaveManager:SetFolder('Blossom')SaveManager:
-BuildConfigSection(tabs['UI Settings'])ThemeManager:ApplyToTab(tabs[
-'UI Settings'])local miscGroup=tabs.Misc:AddLeftGroupbox('Auto Load')miscGroup:
-AddToggle('AutoLoad',{Text='Auto Load',Default=false,Callback=function(enabled)
-self.Client:SetTeleportQueue(enabled)if enabled then local silent=Toggles.
-SilentMode and Toggles.SilentMode.Value or false runAutoload(Library,SaveManager
-,silent)end end})miscGroup:AddToggle('SilentMode',{Text='Silent Mode',Default=
-false,Callback=function(enabled)if enabled then setNotifyMuted(Library,true)else
-setNotifyMuted(Library,false)end end})self.Logger:Info('UI mounted successfully'
-)end function Interface:Cleanup()if self.Library then self.Library:Unload()end
-end return Interface end function __DARKLUA_BUNDLE_MODULES.e()local v=
-__DARKLUA_BUNDLE_MODULES.cache.e if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end end local Services={
-Players=game:GetService('Players'),RunService=game:GetService('RunService'),
-UserInputService=game:GetService('UserInputService')}local Logger=
-__DARKLUA_BUNDLE_MODULES.a()local Signal=__DARKLUA_BUNDLE_MODULES.b()local
-Client={Version='1.0.0',Logger=Logger.new('Blossom'),Events={Started=Signal.new(
-),Stopped=Signal.new()},Modules={},IsRunning=false,_TeleportQueueConn=nil}
-function Client:LoadModule(name,moduleOrPath)local loader=function()if type(
-moduleOrPath)=='string'then return require(moduleOrPath)end return moduleOrPath
-end local success,result=pcall(loader)if success then self.Modules[name]=result
-if result.Init then task.spawn(function()result:Init(self)end)end self.Logger:
-Info('Loaded module:',name)else self.Logger:Warn('Failed to load module:',name,
-result)end end function Client:SetTeleportQueue(enabled)if self.
-_TeleportQueueConn then self._TeleportQueueConn:Disconnect()self.
-_TeleportQueueConn=nil end if not enabled then return end local queueOnTeleport=
-queue_on_teleport or queueonteleport or(syn and syn.queue_on_teleport)if not
+IgnoreThemeSettings()ThemeManager:SetFolder('Blossom')SaveManager:SetFolder(
+'Blossom')SaveManager:BuildConfigSection(tabs['UI Settings'])ThemeManager:
+ApplyToTab(tabs['UI Settings'])local miscGroup=tabs.Misc:AddLeftGroupbox(
+'Auto Load')miscGroup:AddToggle('AutoLoad',{Text='Auto Load',Default=false,
+Callback=function(enabled)self.Client:SetTeleportQueue(enabled)if enabled then
+local silent=Toggles.SilentMode and Toggles.SilentMode.Value or false
+runAutoload(Library,SaveManager,silent)end end})miscGroup:AddToggle('SilentMode'
+,{Text='Silent Mode',Default=false,Callback=function(enabled)if enabled then
+setNotifyMuted(Library,true)else setNotifyMuted(Library,false)end end})self.
+Logger:Info('UI mounted successfully')end function Interface:Cleanup()if self.
+Library then self.Library:Unload()end end return Interface end function
+__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
+end local Services={Players=game:GetService('Players'),RunService=game:
+GetService('RunService'),UserInputService=game:GetService('UserInputService')}
+local Logger=__DARKLUA_BUNDLE_MODULES.a()local Signal=__DARKLUA_BUNDLE_MODULES.
+b()local Client={Version='1.0.0',Logger=Logger.new('Blossom'),Events={Started=
+Signal.new(),Stopped=Signal.new()},Modules={},IsRunning=false,_TeleportQueueConn
+=nil}function Client:LoadModule(name,moduleOrPath)local loader=function()if
+type(moduleOrPath)=='string'then return require(moduleOrPath)end return
+moduleOrPath end local success,result=pcall(loader)if success then self.Modules[
+name]=result if result.Init then task.spawn(function()result:Init(self)end)end
+self.Logger:Info('Loaded module:',name)else self.Logger:Warn(
+'Failed to load module:',name,result)end end function Client:SetTeleportQueue(
+enabled)if self._TeleportQueueConn then self._TeleportQueueConn:Disconnect()self
+._TeleportQueueConn=nil end if not enabled then return end local queueOnTeleport
+=queue_on_teleport or queueonteleport or(syn and syn.queue_on_teleport)if not
 queueOnTeleport then self.Logger:Warn('queue_on_teleport not available.')return
 end local success,player=pcall(function()return game:GetService('Players').
 LocalPlayer end)if not success or not player then self.Logger:Warn(
