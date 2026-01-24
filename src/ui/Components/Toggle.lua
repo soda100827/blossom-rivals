@@ -1,6 +1,6 @@
 ---@diagnostic disable: undefined-global, unknown-symbol
 local Fusion = BlossomImport("src/Vendor/Fusion.lua")
-local Theme = BlossomImport("src/UI/Theme/Default.lua")
+local Theme = BlossomImport("src/ui/Theme/Default.lua")
 
 local New = Fusion.New
 local Children = Fusion.Children

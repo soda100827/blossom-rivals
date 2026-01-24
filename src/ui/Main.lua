@@ -1,6 +1,6 @@
 local Fusion = BlossomImport("src/Vendor/Fusion.lua")
-local Window = BlossomImport("src/UI/Components/Window.lua")
-local Toggle = BlossomImport("src/UI/Components/Toggle.lua")
+local Window = BlossomImport("src/ui/Components/Window.lua")
+local Toggle = BlossomImport("src/ui/Components/Toggle.lua")
 
 local New = Fusion.New
 local Children = Fusion.Children

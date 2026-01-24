@@ -1,5 +1,7 @@
-local Logger = BlossomImport("src/Core/Logger.lua")
-local EventManager = BlossomImport("src/Core/EventManager.lua")
+-- Note: Directory imports match Lowercase/Uppercase of actual git structure
+-- src/core, src/features, src/ui are lowercase on disk/git
+local Logger = BlossomImport("src/core/Logger.lua")
+local EventManager = BlossomImport("src/core/EventManager.lua")
 
 local Client = {
     Version = "1.0.0",
@@ -31,10 +33,10 @@ function Client:Start()
     
     self.Logger:Log("Starting Blossom Client...")
     
-    -- Load Features via Web Import paths
-    self:LoadModule("Movement", "src/Features/Movement.lua")
-    self:LoadModule("Visuals", "src/Features/Visuals.lua")
-    self:LoadModule("UI", "src/UI/Main.lua")
+    -- Load Features via Web Import paths (Case Sensitive!)
+    self:LoadModule("Movement", "src/features/Movement.lua")
+    self:LoadModule("Visuals", "src/features/Visuals.lua")
+    self:LoadModule("UI", "src/ui/Main.lua")
     
     self.Events:Fire("ClientStarted")
 end
