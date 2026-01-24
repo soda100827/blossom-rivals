@@ -1,4 +1,4 @@
-local Fusion = BlossomImport("src/Vendor/Fusion.lua")
+local Fusion = BlossomImport("src/lib/Fusion.lua")
 local Window = BlossomImport("src/ui/Components/Window.lua")
 local Toggle = BlossomImport("src/ui/Components/Toggle.lua")
 

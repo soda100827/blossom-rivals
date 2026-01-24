@@ -3,20 +3,29 @@ Logger.__index = Logger
 
 function Logger.new(prefix)
     local self = setmetatable({}, Logger)
-    self.Prefix = prefix or "Blossom"
+    -- Prefix is set but user requested standard "[Blossom]:" format mostly.
+    -- We can keep the prefix or just hardcode Blossom.
+    -- The user said: "[Blossom]: 이렇게만"
+    self.Prefix = "Blossom" 
     return self
 end
 
 function Logger:Log(...)
-    print(string.format("[%s] [INFO]", self.Prefix), ...)
+    -- Standard print (White/Light Gray usually)
+    print(string.format("[%s]:", self.Prefix), ...)
 end
 
 function Logger:Warn(...)
-    warn(string.format("[%s] [WARN]", self.Prefix), ...)
+    -- Warn (Orange/Yellow)
+    warn(string.format("[%s]:", self.Prefix), ...)
 end
 
 function Logger:Error(...)
-    error(string.format("[%s] [ERROR]", self.Prefix), ...)
+    -- Error (Red)
+    -- Using error() stops execution, usually we might want just a red print if available via rconsoleprint 
+    -- but for standard roblox output, error() or TestService is used.
+    -- Let's stick to error(msg, 0) to avoid stack trace spam if not needed.
+    error(string.format("[%s]:", self.Prefix), ..., 0)
 end
 
 return Logger

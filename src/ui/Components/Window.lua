@@ -2,7 +2,7 @@
 local UserInputService = game:GetService("UserInputService")
 
 -- Import dependencies via global loader with correct paths
-local Fusion = BlossomImport("src/Vendor/Fusion.lua")
+local Fusion = BlossomImport("src/lib/Fusion.lua")
 local Theme = BlossomImport("src/ui/Theme/Default.lua")
 
 local New = Fusion.New
