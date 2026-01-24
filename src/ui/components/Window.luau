@@ -1,7 +1,7 @@
 ---@diagnostic disable: undefined-global, unknown-symbol
 local UserInputService = game:GetService("UserInputService")
 
-local Fusion = require("@pkg/fusion")
+local Fusion = require("@pkg/_Index/realdeedy_fusion@0.3.0/fusion/src")
 local Theme = require("src/ui/Themes")
 
 local New = Fusion.New

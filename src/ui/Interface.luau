@@ -1,6 +1,6 @@
 --!strict
 local RunService = game:GetService("RunService")
-local Fusion = require("@pkg/fusion")
+local Fusion = require("@pkg/_Index/realdeedy_fusion@0.3.0/fusion/src")
 local Window = require("src/ui/components/Window")
 local Toggle = require("src/ui/components/Toggle")
 
