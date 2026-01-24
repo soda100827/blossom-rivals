@@ -5,8 +5,8 @@ local Services = {
 	UserInputService = game:GetService("UserInputService"),
 }
 
-local Logger = require(script.Parent.utils.Logger)
-local Signal = require(script.Parent.utils.Signal)
+local Logger = require("src/utils/Logger")
+local Signal = require("src/utils/Signal")
 
 type BlossomClient = {
 	Version: string,
@@ -14,7 +14,7 @@ type BlossomClient = {
 	Events: { [string]: any },
 	Modules: { [string]: any },
 	IsRunning: boolean,
-	LoadModule: (self: BlossomClient, name: string, path: string) -> (),
+	LoadModule: (self: BlossomClient, name: string, moduleOrPath: any) -> (),
 	Start: (self: BlossomClient) -> (),
 	Stop: (self: BlossomClient) -> (),
 }
@@ -30,8 +30,15 @@ local Client: BlossomClient = {
 	IsRunning = false,
 }
 
-function Client:LoadModule(name, moduleScript)
-	local success, result = pcall(require, moduleScript)
+function Client:LoadModule(name, moduleOrPath)
+	local loader = function()
+		if type(moduleOrPath) == "string" then
+			return require(moduleOrPath)
+		end
+		return moduleOrPath
+	end
+
+	local success, result = pcall(loader)
 
 	if success then
 		self.Modules[name] = result
@@ -55,9 +62,9 @@ function Client:Start()
 	self.Logger:Info("Client initializing...")
 
 	-- Load Features
-	self:LoadModule("Movement", script.Parent.features.Movement)
-	self:LoadModule("Visuals", script.Parent.features.Visuals)
-	self:LoadModule("Interface", script.Parent.ui.Interface)
+	self:LoadModule("Movement", require("src/features/Movement"))
+	self:LoadModule("Visuals", require("src/features/Visuals"))
+	self:LoadModule("Interface", require("src/ui/Interface"))
 
 	self.Events.Started:Fire()
 end
