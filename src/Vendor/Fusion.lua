@@ -36,9 +36,8 @@ local function GithubRequire(virtualScript)
     local content, finalUrl
     
     for _, ext in ipairs(extensions) do
-        -- Add cache busting
-        local targetUrl = BaseUrl .. path .. ext .. "?v=" .. tostring(math.random(1, 100000))
-        local success, result = pcall(function() return game:HttpGet(targetUrl, true) end)
+        local targetUrl = BaseUrl .. path .. ext
+        local success, result = pcall(function() return game:HttpGet(targetUrl) end)
         if success and result ~= "404: Not Found" and #result > 0 then
             content = result
             finalUrl = targetUrl

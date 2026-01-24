@@ -1,9 +1,9 @@
 local Repo = "https://raw.githubusercontent.com/soda100827/blossom-rivals/main/"
 
 getgenv().BlossomImport = function(path)
-    local url = Repo .. path .. "?t=" .. tostring(os.time())
+    local url = Repo .. path
     local success, result = pcall(function()
-        return game:HttpGet(url, true) -- true = CacheIgnore (if supported)
+        return game:HttpGet(url)
     end)
     
     if not success then
