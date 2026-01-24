@@ -1,6 +1,3 @@
--- Blossom Loader
--- This script bootstrapping the environment and loads the core from GitHub.
-
 local Repo = "https://raw.githubusercontent.com/soda100827/blossom-rivals/main/"
 
 getgenv().BlossomImport = function(path)
@@ -21,5 +18,4 @@ getgenv().BlossomImport = function(path)
     return func()
 end
 
--- Initialize Code
 BlossomImport("src/init.lua")
