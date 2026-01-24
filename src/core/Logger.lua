@@ -16,7 +16,7 @@ function Logger:Warn(...)
 end
 
 function Logger:Error(...)
-    error(string.format("[%s] [ERROR]", self.Prefix), ..., 0)
+    error(string.format("[%s] [ERROR]", self.Prefix), ...)
 end
 
 return Logger
