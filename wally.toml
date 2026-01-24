@@ -6,6 +6,5 @@ realm = "shared"
 
 [dependencies]
 iris = "xswezan/iris@2.0.5"
-fusion = "realdeedy/fusion@0.3.0"
 promise = "evaera/promise@4.0.0"
 fastsignal = "lucasmzreal/fastsignal@10.4.0"
