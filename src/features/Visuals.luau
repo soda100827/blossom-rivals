@@ -9,7 +9,6 @@ local Visuals = {
 function Visuals:Init(Client)
 	self.Client = Client
 	self.Logger = Client.Logger
-	self.Logger:Info("Visuals loaded")
 end
 
 function Visuals:Toggle(state: boolean)
@@ -22,7 +21,6 @@ function Visuals:Toggle(state: boolean)
 end
 
 function Visuals:Enable()
-	self.Logger:Info("ESP Enabled")
 	-- Bind to RenderStepped
 	table.insert(
 		self.Connections,
@@ -33,7 +31,6 @@ function Visuals:Enable()
 end
 
 function Visuals:Disable()
-	self.Logger:Info("ESP Disabled")
 	for _, conn in ipairs(self.Connections) do
 		conn:Disconnect()
 	end

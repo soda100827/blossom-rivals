@@ -43,22 +43,19 @@ ScriptConnection.Disconnect return ScriptSignal end function
 __DARKLUA_BUNDLE_MODULES.b()local v=__DARKLUA_BUNDLE_MODULES.cache.b if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.b=v end return v.c end end
 do local function __modImpl()local Movement={Enabled=false,Connections={}}
-function Movement:Init(Client)self.Client=Client self.Logger=Client.Logger self.
-Logger:Info('Movement loaded')end function Movement:Toggle(state)self.Enabled=
-state if state then self.Logger:Info('Movement Enabled')else self.Logger:Info(
-'Movement Disabled')end end function Movement:Cleanup()self:Toggle(false)end
-return Movement end function __DARKLUA_BUNDLE_MODULES.c()local v=
-__DARKLUA_BUNDLE_MODULES.cache.c if not v then v={c=__modImpl()}
+function Movement:Init(Client)self.Client=Client self.Logger=Client.Logger end
+function Movement:Toggle(state)self.Enabled=state end function Movement:Cleanup(
+)self:Toggle(false)end return Movement end function __DARKLUA_BUNDLE_MODULES.c()
+local v=__DARKLUA_BUNDLE_MODULES.cache.c if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.c=v end return v.c end end do local function
 __modImpl()local RunService=game:GetService('RunService')local Visuals={Enabled=
 false,Connections={}}function Visuals:Init(Client)self.Client=Client self.Logger
-=Client.Logger self.Logger:Info('Visuals loaded')end function Visuals:Toggle(
-state)self.Enabled=state if state then self:Enable()else self:Disable()end end
-function Visuals:Enable()self.Logger:Info('ESP Enabled')table.insert(self.
-Connections,RunService.RenderStepped:Connect(function()end))end function Visuals
-:Disable()self.Logger:Info('ESP Disabled')for _,conn in ipairs(self.Connections)
-do conn:Disconnect()end self.Connections={}end function Visuals:Cleanup()self:
-Disable()end return Visuals end function __DARKLUA_BUNDLE_MODULES.d()local v=
+=Client.Logger end function Visuals:Toggle(state)self.Enabled=state if state
+then self:Enable()else self:Disable()end end function Visuals:Enable()table.
+insert(self.Connections,RunService.RenderStepped:Connect(function()end))end
+function Visuals:Disable()for _,conn in ipairs(self.Connections)do conn:
+Disconnect()end self.Connections={}end function Visuals:Cleanup()self:Disable()
+end return Visuals end function __DARKLUA_BUNDLE_MODULES.d()local v=
 __DARKLUA_BUNDLE_MODULES.cache.d if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end do local function
 __modImpl()local repo=
