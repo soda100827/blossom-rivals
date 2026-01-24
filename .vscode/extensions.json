@@ -1,0 +1,11 @@
+{
+    "recommendations": [
+        "evaera.vscode-rojo",
+        "johnnymorganz.luau-lsp",
+        "evaera.roblox-api-explorer",
+        "johnnymorganz.stylua",
+    ],
+    "unwantedRecommendations": [
+        "nightrains.robloxlsp"
+    ]
+}
