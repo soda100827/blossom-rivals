@@ -14,7 +14,7 @@ local function formatMessage(level: string, source: string, ...)
 		parts[i] = tostring(value)
 	end
 	local message = table.concat(parts, " ")
-	return string.format("[🌸] %s", message)
+	return string.format("[%s][%s] %s", level, source, message)
 end
 
 function Logger:Info(...)

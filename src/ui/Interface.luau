@@ -84,6 +84,7 @@ function Interface:Mount()
 
 	local tabs = {
 		Main = window:AddTab("Main"),
+		Visuals = window:AddTab("Visuals"),
 		Misc = window:AddTab("Misc"),
 		["UI Settings"] = window:AddTab("UI Settings"),
 	}
@@ -108,6 +109,40 @@ function Interface:Mount()
 			local mod = self.Client.Modules.Visuals
 			if mod and mod.Toggle then
 				mod:Toggle(state)
+			end
+		end,
+	})
+
+	local visualsGroup = tabs.Visuals:AddLeftGroupbox("ESP")
+	visualsGroup:AddToggle("ESPEnabled", {
+		Text = "Enable ESP",
+		Default = false,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetESPEnabled then
+				mod:SetESPEnabled(state)
+			end
+		end,
+	})
+
+	visualsGroup:AddToggle("ESPNames", {
+		Text = "Show Names",
+		Default = true,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetShowNames then
+				mod:SetShowNames(state)
+			end
+		end,
+	})
+
+	visualsGroup:AddToggle("ESPBoxes", {
+		Text = "Show Boxes",
+		Default = true,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetShowBoxes then
+				mod:SetShowBoxes(state)
 			end
 		end,
 	})

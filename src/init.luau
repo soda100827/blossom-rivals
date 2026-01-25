@@ -1,12 +1,9 @@
 --!strict
-local Services = {
-	Players = game:GetService("Players"),
-	RunService = game:GetService("RunService"),
-	UserInputService = game:GetService("UserInputService"),
-}
-
 local Logger = require("src/utils/Logger")
 local Signal = require("@pkg/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
+
+local BUNDLE_URL =
+	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
 
 type BlossomClient = {
 	Version: string,
@@ -33,7 +30,18 @@ local Client: BlossomClient = {
 	_TeleportQueueConn = nil,
 }
 
+local MODULES = {
+	{ Name = "Movement", Path = "src/features/Movement" },
+	{ Name = "Visuals", Path = "src/features/Visuals" },
+	{ Name = "Interface", Path = "src/ui/Interface" },
+}
+
 function Client:LoadModule(name, moduleOrPath)
+	if self.Modules[name] then
+		self.Logger:Warn("Module already loaded:", name)
+		return
+	end
+
 	local loader = function()
 		if type(moduleOrPath) == "string" then
 			return require(moduleOrPath)
@@ -82,9 +90,7 @@ function Client:SetTeleportQueue(enabled: boolean)
 
 	self._TeleportQueueConn = player.OnTeleport:Connect(function(state)
 		if state == Enum.TeleportState.Started then
-			queueOnTeleport([[
-loadstring(game:HttpGet("https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"))()
-]])
+			queueOnTeleport(([[loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL))
 		end
 	end)
 end
@@ -98,9 +104,9 @@ function Client:Start()
 	self.Logger:Info("Client initializing...")
 
 	-- Load Features
-	self:LoadModule("Movement", require("src/features/Movement"))
-	self:LoadModule("Visuals", require("src/features/Visuals"))
-	self:LoadModule("Interface", require("src/ui/Interface"))
+	for _, entry in ipairs(MODULES) do
+		self:LoadModule(entry.Name, entry.Path)
+	end
 
 	self.Events.Started:Fire()
 end
