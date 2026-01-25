@@ -137,10 +137,6 @@ function Interface:Mount()
 		Default = false,
 		Callback = function(enabled)
 			self.Client:SetTeleportQueue(enabled)
-			if enabled then
-				local silent = Toggles.SilentMode and Toggles.SilentMode.Value or false
-				runAutoload(Library, SaveManager, silent)
-			end
 		end,
 	})
 
@@ -155,6 +151,8 @@ function Interface:Mount()
 			end
 		end,
 	})
+
+	runAutoload(Library, SaveManager, false)
 
 	self.Logger:Info("UI mounted successfully")
 end
