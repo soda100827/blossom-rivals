@@ -125,6 +125,17 @@ function Interface:Mount()
 		end,
 	})
 
+	visualsGroup:AddToggle("ESPTeamCheck", {
+		Text = "Team Check",
+		Default = false,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetTeamCheck then
+				mod:SetTeamCheck(state)
+			end
+		end,
+	})
+
 	visualsGroup:AddToggle("ESPNames", {
 		Text = "Show Names",
 		Default = true,
@@ -143,6 +154,81 @@ function Interface:Mount()
 			local mod = self.Client.Modules.Visuals
 			if mod and mod.SetShowBoxes then
 				mod:SetShowBoxes(state)
+			end
+		end,
+	})
+
+	visualsGroup:AddToggle("ESPOutline", {
+		Text = "Text Outline",
+		Default = true,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetOutline then
+				mod:SetOutline(state)
+			end
+		end,
+	})
+
+	visualsGroup:AddSlider("ESPMaxDistance", {
+		Text = "Max Distance",
+		Default = 2000,
+		Min = 100,
+		Max = 10000,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetMaxDistance then
+				mod:SetMaxDistance(value)
+			end
+		end,
+	})
+
+	visualsGroup:AddSlider("ESPBoxThickness", {
+		Text = "Box Thickness",
+		Default = 1,
+		Min = 1,
+		Max = 5,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetBoxThickness then
+				mod:SetBoxThickness(value)
+			end
+		end,
+	})
+
+	visualsGroup:AddSlider("ESPTextSize", {
+		Text = "Text Size",
+		Default = 14,
+		Min = 10,
+		Max = 24,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetTextSize then
+				mod:SetTextSize(value)
+			end
+		end,
+	})
+
+	visualsGroup:AddColorPicker("ESPBoxColor", {
+		Default = Color3.new(1, 0.6, 0.8),
+		Title = "Box Color",
+		Callback = function(value)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetBoxColor then
+				mod:SetBoxColor(value)
+			end
+		end,
+	})
+
+	visualsGroup:AddColorPicker("ESPTextColor", {
+		Default = Color3.new(1, 1, 1),
+		Title = "Text Color",
+		Callback = function(value)
+			local mod = self.Client.Modules.Visuals
+			if mod and mod.SetTextColor then
+				mod:SetTextColor(value)
 			end
 		end,
 	})

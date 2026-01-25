@@ -12,7 +12,13 @@ local Visuals = {
 		ESPEnabled = false,
 		ShowNames = true,
 		ShowBoxes = true,
+		TeamCheck = false,
 		MaxDistance = 2000,
+		BoxColor = Color3.new(1, 0.6, 0.8),
+		TextColor = Color3.new(1, 1, 1),
+		BoxThickness = 1,
+		TextSize = 14,
+		Outline = true,
 	},
 }
 
@@ -46,6 +52,34 @@ end
 
 function Visuals:SetShowBoxes(state: boolean)
 	self.Settings.ShowBoxes = state
+end
+
+function Visuals:SetTeamCheck(state: boolean)
+	self.Settings.TeamCheck = state
+end
+
+function Visuals:SetMaxDistance(value: number)
+	self.Settings.MaxDistance = value
+end
+
+function Visuals:SetBoxColor(color: Color3)
+	self.Settings.BoxColor = color
+end
+
+function Visuals:SetTextColor(color: Color3)
+	self.Settings.TextColor = color
+end
+
+function Visuals:SetBoxThickness(value: number)
+	self.Settings.BoxThickness = value
+end
+
+function Visuals:SetTextSize(value: number)
+	self.Settings.TextSize = value
+end
+
+function Visuals:SetOutline(state: boolean)
+	self.Settings.Outline = state
 end
 
 function Visuals:Enable()
@@ -112,15 +146,15 @@ function Visuals:EnsurePlayerDrawings(player)
 	}
 
 	local group = self.Drawings[player]
-	group.Name.Size = 14
+	group.Name.Size = self.Settings.TextSize
 	group.Name.Center = true
-	group.Name.Outline = true
-	group.Name.Color = Color3.new(1, 1, 1)
+	group.Name.Outline = self.Settings.Outline
+	group.Name.Color = self.Settings.TextColor
 	group.Name.Visible = false
 
-	group.Box.Thickness = 1
+	group.Box.Thickness = self.Settings.BoxThickness
 	group.Box.Filled = false
-	group.Box.Color = Color3.new(1, 0.6, 0.8)
+	group.Box.Color = self.Settings.BoxColor
 	group.Box.Visible = false
 end
 
@@ -160,6 +194,9 @@ function Visuals:Render()
 		if not character or not humanoid or humanoid.Health <= 0 or not root then
 			group.Name.Visible = false
 			group.Box.Visible = false
+		elseif self.Settings.TeamCheck and LOCAL_PLAYER.Team == player.Team then
+			group.Name.Visible = false
+			group.Box.Visible = false
 		else
 			local distance = (root.Position - camera.CFrame.Position).Magnitude
 			if distance > self.Settings.MaxDistance then
@@ -176,6 +213,8 @@ function Visuals:Render()
 					local boxHeight = 90 * scale
 
 					if self.Settings.ShowBoxes then
+						group.Box.Thickness = self.Settings.BoxThickness
+						group.Box.Color = self.Settings.BoxColor
 						group.Box.Size = Vector2.new(boxWidth, boxHeight)
 						group.Box.Position = Vector2.new(screenPos.X - boxWidth / 2, screenPos.Y - boxHeight / 2)
 						group.Box.Visible = true
@@ -185,6 +224,9 @@ function Visuals:Render()
 
 					if self.Settings.ShowNames then
 						group.Name.Text = player.DisplayName or player.Name
+						group.Name.Size = self.Settings.TextSize
+						group.Name.Color = self.Settings.TextColor
+						group.Name.Outline = self.Settings.Outline
 						group.Name.Position = Vector2.new(screenPos.X, screenPos.Y - boxHeight / 2 - 14)
 						group.Name.Visible = true
 					else
