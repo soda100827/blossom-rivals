@@ -445,6 +445,18 @@ function Interface:Mount()
 	SaveManager:BuildConfigSection(tabs["UI Settings"])
 	ThemeManager:ApplyToTab(tabs["UI Settings"])
 
+	local cosmeticGroup = tabs.Misc:AddLeftGroupbox("Cosmetics")
+	cosmeticGroup:AddToggle("UnlockAllSkins", {
+		Text = "Unlock All Skins",
+		Default = false,
+		Callback = function(state)
+			local mod = self.Client.Modules.UnlockAllSkins
+			if mod and mod.Toggle then
+				mod:Toggle(state)
+			end
+		end,
+	})
+
 	local miscGroup = tabs.Misc:AddLeftGroupbox("Auto Load")
 	miscGroup:AddToggle("TeleportQueue", {
 		Text = "Auto Load",

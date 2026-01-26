@@ -33,6 +33,7 @@ local Client: BlossomClient = {
 local MODULES: { { Name: string, Path: any } } = {
 	{ Name = "Movement", Path = require("src/features/Movement") },
 	{ Name = "Visuals", Path = require("src/features/Visuals") },
+	{ Name = "UnlockAllSkins", Path = require("src/features/UnlockAllSkins") },
 	{ Name = "Interface", Path = require("src/ui/Interface") },
 }
 
