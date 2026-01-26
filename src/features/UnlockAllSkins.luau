@@ -612,20 +612,20 @@ function UnlockAllSkins:InstallEntityHooks()
 				end
 				if finisherEnum then
 					args[1] = finisherEnum
-					module:PlayFinisherClient(args[1], args)
+					module:PlayFinisherClient(args[1], args, selfObj)
 					return module.Originals.EntityHooks.ReplicateFromServer(selfObj, action, unpack(args))
 				end
 			end
 		end
 		if module.Enabled and action == "FinisherEffect" then
 			local args = { ... }
-			module:PlayFinisherClient(args[1], args)
+			module:PlayFinisherClient(args[1], args, selfObj)
 		end
 		return module.Originals.EntityHooks.ReplicateFromServer(selfObj, action, ...)
 	end
 end
 
-function UnlockAllSkins:PlayFinisherClient(finisherId, args)
+function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	local logger = self.Logger
 	if logger then
 		logger:Info("FinisherEffect received.")
@@ -805,6 +805,29 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		return nil
 	end
 
+	local function resolveEntitySubject(entityValue)
+		if typeof(entityValue) ~= "Instance" then
+			return nil
+		end
+		if entityValue.Humanoid then
+			return entityValue.Humanoid
+		end
+		if entityValue.RootPart then
+			return entityValue.RootPart
+		end
+		if entityValue.Model and entityValue.Model:IsA("Model") then
+			local humanoid = entityValue.Model:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				return humanoid
+			end
+			local root = entityValue.Model:FindFirstChild("HumanoidRootPart") or entityValue.Model.PrimaryPart
+			if root then
+				return root
+			end
+		end
+		return nil
+	end
+
 	local function resolveSubjectFromTable(tbl, depth)
 		if type(tbl) ~= "table" or depth <= 0 then
 			return nil
@@ -916,7 +939,13 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 
 	local subject = nil
 	local subjectSource = nil
-	if args then
+	if entity then
+		subject = resolveEntitySubject(entity)
+		if subject then
+			subjectSource = "entity"
+		end
+	end
+	if args and not subject then
 		if type(args[4]) == "table" then
 			local tableKeys = {
 				"Victim",
@@ -1014,6 +1043,12 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	if isLocalSubject(subject) and not eliminatorIsLocal then
 		if logger then
 			logger:Warn("Skipping finisher on local subject; eliminator not local:", eliminator)
+		end
+		return
+	end
+	if eliminatorIsLocal and isLocalSubject(subject) then
+		if logger then
+			logger:Warn("Skipping finisher; subject is local while eliminator is local:", eliminator)
 		end
 		return
 	end
