@@ -865,7 +865,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		end
 		local root = model:FindFirstChild("HumanoidRootPart")
 		if root then
-			root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+			root.AssemblyLinearVelocity *= 0
 			root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 		end
 		dummyHumanoid.Health = 0
@@ -1151,6 +1151,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		isFinal = false
 	end
 	local eliminatorArg = eliminator
+	if dummyModel then
+		eliminatorArg = { Character = dummyModel }
+	end
 	if typeof(eliminator) == "Instance" and eliminator:IsA("Player") then
 		eliminatorArg = { Character = eliminator.Character }
 	end
