@@ -603,8 +603,11 @@ FindFirstAncestorOfClass('Model')or subject end if dummyKey and self.DummyModels
 nil end dummyHumanoid,dummyModel,originalModel=createDummyFromSubject(subject)if
 dummyHumanoid then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if
 dummyKey then self.DummyModels[dummyKey]=dummyModel end end if originalModel
-then originalModel:Destroy()end local isFinal=args and args[2]if isFinal==nil
-then isFinal=false end local eliminatorArg=eliminator if dummyModel then
+then if logger then logger:Info('Finisher destroying original model:',
+originalModel,'parent:',originalModel.Parent)end originalModel:Destroy()if
+logger then logger:Info('Finisher original model destroyed; parent:',
+originalModel.Parent)end end local isFinal=args and args[2]if isFinal==nil then
+isFinal=false end local eliminatorArg=eliminator if dummyModel then
 eliminatorArg={Character=dummyModel}end if typeof(eliminator)=='Instance'and
 eliminator:IsA('Player')then eliminatorArg={Character=eliminator.Character}end
 local okNew,newErr=pcall(function()finisherInstance=finisherClass.new(subject,

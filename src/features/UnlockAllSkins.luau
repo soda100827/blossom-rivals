@@ -1154,7 +1154,13 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		end
 	end
 	if originalModel then
+		if logger then
+			logger:Info("Finisher destroying original model:", originalModel, "parent:", originalModel.Parent)
+		end
 		originalModel:Destroy()
+		if logger then
+			logger:Info("Finisher original model destroyed; parent:", originalModel.Parent)
+		end
 	end
 	local isFinal = args and args[2]
 	if isFinal == nil then
