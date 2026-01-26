@@ -1133,11 +1133,12 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	elseif typeof(subject) == "Instance" then
 		dummyKey = subject:FindFirstAncestorOfClass("Model") or subject
 	end
-	if dummyKey and self.DummyModels[dummyKey] then
-		self.DummyModels[dummyKey]:Destroy()
-		self.DummyModels[dummyKey] = nil
+	if dummyKey and self.DummyModels[dummyKey] and self.DummyModels[dummyKey].Parent then
+		dummyModel = self.DummyModels[dummyKey]
+		dummyHumanoid = dummyModel:FindFirstChildOfClass("Humanoid")
+	else
+		dummyHumanoid, dummyModel = createDummyFromSubject(subject)
 	end
-	dummyHumanoid, dummyModel = createDummyFromSubject(subject)
 	if dummyHumanoid then
 		subject = dummyHumanoid
 		setupDummyForPreview(dummyHumanoid)

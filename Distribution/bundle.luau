@@ -596,8 +596,9 @@ dummyHumanoid=nil local dummyKey=nil if type(entity)=='table'and entity.Model
 then dummyKey=entity.Model elseif typeof(entity)=='Instance'then dummyKey=entity
 elseif typeof(subject)=='Instance'then dummyKey=subject:
 FindFirstAncestorOfClass('Model')or subject end if dummyKey and self.DummyModels
-[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[dummyKey]=
-nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if dummyHumanoid
+[dummyKey]and self.DummyModels[dummyKey].Parent then dummyModel=self.DummyModels
+[dummyKey]dummyHumanoid=dummyModel:FindFirstChildOfClass('Humanoid')else
+dummyHumanoid,dummyModel=createDummyFromSubject(subject)end if dummyHumanoid
 then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if dummyKey then
 self.DummyModels[dummyKey]=dummyModel end end local isFinal=args and args[2]if
 isFinal==nil then isFinal=false end local eliminatorArg=eliminator if typeof(
