@@ -102,7 +102,8 @@ function Interface:Mount()
 		end,
 	})
 
-	mainGroup:AddToggle("VisualsToggle", {
+	local visualsGroup = tabs.Visuals:AddLeftGroupbox("ESP")
+	visualsGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",
 		Default = false,
 		Callback = function(state)
@@ -113,7 +114,6 @@ function Interface:Mount()
 		end,
 	})
 
-	local visualsGroup = tabs.Visuals:AddLeftGroupbox("ESP")
 	visualsGroup:AddToggle("ESPEnabled", {
 		Text = "Enable ESP",
 		Default = false,
@@ -253,7 +253,7 @@ function Interface:Mount()
 	ThemeManager:ApplyToTab(tabs["UI Settings"])
 
 	local miscGroup = tabs.Misc:AddLeftGroupbox("Auto Load")
-	miscGroup:AddToggle("AutoLoad", {
+	miscGroup:AddToggle("TeleportQueue", {
 		Text = "Auto Load",
 		Default = false,
 		Callback = function(enabled)
