@@ -806,7 +806,8 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	end
 
 	local function resolveEntitySubject(entityValue)
-		if typeof(entityValue) ~= "Instance" then
+		local valueType = typeof(entityValue)
+		if valueType ~= "Instance" and type(entityValue) ~= "table" then
 			return nil
 		end
 		if entityValue.Humanoid then
@@ -815,12 +816,13 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		if entityValue.RootPart then
 			return entityValue.RootPart
 		end
-		if entityValue.Model and entityValue.Model:IsA("Model") then
-			local humanoid = entityValue.Model:FindFirstChildOfClass("Humanoid")
+		local model = entityValue.Model
+		if model and typeof(model) == "Instance" and model:IsA("Model") then
+			local humanoid = model:FindFirstChildOfClass("Humanoid")
 			if humanoid then
 				return humanoid
 			end
-			local root = entityValue.Model:FindFirstChild("HumanoidRootPart") or entityValue.Model.PrimaryPart
+			local root = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
 			if root then
 				return root
 			end
@@ -940,6 +942,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	local subject = nil
 	local subjectSource = nil
 	if entity then
+		if logger then
+			logger:Info("Finisher entity type:", typeof(entity), "luaType:", type(entity))
+		end
 		subject = resolveEntitySubject(entity)
 		if subject then
 			subjectSource = "entity"

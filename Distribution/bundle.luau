@@ -504,21 +504,21 @@ ancestor=value:FindFirstAncestorOfClass('Model')if ancestor then local humanoid=
 ancestor:FindFirstChildOfClass('Humanoid')if humanoid then return humanoid end
 local root=ancestor:FindFirstChild('HumanoidRootPart')or ancestor.PrimaryPart if
 root then return root end end return nil end local function resolveEntitySubject
-(entityValue)if typeof(entityValue)~='Instance'then return nil end if
-entityValue.Humanoid then return entityValue.Humanoid end if entityValue.
-RootPart then return entityValue.RootPart end if entityValue.Model and
-entityValue.Model:IsA('Model')then local humanoid=entityValue.Model:
-FindFirstChildOfClass('Humanoid')if humanoid then return humanoid end local root
-=entityValue.Model:FindFirstChild('HumanoidRootPart')or entityValue.Model.
-PrimaryPart if root then return root end end return nil end local function
-resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=0 then return
-nil end for _,value in pairs(tbl)do local direct=resolveSubject(value)if direct
-then return direct end if type(value)=='table'then local nested=
-resolveSubjectFromTable(value,depth-1)if nested then return nested end end end
-return nil end local function resolveNonLocalSubjectFromTable(tbl,depth)if type(
-tbl)~='table'or depth<=0 then return nil end for _,value in pairs(tbl)do local
-direct=resolveSubject(value)if direct and not isLocalSubject(direct)then return
-direct end if type(value)=='table'then local nested=
+(entityValue)local valueType=typeof(entityValue)if valueType~='Instance'and
+type(entityValue)~='table'then return nil end if entityValue.Humanoid then
+return entityValue.Humanoid end if entityValue.RootPart then return entityValue.
+RootPart end local model=entityValue.Model if model and typeof(model)==
+'Instance'and model:IsA('Model')then local humanoid=model:FindFirstChildOfClass(
+'Humanoid')if humanoid then return humanoid end local root=model:FindFirstChild(
+'HumanoidRootPart')or model.PrimaryPart if root then return root end end return
+nil end local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or
+depth<=0 then return nil end for _,value in pairs(tbl)do local direct=
+resolveSubject(value)if direct then return direct end if type(value)=='table'
+then local nested=resolveSubjectFromTable(value,depth-1)if nested then return
+nested end end end return nil end local function resolveNonLocalSubjectFromTable
+(tbl,depth)if type(tbl)~='table'or depth<=0 then return nil end for _,value in
+pairs(tbl)do local direct=resolveSubject(value)if direct and not isLocalSubject(
+direct)then return direct end if type(value)=='table'then local nested=
 resolveNonLocalSubjectFromTable(value,depth-1)if nested then return nested end
 end end return nil end local function logTableSummary(tbl)if not logger or type(
 tbl)~='table'then return end local count=0 for key,value in pairs(tbl)do count+=
@@ -539,9 +539,10 @@ character then return false end if value==character then return true end if
 value:IsA('Model')and value==character then return true end if value:IsA(
 'Humanoid')and value.Parent==character then return true end if value:IsA(
 'BasePart')and value:IsDescendantOf(character)then return true end return false
-end local subject=nil local subjectSource=nil if entity then subject=
-resolveEntitySubject(entity)if subject then subjectSource='entity'end end if
-args and not subject then if type(args[4])=='table'then local tableKeys={
+end local subject=nil local subjectSource=nil if entity then if logger then
+logger:Info('Finisher entity type:',typeof(entity),'luaType:',type(entity))end
+subject=resolveEntitySubject(entity)if subject then subjectSource='entity'end
+end if args and not subject then if type(args[4])=='table'then local tableKeys={
 'Victim','Target','Subject','Character','Model','Humanoid','RootPart',
 'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then local
 candidate=resolveSubject(args[4][key])if candidate and not isLocalSubject(
