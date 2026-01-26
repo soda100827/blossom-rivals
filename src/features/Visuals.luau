@@ -233,10 +233,10 @@ function Visuals:EnsurePlayerDrawings(player)
 		Name = Drawing.new("Text"),
 		Weapon = Drawing.new("Text"),
 		Distance = Drawing.new("Text"),
-		Box = Drawing.new("Square"),
 		BoxOutline = Drawing.new("Square"),
-		Healthbar = Drawing.new("Square"),
+		Box = Drawing.new("Square"),
 		HealthbarOutline = Drawing.new("Square"),
+		Healthbar = Drawing.new("Square"),
 		Skeleton = {},
 	}
 
@@ -368,29 +368,47 @@ function Visuals:Render()
 
 		-- Box
 		if self.Settings.ShowBoxes then
+			-- Outline
+			group.BoxOutline.Size = boxSize
+			group.BoxOutline.Position = boxPos
+			group.BoxOutline.Color = Color3.new(0, 0, 0)
+			group.BoxOutline.Thickness = self.Settings.BoxThickness + 2
+			group.BoxOutline.Visible = true
+			group.BoxOutline.ZIndex = 1
+
+			-- Main Box
 			group.Box.Size = boxSize
 			group.Box.Position = boxPos
 			group.Box.Color = self.Settings.BoxColor
 			group.Box.Thickness = self.Settings.BoxThickness
 			group.Box.Visible = true
-			-- Outline could be added here if needed, usually black 1px bigger
+			group.Box.ZIndex = 2
 		else
 			group.Box.Visible = false
+			group.BoxOutline.Visible = false
 		end
 
 		-- Healthbar
 		if self.Settings.ShowHealthbar then
-			local healthPerc = humanoid.Health / humanoid.MaxHealth
+			local healthPerc = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
 			local barHeight = height * healthPerc
-			group.HealthbarOutline.Size = Vector2.new(2, height)
-			group.HealthbarOutline.Position = Vector2.new(boxPos.X - 5, boxPos.Y)
-			group.HealthbarOutline.Color = self.Settings.HealthbarOutlineColor
-			group.HealthbarOutline.Visible = true
 
+			-- Background/Border (Black)
+			group.HealthbarOutline.Size = Vector2.new(4, height + 2)
+			group.HealthbarOutline.Position = Vector2.new(boxPos.X - 6, boxPos.Y - 1)
+			group.HealthbarOutline.Color = Color3.new(0, 0, 0)
+			group.HealthbarOutline.Filled = true
+			group.HealthbarOutline.Visible = true
+			group.HealthbarOutline.ZIndex = 1
+
+			-- Main Bar
 			group.Healthbar.Size = Vector2.new(2, barHeight)
+			-- Grow from bottom
 			group.Healthbar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
 			group.Healthbar.Color = self.Settings.HealthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
+			group.Healthbar.Filled = true
 			group.Healthbar.Visible = true
+			group.Healthbar.ZIndex = 2
 		else
 			group.Healthbar.Visible = false
 			group.HealthbarOutline.Visible = false

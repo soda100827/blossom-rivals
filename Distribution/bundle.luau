@@ -107,11 +107,11 @@ Highlights[player]:Destroy()self.Highlights[player]=nil end end function Visuals
 'table'then for _,line in pairs(drawing)do line:Remove()end else drawing:Remove(
 )end end end function Visuals:EnsurePlayerDrawings(player)if self.Drawings[
 player]then return self.Drawings[player]end local group={Name=Drawing.new('Text'
-),Weapon=Drawing.new('Text'),Distance=Drawing.new('Text'),Box=Drawing.new(
-'Square'),BoxOutline=Drawing.new('Square'),Healthbar=Drawing.new('Square'),
-HealthbarOutline=Drawing.new('Square'),Skeleton={}}for _,key in ipairs({'Name',
-'Weapon','Distance'})do group[key].Center=true group[key].Outline=true group[key
-].Visible=false end for _,key in ipairs({'Box','BoxOutline','Healthbar',
+),Weapon=Drawing.new('Text'),Distance=Drawing.new('Text'),BoxOutline=Drawing.
+new('Square'),Box=Drawing.new('Square'),HealthbarOutline=Drawing.new('Square'),
+Healthbar=Drawing.new('Square'),Skeleton={}}for _,key in ipairs({'Name','Weapon'
+,'Distance'})do group[key].Center=true group[key].Outline=true group[key].
+Visible=false end for _,key in ipairs({'Box','BoxOutline','Healthbar',
 'HealthbarOutline'})do group[key].Visible=false group[key].Filled=false end
 group.Box.Filled=false group.BoxOutline.Filled=false group.Healthbar.Filled=true
 group.HealthbarOutline.Filled=true for i=1,16 do local line=Drawing.new('Line')
@@ -149,44 +149,49 @@ Camera:WorldToViewportPoint(root.Position-Vector3.new(0,3,0))local headPos=
 Camera:WorldToViewportPoint(root.Position+Vector3.new(0,2,0))height=math.abs(
 headPos.Y-legPos.Y)*1.5 width=height*0.6 local boxPos=Vector2.new(rootPos.X-
 width/2,rootPos.Y-height/2)local boxSize=Vector2.new(width,height)if self.
-Settings.ShowBoxes then group.Box.Size=boxSize group.Box.Position=boxPos group.
-Box.Color=self.Settings.BoxColor group.Box.Thickness=self.Settings.BoxThickness
-group.Box.Visible=true else group.Box.Visible=false end if self.Settings.
-ShowHealthbar then local healthPerc=humanoid.Health/humanoid.MaxHealth local
-barHeight=height*healthPerc group.HealthbarOutline.Size=Vector2.new(2,height)
-group.HealthbarOutline.Position=Vector2.new(boxPos.X-5,boxPos.Y)group.
-HealthbarOutline.Color=self.Settings.HealthbarOutlineColor group.
-HealthbarOutline.Visible=true group.Healthbar.Size=Vector2.new(2,barHeight)group
-.Healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-barHeight))group.
+Settings.ShowBoxes then group.BoxOutline.Size=boxSize group.BoxOutline.Position=
+boxPos group.BoxOutline.Color=Color3.new(0,0,0)group.BoxOutline.Thickness=self.
+Settings.BoxThickness+2 group.BoxOutline.Visible=true group.BoxOutline.ZIndex=1
+group.Box.Size=boxSize group.Box.Position=boxPos group.Box.Color=self.Settings.
+BoxColor group.Box.Thickness=self.Settings.BoxThickness group.Box.Visible=true
+group.Box.ZIndex=2 else group.Box.Visible=false group.BoxOutline.Visible=false
+end if self.Settings.ShowHealthbar then local healthPerc=math.clamp(humanoid.
+Health/humanoid.MaxHealth,0,1)local barHeight=height*healthPerc group.
+HealthbarOutline.Size=Vector2.new(4,height+2)group.HealthbarOutline.Position=
+Vector2.new(boxPos.X-6,boxPos.Y-1)group.HealthbarOutline.Color=Color3.new(0,0,0)
+group.HealthbarOutline.Filled=true group.HealthbarOutline.Visible=true group.
+HealthbarOutline.ZIndex=1 group.Healthbar.Size=Vector2.new(2,barHeight)group.
+Healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-barHeight))group.
 Healthbar.Color=self.Settings.HealthbarColor:Lerp(Color3.new(1,0,0),1-healthPerc
-)group.Healthbar.Visible=true else group.Healthbar.Visible=false group.
-HealthbarOutline.Visible=false end local textYOffset=0 if self.Settings.
-ShowNames then group.Name.Text=player.DisplayName or player.Name group.Name.Size
-=self.Settings.TextSize group.Name.Color=self.Settings.TextColor group.Name.
-Outline=self.Settings.Outline group.Name.Position=Vector2.new(rootPos.X,boxPos.Y
--self.Settings.TextSize-2)group.Name.Visible=true else group.Name.Visible=false
-end if self.Settings.ShowWeapon then local tool=character:FindFirstChildOfClass(
-'Tool')if tool then group.Weapon.Text=tool.Name group.Weapon.Size=self.Settings.
-TextSize group.Weapon.Color=self.Settings.WeaponColor group.Weapon.Outline=self.
-Settings.Outline group.Weapon.Position=Vector2.new(rootPos.X,boxPos.Y+height+2+
-textYOffset)group.Weapon.Visible=true textYOffset=textYOffset+self.Settings.
-TextSize else group.Weapon.Visible=false end else group.Weapon.Visible=false end
-if self.Settings.ShowDistance then group.Distance.Text=math.floor(distance)..
-' studs'group.Distance.Size=self.Settings.TextSize group.Distance.Color=self.
-Settings.DistanceColor group.Distance.Outline=self.Settings.Outline group.
-Distance.Position=Vector2.new(rootPos.X,boxPos.Y+height+2+textYOffset)group.
-Distance.Visible=true textYOffset=textYOffset+self.Settings.TextSize else group.
-Distance.Visible=false end if self.Settings.ShowSkeleton then self:
-UpdateSkeleton(group.Skeleton,character)else for _,l in pairs(group.Skeleton)do
-l.Visible=false end end end end function Visuals:UpdateSkeleton(skeletonLines,
-character)local R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{
-'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg',
-'LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{
-'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{'LeftUpperArm',
-'LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso','RightUpperArm'},{
-'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}}local lineIdx=1
-for _,pair in ipairs(R15_JOINTS)do local p1=character:FindFirstChild(pair[1])
-local p2=character:FindFirstChild(pair[2])if p1 and p2 then local v1,o1=Camera:
+)group.Healthbar.Filled=true group.Healthbar.Visible=true group.Healthbar.ZIndex
+=2 else group.Healthbar.Visible=false group.HealthbarOutline.Visible=false end
+local textYOffset=0 if self.Settings.ShowNames then group.Name.Text=player.
+DisplayName or player.Name group.Name.Size=self.Settings.TextSize group.Name.
+Color=self.Settings.TextColor group.Name.Outline=self.Settings.Outline group.
+Name.Position=Vector2.new(rootPos.X,boxPos.Y-self.Settings.TextSize-2)group.Name
+.Visible=true else group.Name.Visible=false end if self.Settings.ShowWeapon then
+local tool=character:FindFirstChildOfClass('Tool')if tool then group.Weapon.Text
+=tool.Name group.Weapon.Size=self.Settings.TextSize group.Weapon.Color=self.
+Settings.WeaponColor group.Weapon.Outline=self.Settings.Outline group.Weapon.
+Position=Vector2.new(rootPos.X,boxPos.Y+height+2+textYOffset)group.Weapon.
+Visible=true textYOffset=textYOffset+self.Settings.TextSize else group.Weapon.
+Visible=false end else group.Weapon.Visible=false end if self.Settings.
+ShowDistance then group.Distance.Text=math.floor(distance)..' studs'group.
+Distance.Size=self.Settings.TextSize group.Distance.Color=self.Settings.
+DistanceColor group.Distance.Outline=self.Settings.Outline group.Distance.
+Position=Vector2.new(rootPos.X,boxPos.Y+height+2+textYOffset)group.Distance.
+Visible=true textYOffset=textYOffset+self.Settings.TextSize else group.Distance.
+Visible=false end if self.Settings.ShowSkeleton then self:UpdateSkeleton(group.
+Skeleton,character)else for _,l in pairs(group.Skeleton)do l.Visible=false end
+end end end function Visuals:UpdateSkeleton(skeletonLines,character)local
+R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso',
+'LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{
+'LowerTorso','RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg'
+,'RightFoot'},{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{
+'LeftLowerArm','LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm',
+'RightLowerArm'},{'RightLowerArm','RightHand'}}local lineIdx=1 for _,pair in
+ipairs(R15_JOINTS)do local p1=character:FindFirstChild(pair[1])local p2=
+character:FindFirstChild(pair[2])if p1 and p2 then local v1,o1=Camera:
 WorldToViewportPoint(p1.Position)local v2,o2=Camera:WorldToViewportPoint(p2.
 Position)if o1 and o2 then local line=skeletonLines[lineIdx]if line then line.
 From=Vector2.new(v1.X,v1.Y)line.To=Vector2.new(v2.X,v2.Y)line.Color=self.
