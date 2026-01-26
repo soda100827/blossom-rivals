@@ -501,48 +501,56 @@ nil end local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or
 depth<=0 then return nil end for _,value in pairs(tbl)do local direct=
 resolveSubject(value)if direct then return direct end if type(value)=='table'
 then local nested=resolveSubjectFromTable(value,depth-1)if nested then return
-nested end end end return nil end local function logTableSummary(tbl)if not
-logger or type(tbl)~='table'then return end local count=0 for key,value in
-pairs(tbl)do count+=1 if count>12 then logger:Info(
-'Finisher table keys truncated:',count)break end local valueType=type(value)
-local valueKind=''if valueType=='userdata'then valueKind=tostring(typeof(value))
-end logger:Info('Finisher table key:',key,'type:',valueType,'kind:',valueKind,
-'value:',value)end end local function isLocalSubject(value)if not self.Player
-then return false end local character=self.Player.Character if not character
-then return false end if value==character then return true end local humanoid=
-character:FindFirstChildOfClass('Humanoid')if humanoid and value==humanoid then
-return true end local root=character:FindFirstChild('HumanoidRootPart')or
-character.PrimaryPart if root and value==root then return true end if value:IsA(
-'Model')and value==character then return true end return false end
-local function isLocalEliminator(value)if not self.Player or typeof(value)~=
-'Instance'then return false end if value:IsA('Player')then return value==self.
-Player end local character=self.Player.Character if not character then return
-false end if value==character then return true end if value:IsA('Model')and
-value==character then return true end if value:IsA('Humanoid')and value.Parent==
-character then return true end if value:IsA('BasePart')and value:IsDescendantOf(
-character)then return true end return false end local subject=nil local
-subjectSource=nil if args then if type(args[4])=='table'then local tableKeys={
-'Victim','Target','Subject','Character','Model','Humanoid','RootPart',
-'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then local
-candidate=resolveSubject(args[4][key])if candidate and not isLocalSubject(
-candidate)then subject=candidate subjectSource='args[4].'..key break end end end
-end if not subject then local candidate=resolveSubject(args[4])if candidate and
-not isLocalSubject(candidate)then subject=candidate subjectSource='args[4]'end
-end if not subject then local candidate=resolveSubjectFromTable(args[4],2)if
-candidate and not isLocalSubject(candidate)then subject=candidate subjectSource=
-'args[4] table scan'end end if not subject then local candidate=resolveSubject(
-args[2])if candidate and not isLocalSubject(candidate)then subject=candidate
-subjectSource='args[2]'end end if not subject then local candidate=
-resolveSubject(args[3])if candidate and not isLocalSubject(candidate)then
-subject=candidate subjectSource='args[3]'end end if not subject then subject=
-resolveSubject(args[4])or resolveSubject(args[3])or resolveSubject(args[2])
-subjectSource='fallback local'end if not subject and type(args[4])=='table'then
-logTableSummary(args[4])end end if not subject then if logger then logger:Warn(
-'Finisher subject not found for:',finisherName)end return end if logger then
-logger:Info('Finisher subject resolved:',subject,'class:',subject.ClassName,
-'source:',subjectSource,'isLocal:',isLocalSubject(subject))end local eliminator=
-args and args[3]or nil if isLocalSubject(subject)and not isLocalEliminator(
-eliminator)then if logger then logger:Warn(
+nested end end end return nil end local function resolveNonLocalSubjectFromTable
+(tbl,depth)if type(tbl)~='table'or depth<=0 then return nil end for _,value in
+pairs(tbl)do local direct=resolveSubject(value)if direct and not isLocalSubject(
+direct)then return direct end if type(value)=='table'then local nested=
+resolveNonLocalSubjectFromTable(value,depth-1)if nested then return nested end
+end end return nil end local function logTableSummary(tbl)if not logger or type(
+tbl)~='table'then return end local count=0 for key,value in pairs(tbl)do count+=
+1 if count>12 then logger:Info('Finisher table keys truncated:',count)break end
+local valueType=type(value)local valueKind=''if valueType=='userdata'then
+valueKind=tostring(typeof(value))end logger:Info('Finisher table key:',key,
+'type:',valueType,'kind:',valueKind,'value:',value)end end local function
+isLocalSubject(value)if not self.Player then return false end local character=
+self.Player.Character if not character then return false end if value==character
+then return true end local humanoid=character:FindFirstChildOfClass('Humanoid')
+if humanoid and value==humanoid then return true end local root=character:
+FindFirstChild('HumanoidRootPart')or character.PrimaryPart if root and value==
+root then return true end if value:IsA('Model')and value==character then return
+true end return false end local function isLocalEliminator(value)if not self.
+Player or typeof(value)~='Instance'then return false end if value:IsA('Player')
+then return value==self.Player end local character=self.Player.Character if not
+character then return false end if value==character then return true end if
+value:IsA('Model')and value==character then return true end if value:IsA(
+'Humanoid')and value.Parent==character then return true end if value:IsA(
+'BasePart')and value:IsDescendantOf(character)then return true end return false
+end local subject=nil local subjectSource=nil if args then if type(args[4])==
+'table'then local tableKeys={'Victim','Target','Subject','Character','Model',
+'Humanoid','RootPart','HumanoidRootPart'}for _,key in ipairs(tableKeys)do if
+args[4][key]then local candidate=resolveSubject(args[4][key])if candidate and
+not isLocalSubject(candidate)then subject=candidate subjectSource='args[4].'..
+key break end end end end if not subject then local candidate=resolveSubject(
+args[4])if candidate and not isLocalSubject(candidate)then subject=candidate
+subjectSource='args[4]'end end if not subject then local candidate=
+resolveSubjectFromTable(args[4],2)if candidate and not isLocalSubject(candidate)
+then subject=candidate subjectSource='args[4] table scan'end end if not subject
+then local candidate=resolveSubject(args[2])if candidate and not isLocalSubject(
+candidate)then subject=candidate subjectSource='args[2]'end end if not subject
+then local candidate=resolveSubject(args[3])if candidate and not isLocalSubject(
+candidate)then subject=candidate subjectSource='args[3]'end end if not subject
+then subject=resolveSubject(args[4])or resolveSubject(args[3])or resolveSubject(
+args[2])subjectSource='fallback local'end if not subject and type(args[4])==
+'table'then logTableSummary(args[4])end end if not subject then if logger then
+logger:Warn('Finisher subject not found for:',finisherName)end return end if
+subject and isLocalSubject(subject)and type(args)=='table'and type(args[4])==
+'table'then local nonLocal=resolveNonLocalSubjectFromTable(args[4],3)if nonLocal
+then subject=nonLocal subjectSource='args[4] non-local scan'else
+logTableSummary(args[4])end end if logger then logger:Info(
+'Finisher subject resolved:',subject,'class:',subject.ClassName,'source:',
+subjectSource,'isLocal:',isLocalSubject(subject))end local eliminator=args and
+args[3]or nil if isLocalSubject(subject)and not isLocalEliminator(eliminator)
+then if logger then logger:Warn(
 'Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end local finisherInstance=nil local isFinal=args and args[2]or nil local
 okNew,newErr=pcall(function()finisherInstance=finisherClass.new(subject,isFinal,
