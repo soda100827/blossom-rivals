@@ -520,49 +520,49 @@ local clone=model:Clone()model.Archivable=wasArchivable clone.Name=
 'BlossomFinisherDummy'clone:SetAttribute('BlossomFinisherDummy',true)clone:
 PivotTo(model:GetPivot())clone.Parent=workspace local humanoid=clone:
 FindFirstChildOfClass('Humanoid')if not humanoid then clone:Destroy()return nil
-end return humanoid,clone end local function setupDummyForPreview(dummyHumanoid)
-local model=dummyHumanoid.Parent if not model or not model:IsA('Model')then
-return end local root=model:FindFirstChild('HumanoidRootPart')if root then root.
-AssemblyLinearVelocity*=0 root.AssemblyAngularVelocity=Vector3.new(0,0,0)end
-dummyHumanoid.Health=0 local parts={}for _,child in pairs(model:GetChildren())do
-if child:IsA('BasePart')then child.CanCollide=true table.insert(parts,child)end
-end for _,descendant in pairs(model:GetDescendants())do if descendant:IsA(
-'BasePart')then descendant.CanCollide=true end end for i=1,#parts do local part=
-parts[i]for j=1,#parts do if i~=j then local constraint=Instance.new(
-'NoCollisionConstraint')constraint.Part0=part constraint.Part1=parts[j]
-constraint.Parent=part end end end end local function resolveSubjectFromTable(
-tbl,depth)if type(tbl)~='table'or depth<=0 then return nil end for _,value in
-pairs(tbl)do local direct=resolveSubject(value)if direct then return direct end
-if type(value)=='table'then local nested=resolveSubjectFromTable(value,depth-1)
-if nested then return nested end end end return nil end local function
-resolveNonLocalSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=0 then
-return nil end for _,value in pairs(tbl)do local direct=resolveSubject(value)if
-direct and not isLocalSubject(direct)then return direct end if type(value)==
-'table'then local nested=resolveNonLocalSubjectFromTable(value,depth-1)if nested
-then return nested end end end return nil end local function logTableSummary(tbl
-)if not logger or type(tbl)~='table'then return end local count=0 for key,value
-in pairs(tbl)do count+=1 if count>12 then logger:Info(
-'Finisher table keys truncated:',count)break end local valueType=type(value)
-local valueKind=''if valueType=='userdata'then valueKind=tostring(typeof(value))
-end logger:Info('Finisher table key:',key,'type:',valueType,'kind:',valueKind,
-'value:',value)end end local function isLocalSubject(value)if not self.Player
-then return false end local character=self.Player.Character if not character
-then return false end if value==character then return true end local humanoid=
-character:FindFirstChildOfClass('Humanoid')if humanoid and value==humanoid then
-return true end local root=character:FindFirstChild('HumanoidRootPart')or
-character.PrimaryPart if root and value==root then return true end if value:IsA(
-'Model')and value==character then return true end return false end
-local function isLocalEliminator(value)if not self.Player or typeof(value)~=
-'Instance'then return false end if value:IsA('Player')then return value==self.
-Player end local character=self.Player.Character if not character then return
-false end if value==character then return true end if value:IsA('Model')and
-value==character then return true end if value:IsA('Humanoid')and value.Parent==
-character then return true end if value:IsA('BasePart')and value:IsDescendantOf(
-character)then return true end return false end local subject=nil local
-subjectSource=nil if entity then if logger then logger:Info(
-'Finisher entity type:',typeof(entity),'luaType:',type(entity))end subject=
-resolveEntitySubject(entity)if subject then subjectSource='entity'end end if
-args and not subject then if type(args[4])=='table'then local tableKeys={
+end return humanoid,clone,model end local function setupDummyForPreview(
+dummyHumanoid)local model=dummyHumanoid.Parent if not model or not model:IsA(
+'Model')then return end local root=model:FindFirstChild('HumanoidRootPart')if
+root then root.AssemblyLinearVelocity*=0 root.AssemblyAngularVelocity=Vector3.
+new(0,0,0)end dummyHumanoid.Health=0 local parts={}for _,child in pairs(model:
+GetChildren())do if child:IsA('BasePart')then child.CanCollide=true table.
+insert(parts,child)end end for _,descendant in pairs(model:GetDescendants())do
+if descendant:IsA('BasePart')then descendant.CanCollide=true end end for i=1,#
+parts do local part=parts[i]for j=1,#parts do if i~=j then local constraint=
+Instance.new('NoCollisionConstraint')constraint.Part0=part constraint.Part1=
+parts[j]constraint.Parent=part end end end end local function
+resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=0 then return
+nil end for _,value in pairs(tbl)do local direct=resolveSubject(value)if direct
+then return direct end if type(value)=='table'then local nested=
+resolveSubjectFromTable(value,depth-1)if nested then return nested end end end
+return nil end local function resolveNonLocalSubjectFromTable(tbl,depth)if type(
+tbl)~='table'or depth<=0 then return nil end for _,value in pairs(tbl)do local
+direct=resolveSubject(value)if direct and not isLocalSubject(direct)then return
+direct end if type(value)=='table'then local nested=
+resolveNonLocalSubjectFromTable(value,depth-1)if nested then return nested end
+end end return nil end local function logTableSummary(tbl)if not logger or type(
+tbl)~='table'then return end local count=0 for key,value in pairs(tbl)do count+=
+1 if count>12 then logger:Info('Finisher table keys truncated:',count)break end
+local valueType=type(value)local valueKind=''if valueType=='userdata'then
+valueKind=tostring(typeof(value))end logger:Info('Finisher table key:',key,
+'type:',valueType,'kind:',valueKind,'value:',value)end end local function
+isLocalSubject(value)if not self.Player then return false end local character=
+self.Player.Character if not character then return false end if value==character
+then return true end local humanoid=character:FindFirstChildOfClass('Humanoid')
+if humanoid and value==humanoid then return true end local root=character:
+FindFirstChild('HumanoidRootPart')or character.PrimaryPart if root and value==
+root then return true end if value:IsA('Model')and value==character then return
+true end return false end local function isLocalEliminator(value)if not self.
+Player or typeof(value)~='Instance'then return false end if value:IsA('Player')
+then return value==self.Player end local character=self.Player.Character if not
+character then return false end if value==character then return true end if
+value:IsA('Model')and value==character then return true end if value:IsA(
+'Humanoid')and value.Parent==character then return true end if value:IsA(
+'BasePart')and value:IsDescendantOf(character)then return true end return false
+end local subject=nil local subjectSource=nil if entity then if logger then
+logger:Info('Finisher entity type:',typeof(entity),'luaType:',type(entity))end
+subject=resolveEntitySubject(entity)if subject then subjectSource='entity'end
+end if args and not subject then if type(args[4])=='table'then local tableKeys={
 'Victim','Target','Subject','Character','Model','Humanoid','RootPart',
 'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then local
 candidate=resolveSubject(args[4][key])if candidate and not isLocalSubject(
@@ -593,25 +593,27 @@ Warn('Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end if eliminatorIsLocal and isLocalSubject(subject)then if logger then
 logger:Warn([[Skipping finisher; subject is local while eliminator is local:]],
 eliminator)end return end local finisherInstance=nil local dummyModel=nil local
-dummyHumanoid=nil local dummyKey=nil for _,child in ipairs(workspace:
-GetChildren())do if child:GetAttribute('BlossomFinisherDummy')then child:
-Destroy()end end if type(entity)=='table'and entity.Model then dummyKey=entity.
-Model elseif typeof(entity)=='Instance'then dummyKey=entity elseif typeof(
-subject)=='Instance'then dummyKey=subject:FindFirstAncestorOfClass('Model')or
-subject end if dummyKey and self.DummyModels[dummyKey]then self.DummyModels[
-dummyKey]:Destroy()self.DummyModels[dummyKey]=nil end dummyHumanoid,dummyModel=
-createDummyFromSubject(subject)if dummyHumanoid then subject=dummyHumanoid
-setupDummyForPreview(dummyHumanoid)if dummyKey then self.DummyModels[dummyKey]=
-dummyModel end end local isFinal=args and args[2]if isFinal==nil then isFinal=
-false end local eliminatorArg=eliminator if dummyModel then eliminatorArg={
-Character=dummyModel}end if typeof(eliminator)=='Instance'and eliminator:IsA(
-'Player')then eliminatorArg={Character=eliminator.Character}end local okNew,
-newErr=pcall(function()finisherInstance=finisherClass.new(subject,isFinal,
-eliminatorArg)end)if not finisherInstance then local okFallback,fallbackErr=
-pcall(function()finisherInstance=finisherClass.new()end)if logger then logger:
-Info('Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
-okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
-newErr)elseif okNew and not finisherInstance then logger:Warn(
+dummyHumanoid=nil local dummyKey=nil local originalModel=nil for _,child in
+ipairs(workspace:GetChildren())do if child:GetAttribute('BlossomFinisherDummy')
+then child:Destroy()end end if type(entity)=='table'and entity.Model then
+dummyKey=entity.Model elseif typeof(entity)=='Instance'then dummyKey=entity
+elseif typeof(subject)=='Instance'then dummyKey=subject:
+FindFirstAncestorOfClass('Model')or subject end if dummyKey and self.DummyModels
+[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[dummyKey]=
+nil end dummyHumanoid,dummyModel,originalModel=createDummyFromSubject(subject)if
+dummyHumanoid then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if
+dummyKey then self.DummyModels[dummyKey]=dummyModel end end if originalModel
+then originalModel:Destroy()end local isFinal=args and args[2]if isFinal==nil
+then isFinal=false end local eliminatorArg=eliminator if dummyModel then
+eliminatorArg={Character=dummyModel}end if typeof(eliminator)=='Instance'and
+eliminator:IsA('Player')then eliminatorArg={Character=eliminator.Character}end
+local okNew,newErr=pcall(function()finisherInstance=finisherClass.new(subject,
+isFinal,eliminatorArg)end)if not finisherInstance then local okFallback,
+fallbackErr=pcall(function()finisherInstance=finisherClass.new()end)if logger
+then logger:Info('Finisher constructor status:','okNew',okNew,'okFallback',
+okFallback)if not okNew then logger:Warn(
+'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
+not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:

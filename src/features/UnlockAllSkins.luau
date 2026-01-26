@@ -857,7 +857,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 			clone:Destroy()
 			return nil
 		end
-		return humanoid, clone
+		return humanoid, clone, model
 	end
 
 	local function setupDummyForPreview(dummyHumanoid: Humanoid)
@@ -1128,6 +1128,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	local dummyModel = nil
 	local dummyHumanoid = nil
 	local dummyKey = nil
+	local originalModel = nil
 	for _, child in ipairs(workspace:GetChildren()) do
 		if child:GetAttribute("BlossomFinisherDummy") then
 			child:Destroy()
@@ -1144,13 +1145,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		self.DummyModels[dummyKey]:Destroy()
 		self.DummyModels[dummyKey] = nil
 	end
-	dummyHumanoid, dummyModel = createDummyFromSubject(subject)
+	dummyHumanoid, dummyModel, originalModel = createDummyFromSubject(subject)
 	if dummyHumanoid then
 		subject = dummyHumanoid
 		setupDummyForPreview(dummyHumanoid)
 		if dummyKey then
 			self.DummyModels[dummyKey] = dummyModel
 		end
+	end
+	if originalModel then
+		originalModel:Destroy()
 	end
 	local isFinal = args and args[2]
 	if isFinal == nil then
