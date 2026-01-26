@@ -1,147 +1,219 @@
 --!strict
-local Logger = require("src/utils/Logger")
-local Signal = require("@pkg/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
 
+--// Services
+local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
+
+--// Dependencies (require)
+local Logger = require("src/utils/Logger")
+local Maid = require("Packages/maid")
+local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
+
+--// Constants
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
 
-type BlossomClient = {
+local MODULES: { { name: string, loader: Module } } = {
+	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
+	{ name = "Interface", loader = require("src/ui/Interface") :: Module },
+}
+
+--// Types
+export type Signal = {
+	Fire: (self: Signal, ...unknown) -> (),
+}
+
+export type LoggerInstance = {
+	info: (self: LoggerInstance, ...unknown) -> (),
+	warn: (self: LoggerInstance, ...unknown) -> (),
+	error: (self: LoggerInstance, ...unknown) -> (),
+}
+
+export type LoggerModule = {
+	new: (source: string?) -> LoggerInstance,
+}
+
+export type Module = {
+	init: ((self: Module, client: BlossomClient) -> ())?,
+	cleanup: ((self: Module) -> ())?,
+	Init: ((self: Module, client: BlossomClient) -> ())?,
+	Cleanup: ((self: Module) -> ())?,
+	[string]: unknown,
+}
+
+export type ModuleOrPath = Module | string
+
+export type BlossomClient = {
 	Version: string,
-	Logger: any,
-	Events: { [string]: any },
-	Modules: { [string]: any },
-	IsRunning: boolean,
-	LoadModule: (self: BlossomClient, name: string, moduleOrPath: any) -> (),
-	SetTeleportQueue: (self: BlossomClient, enabled: boolean) -> (),
-	Start: (self: BlossomClient) -> (),
-	Stop: (self: BlossomClient) -> (),
-	_TeleportQueueConn: any?,
+	Logger: LoggerInstance,
+	Modules: { [string]: Module },
+	Started: Signal,
+	Stopped: Signal,
+	loadModule: (self: BlossomClient, name: string, moduleOrPath: ModuleOrPath) -> (),
+	setTeleportQueue: (self: BlossomClient, shouldEnable: boolean) -> (),
+	start: (self: BlossomClient) -> (),
+	destroy: (self: BlossomClient) -> (),
 }
 
-local Client: BlossomClient = {
-	Version = "1.0.0",
-	Logger = Logger.new("Blossom"),
-	Events = {
-		Started = Signal.new(),
-		Stopped = Signal.new(),
-	},
-	Modules = {},
-	IsRunning = false,
-	_TeleportQueueConn = nil,
-}
+--// Private state
+local Client = {}
+Client.__index = Client
 
-local MODULES: { { Name: string, Path: any } } = {
-	{ Name = "Movement", Path = require("src/features/Movement") },
-	{ Name = "Visuals", Path = require("src/features/Visuals") },
-	{ Name = "UnlockAllSkins", Path = require("src/features/UnlockAllSkins") },
-	{ Name = "Interface", Path = require("src/ui/Interface") },
+local _maid = Maid.new()
+local _state: {
+	isRunning: boolean,
+	shouldTeleportQueue: boolean,
+	logger: LoggerInstance,
+} = {
+	isRunning = false,
+	shouldTeleportQueue = false,
+	logger = nil :: any,
 }
+local _signals: { started: Signal, stopped: Signal } = {
+	started = Signal.new(),
+	stopped = Signal.new(),
+}
+local _modules: { [string]: Module } = {}
 
-local function disableAnalyticsPipeline()
+--// Private helpers
+local function _disableAnalyticsPipeline(logger: LoggerInstance)
 	local success, err = pcall(function()
-		local rf = game:GetService("ReplicatedFirst")
-		local controller = rf:FindFirstChild("AnalyticsPipelineController")
+		local controller = ReplicatedFirst:FindFirstChild("AnalyticsPipelineController")
 		if not controller then
-			controller = rf:WaitForChild("AnalyticsPipelineController", 10)
+			controller = ReplicatedFirst:WaitForChild("AnalyticsPipelineController", 10)
 		end
 		if controller then
-			controller.Disabled = true
-			print(controller.Disabled)
+			(controller :: any).Disabled = true
 		end
 	end)
 
 	if not success then
-		warn("[Blossom] Failed to disable AnalyticsPipelineController:", err)
+		logger:warn("Failed to disable AnalyticsPipelineController:", err)
 	end
 end
 
-function Client:LoadModule(name, moduleOrPath)
-	if self.Modules[name] then
-		self.Logger:Warn("Module already loaded:", name)
+local function _getQueueOnTeleport(): ((string) -> ())?
+	local globals = _G :: any
+	local synCompat = globals.syn
+	return queue_on_teleport or queueonteleport or (synCompat and synCompat.queue_on_teleport)
+end
+
+local function _connect()
+	_maid:DoCleaning()
+	if not _state.shouldTeleportQueue then
+		return
+	end
+
+	local queueOnTeleport = _getQueueOnTeleport()
+	if not queueOnTeleport then
+		_state.logger:warn("queue_on_teleport not available.")
+		return
+	end
+
+	local player = Players.LocalPlayer
+	if not player then
+		_state.logger:warn("LocalPlayer not available for teleport queue.")
+		return
+	end
+
+	local conn = player.OnTeleport:Connect(function(state)
+		if state == Enum.TeleportState.Started then
+			queueOnTeleport(([[loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL))
+		end
+	end)
+	_maid:GiveTask(conn)
+end
+
+local function _getModuleInit(moduleResult: Module)
+	return moduleResult.init or moduleResult.Init
+end
+
+local function _getModuleCleanup(moduleResult: Module)
+	return moduleResult.cleanup or moduleResult.Cleanup
+end
+
+--// Public API
+function Client.loadModule(self: BlossomClient, name: string, moduleOrPath: ModuleOrPath): ()
+	if _modules[name] then
+		_state.logger:warn("Module already loaded:", name)
 		return
 	end
 
 	local loader = function()
 		if type(moduleOrPath) == "string" then
-			return require(moduleOrPath)
+			local dynamicRequire = require :: any
+			return dynamicRequire(moduleOrPath)
 		end
 		return moduleOrPath
 	end
 
 	local success, result = pcall(loader)
-
 	if success then
-		self.Modules[name] = result
-		if result.Init then
+		local moduleResult = result :: Module
+		_modules[name] = moduleResult
+		local initFn = _getModuleInit(moduleResult) :: any
+		if initFn then
 			task.spawn(function()
-				result:Init(self)
+				initFn(moduleResult, self)
 			end)
 		end
-		self.Logger:Info("Loaded module:", name)
+		_state.logger:info("Loaded module:", name)
 	else
-		self.Logger:Warn("Failed to load module:", name, result)
+		_state.logger:warn("Failed to load module:", name, result)
 	end
 end
 
-function Client:SetTeleportQueue(enabled: boolean)
-	if self._TeleportQueueConn then
-		self._TeleportQueueConn:Disconnect()
-		self._TeleportQueueConn = nil
+function Client.setTeleportQueue(self: BlossomClient, shouldEnable: boolean): ()
+	_state.shouldTeleportQueue = shouldEnable
+	if _state.isRunning then
+		_connect()
 	end
-
-	if not enabled then
-		return
-	end
-
-	local queueOnTeleport = queue_on_teleport or queueonteleport or (syn and syn.queue_on_teleport)
-	if not queueOnTeleport then
-		self.Logger:Warn("queue_on_teleport not available.")
-		return
-	end
-
-	local success, player = pcall(function()
-		return game:GetService("Players").LocalPlayer
-	end)
-	if not success or not player then
-		self.Logger:Warn("LocalPlayer not available for teleport queue.")
-		return
-	end
-
-	self._TeleportQueueConn = player.OnTeleport:Connect(function(state)
-		if state == Enum.TeleportState.Started then
-			queueOnTeleport(([[loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL))
-		end
-	end)
 end
 
-function Client:Start()
-	if self.IsRunning then
+function Client.start(self: BlossomClient): ()
+	if _state.isRunning then
 		return
 	end
-	self.IsRunning = true
+	_state.isRunning = true
 
-	disableAnalyticsPipeline()
-	self.Logger:Info("Client initializing...")
+	_disableAnalyticsPipeline(_state.logger)
+	_state.logger:info("Client initializing...")
 
-	-- Load Features
 	for _, entry in ipairs(MODULES) do
-		self:LoadModule(entry.Name, entry.Path)
+		self:loadModule(entry.name, entry.loader)
 	end
 
-	self.Events.Started:Fire()
+	_connect()
+	_signals.started:Fire()
 end
 
-function Client:Stop()
-	self.IsRunning = false
-	self.Events.Stopped:Fire()
+function Client.destroy(self: BlossomClient): ()
+	if not _state.isRunning then
+		return
+	end
+	_state.isRunning = false
+	_signals.stopped:Fire()
+	_maid:DoCleaning()
 
-	for name, module in pairs(self.Modules) do
-		if module.Cleanup then
-			pcall(module.Cleanup, module)
+	for _, moduleResult in pairs(_modules) do
+		local cleanupFn = _getModuleCleanup(moduleResult) :: any
+		if cleanupFn then
+			pcall(cleanupFn, moduleResult)
 		end
 	end
 
-	self.Logger:Info("Client stopped.")
+	_state.logger:info("Client stopped.")
 end
 
-return Client:Start()
+local loggerModule = (Logger :: any) :: LoggerModule
+
+local client = (setmetatable({}, Client) :: any) :: BlossomClient
+client.Version = "1.0.0"
+client.Logger = loggerModule.new("Blossom")
+client.Modules = _modules
+client.Started = _signals.started
+client.Stopped = _signals.stopped
+
+_state.logger = client.Logger
+
+return client:start()

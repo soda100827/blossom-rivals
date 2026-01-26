@@ -1,331 +1,327 @@
 --!strict
+
+--// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
+
+--// Dependencies (require)
+local Maid = require("Packages/maid") :: any
+
+--// Constants
 local LOCAL_PLAYER = Players.LocalPlayer
+local Drawing = Drawing :: any
 
-local Camera = Workspace.CurrentCamera
-
-local Visuals = {
-	Enabled = false,
-	Connections = {},
-	Drawings = {},
-	Highlights = {},
-	Settings = {
-		ESPEnabled = false,
-		ShowNames = true,
-		ShowWeapon = false,
-		ShowDistance = false,
-		ShowBoxes = true,
-		ShowSkeleton = false,
-		ShowHealthbar = false,
-		ShowHighlight = false,
-		TeamCheck = false,
-		MaxDistance = 2000,
-
-		-- Colors
-		BoxColor = Color3.new(1, 1, 1),
-		TextColor = Color3.new(1, 1, 1),
-		WeaponColor = Color3.new(1, 1, 1),
-		DistanceColor = Color3.new(1, 1, 1),
-		SkeletonColor = Color3.new(1, 1, 1),
-		HealthbarColor = Color3.new(0, 1, 0), -- Green by default
-		HealthbarOutlineColor = Color3.new(0, 0, 0),
-		NameOutlineColor = Color3.new(0, 0, 0),
-		WeaponOutlineColor = Color3.new(0, 0, 0),
-		DistanceOutlineColor = Color3.new(0, 0, 0),
-		BoxOutlineColor = Color3.new(0, 0, 0),
-		SkeletonOutlineColor = Color3.new(0, 0, 0),
-		HighlightFill = Color3.new(1, 0, 0),
-		HighlightOutline = Color3.new(1, 1, 1),
-
-		BoxThickness = 1,
-		SkeletonThickness = 1,
-		TextSize = 12,
-		Outline = true,
-	},
+local DEFAULT_SETTINGS = {
+	isEspEnabled = false,
+	shouldShowNames = true,
+	shouldShowWeapon = false,
+	shouldShowDistance = false,
+	shouldShowBoxes = true,
+	shouldShowSkeleton = false,
+	shouldShowHealthbar = false,
+	shouldShowHighlight = false,
+	shouldCheckTeam = false,
+	maxDistance = 2000,
+	boxColor = Color3.new(1, 1, 1),
+	textColor = Color3.new(1, 1, 1),
+	weaponColor = Color3.new(1, 1, 1),
+	distanceColor = Color3.new(1, 1, 1),
+	skeletonColor = Color3.new(1, 1, 1),
+	healthbarColor = Color3.new(0, 1, 0),
+	healthbarOutlineColor = Color3.new(0, 0, 0),
+	nameOutlineColor = Color3.new(0, 0, 0),
+	weaponOutlineColor = Color3.new(0, 0, 0),
+	distanceOutlineColor = Color3.new(0, 0, 0),
+	boxOutlineColor = Color3.new(0, 0, 0),
+	skeletonOutlineColor = Color3.new(0, 0, 0),
+	highlightFill = Color3.new(1, 0, 0),
+	highlightOutline = Color3.new(1, 1, 1),
+	boxThickness = 1,
+	skeletonThickness = 1,
+	textSize = 12,
+	shouldOutline = true,
 }
 
-function Visuals:Init(Client)
-	self.Client = Client
-	self.Logger = Client.Logger
-end
+local R15_JOINTS = {
+	{ "Head", "UpperTorso" },
+	{ "UpperTorso", "LowerTorso" },
+	{ "LowerTorso", "LeftUpperLeg" },
+	{ "LeftUpperLeg", "LeftLowerLeg" },
+	{ "LeftLowerLeg", "LeftFoot" },
+	{ "LowerTorso", "RightUpperLeg" },
+	{ "RightUpperLeg", "RightLowerLeg" },
+	{ "RightLowerLeg", "RightFoot" },
+	{ "UpperTorso", "LeftUpperArm" },
+	{ "LeftUpperArm", "LeftLowerArm" },
+	{ "LeftLowerArm", "LeftHand" },
+	{ "UpperTorso", "RightUpperArm" },
+	{ "RightUpperArm", "RightLowerArm" },
+	{ "RightLowerArm", "RightHand" },
+}
 
-function Visuals:Toggle(state: boolean)
-	if self.Enabled == state then
-		return
+--// Types
+export type Visuals = {
+	init: (self: Visuals, client: any) -> (),
+	cleanup: (self: Visuals) -> (),
+	toggle: (self: Visuals, isEnabled: boolean) -> (),
+	setEspEnabled: (self: Visuals, isEnabled: boolean) -> (),
+	setShowNames: (self: Visuals, shouldShow: boolean) -> (),
+	setShowWeapon: (self: Visuals, shouldShow: boolean) -> (),
+	setShowDistance: (self: Visuals, shouldShow: boolean) -> (),
+	setShowBoxes: (self: Visuals, shouldShow: boolean) -> (),
+	setShowSkeleton: (self: Visuals, shouldShow: boolean) -> (),
+	setShowHealthbar: (self: Visuals, shouldShow: boolean) -> (),
+	setShowHighlight: (self: Visuals, shouldShow: boolean) -> (),
+	setTeamCheck: (self: Visuals, isEnabled: boolean) -> (),
+	setMaxDistance: (self: Visuals, value: number) -> (),
+	setBoxColor: (self: Visuals, color: Color3) -> (),
+	setTextColor: (self: Visuals, color: Color3) -> (),
+	setWeaponColor: (self: Visuals, color: Color3) -> (),
+	setDistanceColor: (self: Visuals, color: Color3) -> (),
+	setSkeletonColor: (self: Visuals, color: Color3) -> (),
+	setHealthbarColor: (self: Visuals, color: Color3) -> (),
+	setHealthbarOutlineColor: (self: Visuals, color: Color3) -> (),
+	setNameOutlineColor: (self: Visuals, color: Color3) -> (),
+	setWeaponOutlineColor: (self: Visuals, color: Color3) -> (),
+	setDistanceOutlineColor: (self: Visuals, color: Color3) -> (),
+	setBoxOutlineColor: (self: Visuals, color: Color3) -> (),
+	setSkeletonOutlineColor: (self: Visuals, color: Color3) -> (),
+	setHighlightFill: (self: Visuals, color: Color3) -> (),
+	setHighlightOutline: (self: Visuals, color: Color3) -> (),
+	setBoxThickness: (self: Visuals, value: number) -> (),
+	setSkeletonThickness: (self: Visuals, value: number) -> (),
+	setTextSize: (self: Visuals, value: number) -> (),
+	setOutline: (self: Visuals, isEnabled: boolean) -> (),
+}
+
+--// Private state
+local Visuals = {}
+Visuals.__index = Visuals
+
+local _maid = nil :: any
+local _state: {
+	client: any,
+	logger: any,
+	isEnabled: boolean,
+	drawings: { [Player]: any },
+	highlights: { [Player]: Highlight? },
+	settings: typeof(DEFAULT_SETTINGS),
+} =
+	{
+		client = nil :: any,
+		logger = nil :: any,
+		isEnabled = false,
+		drawings = {},
+		highlights = {},
+		settings = table.clone(DEFAULT_SETTINGS),
+	}
+local _signals = {}
+
+--// Private helpers
+local function _getCamera(): Camera
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		camera = Workspace:WaitForChild("Camera") :: Camera
 	end
-	self.Enabled = state
-	if state then
-		self:Enable()
-	else
-		self:Disable()
-	end
+	return camera
 end
 
--- Settings Setters
-function Visuals:SetESPEnabled(state: boolean)
-	self.Settings.ESPEnabled = state
-	if not state then
-		self:Clear()
-	end
-end
-function Visuals:SetShowNames(state: boolean)
-	self.Settings.ShowNames = state
-end
-function Visuals:SetShowWeapon(state: boolean)
-	self.Settings.ShowWeapon = state
-end
-function Visuals:SetShowDistance(state: boolean)
-	self.Settings.ShowDistance = state
-end
-function Visuals:SetShowBoxes(state: boolean)
-	self.Settings.ShowBoxes = state
-end
-function Visuals:SetShowSkeleton(state: boolean)
-	self.Settings.ShowSkeleton = state
-end
-function Visuals:SetShowHealthbar(state: boolean)
-	self.Settings.ShowHealthbar = state
-end
-function Visuals:SetShowHighlight(state: boolean)
-	self.Settings.ShowHighlight = state
-	if not state then
-		self:ClearHighlights()
-	end
-end
-function Visuals:SetTeamCheck(state: boolean)
-	self.Settings.TeamCheck = state
-end
-function Visuals:SetMaxDistance(value: number)
-	self.Settings.MaxDistance = value
-end
-
-function Visuals:SetBoxColor(color: Color3)
-	self.Settings.BoxColor = color
-end
-function Visuals:SetTextColor(color: Color3)
-	self.Settings.TextColor = color
-end
-function Visuals:SetWeaponColor(color: Color3)
-	self.Settings.WeaponColor = color
-end
-function Visuals:SetDistanceColor(color: Color3)
-	self.Settings.DistanceColor = color
-end
-function Visuals:SetSkeletonColor(color: Color3)
-	self.Settings.SkeletonColor = color
-end
-function Visuals:SetHealthbarColor(color: Color3)
-	self.Settings.HealthbarColor = color
-end
-function Visuals:SetHealthbarOutlineColor(color: Color3)
-	self.Settings.HealthbarOutlineColor = color
-end
-function Visuals:SetNameOutlineColor(color: Color3)
-	self.Settings.NameOutlineColor = color
-end
-function Visuals:SetWeaponOutlineColor(color: Color3)
-	self.Settings.WeaponOutlineColor = color
-end
-function Visuals:SetDistanceOutlineColor(color: Color3)
-	self.Settings.DistanceOutlineColor = color
-end
-function Visuals:SetBoxOutlineColor(color: Color3)
-	self.Settings.BoxOutlineColor = color
-end
-function Visuals:SetSkeletonOutlineColor(color: Color3)
-	self.Settings.SkeletonOutlineColor = color
-end
-function Visuals:SetHighlightFill(color: Color3)
-	self.Settings.HighlightFill = color
-end
-function Visuals:SetHighlightOutline(color: Color3)
-	self.Settings.HighlightOutline = color
-end
-
-function Visuals:SetBoxThickness(value: number)
-	self.Settings.BoxThickness = value
-end
-function Visuals:SetSkeletonThickness(value: number)
-	self.Settings.SkeletonThickness = value
-end
-function Visuals:SetTextSize(value: number)
-	self.Settings.TextSize = value
-end
-function Visuals:SetOutline(state: boolean)
-	self.Settings.Outline = state
-end
-
-function Visuals:Enable()
-	if not Drawing then
-		self.Logger:Warn("Drawing API not available; Visuals disabled.")
-		self.Enabled = false
-		return
-	end
-
-	local function onPlayerRemoving(player)
-		self:RemovePlayer(player)
-	end
-
-	local function onPlayerAdded(player)
-		if player == LOCAL_PLAYER then
-			return
-		end
-		-- We let Render loop handle creation to avoid issues if char isn't ready
-	end
-
-	table.insert(self.Connections, Players.PlayerAdded:Connect(onPlayerAdded))
-	table.insert(self.Connections, Players.PlayerRemoving:Connect(onPlayerRemoving))
-
-	for _, player in ipairs(Players:GetPlayers()) do
-		onPlayerAdded(player)
-	end
-
-	table.insert(
-		self.Connections,
-		RunService.RenderStepped:Connect(function()
-			self:Render()
-		end)
-	)
-end
-
-function Visuals:Disable()
-	for _, conn in ipairs(self.Connections) do
-		conn:Disconnect()
-	end
-	self.Connections = {}
-	self:Clear()
-end
-
-function Visuals:Cleanup()
-	self:Disable()
-end
-
-function Visuals:Clear()
-	self:ClearDrawings()
-	self:ClearHighlights()
-end
-
-function Visuals:ClearDrawings()
-	for player, group in pairs(self.Drawings) do
-		self:DestroyDrawingGroup(group)
-		self.Drawings[player] = nil
-	end
-end
-
-function Visuals:ClearHighlights()
-	for player, hl in pairs(self.Highlights) do
-		hl:Destroy()
-		self.Highlights[player] = nil
-	end
-end
-
-function Visuals:RemovePlayer(player)
-	if self.Drawings[player] then
-		self:DestroyDrawingGroup(self.Drawings[player])
-		self.Drawings[player] = nil
-	end
-	if self.Highlights[player] then
-		self.Highlights[player]:Destroy()
-		self.Highlights[player] = nil
-	end
-end
-
-function Visuals:DestroyDrawingGroup(group)
-	for _, drawing in pairs(group) do
-		if type(drawing) == "table" then -- Skeleton lines
-			for _, line in pairs(drawing) do
-				line:Remove()
+local function _clearDrawings()
+	for player, group in pairs(_state.drawings) do
+		for _, drawing in pairs(group) do
+			if type(drawing) == "table" then
+				for _, line in pairs(drawing) do
+					line:Remove()
+				end
+			else
+				drawing:Remove()
 			end
-		else
-			drawing:Remove()
 		end
+		_state.drawings[player] = nil
 	end
 end
 
-function Visuals:EnsurePlayerDrawings(player)
-	if self.Drawings[player] then
-		return self.Drawings[player]
+local function _clearHighlights()
+	for player, highlight in pairs(_state.highlights) do
+		if highlight ~= nil then
+			(highlight :: Highlight):Destroy()
+		end
+		_state.highlights[player] = nil
+	end
+end
+
+local function _clear()
+	_clearDrawings()
+	_clearHighlights()
+end
+
+local function _removePlayer(player: Player)
+	local group = _state.drawings[player]
+	if group then
+		for _, drawing in pairs(group) do
+			if type(drawing) == "table" then
+				for _, line in pairs(drawing) do
+					line:Remove()
+				end
+			else
+				drawing:Remove()
+			end
+		end
+		_state.drawings[player] = nil
+	end
+	local highlight = _state.highlights[player]
+	if highlight ~= nil then
+		(highlight :: Highlight):Destroy()
+		_state.highlights[player] = nil
+	end
+end
+
+local function _ensurePlayerDrawings(player: Player): any
+	local existing = _state.drawings[player]
+	if existing then
+		return existing
 	end
 
 	local group = {
-		Name = Drawing.new("Text"),
-		Weapon = Drawing.new("Text"),
-		Distance = Drawing.new("Text"),
-		BoxOutline = Drawing.new("Square"),
-		Box = Drawing.new("Square"),
-		HealthbarOutline = Drawing.new("Square"),
-		Healthbar = Drawing.new("Square"),
-		Skeleton = {},
-		SkeletonOutline = {},
+		name = Drawing.new("Text"),
+		weapon = Drawing.new("Text"),
+		distance = Drawing.new("Text"),
+		boxOutline = Drawing.new("Square"),
+		box = Drawing.new("Square"),
+		healthbarOutline = Drawing.new("Square"),
+		healthbar = Drawing.new("Square"),
+		skeleton = {},
+		skeletonOutline = {},
 	}
 
-	-- Init Text
-	for _, key in ipairs({ "Name", "Weapon", "Distance" }) do
+	for _, key in ipairs({ "name", "weapon", "distance" }) do
 		group[key].Center = true
 		group[key].Outline = true
 		group[key].Visible = false
 	end
 
-	-- Init Boxes
-	for _, key in ipairs({ "Box", "BoxOutline", "Healthbar", "HealthbarOutline" }) do
+	for _, key in ipairs({ "box", "boxOutline", "healthbar", "healthbarOutline" }) do
 		group[key].Visible = false
 		group[key].Filled = false
 	end
-	group.Box.Filled = false
-	group.BoxOutline.Filled = false
-	group.Healthbar.Filled = true
-	group.HealthbarOutline.Filled = true -- Used as background
+	group.healthbar.Filled = true
+	group.healthbarOutline.Filled = true
 
-	-- Init Skeleton (15 lines max usually)
-	for i = 1, 16 do
+	for _ = 1, 16 do
 		local line = Drawing.new("Line")
 		line.Visible = false
-		table.insert(group.Skeleton, line)
+		table.insert(group.skeleton, line)
 
 		local outline = Drawing.new("Line")
 		outline.Visible = false
-		table.insert(group.SkeletonOutline, outline)
+		table.insert(group.skeletonOutline, outline)
 	end
 
-	self.Drawings[player] = group
+	_state.drawings[player] = group
 	return group
 end
 
-function Visuals:UpdateHighlight(player, character)
-	if not self.Settings.ShowHighlight then
-		if self.Highlights[player] then
-			self.Highlights[player]:Destroy()
-			self.Highlights[player] = nil
+local function _updateHighlight(player: Player, character: Instance)
+	if not _state.settings.shouldShowHighlight then
+		local highlight = _state.highlights[player]
+		if highlight then
+			highlight:Destroy()
+			_state.highlights[player] = nil
 		end
 		return
 	end
 
-	if not self.Highlights[player] then
-		local hl = Instance.new("Highlight")
-		hl.Name = "BlossomHighlight"
-		hl.FillTransparency = 0.5
-		hl.OutlineTransparency = 0
-		hl.Parent = game:GetService("CoreGui") -- Or match parent logic
-		self.Highlights[player] = hl
+	local highlight = _state.highlights[player]
+	if not highlight then
+		local created = Instance.new("Highlight")
+		created.Name = "BlossomHighlight"
+		created.FillTransparency = 0.5
+		created.OutlineTransparency = 0
+		created.Parent = game:GetService("CoreGui")
+		_state.highlights[player] = created
+		highlight = created
 	end
+	if not highlight then
+		return
+	end
+	local activeHighlight = highlight :: Highlight
 
-	local hl = self.Highlights[player]
-	if hl.Adornee ~= character then
-		hl.Adornee = character
+	local adornee = character
+	if adornee:IsA("Model") then
+		local rootPart = adornee:FindFirstChild("HumanoidRootPart")
+		if rootPart and rootPart:IsA("BasePart") then
+			adornee = rootPart
+		end
 	end
-	hl.FillColor = self.Settings.HighlightFill
-	hl.OutlineColor = self.Settings.HighlightOutline
-	hl.Enabled = true
+	if activeHighlight.Adornee ~= adornee then
+		activeHighlight.Adornee = adornee
+	end
+	activeHighlight.FillColor = _state.settings.highlightFill
+	activeHighlight.OutlineColor = _state.settings.highlightOutline
+	activeHighlight.Enabled = true
 end
 
-function Visuals:Render()
-	if not self.Settings.ESPEnabled then
-		self:Clear()
+local function _setGroupVisible(group, isVisible: boolean)
+	for _, drawing in pairs(group) do
+		if type(drawing) == "table" then
+			for _, line in pairs(drawing) do
+				line.Visible = isVisible
+			end
+		else
+			drawing.Visible = isVisible
+		end
+	end
+end
+
+local function _updateSkeleton(skeletonLines, skeletonOutlineLines, character: Model)
+	local camera = _getCamera()
+	local lineIndex = 1
+	for _, pair in ipairs(R15_JOINTS) do
+		local p1 = character:FindFirstChild(pair[1])
+		local p2 = character:FindFirstChild(pair[2])
+		if p1 and p2 and p1:IsA("BasePart") and p2:IsA("BasePart") then
+			local v1, o1 = camera:WorldToViewportPoint(p1.Position)
+			local v2, o2 = camera:WorldToViewportPoint(p2.Position)
+			if o1 and o2 then
+				local outline = skeletonOutlineLines[lineIndex]
+				if outline then
+					outline.From = Vector2.new(v1.X, v1.Y)
+					outline.To = Vector2.new(v2.X, v2.Y)
+					outline.Color = _state.settings.skeletonOutlineColor
+					outline.Thickness = _state.settings.skeletonThickness + 2
+					outline.Visible = true
+					outline.ZIndex = 1
+				end
+				local line = skeletonLines[lineIndex]
+				if line then
+					line.From = Vector2.new(v1.X, v1.Y)
+					line.To = Vector2.new(v2.X, v2.Y)
+					line.Color = _state.settings.skeletonColor
+					line.Thickness = _state.settings.skeletonThickness
+					line.Visible = true
+					line.ZIndex = 2
+					lineIndex += 1
+				end
+			end
+		end
+	end
+
+	for i = lineIndex, #skeletonLines do
+		skeletonLines[i].Visible = false
+	end
+	for i = lineIndex, #skeletonOutlineLines do
+		skeletonOutlineLines[i].Visible = false
+	end
+end
+
+local function _render()
+	if not _state.settings.isEspEnabled then
+		_clear()
 		return
 	end
 
+	local camera = _getCamera()
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player == LOCAL_PLAYER then
 			continue
@@ -336,230 +332,302 @@ function Visuals:Render()
 		local root = character and character:FindFirstChild("HumanoidRootPart")
 
 		if not character or not root or not humanoid or humanoid.Health <= 0 then
-			self:RemovePlayer(player)
+			_removePlayer(player)
 			continue
 		end
 
-		if self.Settings.TeamCheck and player.Team == LOCAL_PLAYER.Team then
-			self:RemovePlayer(player)
+		if _state.settings.shouldCheckTeam and player.Team == LOCAL_PLAYER.Team then
+			_removePlayer(player)
 			continue
 		end
 
-		local group = self:EnsurePlayerDrawings(player)
-		local screenPos, onScreen = Camera:WorldToViewportPoint(root.Position)
-		local distance = (root.Position - Camera.CFrame.Position).Magnitude
-
-		if not onScreen or distance > self.Settings.MaxDistance then
-			for _, d in pairs(group) do
-				if type(d) == "table" then
-					for _, l in pairs(d) do
-						l.Visible = false
-					end
-				else
-					d.Visible = false
-				end
-			end
-			if self.Highlights[player] then
-				self.Highlights[player].Enabled = false
+		local group = _ensurePlayerDrawings(player)
+		local rootPart = root :: BasePart
+		local distance = (rootPart.Position - camera.CFrame.Position).Magnitude
+		local _, onScreen = camera:WorldToViewportPoint(rootPart.Position)
+		if not onScreen or distance > _state.settings.maxDistance then
+			_setGroupVisible(group, false)
+			local highlight = _state.highlights[player]
+			if highlight then
+				highlight.Enabled = false
 			end
 			continue
 		end
 
-		-- Update Highlight
-		self:UpdateHighlight(player, character)
+		_updateHighlight(player, character)
 
-		-- Calculate Box
-		local scale = math.clamp(1000 / distance, 0.1, 1) -- Simple scaling
-		local width, height = 30 * scale, 50 * scale -- Basic box size estimation, better to use part bounds but this is simple
-
-		-- Helper to get bounds
-		local cf, size = character:GetBoundingBox()
-		local tl = Camera:WorldToViewportPoint((cf * CFrame.new(size.X / 2, size.Y / 2, 0)).Position)
-		local tr = Camera:WorldToViewportPoint((cf * CFrame.new(-size.X / 2, size.Y / 2, 0)).Position)
-		local bl = Camera:WorldToViewportPoint((cf * CFrame.new(size.X / 2, -size.Y / 2, 0)).Position)
-		local br = Camera:WorldToViewportPoint((cf * CFrame.new(-size.X / 2, -size.Y / 2, 0)).Position)
-
-		-- Simplistic 2D box from RootPart for stability or use BoundingBox if preferred.
-		-- Let's stick to the previous simple method refined:
-		local rootPos = Camera:WorldToViewportPoint(root.Position)
-		local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
-		local headPos = Camera:WorldToViewportPoint(root.Position + Vector3.new(0, 2, 0))
-
-		height = math.abs(headPos.Y - legPos.Y) * 1.5
-		width = height * 0.6
-
+		local rootPos = camera:WorldToViewportPoint(rootPart.Position)
+		local legPos = camera:WorldToViewportPoint(rootPart.Position - Vector3.new(0, 3, 0))
+		local headPos = camera:WorldToViewportPoint(rootPart.Position + Vector3.new(0, 2, 0))
+		local height = math.abs(headPos.Y - legPos.Y) * 1.5
+		local width = height * 0.6
 		local boxPos = Vector2.new(rootPos.X - width / 2, rootPos.Y - height / 2)
 		local boxSize = Vector2.new(width, height)
 
-		-- Box
-		if self.Settings.ShowBoxes then
-			-- Outline
-			group.BoxOutline.Size = boxSize
-			group.BoxOutline.Position = boxPos
-			group.BoxOutline.Color = self.Settings.BoxOutlineColor
-			group.BoxOutline.Thickness = self.Settings.BoxThickness + 2
-			group.BoxOutline.Visible = true
-			group.BoxOutline.ZIndex = 1
+		if _state.settings.shouldShowBoxes then
+			group.boxOutline.Size = boxSize
+			group.boxOutline.Position = boxPos
+			group.boxOutline.Color = _state.settings.boxOutlineColor
+			group.boxOutline.Thickness = _state.settings.boxThickness + 2
+			group.boxOutline.Visible = true
+			group.boxOutline.ZIndex = 1
 
-			-- Main Box
-			group.Box.Size = boxSize
-			group.Box.Position = boxPos
-			group.Box.Color = self.Settings.BoxColor
-			group.Box.Thickness = self.Settings.BoxThickness
-			group.Box.Visible = true
-			group.Box.ZIndex = 2
+			group.box.Size = boxSize
+			group.box.Position = boxPos
+			group.box.Color = _state.settings.boxColor
+			group.box.Thickness = _state.settings.boxThickness
+			group.box.Visible = true
+			group.box.ZIndex = 2
 		else
-			group.Box.Visible = false
-			group.BoxOutline.Visible = false
+			group.box.Visible = false
+			group.boxOutline.Visible = false
 		end
 
-		-- Healthbar
-		if self.Settings.ShowHealthbar then
+		if _state.settings.shouldShowHealthbar then
 			local healthPerc = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
 			local barHeight = height * healthPerc
+			group.healthbarOutline.Size = Vector2.new(4, height + 2)
+			group.healthbarOutline.Position = Vector2.new(boxPos.X - 6, boxPos.Y - 1)
+			group.healthbarOutline.Color = _state.settings.healthbarOutlineColor
+			group.healthbarOutline.Filled = true
+			group.healthbarOutline.Visible = true
+			group.healthbarOutline.ZIndex = 1
 
-			-- Background/Border (Black)
-			group.HealthbarOutline.Size = Vector2.new(4, height + 2)
-			group.HealthbarOutline.Position = Vector2.new(boxPos.X - 6, boxPos.Y - 1)
-			group.HealthbarOutline.Color = self.Settings.HealthbarOutlineColor
-			group.HealthbarOutline.Filled = true
-			group.HealthbarOutline.Visible = true
-			group.HealthbarOutline.ZIndex = 1
-
-			-- Main Bar
-			group.Healthbar.Size = Vector2.new(2, barHeight)
-			-- Grow from bottom
-			group.Healthbar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
-			group.Healthbar.Color = self.Settings.HealthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
-			group.Healthbar.Filled = true
-			group.Healthbar.Visible = true
-			group.Healthbar.ZIndex = 2
+			group.healthbar.Size = Vector2.new(2, barHeight)
+			group.healthbar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
+			group.healthbar.Color = _state.settings.healthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
+			group.healthbar.Filled = true
+			group.healthbar.Visible = true
+			group.healthbar.ZIndex = 2
 		else
-			group.Healthbar.Visible = false
-			group.HealthbarOutline.Visible = false
+			group.healthbar.Visible = false
+			group.healthbarOutline.Visible = false
 		end
 
-		local textYOffset = 0
-		-- Name
-		if self.Settings.ShowNames then
-			group.Name.Text = player.DisplayName or player.Name
-			group.Name.Size = self.Settings.TextSize
-			group.Name.Color = self.Settings.TextColor
-			group.Name.Outline = self.Settings.Outline
-			group.Name.OutlineColor = self.Settings.NameOutlineColor
-			group.Name.Position = Vector2.new(rootPos.X, boxPos.Y - self.Settings.TextSize - 2)
-			group.Name.Visible = true
+		local textOffset = 0
+		if _state.settings.shouldShowNames then
+			group.name.Text = player.DisplayName or player.Name
+			group.name.Size = _state.settings.textSize
+			group.name.Color = _state.settings.textColor
+			group.name.Outline = _state.settings.shouldOutline
+			group.name.OutlineColor = _state.settings.nameOutlineColor
+			group.name.Position = Vector2.new(rootPos.X, boxPos.Y - _state.settings.textSize - 2)
+			group.name.Visible = true
 		else
-			group.Name.Visible = false
+			group.name.Visible = false
 		end
 
-		-- Weapon
-		if self.Settings.ShowWeapon then
+		if _state.settings.shouldShowWeapon then
 			local tool = character:FindFirstChildOfClass("Tool")
 			if tool then
-				group.Weapon.Text = tool.Name
-				group.Weapon.Size = self.Settings.TextSize
-				group.Weapon.Color = self.Settings.WeaponColor
-				group.Weapon.Outline = self.Settings.Outline
-				group.Weapon.OutlineColor = self.Settings.WeaponOutlineColor
-				group.Weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textYOffset)
-				group.Weapon.Visible = true
-				textYOffset = textYOffset + self.Settings.TextSize
+				group.weapon.Text = tool.Name
+				group.weapon.Size = _state.settings.textSize
+				group.weapon.Color = _state.settings.weaponColor
+				group.weapon.Outline = _state.settings.shouldOutline
+				group.weapon.OutlineColor = _state.settings.weaponOutlineColor
+				group.weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
+				group.weapon.Visible = true
+				textOffset += _state.settings.textSize
 			else
-				group.Weapon.Visible = false
+				group.weapon.Visible = false
 			end
 		else
-			group.Weapon.Visible = false
+			group.weapon.Visible = false
 		end
 
-		-- Distance
-		if self.Settings.ShowDistance then
-			group.Distance.Text = math.floor(distance) .. " studs"
-			group.Distance.Size = self.Settings.TextSize
-			group.Distance.Color = self.Settings.DistanceColor
-			group.Distance.Outline = self.Settings.Outline
-			group.Distance.OutlineColor = self.Settings.DistanceOutlineColor
-			group.Distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textYOffset)
-			group.Distance.Visible = true
-			textYOffset = textYOffset + self.Settings.TextSize
+		if _state.settings.shouldShowDistance then
+			group.distance.Text = tostring(math.floor(distance)) .. " studs"
+			group.distance.Size = _state.settings.textSize
+			group.distance.Color = _state.settings.distanceColor
+			group.distance.Outline = _state.settings.shouldOutline
+			group.distance.OutlineColor = _state.settings.distanceOutlineColor
+			group.distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
+			group.distance.Visible = true
+			textOffset += _state.settings.textSize
 		else
-			group.Distance.Visible = false
+			group.distance.Visible = false
 		end
 
-		-- Skeleton
-		if self.Settings.ShowSkeleton then
-			self:UpdateSkeleton(group.Skeleton, group.SkeletonOutline, character)
+		if _state.settings.shouldShowSkeleton then
+			_updateSkeleton(group.skeleton, group.skeletonOutline, character)
 		else
-			for _, l in pairs(group.Skeleton) do
-				l.Visible = false
+			for _, line in pairs(group.skeleton) do
+				line.Visible = false
 			end
-			for _, l in pairs(group.SkeletonOutline) do
-				l.Visible = false
+			for _, line in pairs(group.skeletonOutline) do
+				line.Visible = false
 			end
 		end
 	end
 end
 
-function Visuals:UpdateSkeleton(skeletonLines, skeletonOutlineLines, character)
-	local R15_JOINTS = {
-		{ "Head", "UpperTorso" },
-		{ "UpperTorso", "LowerTorso" },
-		{ "LowerTorso", "LeftUpperLeg" },
-		{ "LeftUpperLeg", "LeftLowerLeg" },
-		{ "LeftLowerLeg", "LeftFoot" },
-		{ "LowerTorso", "RightUpperLeg" },
-		{ "RightUpperLeg", "RightLowerLeg" },
-		{ "RightLowerLeg", "RightFoot" },
-		{ "UpperTorso", "LeftUpperArm" },
-		{ "LeftUpperArm", "LeftLowerArm" },
-		{ "LeftLowerArm", "LeftHand" },
-		{ "UpperTorso", "RightUpperArm" },
-		{ "RightUpperArm", "RightLowerArm" },
-		{ "RightLowerArm", "RightHand" },
-	}
-	-- R6 is simpler, but let's assume R15 or standard names.
+local function _connect()
+	_maid:DoCleaning()
+	local removeConn = Players.PlayerRemoving:Connect(function(player)
+		_removePlayer(player)
+	end)
+	_maid:GiveTask(removeConn)
 
-	local lineIdx = 1
-	for _, pair in ipairs(R15_JOINTS) do
-		local p1 = character:FindFirstChild(pair[1])
-		local p2 = character:FindFirstChild(pair[2])
+	local renderConn = RunService.RenderStepped:Connect(function()
+		_render()
+	end)
+	_maid:GiveTask(renderConn)
+end
 
-		if p1 and p2 then
-			local v1, o1 = Camera:WorldToViewportPoint(p1.Position)
-			local v2, o2 = Camera:WorldToViewportPoint(p2.Position)
-
-			if o1 and o2 then
-				local outline = skeletonOutlineLines[lineIdx]
-				if outline then
-					outline.From = Vector2.new(v1.X, v1.Y)
-					outline.To = Vector2.new(v2.X, v2.Y)
-					outline.Color = self.Settings.SkeletonOutlineColor
-					outline.Thickness = self.Settings.SkeletonThickness + 2
-					outline.Visible = true
-					outline.ZIndex = 1
-				end
-
-				local line = skeletonLines[lineIdx]
-				if line then
-					line.From = Vector2.new(v1.X, v1.Y)
-					line.To = Vector2.new(v2.X, v2.Y)
-					line.Color = self.Settings.SkeletonColor
-					line.Thickness = self.Settings.SkeletonThickness
-					line.Visible = true
-					line.ZIndex = 2
-					lineIdx = lineIdx + 1
-				end
-			end
-		end
+local function _enable()
+	if not Drawing then
+		_state.logger:warn("Drawing API not available; Visuals disabled.")
+		_state.isEnabled = false
+		return
 	end
+	_connect()
+end
 
-	-- Hide unused lines
-	for i = lineIdx, #skeletonLines do
-		skeletonLines[i].Visible = false
+local function _disable()
+	_maid:DoCleaning()
+	_clear()
+end
+
+--// Public API
+function Visuals.init(self: Visuals, client: any): ()
+	_state.client = client
+	_state.logger = client.Logger
+	_maid = Maid.new()
+end
+
+function Visuals.cleanup(self: Visuals): ()
+	_state.isEnabled = false
+	_disable()
+end
+
+function Visuals.toggle(self: Visuals, isEnabled: boolean): ()
+	if _state.isEnabled == isEnabled then
+		return
 	end
-	for i = lineIdx, #skeletonOutlineLines do
-		skeletonOutlineLines[i].Visible = false
+	_state.isEnabled = isEnabled
+	if isEnabled then
+		_enable()
+	else
+		_disable()
 	end
+end
+
+function Visuals.setEspEnabled(self: Visuals, isEnabled: boolean): ()
+	_state.settings.isEspEnabled = isEnabled
+	if not isEnabled then
+		_clear()
+	end
+end
+
+function Visuals.setShowNames(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowNames = shouldShow
+end
+
+function Visuals.setShowWeapon(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowWeapon = shouldShow
+end
+
+function Visuals.setShowDistance(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowDistance = shouldShow
+end
+
+function Visuals.setShowBoxes(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowBoxes = shouldShow
+end
+
+function Visuals.setShowSkeleton(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowSkeleton = shouldShow
+end
+
+function Visuals.setShowHealthbar(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowHealthbar = shouldShow
+end
+
+function Visuals.setShowHighlight(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowHighlight = shouldShow
+	if not shouldShow then
+		_clearHighlights()
+	end
+end
+
+function Visuals.setTeamCheck(self: Visuals, isEnabled: boolean): ()
+	_state.settings.shouldCheckTeam = isEnabled
+end
+
+function Visuals.setMaxDistance(self: Visuals, value: number): ()
+	_state.settings.maxDistance = value
+end
+
+function Visuals.setBoxColor(self: Visuals, color: Color3): ()
+	_state.settings.boxColor = color
+end
+
+function Visuals.setTextColor(self: Visuals, color: Color3): ()
+	_state.settings.textColor = color
+end
+
+function Visuals.setWeaponColor(self: Visuals, color: Color3): ()
+	_state.settings.weaponColor = color
+end
+
+function Visuals.setDistanceColor(self: Visuals, color: Color3): ()
+	_state.settings.distanceColor = color
+end
+
+function Visuals.setSkeletonColor(self: Visuals, color: Color3): ()
+	_state.settings.skeletonColor = color
+end
+
+function Visuals.setHealthbarColor(self: Visuals, color: Color3): ()
+	_state.settings.healthbarColor = color
+end
+
+function Visuals.setHealthbarOutlineColor(self: Visuals, color: Color3): ()
+	_state.settings.healthbarOutlineColor = color
+end
+
+function Visuals.setNameOutlineColor(self: Visuals, color: Color3): ()
+	_state.settings.nameOutlineColor = color
+end
+
+function Visuals.setWeaponOutlineColor(self: Visuals, color: Color3): ()
+	_state.settings.weaponOutlineColor = color
+end
+
+function Visuals.setDistanceOutlineColor(self: Visuals, color: Color3): ()
+	_state.settings.distanceOutlineColor = color
+end
+
+function Visuals.setBoxOutlineColor(self: Visuals, color: Color3): ()
+	_state.settings.boxOutlineColor = color
+end
+
+function Visuals.setSkeletonOutlineColor(self: Visuals, color: Color3): ()
+	_state.settings.skeletonOutlineColor = color
+end
+
+function Visuals.setHighlightFill(self: Visuals, color: Color3): ()
+	_state.settings.highlightFill = color
+end
+
+function Visuals.setHighlightOutline(self: Visuals, color: Color3): ()
+	_state.settings.highlightOutline = color
+end
+
+function Visuals.setBoxThickness(self: Visuals, value: number): ()
+	_state.settings.boxThickness = value
+end
+
+function Visuals.setSkeletonThickness(self: Visuals, value: number): ()
+	_state.settings.skeletonThickness = value
+end
+
+function Visuals.setTextSize(self: Visuals, value: number): ()
+	_state.settings.textSize = value
+end
+
+function Visuals.setOutline(self: Visuals, isEnabled: boolean): ()
+	_state.settings.shouldOutline = isEnabled
 end
 
 return Visuals

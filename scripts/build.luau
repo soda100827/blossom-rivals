@@ -1,5 +1,5 @@
-local fs = require("@lune/fs")
-local process = require("@lune/process")
+local fs = require("@lune/fs") :: any
+local process = require("@lune/process") :: any
 
 local osName = type(process.os) == "function" and process.os() or process.os
 local separator = osName == "windows" and "\\" or "/"

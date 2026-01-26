@@ -1,35 +1,58 @@
 --!strict
-local repo = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
-local function loadRemote(path)
-	local source = game:HttpGet(repo .. path)
+
+--// Dependencies (require)
+local Maid = require("Packages/maid") :: any
+
+--// Constants
+local REPO_URL = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
+
+--// Types
+export type Interface = {
+	init: (self: Interface, client: any) -> (),
+	cleanup: (self: Interface) -> (),
+}
+
+--// Private state
+local Interface = {}
+Interface.__index = Interface
+
+local _maid = nil :: any
+local _state = {
+	client = nil :: any,
+	logger = nil :: any,
+	library = nil :: any,
+	themeManager = nil :: any,
+	saveManager = nil :: any,
+	isMounted = false,
+}
+local _signals = {}
+
+--// Private helpers
+local function _loadRemote(path: string, logger: any): any
+	local source = game:HttpGet(REPO_URL .. path)
 	local chunk, err = loadstring(source)
 	if not chunk then
-		error("[Blossom] UI load failed: " .. tostring(err))
+		if logger then
+			logger:error("UI load failed:", err)
+		end
+		error("UI load failed: " .. tostring(err))
 	end
 	return chunk()
 end
 
-local Interface = {}
-
-function Interface:Init(Client)
-	self.Client = Client
-	self.Logger = Client.Logger
-	self:Mount()
-end
-
-local function setNotifyMuted(library, enabled)
-	if enabled then
+local function _setNotifyMuted(library: any, shouldMute: boolean)
+	if shouldMute then
 		library.Notify = library.Notify or function() end
 		library._blossomNotify = library._blossomNotify or library.Notify
 		library.Notify = function() end
-	else
-		if library._blossomNotify then
-			library.Notify = library._blossomNotify
-		end
+		return
+	end
+	if library._blossomNotify then
+		library.Notify = library._blossomNotify
 	end
 end
 
-local function getLibraryVisible(library)
+local function _getLibraryVisible(library: any): boolean
 	if type(library.Opened) == "boolean" then
 		return library.Opened
 	end
@@ -42,10 +65,10 @@ local function getLibraryVisible(library)
 	return true
 end
 
-local function runAutoload(library, saveManager, silent)
-	local wasVisible = getLibraryVisible(library)
-	if silent then
-		setNotifyMuted(library, true)
+local function _runAutoload(library: any, saveManager: any, isSilent: boolean)
+	local wasVisible = _getLibraryVisible(library)
+	if isSilent then
+		_setNotifyMuted(library, true)
 		if wasVisible then
 			pcall(function()
 				library:Toggle()
@@ -57,25 +80,37 @@ local function runAutoload(library, saveManager, silent)
 		saveManager:LoadAutoloadConfig()
 	end)
 
-	if silent then
+	if isSilent then
 		if wasVisible then
 			pcall(function()
 				library:Toggle()
 			end)
 		end
-		setNotifyMuted(library, false)
+		_setNotifyMuted(library, false)
 	end
 end
 
-function Interface:Mount()
-	local Library = loadRemote("Library.lua")
-	local ThemeManager = loadRemote("addons/ThemeManager.lua")
-	local SaveManager = loadRemote("addons/SaveManager.lua")
+local function _connect()
+	_maid:DoCleaning()
+end
 
-	self.Library = Library
+local function _mount()
+	if _state.isMounted then
+		return
+	end
+	_state.isMounted = true
 
-	local window = Library:CreateWindow({
-		Title = "Blossom " .. self.Client.Version,
+	local logger = _state.logger
+	local library = _loadRemote("Library.lua", logger)
+	local themeManager = _loadRemote("addons/ThemeManager.lua", logger)
+	local saveManager = _loadRemote("addons/SaveManager.lua", logger)
+
+	_state.library = library
+	_state.themeManager = themeManager
+	_state.saveManager = saveManager
+
+	local window = library:CreateWindow({
+		Title = "Blossom " .. _state.client.Version,
 		Center = true,
 		AutoShow = true,
 		TabPadding = 8,
@@ -83,54 +118,36 @@ function Interface:Mount()
 	})
 
 	local tabs = {
-		Main = window:AddTab("Main"),
-		Visuals = window:AddTab("Visuals"),
-		Misc = window:AddTab("Misc"),
-		["UI Settings"] = window:AddTab("UI Settings"),
+		visuals = window:AddTab("Visuals"),
+		misc = window:AddTab("Misc"),
+		uiSettings = window:AddTab("UI Settings"),
 	}
 
-	local mainGroup = tabs.Main:AddLeftGroupbox("Main")
-
-	mainGroup:AddToggle("MovementToggle", {
-		Text = "Movement Assist",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.Movement
-			if mod and mod.Toggle then
-				mod:Toggle(state)
-			end
-		end,
-	})
-
-	-- Visuals Tab
-	local espGroup = tabs.Visuals:AddLeftGroupbox("ESP")
-
-	-- Enable Master Toggle
+	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup
 		:AddToggle("VisualsToggle", {
 			Text = "Visuals (ESP)",
 			Default = false,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod and mod.Toggle then
-					mod:Toggle(state)
-					if mod.SetESPEnabled then
-						mod:SetESPEnabled(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.toggle then
+					mod:toggle(state)
+					if mod.setEspEnabled then
+						mod:setEspEnabled(state)
 					end
 				end
 			end,
 		})
 		:AddKeyPicker("EspKey", { Default = "Insert", NoUI = true, Text = "ESP Key" })
 
-	-- Name
 	espGroup
 		:AddToggle("ESPNames", {
 			Text = "Name",
 			Default = true,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowNames(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowNames then
+					mod:setShowNames(state)
 				end
 			end,
 		})
@@ -138,9 +155,9 @@ function Interface:Mount()
 			Default = Color3.new(1, 1, 1),
 			Title = "Text Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetTextColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setTextColor then
+					mod:setTextColor(value)
 				end
 			end,
 		})
@@ -148,22 +165,21 @@ function Interface:Mount()
 			Default = Color3.new(0, 0, 0),
 			Title = "Name Outline",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetNameOutlineColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setNameOutlineColor then
+					mod:setNameOutlineColor(value)
 				end
 			end,
 		})
 
-	-- Weapon
 	espGroup
 		:AddToggle("ESPWeapon", {
 			Text = "Weapon",
 			Default = false,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowWeapon(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowWeapon then
+					mod:setShowWeapon(state)
 				end
 			end,
 		})
@@ -171,9 +187,9 @@ function Interface:Mount()
 			Default = Color3.new(1, 1, 1),
 			Title = "Weapon Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetWeaponColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setWeaponColor then
+					mod:setWeaponColor(value)
 				end
 			end,
 		})
@@ -181,31 +197,21 @@ function Interface:Mount()
 			Default = Color3.new(0, 0, 0),
 			Title = "Weapon Outline",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetWeaponOutlineColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setWeaponOutlineColor then
+					mod:setWeaponOutlineColor(value)
 				end
 			end,
 		})
-	-- Assuming Weapon uses TextColor for now, but UI implies separate color.
-	-- Since SetTextColor sets both, we'll leave it shared or add specific if needed.
-	-- The image has a color picker for Weapon.
-	-- Let's just use the shared text color for consistency or we need more Setters.
-	-- I'll skip individual color pickers for text items sharing color to keep implementation simple as requested,
-	-- UNLESS the user explicitly asked for every single color. The image shows color pickers.
-	-- I'll reuse TextColor for Name/Weapon/Distance for now to save space, or add duplicate pickers if strictly matching image.
-	-- Let's match image. We need `SetWeaponColor` etc. But Visuals.luau uses `TextColor` for all.
-	-- I'll stick to `TextColor` managing all text for now.
 
-	-- Distance
 	espGroup
 		:AddToggle("ESPDistance", {
 			Text = "Distance",
 			Default = false,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowDistance(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowDistance then
+					mod:setShowDistance(state)
 				end
 			end,
 		})
@@ -213,9 +219,9 @@ function Interface:Mount()
 			Default = Color3.new(1, 1, 1),
 			Title = "Distance Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetDistanceColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setDistanceColor then
+					mod:setDistanceColor(value)
 				end
 			end,
 		})
@@ -223,22 +229,21 @@ function Interface:Mount()
 			Default = Color3.new(0, 0, 0),
 			Title = "Distance Outline",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetDistanceOutlineColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setDistanceOutlineColor then
+					mod:setDistanceOutlineColor(value)
 				end
 			end,
 		})
 
-	-- Box
 	espGroup
 		:AddToggle("ESPBoxes", {
 			Text = "Box",
 			Default = true,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowBoxes(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowBoxes then
+					mod:setShowBoxes(state)
 				end
 			end,
 		})
@@ -246,9 +251,9 @@ function Interface:Mount()
 			Default = Color3.new(1, 1, 1),
 			Title = "Box Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetBoxColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setBoxColor then
+					mod:setBoxColor(value)
 				end
 			end,
 		})
@@ -256,22 +261,21 @@ function Interface:Mount()
 			Default = Color3.new(0, 0, 0),
 			Title = "Box Outline",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetBoxOutlineColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setBoxOutlineColor then
+					mod:setBoxOutlineColor(value)
 				end
 			end,
 		})
 
-	-- Skeleton
 	espGroup
 		:AddToggle("ESPSkeleton", {
 			Text = "Skeleton",
 			Default = false,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowSkeleton(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowSkeleton then
+					mod:setShowSkeleton(state)
 				end
 			end,
 		})
@@ -279,9 +283,9 @@ function Interface:Mount()
 			Default = Color3.new(1, 1, 1),
 			Title = "Skeleton Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetSkeletonColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setSkeletonColor then
+					mod:setSkeletonColor(value)
 				end
 			end,
 		})
@@ -289,22 +293,21 @@ function Interface:Mount()
 			Default = Color3.new(0, 0, 0),
 			Title = "Skeleton Outline",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetSkeletonOutlineColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setSkeletonOutlineColor then
+					mod:setSkeletonOutlineColor(value)
 				end
 			end,
 		})
 
-	-- Healthbar
 	espGroup
 		:AddToggle("ESPHealthbar", {
 			Text = "Healthbar",
 			Default = false,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowHealthbar(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowHealthbar then
+					mod:setShowHealthbar(state)
 				end
 			end,
 		})
@@ -312,9 +315,9 @@ function Interface:Mount()
 			Default = Color3.new(0, 1, 0),
 			Title = "Health Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetHealthbarColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setHealthbarColor then
+					mod:setHealthbarColor(value)
 				end
 			end,
 		})
@@ -322,22 +325,21 @@ function Interface:Mount()
 			Default = Color3.new(0, 0, 0),
 			Title = "Outline Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetHealthbarOutlineColor(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setHealthbarOutlineColor then
+					mod:setHealthbarOutlineColor(value)
 				end
 			end,
 		})
 
-	-- Highlight (Fill, Outline)
 	espGroup
 		:AddToggle("ESPHighlight", {
 			Text = "Highlight",
 			Default = false,
 			Callback = function(state)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetShowHighlight(state)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setShowHighlight then
+					mod:setShowHighlight(state)
 				end
 			end,
 		})
@@ -345,9 +347,9 @@ function Interface:Mount()
 			Default = Color3.new(1, 0, 0),
 			Title = "Fill Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetHighlightFill(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setHighlightFill then
+					mod:setHighlightFill(value)
 				end
 			end,
 		})
@@ -355,35 +357,30 @@ function Interface:Mount()
 			Default = Color3.new(1, 1, 1),
 			Title = "Outline Color",
 			Callback = function(value)
-				local mod = self.Client.Modules.Visuals
-				if mod then
-					mod:SetHighlightOutline(value)
+				local mod = _state.client.Modules.Visuals
+				if mod and mod.setHighlightOutline then
+					mod:setHighlightOutline(value)
 				end
 			end,
 		})
 
-	-- Better Bounds (Visuals uses simple bounds for now, but UI checks box)
 	espGroup:AddToggle("ESPBetterBounds", {
 		Text = "Better Bounds",
 		Default = false,
-		Callback = function(state)
-			-- Placeholder logic or refine Visuals later
-		end,
+		Callback = function(_stateValue) end,
 	})
 
-	-- Show Teammates
 	espGroup:AddToggle("ESPShowTeammates", {
 		Text = "Show Teammates",
 		Default = true,
 		Callback = function(state)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetTeamCheck(not state)
-			end -- Inverse
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setTeamCheck then
+				mod:setTeamCheck(not state)
+			end
 		end,
 	})
 
-	-- Sliders
 	espGroup:AddSlider("ESPSkeletonThickness", {
 		Text = "Skeleton Thickness",
 		Default = 1,
@@ -391,9 +388,9 @@ function Interface:Mount()
 		Max = 5,
 		Rounding = 1,
 		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetSkeletonThickness(value)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setSkeletonThickness then
+				mod:setSkeletonThickness(value)
 			end
 		end,
 	})
@@ -405,9 +402,9 @@ function Interface:Mount()
 		Max = 24,
 		Rounding = 0,
 		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetTextSize(value)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setTextSize then
+				mod:setTextSize(value)
 			end
 		end,
 	})
@@ -419,50 +416,41 @@ function Interface:Mount()
 		Max = 10000,
 		Rounding = 0,
 		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetMaxDistance(value)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setMaxDistance then
+				mod:setMaxDistance(value)
 			end
 		end,
 	})
 
-	local menuGroup = tabs["UI Settings"]:AddLeftGroupbox("Menu")
+	local menuGroup = tabs.uiSettings:AddLeftGroupbox("Menu")
 	menuGroup:AddButton("Unload", function()
-		Library:Unload()
+		library:Unload()
 	end)
 	menuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
 		Default = "End",
 		NoUI = true,
 		Text = "Menu keybind",
 	})
-	Library.ToggleKeybind = Options.MenuKeybind
+	local options = library.Options
+	if options and options.MenuKeybind then
+		library.ToggleKeybind = options.MenuKeybind
+	end
 
-	ThemeManager:SetLibrary(Library)
-	SaveManager:SetLibrary(Library)
-	SaveManager:IgnoreThemeSettings()
-	ThemeManager:SetFolder("Blossom")
-	SaveManager:SetFolder("Blossom")
-	SaveManager:BuildConfigSection(tabs["UI Settings"])
-	ThemeManager:ApplyToTab(tabs["UI Settings"])
+	themeManager:SetLibrary(library)
+	saveManager:SetLibrary(library)
+	saveManager:IgnoreThemeSettings()
+	themeManager:SetFolder("Blossom")
+	saveManager:SetFolder("Blossom")
+	saveManager:BuildConfigSection(tabs.uiSettings)
+	themeManager:ApplyToTab(tabs.uiSettings)
 
-	local cosmeticGroup = tabs.Misc:AddLeftGroupbox("Cosmetics")
-	cosmeticGroup:AddToggle("UnlockAllSkins", {
-		Text = "Unlock All Skins",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.UnlockAllSkins
-			if mod and mod.Toggle then
-				mod:Toggle(state)
-			end
-		end,
-	})
-
-	local miscGroup = tabs.Misc:AddLeftGroupbox("Auto Load")
+	local miscGroup = tabs.misc:AddLeftGroupbox("Auto Load")
 	miscGroup:AddToggle("TeleportQueue", {
 		Text = "Auto Load",
 		Default = false,
 		Callback = function(enabled)
-			self.Client:SetTeleportQueue(enabled)
+			_state.client:setTeleportQueue(enabled)
 		end,
 	})
 
@@ -470,23 +458,29 @@ function Interface:Mount()
 		Text = "Silent Mode",
 		Default = false,
 		Callback = function(enabled)
-			if enabled then
-				setNotifyMuted(Library, true)
-			else
-				setNotifyMuted(Library, false)
-			end
+			_setNotifyMuted(library, enabled)
 		end,
 	})
 
-	runAutoload(Library, SaveManager, false)
-
-	self.Logger:Info("UI mounted successfully")
+	_runAutoload(library, saveManager, false)
+	logger:info("UI mounted successfully")
 end
 
-function Interface:Cleanup()
-	if self.Library then
-		self.Library:Unload()
+--// Public API
+function Interface.init(self: Interface, client: any): ()
+	_state.client = client
+	_state.logger = client.Logger
+	_maid = Maid.new()
+	_connect()
+	_mount()
+end
+
+function Interface.cleanup(self: Interface): ()
+	_maid:DoCleaning()
+	if _state.library then
+		_state.library:Unload()
 	end
+	_state.isMounted = false
 end
 
 return Interface
