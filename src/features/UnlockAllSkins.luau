@@ -745,8 +745,14 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	end
 
 	local finisherInstance = nil
+	local ctorArgs = {}
+	if args then
+		for i = 2, #args do
+			ctorArgs[i - 1] = args[i]
+		end
+	end
 	local okNew, newErr = pcall(function()
-		finisherInstance = finisherClass.new(unpack(args))
+		finisherInstance = finisherClass.new(unpack(ctorArgs))
 	end)
 	if not finisherInstance then
 		local okFallback, fallbackErr = pcall(function()

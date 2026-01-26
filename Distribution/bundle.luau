@@ -486,8 +486,9 @@ finisherClass=safeRequire(finisherModule)if not finisherClass then if logger
 then logger:Warn('Failed to require finisher module:',finisherName)end return
 end self.FinisherCache[finisherName]=finisherClass end if not finisherClass.new
 then if logger then logger:Warn('Finisher class missing constructor:',
-finisherName)end return end local finisherInstance=nil local okNew,newErr=pcall(
-function()finisherInstance=finisherClass.new(unpack(args))end)if not
+finisherName)end return end local finisherInstance=nil local ctorArgs={}if args
+then for i=2,#args do ctorArgs[i-1]=args[i]end end local okNew,newErr=pcall(
+function()finisherInstance=finisherClass.new(unpack(ctorArgs))end)if not
 finisherInstance then local okFallback,fallbackErr=pcall(function()
 finisherInstance=finisherClass.new()end)if logger then logger:Info(
 'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
