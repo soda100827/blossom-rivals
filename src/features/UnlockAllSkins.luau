@@ -25,7 +25,6 @@ local UnlockAllSkins = {
 	Favorites = {},
 	Originals = {},
 	FinisherCache = {},
-	FinisherSerials = {},
 }
 
 local CONFIG_DIR = "BlossomUnlockAll"
@@ -1024,23 +1023,6 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		else
 			logTableSummary(args[4])
 		end
-	end
-
-	local serialKey = nil
-	if args then
-		local serialValue = args[4]
-		if type(serialValue) == "table" and serialValue.Seed then
-			serialKey = serialValue.Seed
-		else
-			serialKey = serialValue
-		end
-	end
-	if entity and serialKey ~= nil then
-		local lastSerial = self.FinisherSerials[entity]
-		if lastSerial == serialKey then
-			return
-		end
-		self.FinisherSerials[entity] = serialKey
 	end
 
 	if logger then

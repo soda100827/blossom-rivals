@@ -226,37 +226,36 @@ local UnlockAllSkins={Enabled=false,Installed=false,Player=nil,PlayerScripts=nil
 ,Controllers=nil,EnumLibrary=nil,CosmeticLibrary=nil,ItemLibrary=nil,
 DataController=nil,FighterController=nil,ClientItem=nil,ClientViewModel=nil,
 ViewProfile=nil,ClientEntity=nil,LastUsedWeapon=nil,ConstructingWeapon=nil,
-ViewingProfile=nil,Equipped={},Favorites={},Originals={},FinisherCache={},
-FinisherSerials={}}local CONFIG_DIR='BlossomUnlockAll'local CONFIG_FILE=
-CONFIG_DIR..'/config.json'local function safeRequire(moduleRef)local ok,result=
-pcall(require,moduleRef)if ok then return result end return nil end function
-UnlockAllSkins:Init(Client)self.Client=Client self.Logger=Client.Logger self.
-Player=Players.LocalPlayer if self.Player then self.PlayerScripts=self.Player:
-WaitForChild('PlayerScripts',10)self.Controllers=self.PlayerScripts and self.
-PlayerScripts:WaitForChild('Controllers',10)or nil end end function
-UnlockAllSkins:Toggle(state)if self.Enabled==state then return end self.Enabled=
-state if state then self:EnsureInstalled()self:LoadConfig()self:
-ReplicateInventory()else self:ReplicateInventory()end end function
-UnlockAllSkins:EnsureInstalled()if self.Installed then return end self.
-EnumLibrary=safeRequire(ReplicatedStorage.Modules:WaitForChild('EnumLibrary',10)
-)if self.EnumLibrary then pcall(function()self.EnumLibrary:WaitForEnumBuilder()
-end)end self.CosmeticLibrary=safeRequire(ReplicatedStorage.Modules:WaitForChild(
-'CosmeticLibrary',10))self.ItemLibrary=safeRequire(ReplicatedStorage.Modules:
-WaitForChild('ItemLibrary',10))self.DataController=self.Controllers and
-safeRequire(self.Controllers:WaitForChild('PlayerDataController',10))or nil
-pcall(function()self.FighterController=self.Controllers and safeRequire(self.
-Controllers:WaitForChild('FighterController',10))or nil end)pcall(function()
-local modules=self.PlayerScripts and self.PlayerScripts:WaitForChild('Modules',
-10)or nil self.ClientItem=modules and safeRequire(modules.
-ClientReplicatedClasses.ClientFighter.ClientItem)or nil end)pcall(function()
-local modules=self.PlayerScripts and self.PlayerScripts:WaitForChild('Modules',
-10)or nil local viewModelModule=modules and modules.ClientReplicatedClasses.
-ClientFighter.ClientItem:FindFirstChild('ClientViewModel')or nil self.
-ClientViewModel=viewModelModule and safeRequire(viewModelModule)or nil end)
+ViewingProfile=nil,Equipped={},Favorites={},Originals={},FinisherCache={}}local
+CONFIG_DIR='BlossomUnlockAll'local CONFIG_FILE=CONFIG_DIR..'/config.json'
+local function safeRequire(moduleRef)local ok,result=pcall(require,moduleRef)if
+ok then return result end return nil end function UnlockAllSkins:Init(Client)
+self.Client=Client self.Logger=Client.Logger self.Player=Players.LocalPlayer if
+self.Player then self.PlayerScripts=self.Player:WaitForChild('PlayerScripts',10)
+self.Controllers=self.PlayerScripts and self.PlayerScripts:WaitForChild(
+'Controllers',10)or nil end end function UnlockAllSkins:Toggle(state)if self.
+Enabled==state then return end self.Enabled=state if state then self:
+EnsureInstalled()self:LoadConfig()self:ReplicateInventory()else self:
+ReplicateInventory()end end function UnlockAllSkins:EnsureInstalled()if self.
+Installed then return end self.EnumLibrary=safeRequire(ReplicatedStorage.Modules
+:WaitForChild('EnumLibrary',10))if self.EnumLibrary then pcall(function()self.
+EnumLibrary:WaitForEnumBuilder()end)end self.CosmeticLibrary=safeRequire(
+ReplicatedStorage.Modules:WaitForChild('CosmeticLibrary',10))self.ItemLibrary=
+safeRequire(ReplicatedStorage.Modules:WaitForChild('ItemLibrary',10))self.
+DataController=self.Controllers and safeRequire(self.Controllers:WaitForChild(
+'PlayerDataController',10))or nil pcall(function()self.FighterController=self.
+Controllers and safeRequire(self.Controllers:WaitForChild('FighterController',10
+))or nil end)pcall(function()local modules=self.PlayerScripts and self.
+PlayerScripts:WaitForChild('Modules',10)or nil self.ClientItem=modules and
+safeRequire(modules.ClientReplicatedClasses.ClientFighter.ClientItem)or nil end)
 pcall(function()local modules=self.PlayerScripts and self.PlayerScripts:
-WaitForChild('Modules',10)or nil self.ViewProfile=modules and safeRequire(
-modules.Pages.ViewProfile)or nil end)pcall(function()local modules=self.
-PlayerScripts and self.PlayerScripts:WaitForChild('Modules',10)or nil self.
+WaitForChild('Modules',10)or nil local viewModelModule=modules and modules.
+ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild(
+'ClientViewModel')or nil self.ClientViewModel=viewModelModule and safeRequire(
+viewModelModule)or nil end)pcall(function()local modules=self.PlayerScripts and
+self.PlayerScripts:WaitForChild('Modules',10)or nil self.ViewProfile=modules and
+safeRequire(modules.Pages.ViewProfile)or nil end)pcall(function()local modules=
+self.PlayerScripts and self.PlayerScripts:WaitForChild('Modules',10)or nil self.
 ClientEntity=modules and safeRequire(modules.ClientReplicatedClasses.
 ClientEntity)or nil end)self:InstallCosmeticOverrides()self:
 InstallDataOverrides()self:InstallRemoteHooks()self:InstallViewModelHooks()self:
@@ -563,18 +562,13 @@ logTableSummary(args[4])end end if not subject then if logger then logger:Warn(
 isLocalSubject(subject)and type(args)=='table'and type(args[4])=='table'then
 local nonLocal=resolveNonLocalSubjectFromTable(args[4],3)if nonLocal then
 subject=nonLocal subjectSource='args[4] non-local scan'else logTableSummary(args
-[4])end end local serialKey=nil if args then local serialValue=args[4]if type(
-serialValue)=='table'and serialValue.Seed then serialKey=serialValue.Seed else
-serialKey=serialValue end end if entity and serialKey~=nil then local lastSerial
-=self.FinisherSerials[entity]if lastSerial==serialKey then return end self.
-FinisherSerials[entity]=serialKey end if logger then logger:Info(
-'Finisher subject resolved:',subject,'class:',subject.ClassName,'source:',
-subjectSource,'isLocal:',isLocalSubject(subject))end local eliminator=args and
-args[3]or nil local eliminatorIsLocal=isLocalEliminator(eliminator)if logger
-then logger:Info('Finisher eliminator local:',eliminatorIsLocal,'eliminator:',
-eliminator)end if isLocalSubject(subject)and not eliminatorIsLocal then if
-logger then logger:Warn(
-'Skipping finisher on local subject; eliminator not local:',eliminator)end
+[4])end end if logger then logger:Info('Finisher subject resolved:',subject,
+'class:',subject.ClassName,'source:',subjectSource,'isLocal:',isLocalSubject(
+subject))end local eliminator=args and args[3]or nil local eliminatorIsLocal=
+isLocalEliminator(eliminator)if logger then logger:Info(
+'Finisher eliminator local:',eliminatorIsLocal,'eliminator:',eliminator)end if
+isLocalSubject(subject)and not eliminatorIsLocal then if logger then logger:
+Warn('Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end if eliminatorIsLocal and isLocalSubject(subject)then if logger then
 logger:Warn([[Skipping finisher; subject is local while eliminator is local:]],
 eliminator)end return end local finisherInstance=nil local isFinal=args and args
