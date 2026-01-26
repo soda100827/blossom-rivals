@@ -639,8 +639,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 
 	if finisherInstance.PlayServer then
 		pcall(finisherInstance.PlayServer, finisherInstance)
-	elseif finisherInstance.PlayClient then
-		pcall(finisherInstance.PlayClient, finisherInstance)
+	end
+	if finisherInstance.PlayClient then
+		pcall(finisherInstance.PlayClient, finisherInstance, unpack(args))
 	end
 end
 

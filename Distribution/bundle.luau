@@ -460,11 +460,11 @@ return end local finisherInstance=nil pcall(function()finisherInstance=
 finisherClass.new(unpack(args))end)if not finisherInstance then pcall(function()
 finisherInstance=finisherClass.new()end)end if not finisherInstance then return
 end if finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
-finisherInstance)elseif finisherInstance.PlayClient then pcall(finisherInstance.
-PlayClient,finisherInstance)end end return UnlockAllSkins end function
-__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
-do local function __modImpl()local repo=
+finisherInstance)end if finisherInstance.PlayClient then pcall(finisherInstance.
+PlayClient,finisherInstance,unpack(args))end end return UnlockAllSkins end
+function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
+end end do local function __modImpl()local repo=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local function loadRemote(path)local source=game:HttpGet(repo..path)local chunk,
 err=loadstring(source)if not chunk then error('[Blossom] UI load failed: '..
