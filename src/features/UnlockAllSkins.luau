@@ -673,6 +673,23 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 				end
 			end
 		end
+		if
+			not finisherModule
+			and finishersFolder
+			and type(finisherId) == "string"
+			and self.EnumLibrary
+			and self.EnumLibrary.ToEnum
+		then
+			for _, child in ipairs(finishersFolder:GetChildren()) do
+				local ok, enumId = pcall(self.EnumLibrary.ToEnum, self.EnumLibrary, child.Name)
+				if ok and enumId and tostring(enumId) == finisherId then
+					finisherModule = child
+					finisherName = child.Name
+					finisherEnum = enumId
+					break
+				end
+			end
+		end
 		if not finisherModule then
 			if logger then
 				logger:Warn("Finisher module not found:", finisherName)

@@ -464,9 +464,14 @@ finisherEnum and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child
 in ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.
 EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if ok and enumId==finisherEnum
 then finisherModule=child finisherName=child.Name break end end end if not
-finisherModule then if logger then logger:Warn('Finisher module not found:',
-finisherName)end return end finisherClass=safeRequire(finisherModule)if not
-finisherClass then if logger then logger:Warn(
+finisherModule and finishersFolder and type(finisherId)=='string'and self.
+EnumLibrary and self.EnumLibrary.ToEnum then for _,child in ipairs(
+finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.ToEnum,
+self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==finisherId
+then finisherModule=child finisherName=child.Name finisherEnum=enumId break end
+end end if not finisherModule then if logger then logger:Warn(
+'Finisher module not found:',finisherName)end return end finisherClass=
+safeRequire(finisherModule)if not finisherClass then if logger then logger:Warn(
 'Failed to require finisher module:',finisherName)end return end self.
 FinisherCache[finisherName]=finisherClass end if not finisherClass.new then if
 logger then logger:Warn('Finisher class missing constructor:',finisherName)end
