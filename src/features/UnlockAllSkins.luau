@@ -848,6 +848,8 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		model.Archivable = true
 		local clone = model:Clone()
 		model.Archivable = wasArchivable
+		clone.Name = "BlossomFinisherDummy"
+		clone:SetAttribute("BlossomFinisherDummy", true)
 		clone:PivotTo(model:GetPivot())
 		clone.Parent = workspace
 		local humanoid = clone:FindFirstChildOfClass("Humanoid")
@@ -1126,6 +1128,11 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	local dummyModel = nil
 	local dummyHumanoid = nil
 	local dummyKey = nil
+	for _, child in ipairs(workspace:GetChildren()) do
+		if child:GetAttribute("BlossomFinisherDummy") then
+			child:Destroy()
+		end
+	end
 	if type(entity) == "table" and entity.Model then
 		dummyKey = entity.Model
 	elseif typeof(entity) == "Instance" then
@@ -1207,10 +1214,8 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	if finisherInstance.Simulate then
 		pcall(finisherInstance.Simulate, finisherInstance)
 		if dummyModel then
+			game:GetService("Debris"):AddItem(dummyModel, 3)
 			task.delay(3, function()
-				if dummyModel and dummyModel.Parent then
-					dummyModel:Destroy()
-				end
 				if dummyKey and self.DummyModels[dummyKey] == dummyModel then
 					self.DummyModels[dummyKey] = nil
 				end

@@ -516,12 +516,13 @@ IsA('Humanoid')then model=subjectValue.Parent elseif subjectValue:IsA('BasePart'
 )then model=subjectValue:FindFirstAncestorOfClass('Model')elseif subjectValue:
 IsA('Model')then model=subjectValue end if not model or not model:IsA('Model')
 then return nil end local wasArchivable=model.Archivable model.Archivable=true
-local clone=model:Clone()model.Archivable=wasArchivable clone:PivotTo(model:
-GetPivot())clone.Parent=workspace local humanoid=clone:FindFirstChildOfClass(
-'Humanoid')if not humanoid then clone:Destroy()return nil end return humanoid,
-clone end local function setupDummyForPreview(dummyHumanoid)local model=
-dummyHumanoid.Parent if not model or not model:IsA('Model')then return end local
-root=model:FindFirstChild('HumanoidRootPart')if root then root.
+local clone=model:Clone()model.Archivable=wasArchivable clone.Name=
+'BlossomFinisherDummy'clone:SetAttribute('BlossomFinisherDummy',true)clone:
+PivotTo(model:GetPivot())clone.Parent=workspace local humanoid=clone:
+FindFirstChildOfClass('Humanoid')if not humanoid then clone:Destroy()return nil
+end return humanoid,clone end local function setupDummyForPreview(dummyHumanoid)
+local model=dummyHumanoid.Parent if not model or not model:IsA('Model')then
+return end local root=model:FindFirstChild('HumanoidRootPart')if root then root.
 AssemblyLinearVelocity*=0 root.AssemblyAngularVelocity=Vector3.new(0,0,0)end
 dummyHumanoid.Health=0 local parts={}for _,child in pairs(model:GetChildren())do
 if child:IsA('BasePart')then child.CanCollide=true table.insert(parts,child)end
@@ -592,24 +593,25 @@ Warn('Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end if eliminatorIsLocal and isLocalSubject(subject)then if logger then
 logger:Warn([[Skipping finisher; subject is local while eliminator is local:]],
 eliminator)end return end local finisherInstance=nil local dummyModel=nil local
-dummyHumanoid=nil local dummyKey=nil if type(entity)=='table'and entity.Model
-then dummyKey=entity.Model elseif typeof(entity)=='Instance'then dummyKey=entity
-elseif typeof(subject)=='Instance'then dummyKey=subject:
-FindFirstAncestorOfClass('Model')or subject end if dummyKey and self.DummyModels
-[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[dummyKey]=
-nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if dummyHumanoid
-then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if dummyKey then
-self.DummyModels[dummyKey]=dummyModel end end local isFinal=args and args[2]if
-isFinal==nil then isFinal=false end local eliminatorArg=eliminator if dummyModel
-then eliminatorArg={Character=dummyModel}end if typeof(eliminator)=='Instance'
-and eliminator:IsA('Player')then eliminatorArg={Character=eliminator.Character}
-end local okNew,newErr=pcall(function()finisherInstance=finisherClass.new(
-subject,isFinal,eliminatorArg)end)if not finisherInstance then local okFallback,
-fallbackErr=pcall(function()finisherInstance=finisherClass.new()end)if logger
-then logger:Info('Finisher constructor status:','okNew',okNew,'okFallback',
-okFallback)if not okNew then logger:Warn(
-'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
-not finisherInstance then logger:Warn(
+dummyHumanoid=nil local dummyKey=nil for _,child in ipairs(workspace:
+GetChildren())do if child:GetAttribute('BlossomFinisherDummy')then child:
+Destroy()end end if type(entity)=='table'and entity.Model then dummyKey=entity.
+Model elseif typeof(entity)=='Instance'then dummyKey=entity elseif typeof(
+subject)=='Instance'then dummyKey=subject:FindFirstAncestorOfClass('Model')or
+subject end if dummyKey and self.DummyModels[dummyKey]then self.DummyModels[
+dummyKey]:Destroy()self.DummyModels[dummyKey]=nil end dummyHumanoid,dummyModel=
+createDummyFromSubject(subject)if dummyHumanoid then subject=dummyHumanoid
+setupDummyForPreview(dummyHumanoid)if dummyKey then self.DummyModels[dummyKey]=
+dummyModel end end local isFinal=args and args[2]if isFinal==nil then isFinal=
+false end local eliminatorArg=eliminator if dummyModel then eliminatorArg={
+Character=dummyModel}end if typeof(eliminator)=='Instance'and eliminator:IsA(
+'Player')then eliminatorArg={Character=eliminator.Character}end local okNew,
+newErr=pcall(function()finisherInstance=finisherClass.new(subject,isFinal,
+eliminatorArg)end)if not finisherInstance then local okFallback,fallbackErr=
+pcall(function()finisherInstance=finisherClass.new()end)if logger then logger:
+Info('Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
+okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
+newErr)elseif okNew and not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
@@ -623,17 +625,17 @@ SetSerial and args then local serialValue=args[4]if type(serialValue)=='table'
 and serialValue.Seed then serialValue=serialValue.Seed end if serialValue~=nil
 then pcall(finisherInstance.SetSerial,finisherInstance,serialValue)end end if
 finisherInstance.Simulate then pcall(finisherInstance.Simulate,finisherInstance)
-if dummyModel then task.delay(3,function()if dummyModel and dummyModel.Parent
-then dummyModel:Destroy()end if dummyKey and self.DummyModels[dummyKey]==
-dummyModel then self.DummyModels[dummyKey]=nil end end)end return end if
-finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
-finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
-finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
-PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
-'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
-function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
-end end do local function __modImpl()local repo=
+if dummyModel then game:GetService('Debris'):AddItem(dummyModel,3)task.delay(3,
+function()if dummyKey and self.DummyModels[dummyKey]==dummyModel then self.
+DummyModels[dummyKey]=nil end end)end return end if finisherInstance.PlayServer
+then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger then
+logger:Warn('Finisher missing PlayServer:',finisherName)end if finisherInstance.
+PlayClient then pcall(finisherInstance.PlayClient,finisherInstance,unpack(args))
+elseif logger then logger:Warn('Finisher missing PlayClient:',finisherName)end
+end return UnlockAllSkins end function __DARKLUA_BUNDLE_MODULES.e()local v=
+__DARKLUA_BUNDLE_MODULES.cache.e if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end do local function
+__modImpl()local repo=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local function loadRemote(path)local source=game:HttpGet(repo..path)local chunk,
 err=loadstring(source)if not chunk then error('[Blossom] UI load failed: '..
