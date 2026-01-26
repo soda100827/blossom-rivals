@@ -25,6 +25,7 @@ local UnlockAllSkins = {
 	Favorites = {},
 	Originals = {},
 	FinisherCache = {},
+	FinisherSerials = {},
 }
 
 local CONFIG_DIR = "BlossomUnlockAll"
@@ -1025,6 +1026,23 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		end
 	end
 
+	local serialKey = nil
+	if args then
+		local serialValue = args[4]
+		if type(serialValue) == "table" and serialValue.Seed then
+			serialKey = serialValue.Seed
+		else
+			serialKey = serialValue
+		end
+	end
+	if entity and serialKey ~= nil then
+		local lastSerial = self.FinisherSerials[entity]
+		if lastSerial == serialKey then
+			return
+		end
+		self.FinisherSerials[entity] = serialKey
+	end
+
 	if logger then
 		logger:Info(
 			"Finisher subject resolved:",
@@ -1091,10 +1109,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	end
 
 	if finisherInstance.PlayServer then
-		local runService = game:GetService("RunService")
-		if runService:IsServer() then
-			pcall(finisherInstance.PlayServer, finisherInstance)
-		end
+		pcall(finisherInstance.PlayServer, finisherInstance)
 	elseif logger then
 		logger:Warn("Finisher missing PlayServer:", finisherName)
 	end
