@@ -640,6 +640,18 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 					valueKind = tostring(typeof(args[i]))
 				end
 				logger:Info("Finisher arg", i, "type:", valueType, "kind:", valueKind, "value:", args[i])
+				if valueType == "userdata" and typeof(args[i]) == "Instance" then
+					logger:Info(
+						"Finisher arg",
+						i,
+						"class:",
+						args[i].ClassName,
+						"name:",
+						args[i].Name,
+						"parent:",
+						args[i].Parent
+					)
+				end
 			end
 			if #args > maxArgs then
 				logger:Info("Finisher args truncated:", maxArgs, "of", #args)
@@ -775,6 +787,17 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 				return humanoid
 			end
 			local root = value:FindFirstChild("HumanoidRootPart") or value.PrimaryPart
+			if root then
+				return root
+			end
+		end
+		local ancestor = value:FindFirstAncestorOfClass("Model")
+		if ancestor then
+			local humanoid = ancestor:FindFirstChildOfClass("Humanoid")
+			if humanoid then
+				return humanoid
+			end
+			local root = ancestor:FindFirstChild("HumanoidRootPart") or ancestor.PrimaryPart
 			if root then
 				return root
 			end
@@ -984,7 +1007,11 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	end
 
 	local eliminator = args and args[3] or nil
-	if isLocalSubject(subject) and not isLocalEliminator(eliminator) then
+	local eliminatorIsLocal = isLocalEliminator(eliminator)
+	if logger then
+		logger:Info("Finisher eliminator local:", eliminatorIsLocal, "eliminator:", eliminator)
+	end
+	if isLocalSubject(subject) and not eliminatorIsLocal then
 		if logger then
 			logger:Warn("Skipping finisher on local subject; eliminator not local:", eliminator)
 		end

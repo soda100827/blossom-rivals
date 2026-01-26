@@ -449,32 +449,34 @@ logger:Info('Finisher id:',finisherId,'type:',type(finisherId))if args then
 logger:Info('Finisher args count:',#args)local maxArgs=math.min(#args,6)for i=1,
 maxArgs do local valueType=type(args[i])local valueKind=''if valueType==
 'userdata'then valueKind=tostring(typeof(args[i]))end logger:Info('Finisher arg'
-,i,'type:',valueType,'kind:',valueKind,'value:',args[i])end if#args>maxArgs then
-logger:Info('Finisher args truncated:',maxArgs,'of',#args)end end end local
-finisherName=finisherId local finisherEnum=nil if type(finisherId)=='userdata'
-and self.EnumLibrary and self.EnumLibrary.FromEnum then finisherEnum=finisherId
-local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if
-ok and decoded then finisherName=decoded end elseif type(finisherId)=='string'
-and self.EnumLibrary and self.EnumLibrary.ToEnum then local ok,enumId=pcall(self
-.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok and enumId then
-finisherEnum=enumId end end if type(finisherName)~='string'then if logger then
-logger:Warn('Finisher name not a string:',finisherName)end return end if logger
-then logger:Info('Finisher name:',finisherName,'enum:',finisherEnum)end local
-cached=self.FinisherCache[finisherName]local finisherClass=cached if not
-finisherClass then local finishersFolder=ReplicatedStorage:FindFirstChild(
-'Modules')finishersFolder=finishersFolder and finishersFolder:FindFirstChild(
-'Finishers')or nil local finisherModule=finishersFolder and finishersFolder:
-FindFirstChild(finisherName)or nil if not finisherModule and finishersFolder and
-finisherEnum and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child
-in ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.
-EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if ok and enumId==finisherEnum
-then finisherModule=child finisherName=child.Name break end end end if not
-finisherModule and finishersFolder and type(finisherId)=='string'and self.
-EnumLibrary and self.EnumLibrary.ToEnum then for _,child in ipairs(
-finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.ToEnum,
-self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==finisherId
-then finisherModule=child finisherName=child.Name finisherEnum=enumId break end
-end end if not finisherModule then if logger then logger:Warn(
+,i,'type:',valueType,'kind:',valueKind,'value:',args[i])if valueType=='userdata'
+and typeof(args[i])=='Instance'then logger:Info('Finisher arg',i,'class:',args[i
+].ClassName,'name:',args[i].Name,'parent:',args[i].Parent)end end if#args>
+maxArgs then logger:Info('Finisher args truncated:',maxArgs,'of',#args)end end
+end local finisherName=finisherId local finisherEnum=nil if type(finisherId)==
+'userdata'and self.EnumLibrary and self.EnumLibrary.FromEnum then finisherEnum=
+finisherId local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.EnumLibrary,
+finisherId)if ok and decoded then finisherName=decoded end elseif type(
+finisherId)=='string'and self.EnumLibrary and self.EnumLibrary.ToEnum then local
+ok,enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok and
+enumId then finisherEnum=enumId end end if type(finisherName)~='string'then if
+logger then logger:Warn('Finisher name not a string:',finisherName)end return
+end if logger then logger:Info('Finisher name:',finisherName,'enum:',
+finisherEnum)end local cached=self.FinisherCache[finisherName]local
+finisherClass=cached if not finisherClass then local finishersFolder=
+ReplicatedStorage:FindFirstChild('Modules')finishersFolder=finishersFolder and
+finishersFolder:FindFirstChild('Finishers')or nil local finisherModule=
+finishersFolder and finishersFolder:FindFirstChild(finisherName)or nil if not
+finisherModule and finishersFolder and finisherEnum and self.EnumLibrary and
+self.EnumLibrary.ToEnum then for _,child in ipairs(finishersFolder:GetChildren()
+)do local ok,enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if
+ok and enumId==finisherEnum then finisherModule=child finisherName=child.Name
+break end end end if not finisherModule and finishersFolder and type(finisherId)
+=='string'and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child in
+ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.
+ToEnum,self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==
+finisherId then finisherModule=child finisherName=child.Name finisherEnum=enumId
+break end end end if not finisherModule then if logger then logger:Warn(
 'Finisher module not found:',finisherName)if finishersFolder then local children
 =finishersFolder:GetChildren()logger:Info('Finishers folder children:',#children
 )local maxList=math.min(#children,20)for i=1,maxList do local child=children[i]
@@ -496,15 +498,19 @@ humanoid then return humanoid end local root=character:FindFirstChild(
 'HumanoidRootPart')or character.PrimaryPart if root then return root end end end
 if value:IsA('Model')then local humanoid=value:FindFirstChildOfClass('Humanoid')
 if humanoid then return humanoid end local root=value:FindFirstChild(
-'HumanoidRootPart')or value.PrimaryPart if root then return root end end return
-nil end local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or
-depth<=0 then return nil end for _,value in pairs(tbl)do local direct=
-resolveSubject(value)if direct then return direct end if type(value)=='table'
-then local nested=resolveSubjectFromTable(value,depth-1)if nested then return
-nested end end end return nil end local function resolveNonLocalSubjectFromTable
-(tbl,depth)if type(tbl)~='table'or depth<=0 then return nil end for _,value in
-pairs(tbl)do local direct=resolveSubject(value)if direct and not isLocalSubject(
-direct)then return direct end if type(value)=='table'then local nested=
+'HumanoidRootPart')or value.PrimaryPart if root then return root end end local
+ancestor=value:FindFirstAncestorOfClass('Model')if ancestor then local humanoid=
+ancestor:FindFirstChildOfClass('Humanoid')if humanoid then return humanoid end
+local root=ancestor:FindFirstChild('HumanoidRootPart')or ancestor.PrimaryPart if
+root then return root end end return nil end local function
+resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=0 then return
+nil end for _,value in pairs(tbl)do local direct=resolveSubject(value)if direct
+then return direct end if type(value)=='table'then local nested=
+resolveSubjectFromTable(value,depth-1)if nested then return nested end end end
+return nil end local function resolveNonLocalSubjectFromTable(tbl,depth)if type(
+tbl)~='table'or depth<=0 then return nil end for _,value in pairs(tbl)do local
+direct=resolveSubject(value)if direct and not isLocalSubject(direct)then return
+direct end if type(value)=='table'then local nested=
 resolveNonLocalSubjectFromTable(value,depth-1)if nested then return nested end
 end end return nil end local function logTableSummary(tbl)if not logger or type(
 tbl)~='table'then return end local count=0 for key,value in pairs(tbl)do count+=
@@ -549,8 +555,10 @@ then subject=nonLocal subjectSource='args[4] non-local scan'else
 logTableSummary(args[4])end end if logger then logger:Info(
 'Finisher subject resolved:',subject,'class:',subject.ClassName,'source:',
 subjectSource,'isLocal:',isLocalSubject(subject))end local eliminator=args and
-args[3]or nil if isLocalSubject(subject)and not isLocalEliminator(eliminator)
-then if logger then logger:Warn(
+args[3]or nil local eliminatorIsLocal=isLocalEliminator(eliminator)if logger
+then logger:Info('Finisher eliminator local:',eliminatorIsLocal,'eliminator:',
+eliminator)end if isLocalSubject(subject)and not eliminatorIsLocal then if
+logger then logger:Warn(
 'Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end local finisherInstance=nil local isFinal=args and args[2]or nil local
 okNew,newErr=pcall(function()finisherInstance=finisherClass.new(subject,isFinal,
