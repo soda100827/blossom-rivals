@@ -114,21 +114,13 @@ function Interface:Mount()
 				local mod = self.Client.Modules.Visuals
 				if mod and mod.Toggle then
 					mod:Toggle(state)
+					if mod.SetESPEnabled then
+						mod:SetESPEnabled(state)
+					end
 				end
 			end,
 		})
 		:AddKeyPicker("EspKey", { Default = "Insert", NoUI = true, Text = "ESP Key" })
-
-	espGroup:AddToggle("ESPEnabled", {
-		Text = "Enable ESP",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetESPEnabled(state)
-			end
-		end,
-	})
 
 	-- Name
 	espGroup
@@ -154,16 +146,27 @@ function Interface:Mount()
 		})
 
 	-- Weapon
-	espGroup:AddToggle("ESPWeapon", {
-		Text = "Weapon",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetShowWeapon(state)
-			end
-		end,
-	})
+	espGroup
+		:AddToggle("ESPWeapon", {
+			Text = "Weapon",
+			Default = false,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowWeapon(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPWeaponColor", {
+			Default = Color3.new(1, 1, 1),
+			Title = "Weapon Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetWeaponColor(value)
+				end
+			end,
+		})
 	-- Assuming Weapon uses TextColor for now, but UI implies separate color.
 	-- Since SetTextColor sets both, we'll leave it shared or add specific if needed.
 	-- The image has a color picker for Weapon.
@@ -175,16 +178,27 @@ function Interface:Mount()
 	-- I'll stick to `TextColor` managing all text for now.
 
 	-- Distance
-	espGroup:AddToggle("ESPDistance", {
-		Text = "Distance",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetShowDistance(state)
-			end
-		end,
-	})
+	espGroup
+		:AddToggle("ESPDistance", {
+			Text = "Distance",
+			Default = false,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowDistance(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPDistanceColor", {
+			Default = Color3.new(1, 1, 1),
+			Title = "Distance Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetDistanceColor(value)
+				end
+			end,
+		})
 
 	-- Box
 	espGroup
@@ -233,16 +247,37 @@ function Interface:Mount()
 		})
 
 	-- Healthbar
-	espGroup:AddToggle("ESPHealthbar", {
-		Text = "Healthbar",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.Visuals
-			if mod then
-				mod:SetShowHealthbar(state)
-			end
-		end,
-	})
+	espGroup
+		:AddToggle("ESPHealthbar", {
+			Text = "Healthbar",
+			Default = false,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowHealthbar(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPHealthbarColor", {
+			Default = Color3.new(0, 1, 0),
+			Title = "Health Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetHealthbarColor(value)
+				end
+			end,
+		})
+		:AddColorPicker("ESPHealthbarOutlineColor", {
+			Default = Color3.new(0, 0, 0),
+			Title = "Outline Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetHealthbarOutlineColor(value)
+				end
+			end,
+		})
 
 	-- Highlight (Fill, Outline)
 	espGroup

@@ -26,8 +26,11 @@ local Visuals = {
 		-- Colors
 		BoxColor = Color3.new(1, 1, 1),
 		TextColor = Color3.new(1, 1, 1),
+		WeaponColor = Color3.new(1, 1, 1),
+		DistanceColor = Color3.new(1, 1, 1),
 		SkeletonColor = Color3.new(1, 1, 1),
-		HealthbarColor = Color3.new(0, 1, 0), -- Dynamic usually, but base color
+		HealthbarColor = Color3.new(0, 1, 0), -- Green by default
+		HealthbarOutlineColor = Color3.new(0, 0, 0),
 		HighlightFill = Color3.new(1, 0, 0),
 		HighlightOutline = Color3.new(1, 1, 1),
 
@@ -99,8 +102,20 @@ end
 function Visuals:SetTextColor(color: Color3)
 	self.Settings.TextColor = color
 end
+function Visuals:SetWeaponColor(color: Color3)
+	self.Settings.WeaponColor = color
+end
+function Visuals:SetDistanceColor(color: Color3)
+	self.Settings.DistanceColor = color
+end
 function Visuals:SetSkeletonColor(color: Color3)
 	self.Settings.SkeletonColor = color
+end
+function Visuals:SetHealthbarColor(color: Color3)
+	self.Settings.HealthbarColor = color
+end
+function Visuals:SetHealthbarOutlineColor(color: Color3)
+	self.Settings.HealthbarOutlineColor = color
 end
 function Visuals:SetHighlightFill(color: Color3)
 	self.Settings.HighlightFill = color
@@ -369,12 +384,12 @@ function Visuals:Render()
 			local barHeight = height * healthPerc
 			group.HealthbarOutline.Size = Vector2.new(2, height)
 			group.HealthbarOutline.Position = Vector2.new(boxPos.X - 5, boxPos.Y)
-			group.HealthbarOutline.Color = Color3.new(0, 0, 0)
+			group.HealthbarOutline.Color = self.Settings.HealthbarOutlineColor
 			group.HealthbarOutline.Visible = true
 
 			group.Healthbar.Size = Vector2.new(2, barHeight)
 			group.Healthbar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
-			group.Healthbar.Color = Color3.fromRGB(255, 0, 0):Lerp(Color3.fromRGB(0, 255, 0), healthPerc)
+			group.Healthbar.Color = self.Settings.HealthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
 			group.Healthbar.Visible = true
 		else
 			group.Healthbar.Visible = false
@@ -400,7 +415,7 @@ function Visuals:Render()
 			if tool then
 				group.Weapon.Text = tool.Name
 				group.Weapon.Size = self.Settings.TextSize
-				group.Weapon.Color = self.Settings.TextColor
+				group.Weapon.Color = self.Settings.WeaponColor
 				group.Weapon.Outline = self.Settings.Outline
 				group.Weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textYOffset)
 				group.Weapon.Visible = true
@@ -416,7 +431,7 @@ function Visuals:Render()
 		if self.Settings.ShowDistance then
 			group.Distance.Text = math.floor(distance) .. " studs"
 			group.Distance.Size = self.Settings.TextSize
-			group.Distance.Color = self.Settings.TextColor
+			group.Distance.Color = self.Settings.DistanceColor
 			group.Distance.Outline = self.Settings.Outline
 			group.Distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textYOffset)
 			group.Distance.Visible = true
