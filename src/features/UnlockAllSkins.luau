@@ -626,7 +626,11 @@ function UnlockAllSkins:InstallEntityHooks()
 end
 
 function UnlockAllSkins:PlayFinisherClient(finisherId, args)
-	print("Called PlayFinisherClient")
+	local logger = self.Logger
+	if logger then
+		logger:Info("FinisherEffect received.")
+		logger:Info("Finisher id:", finisherId, "type:", type(finisherId))
+	end
 
 	local finisherName = finisherId
 	local finisherEnum = nil
@@ -636,10 +640,21 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		if ok and decoded then
 			finisherName = decoded
 		end
+	elseif type(finisherId) == "string" and self.EnumLibrary and self.EnumLibrary.ToEnum then
+		local ok, enumId = pcall(self.EnumLibrary.ToEnum, self.EnumLibrary, finisherId)
+		if ok and enumId then
+			finisherEnum = enumId
+		end
 	end
 
 	if type(finisherName) ~= "string" then
+		if logger then
+			logger:Warn("Finisher name not a string:", finisherName)
+		end
 		return
+	end
+	if logger then
+		logger:Info("Finisher name:", finisherName, "enum:", finisherEnum)
 	end
 
 	local cached = self.FinisherCache[finisherName]
@@ -659,16 +674,25 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 			end
 		end
 		if not finisherModule then
+			if logger then
+				logger:Warn("Finisher module not found:", finisherName)
+			end
 			return
 		end
 		finisherClass = safeRequire(finisherModule)
 		if not finisherClass then
+			if logger then
+				logger:Warn("Failed to require finisher module:", finisherName)
+			end
 			return
 		end
 		self.FinisherCache[finisherName] = finisherClass
 	end
 
 	if not finisherClass.new then
+		if logger then
+			logger:Warn("Finisher class missing constructor:", finisherName)
+		end
 		return
 	end
 
@@ -682,17 +706,25 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		end)
 	end
 
-	print(finisherInstance)
-
 	if not finisherInstance then
+		if logger then
+			logger:Warn("Finisher instance not created:", finisherName)
+		end
 		return
+	end
+	if logger then
+		logger:Info("Finisher instance created:", finisherName)
 	end
 
 	if finisherInstance.PlayServer then
 		pcall(finisherInstance.PlayServer, finisherInstance)
+	elseif logger then
+		logger:Warn("Finisher missing PlayServer:", finisherName)
 	end
 	if finisherInstance.PlayClient then
 		pcall(finisherInstance.PlayClient, finisherInstance, unpack(args))
+	elseif logger then
+		logger:Warn("Finisher missing PlayClient:", finisherName)
 	end
 end
 

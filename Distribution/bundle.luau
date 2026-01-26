@@ -444,12 +444,18 @@ ReplicateFromServer(selfObj,action,unpack(args))end end end if module.Enabled
 and action=='FinisherEffect'then local args={...}module:PlayFinisherClient(args[
 1],args)end return module.Originals.EntityHooks.ReplicateFromServer(selfObj,
 action,...)end end function UnlockAllSkins:PlayFinisherClient(finisherId,args)
-print('Called PlayFinisherClient')local finisherName=finisherId local
-finisherEnum=nil if type(finisherId)=='userdata'and self.EnumLibrary and self.
-EnumLibrary.FromEnum then finisherEnum=finisherId local ok,decoded=pcall(self.
-EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if ok and decoded then
-finisherName=decoded end end if type(finisherName)~='string'then return end
-local cached=self.FinisherCache[finisherName]local finisherClass=cached if not
+local logger=self.Logger if logger then logger:Info('FinisherEffect received.')
+logger:Info('Finisher id:',finisherId,'type:',type(finisherId))end local
+finisherName=finisherId local finisherEnum=nil if type(finisherId)=='userdata'
+and self.EnumLibrary and self.EnumLibrary.FromEnum then finisherEnum=finisherId
+local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if
+ok and decoded then finisherName=decoded end elseif type(finisherId)=='string'
+and self.EnumLibrary and self.EnumLibrary.ToEnum then local ok,enumId=pcall(self
+.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok and enumId then
+finisherEnum=enumId end end if type(finisherName)~='string'then if logger then
+logger:Warn('Finisher name not a string:',finisherName)end return end if logger
+then logger:Info('Finisher name:',finisherName,'enum:',finisherEnum)end local
+cached=self.FinisherCache[finisherName]local finisherClass=cached if not
 finisherClass then local finishersFolder=ReplicatedStorage:FindFirstChild(
 'Modules')finishersFolder=finishersFolder and finishersFolder:FindFirstChild(
 'Finishers')or nil local finisherModule=finishersFolder and finishersFolder:
@@ -458,15 +464,22 @@ finisherEnum and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child
 in ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.
 EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if ok and enumId==finisherEnum
 then finisherModule=child finisherName=child.Name break end end end if not
-finisherModule then return end finisherClass=safeRequire(finisherModule)if not
-finisherClass then return end self.FinisherCache[finisherName]=finisherClass end
-if not finisherClass.new then return end local finisherInstance=nil pcall(
-function()finisherInstance=finisherClass.new(unpack(args))end)if not
-finisherInstance then pcall(function()finisherInstance=finisherClass.new()end)
-end print(finisherInstance)if not finisherInstance then return end if
+finisherModule then if logger then logger:Warn('Finisher module not found:',
+finisherName)end return end finisherClass=safeRequire(finisherModule)if not
+finisherClass then if logger then logger:Warn(
+'Failed to require finisher module:',finisherName)end return end self.
+FinisherCache[finisherName]=finisherClass end if not finisherClass.new then if
+logger then logger:Warn('Finisher class missing constructor:',finisherName)end
+return end local finisherInstance=nil pcall(function()finisherInstance=
+finisherClass.new(unpack(args))end)if not finisherInstance then pcall(function()
+finisherInstance=finisherClass.new()end)end if not finisherInstance then if
+logger then logger:Warn('Finisher instance not created:',finisherName)end return
+end if logger then logger:Info('Finisher instance created:',finisherName)end if
 finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
-finisherInstance)end if finisherInstance.PlayClient then pcall(finisherInstance.
-PlayClient,finisherInstance,unpack(args))end end return UnlockAllSkins end
+finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
+finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
+PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
+'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
 function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
 end end do local function __modImpl()local repo=
