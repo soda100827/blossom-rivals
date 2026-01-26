@@ -483,16 +483,20 @@ finisherClass=safeRequire(finisherModule)if not finisherClass then if logger
 then logger:Warn('Failed to require finisher module:',finisherName)end return
 end self.FinisherCache[finisherName]=finisherClass end if not finisherClass.new
 then if logger then logger:Warn('Finisher class missing constructor:',
-finisherName)end return end local finisherInstance=nil pcall(function()
-finisherInstance=finisherClass.new(unpack(args))end)if not finisherInstance then
-pcall(function()finisherInstance=finisherClass.new()end)end if not
-finisherInstance then if logger then logger:Warn(
-'Finisher instance not created:',finisherName)end return end if logger then
-logger:Info('Finisher instance created:',finisherName)end if finisherInstance.
-PlayServer then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger
-then logger:Warn('Finisher missing PlayServer:',finisherName)end if
-finisherInstance.PlayClient then pcall(finisherInstance.PlayClient,
-finisherInstance,unpack(args))elseif logger then logger:Warn(
+finisherName)end return end local finisherInstance=nil local okNew,newErr=pcall(
+function()finisherInstance=finisherClass.new(unpack(args))end)if not
+finisherInstance then local okFallback,fallbackErr=pcall(function()
+finisherInstance=finisherClass.new()end)if logger and(not okNew or not
+okFallback)then if not okNew then logger:Warn(
+'Finisher constructor failed with args:',finisherName,newErr)end if not
+okFallback then logger:Warn('Finisher constructor failed with no args:',
+finisherName,fallbackErr)end end end if not finisherInstance then if logger then
+logger:Warn('Finisher instance not created:',finisherName)end return end if
+logger then logger:Info('Finisher instance created:',finisherName)end if
+finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
+finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
+finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
+PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
 'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
 function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c

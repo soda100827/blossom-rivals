@@ -735,13 +735,21 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	end
 
 	local finisherInstance = nil
-	pcall(function()
+	local okNew, newErr = pcall(function()
 		finisherInstance = finisherClass.new(unpack(args))
 	end)
 	if not finisherInstance then
-		pcall(function()
+		local okFallback, fallbackErr = pcall(function()
 			finisherInstance = finisherClass.new()
 		end)
+		if logger and (not okNew or not okFallback) then
+			if not okNew then
+				logger:Warn("Finisher constructor failed with args:", finisherName, newErr)
+			end
+			if not okFallback then
+				logger:Warn("Finisher constructor failed with no args:", finisherName, fallbackErr)
+			end
+		end
 	end
 
 	if not finisherInstance then
