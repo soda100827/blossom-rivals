@@ -31,9 +31,9 @@ local Client: BlossomClient = {
 }
 
 local MODULES = {
-	{ Name = "Movement", Path = "src/features/Movement" },
-	{ Name = "Visuals", Path = "src/features/Visuals" },
-	{ Name = "Interface", Path = "src/ui/Interface" },
+	{ Name = "Movement", Path = "./src/features/Movement" },
+	{ Name = "Visuals", Path = "./src/features/Visuals" },
+	{ Name = "Interface", Path = "./src/ui/Interface" },
 }
 
 function Client:LoadModule(name, moduleOrPath)
