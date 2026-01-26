@@ -801,6 +801,25 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		return nil
 	end
 
+	local function resolveNonLocalSubjectFromTable(tbl, depth)
+		if type(tbl) ~= "table" or depth <= 0 then
+			return nil
+		end
+		for _, value in pairs(tbl) do
+			local direct = resolveSubject(value)
+			if direct and not isLocalSubject(direct) then
+				return direct
+			end
+			if type(value) == "table" then
+				local nested = resolveNonLocalSubjectFromTable(value, depth - 1)
+				if nested then
+					return nested
+				end
+			end
+		end
+		return nil
+	end
+
 	local function logTableSummary(tbl)
 		if not logger or type(tbl) ~= "table" then
 			return
@@ -941,6 +960,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		end
 		return
 	end
+	if subject and isLocalSubject(subject) and type(args) == "table" and type(args[4]) == "table" then
+		local nonLocal = resolveNonLocalSubjectFromTable(args[4], 3)
+		if nonLocal then
+			subject = nonLocal
+			subjectSource = "args[4] non-local scan"
+		else
+			logTableSummary(args[4])
+		end
+	end
+
 	if logger then
 		logger:Info(
 			"Finisher subject resolved:",
