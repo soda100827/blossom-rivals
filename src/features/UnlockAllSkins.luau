@@ -821,6 +821,31 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		end
 	end
 
+	local function isLocalSubject(value)
+		if not self.Player then
+			return false
+		end
+		local character = self.Player.Character
+		if not character then
+			return false
+		end
+		if value == character then
+			return true
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid and value == humanoid then
+			return true
+		end
+		local root = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+		if root and value == root then
+			return true
+		end
+		if value:IsA("Model") and value == character then
+			return true
+		end
+		return false
+	end
+
 	local subject = nil
 	local subjectSource = nil
 	if args then
@@ -837,8 +862,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 			}
 			for _, key in ipairs(tableKeys) do
 				if args[4][key] then
-					subject = resolveSubject(args[4][key])
-					if subject then
+					local candidate = resolveSubject(args[4][key])
+					if candidate and not isLocalSubject(candidate) then
+						subject = candidate
 						subjectSource = "args[4]." .. key
 						break
 					end
@@ -846,28 +872,37 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 			end
 		end
 		if not subject then
-			subject = resolveSubject(args[4])
-			if subject then
+			local candidate = resolveSubject(args[4])
+			if candidate and not isLocalSubject(candidate) then
+				subject = candidate
 				subjectSource = "args[4]"
 			end
 		end
 		if not subject then
-			subject = resolveSubjectFromTable(args[4], 2)
-			if subject then
+			local candidate = resolveSubjectFromTable(args[4], 2)
+			if candidate and not isLocalSubject(candidate) then
+				subject = candidate
 				subjectSource = "args[4] table scan"
 			end
 		end
 		if not subject then
-			subject = resolveSubject(args[2])
-			if subject then
+			local candidate = resolveSubject(args[2])
+			if candidate and not isLocalSubject(candidate) then
+				subject = candidate
 				subjectSource = "args[2]"
 			end
 		end
 		if not subject then
-			subject = resolveSubject(args[3])
-			if subject then
+			local candidate = resolveSubject(args[3])
+			if candidate and not isLocalSubject(candidate) then
+				subject = candidate
 				subjectSource = "args[3]"
 			end
+		end
+		if not subject then
+			-- Fallback to local subject if nothing else was found.
+			subject = resolveSubject(args[4]) or resolveSubject(args[3]) or resolveSubject(args[2])
+			subjectSource = "fallback local"
 		end
 		if not subject and type(args[4]) == "table" then
 			logTableSummary(args[4])
@@ -881,7 +916,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		return
 	end
 	if logger then
-		logger:Info("Finisher subject resolved:", subject, "class:", subject.ClassName, "source:", subjectSource)
+		logger:Info(
+			"Finisher subject resolved:",
+			subject,
+			"class:",
+			subject.ClassName,
+			"source:",
+			subjectSource,
+			"isLocal:",
+			isLocalSubject(subject)
+		)
 	end
 
 	local finisherInstance = nil
