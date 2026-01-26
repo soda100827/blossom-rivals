@@ -456,16 +456,6 @@ function Interface:Mount()
 			end
 		end,
 	})
-	cosmeticGroup:AddToggle("UnlockAllSkinsDebug", {
-		Text = "Unlock All Skins Debug",
-		Default = true,
-		Callback = function(state)
-			local mod = self.Client.Modules.UnlockAllSkins
-			if mod then
-				mod.DebugEnabled = state
-			end
-		end,
-	})
 
 	local miscGroup = tabs.Misc:AddLeftGroupbox("Auto Load")
 	miscGroup:AddToggle("TeleportQueue", {
