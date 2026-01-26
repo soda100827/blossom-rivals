@@ -1125,7 +1125,14 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	local finisherInstance = nil
 	local dummyModel = nil
 	local dummyHumanoid = nil
-	local dummyKey = entity or subject
+	local dummyKey = nil
+	if type(entity) == "table" and entity.Model then
+		dummyKey = entity.Model
+	elseif typeof(entity) == "Instance" then
+		dummyKey = entity
+	elseif typeof(subject) == "Instance" then
+		dummyKey = subject:FindFirstAncestorOfClass("Model") or subject
+	end
 	if dummyKey and self.DummyModels[dummyKey] then
 		self.DummyModels[dummyKey]:Destroy()
 		self.DummyModels[dummyKey] = nil

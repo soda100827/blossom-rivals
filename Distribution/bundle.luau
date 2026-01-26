@@ -592,20 +592,23 @@ Warn('Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end if eliminatorIsLocal and isLocalSubject(subject)then if logger then
 logger:Warn([[Skipping finisher; subject is local while eliminator is local:]],
 eliminator)end return end local finisherInstance=nil local dummyModel=nil local
-dummyHumanoid=nil local dummyKey=entity or subject if dummyKey and self.
-DummyModels[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[
-dummyKey]=nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if
-dummyHumanoid then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if
-dummyKey then self.DummyModels[dummyKey]=dummyModel end end local isFinal=args
-and args[2]if isFinal==nil then isFinal=false end local eliminatorArg=eliminator
-if typeof(eliminator)=='Instance'and eliminator:IsA('Player')then eliminatorArg=
-{Character=eliminator.Character}end local okNew,newErr=pcall(function()
-finisherInstance=finisherClass.new(subject,isFinal,eliminatorArg)end)if not
-finisherInstance then local okFallback,fallbackErr=pcall(function()
-finisherInstance=finisherClass.new()end)if logger then logger:Info(
-'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
-okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
-newErr)elseif okNew and not finisherInstance then logger:Warn(
+dummyHumanoid=nil local dummyKey=nil if type(entity)=='table'and entity.Model
+then dummyKey=entity.Model elseif typeof(entity)=='Instance'then dummyKey=entity
+elseif typeof(subject)=='Instance'then dummyKey=subject:
+FindFirstAncestorOfClass('Model')or subject end if dummyKey and self.DummyModels
+[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[dummyKey]=
+nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if dummyHumanoid
+then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if dummyKey then
+self.DummyModels[dummyKey]=dummyModel end end local isFinal=args and args[2]if
+isFinal==nil then isFinal=false end local eliminatorArg=eliminator if typeof(
+eliminator)=='Instance'and eliminator:IsA('Player')then eliminatorArg={Character
+=eliminator.Character}end local okNew,newErr=pcall(function()finisherInstance=
+finisherClass.new(subject,isFinal,eliminatorArg)end)if not finisherInstance then
+local okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new(
+)end)if logger then logger:Info('Finisher constructor status:','okNew',okNew,
+'okFallback',okFallback)if not okNew then logger:Warn(
+'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
+not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
