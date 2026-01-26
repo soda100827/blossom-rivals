@@ -1057,9 +1057,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	end
 
 	local finisherInstance = nil
-	local isFinal = args and args[2] or nil
+	local isFinal = args and args[2]
+	if isFinal == nil then
+		isFinal = false
+	end
+	local eliminatorArg = eliminator
+	if typeof(eliminator) == "Instance" and eliminator:IsA("Player") then
+		eliminatorArg = { Character = eliminator.Character }
+	end
 	local okNew, newErr = pcall(function()
-		finisherInstance = finisherClass.new(subject, isFinal, eliminator)
+		finisherInstance = finisherClass.new(subject, isFinal, eliminatorArg)
 	end)
 	if not finisherInstance then
 		local okFallback, fallbackErr = pcall(function()

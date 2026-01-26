@@ -572,13 +572,15 @@ Warn('Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end if eliminatorIsLocal and isLocalSubject(subject)then if logger then
 logger:Warn([[Skipping finisher; subject is local while eliminator is local:]],
 eliminator)end return end local finisherInstance=nil local isFinal=args and args
-[2]or nil local okNew,newErr=pcall(function()finisherInstance=finisherClass.new(
-subject,isFinal,eliminator)end)if not finisherInstance then local okFallback,
-fallbackErr=pcall(function()finisherInstance=finisherClass.new()end)if logger
-then logger:Info('Finisher constructor status:','okNew',okNew,'okFallback',
-okFallback)if not okNew then logger:Warn(
-'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
-not finisherInstance then logger:Warn(
+[2]if isFinal==nil then isFinal=false end local eliminatorArg=eliminator if
+typeof(eliminator)=='Instance'and eliminator:IsA('Player')then eliminatorArg={
+Character=eliminator.Character}end local okNew,newErr=pcall(function()
+finisherInstance=finisherClass.new(subject,isFinal,eliminatorArg)end)if not
+finisherInstance then local okFallback,fallbackErr=pcall(function()
+finisherInstance=finisherClass.new()end)if logger then logger:Info(
+'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
+okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
+newErr)elseif okNew and not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
