@@ -876,6 +876,11 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 				table.insert(parts, child)
 			end
 		end
+		for _, descendant in pairs(model:GetDescendants()) do
+			if descendant:IsA("BasePart") then
+				descendant.CanCollide = true
+			end
+		end
 		for i = 1, #parts do
 			local part = parts[i]
 			for j = 1, #parts do

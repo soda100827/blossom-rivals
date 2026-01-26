@@ -525,12 +525,14 @@ root=model:FindFirstChild('HumanoidRootPart')if root then root.
 AssemblyLinearVelocity=Vector3.new(0,0,0)root.AssemblyAngularVelocity=Vector3.
 new(0,0,0)end dummyHumanoid.Health=0 local parts={}for _,child in pairs(model:
 GetChildren())do if child:IsA('BasePart')then child.CanCollide=true table.
-insert(parts,child)end end for i=1,#parts do local part=parts[i]for j=1,#parts
-do if i~=j then local constraint=Instance.new('NoCollisionConstraint')constraint
-.Part0=part constraint.Part1=parts[j]constraint.Parent=part end end end end
-local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=
-0 then return nil end for _,value in pairs(tbl)do local direct=resolveSubject(
-value)if direct then return direct end if type(value)=='table'then local nested=
+insert(parts,child)end end for _,descendant in pairs(model:GetDescendants())do
+if descendant:IsA('BasePart')then descendant.CanCollide=true end end for i=1,#
+parts do local part=parts[i]for j=1,#parts do if i~=j then local constraint=
+Instance.new('NoCollisionConstraint')constraint.Part0=part constraint.Part1=
+parts[j]constraint.Parent=part end end end end local function
+resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=0 then return
+nil end for _,value in pairs(tbl)do local direct=resolveSubject(value)if direct
+then return direct end if type(value)=='table'then local nested=
 resolveSubjectFromTable(value,depth-1)if nested then return nested end end end
 return nil end local function resolveNonLocalSubjectFromTable(tbl,depth)if type(
 tbl)~='table'or depth<=0 then return nil end for _,value in pairs(tbl)do local
