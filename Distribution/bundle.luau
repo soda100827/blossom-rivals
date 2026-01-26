@@ -586,10 +586,14 @@ Warn('Finisher constructor returned nil with no args:',finisherName)end end end
 if not finisherInstance then if logger then logger:Warn(
 'Finisher instance not created:',finisherName)end return end if logger then
 logger:Info('Finisher instance created:',finisherName)end if finisherInstance.
-PlayServer then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger
-then logger:Warn('Finisher missing PlayServer:',finisherName)end if
-finisherInstance.PlayClient then pcall(finisherInstance.PlayClient,
-finisherInstance,unpack(args))elseif logger then logger:Warn(
+SetSerial and args then local serialValue=args[4]if type(serialValue)=='table'
+and serialValue.Seed then serialValue=serialValue.Seed end if serialValue~=nil
+then pcall(finisherInstance.SetSerial,finisherInstance,serialValue)end end if
+finisherInstance.Simulate then pcall(finisherInstance.Simulate,finisherInstance)
+return end if finisherInstance.PlayServer then pcall(finisherInstance.PlayServer
+,finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
+finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
+PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
 'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
 function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c

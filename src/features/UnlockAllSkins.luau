@@ -1090,6 +1090,21 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		logger:Info("Finisher instance created:", finisherName)
 	end
 
+	if finisherInstance.SetSerial and args then
+		local serialValue = args[4]
+		if type(serialValue) == "table" and serialValue.Seed then
+			serialValue = serialValue.Seed
+		end
+		if serialValue ~= nil then
+			pcall(finisherInstance.SetSerial, finisherInstance, serialValue)
+		end
+	end
+
+	if finisherInstance.Simulate then
+		pcall(finisherInstance.Simulate, finisherInstance)
+		return
+	end
+
 	if finisherInstance.PlayServer then
 		pcall(finisherInstance.PlayServer, finisherInstance)
 	elseif logger then
