@@ -427,30 +427,34 @@ InstallEntityHooks()if self.Originals.EntityHooks then return end self.Originals
 ReplicateFromServer then return end local module=self self.Originals.EntityHooks
 .ReplicateFromServer=self.ClientEntity.ReplicateFromServer self.ClientEntity.
 ReplicateFromServer=function(selfObj,action,...)if module.Enabled and action==
-'FinisherEffect'then local args={...}local killerName=args[3]local decodedKiller
-=killerName if type(killerName)=='userdata'and module.EnumLibrary and module.
-EnumLibrary.FromEnum then local ok,decoded=pcall(module.EnumLibrary.FromEnum,
-module.EnumLibrary,killerName)if ok and decoded then decodedKiller=decoded end
-end local isOurKill=tostring(decodedKiller)==module.Player.Name or tostring(
-decodedKiller):lower()==module.Player.Name:lower()if isOurKill and module.
-LastUsedWeapon and module.Equipped[module.LastUsedWeapon]and module.Equipped[
-module.LastUsedWeapon].Finisher then local finisherData=module.Equipped[module.
-LastUsedWeapon].Finisher local finisherEnum=finisherData.Enum if not
-finisherEnum and module.EnumLibrary then local ok,result=pcall(module.
-EnumLibrary.ToEnum,module.EnumLibrary,finisherData.Name)if ok and result then
-finisherEnum=result end end if finisherEnum then args[1]=finisherEnum module:
-PlayFinisherClient(args[1],args,selfObj)return module.Originals.EntityHooks.
-ReplicateFromServer(selfObj,action,unpack(args))end end end if module.Enabled
-and action=='FinisherEffect'then local args={...}module:PlayFinisherClient(args[
-1],args,selfObj)end return module.Originals.EntityHooks.ReplicateFromServer(
-selfObj,action,...)end end function UnlockAllSkins:PlayFinisherClient(finisherId
-,args,entity)local logger=self.Logger if logger then logger:Info(
+'FinisherEffect'then local args={...}if module.Logger then module.Logger:Info(
+'Finisher hook entity:',selfObj,'type:',typeof(selfObj),'luaType:',type(selfObj)
+)end local killerName=args[3]local decodedKiller=killerName if type(killerName)
+=='userdata'and module.EnumLibrary and module.EnumLibrary.FromEnum then local ok
+,decoded=pcall(module.EnumLibrary.FromEnum,module.EnumLibrary,killerName)if ok
+and decoded then decodedKiller=decoded end end local isOurKill=tostring(
+decodedKiller)==module.Player.Name or tostring(decodedKiller):lower()==module.
+Player.Name:lower()if isOurKill and module.LastUsedWeapon and module.Equipped[
+module.LastUsedWeapon]and module.Equipped[module.LastUsedWeapon].Finisher then
+local finisherData=module.Equipped[module.LastUsedWeapon].Finisher local
+finisherEnum=finisherData.Enum if not finisherEnum and module.EnumLibrary then
+local ok,result=pcall(module.EnumLibrary.ToEnum,module.EnumLibrary,finisherData.
+Name)if ok and result then finisherEnum=result end end if finisherEnum then args
+[1]=finisherEnum module:PlayFinisherClient(args[1],args,selfObj)return module.
+Originals.EntityHooks.ReplicateFromServer(selfObj,action,unpack(args))end end
+end if module.Enabled and action=='FinisherEffect'then local args={...}if module
+.Logger then module.Logger:Info('Finisher hook entity:',selfObj,'type:',typeof(
+selfObj),'luaType:',type(selfObj))end module:PlayFinisherClient(args[1],args,
+selfObj)end return module.Originals.EntityHooks.ReplicateFromServer(selfObj,
+action,...)end end function UnlockAllSkins:PlayFinisherClient(finisherId,args,
+entity)local logger=self.Logger if logger then logger:Info(
 'FinisherEffect received.')logger:Info('Finisher id:',finisherId,'type:',type(
-finisherId))if args then logger:Info('Finisher args count:',#args)local maxArgs=
-math.min(#args,6)for i=1,maxArgs do local valueType=type(args[i])local valueKind
-=''if valueType=='userdata'then valueKind=tostring(typeof(args[i]))end logger:
-Info('Finisher arg',i,'type:',valueType,'kind:',valueKind,'value:',args[i])if
-valueType=='userdata'and typeof(args[i])=='Instance'then logger:Info(
+finisherId))logger:Info('Finisher entity param:',entity,'type:',typeof(entity),
+'luaType:',type(entity))if args then logger:Info('Finisher args count:',#args)
+local maxArgs=math.min(#args,6)for i=1,maxArgs do local valueType=type(args[i])
+local valueKind=''if valueType=='userdata'then valueKind=tostring(typeof(args[i]
+))end logger:Info('Finisher arg',i,'type:',valueType,'kind:',valueKind,'value:',
+args[i])if valueType=='userdata'and typeof(args[i])=='Instance'then logger:Info(
 'Finisher arg',i,'class:',args[i].ClassName,'name:',args[i].Name,'parent:',args[
 i].Parent)end end if#args>maxArgs then logger:Info('Finisher args truncated:',
 maxArgs,'of',#args)end end end local finisherName=finisherId local finisherEnum=

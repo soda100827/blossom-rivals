@@ -586,6 +586,9 @@ function UnlockAllSkins:InstallEntityHooks()
 	self.ClientEntity.ReplicateFromServer = function(selfObj, action, ...)
 		if module.Enabled and action == "FinisherEffect" then
 			local args = { ... }
+			if module.Logger then
+				module.Logger:Info("Finisher hook entity:", selfObj, "type:", typeof(selfObj), "luaType:", type(selfObj))
+			end
 			local killerName = args[3]
 			local decodedKiller = killerName
 			if type(killerName) == "userdata" and module.EnumLibrary and module.EnumLibrary.FromEnum then
@@ -619,6 +622,9 @@ function UnlockAllSkins:InstallEntityHooks()
 		end
 		if module.Enabled and action == "FinisherEffect" then
 			local args = { ... }
+			if module.Logger then
+				module.Logger:Info("Finisher hook entity:", selfObj, "type:", typeof(selfObj), "luaType:", type(selfObj))
+			end
 			module:PlayFinisherClient(args[1], args, selfObj)
 		end
 		return module.Originals.EntityHooks.ReplicateFromServer(selfObj, action, ...)
@@ -630,6 +636,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	if logger then
 		logger:Info("FinisherEffect received.")
 		logger:Info("Finisher id:", finisherId, "type:", type(finisherId))
+		logger:Info("Finisher entity param:", entity, "type:", typeof(entity), "luaType:", type(entity))
 		if args then
 			logger:Info("Finisher args count:", #args)
 			local maxArgs = math.min(#args, 6)
