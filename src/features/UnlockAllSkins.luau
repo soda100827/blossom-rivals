@@ -25,6 +25,7 @@ local UnlockAllSkins = {
 	Favorites = {},
 	Originals = {},
 	FinisherCache = {},
+	DummyModels = {},
 }
 
 local CONFIG_DIR = "BlossomUnlockAll"
@@ -1088,9 +1089,17 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	local finisherInstance = nil
 	local dummyModel = nil
 	local dummyHumanoid = nil
+	local dummyKey = entity or subject
+	if dummyKey and self.DummyModels[dummyKey] then
+		self.DummyModels[dummyKey]:Destroy()
+		self.DummyModels[dummyKey] = nil
+	end
 	dummyHumanoid, dummyModel = createDummyFromSubject(subject)
 	if dummyHumanoid then
 		subject = dummyHumanoid
+		if dummyKey then
+			self.DummyModels[dummyKey] = dummyModel
+		end
 	end
 	local isFinal = args and args[2]
 	if isFinal == nil then
@@ -1129,6 +1138,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		if dummyModel and dummyModel.Parent then
 			dummyModel:Destroy()
 		end
+		if dummyKey and self.DummyModels[dummyKey] == dummyModel then
+			self.DummyModels[dummyKey] = nil
+		end
 		return
 	end
 	if logger then
@@ -1151,6 +1163,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 			task.delay(6, function()
 				if dummyModel and dummyModel.Parent then
 					dummyModel:Destroy()
+				end
+				if dummyKey and self.DummyModels[dummyKey] == dummyModel then
+					self.DummyModels[dummyKey] = nil
 				end
 			end)
 		end

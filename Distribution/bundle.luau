@@ -226,16 +226,16 @@ local UnlockAllSkins={Enabled=false,Installed=false,Player=nil,PlayerScripts=nil
 ,Controllers=nil,EnumLibrary=nil,CosmeticLibrary=nil,ItemLibrary=nil,
 DataController=nil,FighterController=nil,ClientItem=nil,ClientViewModel=nil,
 ViewProfile=nil,ClientEntity=nil,LastUsedWeapon=nil,ConstructingWeapon=nil,
-ViewingProfile=nil,Equipped={},Favorites={},Originals={},FinisherCache={}}local
-CONFIG_DIR='BlossomUnlockAll'local CONFIG_FILE=CONFIG_DIR..'/config.json'
-local function safeRequire(moduleRef)local ok,result=pcall(require,moduleRef)if
-ok then return result end return nil end function UnlockAllSkins:Init(Client)
-self.Client=Client self.Logger=Client.Logger self.Player=Players.LocalPlayer if
-self.Player then self.PlayerScripts=self.Player:WaitForChild('PlayerScripts',10)
-self.Controllers=self.PlayerScripts and self.PlayerScripts:WaitForChild(
-'Controllers',10)or nil end end function UnlockAllSkins:Toggle(state)if self.
-Enabled==state then return end self.Enabled=state if state then self:
-EnsureInstalled()self:LoadConfig()self:ReplicateInventory()else self:
+ViewingProfile=nil,Equipped={},Favorites={},Originals={},FinisherCache={},
+DummyModels={}}local CONFIG_DIR='BlossomUnlockAll'local CONFIG_FILE=CONFIG_DIR..
+'/config.json'local function safeRequire(moduleRef)local ok,result=pcall(require
+,moduleRef)if ok then return result end return nil end function UnlockAllSkins:
+Init(Client)self.Client=Client self.Logger=Client.Logger self.Player=Players.
+LocalPlayer if self.Player then self.PlayerScripts=self.Player:WaitForChild(
+'PlayerScripts',10)self.Controllers=self.PlayerScripts and self.PlayerScripts:
+WaitForChild('Controllers',10)or nil end end function UnlockAllSkins:Toggle(
+state)if self.Enabled==state then return end self.Enabled=state if state then
+self:EnsureInstalled()self:LoadConfig()self:ReplicateInventory()else self:
 ReplicateInventory()end end function UnlockAllSkins:EnsureInstalled()if self.
 Installed then return end self.EnumLibrary=safeRequire(ReplicatedStorage.Modules
 :WaitForChild('EnumLibrary',10))if self.EnumLibrary then pcall(function()self.
@@ -581,14 +581,17 @@ Warn('Skipping finisher on local subject; eliminator not local:',eliminator)end
 return end if eliminatorIsLocal and isLocalSubject(subject)then if logger then
 logger:Warn([[Skipping finisher; subject is local while eliminator is local:]],
 eliminator)end return end local finisherInstance=nil local dummyModel=nil local
-dummyHumanoid=nil dummyHumanoid,dummyModel=createDummyFromSubject(subject)if
-dummyHumanoid then subject=dummyHumanoid end local isFinal=args and args[2]if
-isFinal==nil then isFinal=false end local eliminatorArg=eliminator if typeof(
-eliminator)=='Instance'and eliminator:IsA('Player')then eliminatorArg={Character
-=eliminator.Character}end local okNew,newErr=pcall(function()finisherInstance=
-finisherClass.new(subject,isFinal,eliminatorArg)end)if not finisherInstance then
-local okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new(
-)end)if logger then logger:Info('Finisher constructor status:','okNew',okNew,
+dummyHumanoid=nil local dummyKey=entity or subject if dummyKey and self.
+DummyModels[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[
+dummyKey]=nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if
+dummyHumanoid then subject=dummyHumanoid if dummyKey then self.DummyModels[
+dummyKey]=dummyModel end end local isFinal=args and args[2]if isFinal==nil then
+isFinal=false end local eliminatorArg=eliminator if typeof(eliminator)==
+'Instance'and eliminator:IsA('Player')then eliminatorArg={Character=eliminator.
+Character}end local okNew,newErr=pcall(function()finisherInstance=finisherClass.
+new(subject,isFinal,eliminatorArg)end)if not finisherInstance then local
+okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new()end)
+if logger then logger:Info('Finisher constructor status:','okNew',okNew,
 'okFallback',okFallback)if not okNew then logger:Warn(
 'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
 not finisherInstance then logger:Warn(
@@ -598,22 +601,24 @@ finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
 Warn('Finisher constructor returned nil with no args:',finisherName)end end end
 if not finisherInstance then if logger then logger:Warn(
 'Finisher instance not created:',finisherName)end if dummyModel and dummyModel.
-Parent then dummyModel:Destroy()end return end if logger then logger:Info(
-'Finisher instance created:',finisherName)end if finisherInstance.SetSerial and
-args then local serialValue=args[4]if type(serialValue)=='table'and serialValue.
-Seed then serialValue=serialValue.Seed end if serialValue~=nil then pcall(
-finisherInstance.SetSerial,finisherInstance,serialValue)end end if
+Parent then dummyModel:Destroy()end if dummyKey and self.DummyModels[dummyKey]==
+dummyModel then self.DummyModels[dummyKey]=nil end return end if logger then
+logger:Info('Finisher instance created:',finisherName)end if finisherInstance.
+SetSerial and args then local serialValue=args[4]if type(serialValue)=='table'
+and serialValue.Seed then serialValue=serialValue.Seed end if serialValue~=nil
+then pcall(finisherInstance.SetSerial,finisherInstance,serialValue)end end if
 finisherInstance.Simulate then pcall(finisherInstance.Simulate,finisherInstance)
 if dummyModel then task.delay(6,function()if dummyModel and dummyModel.Parent
-then dummyModel:Destroy()end end)end return end if finisherInstance.PlayServer
-then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger then
-logger:Warn('Finisher missing PlayServer:',finisherName)end if finisherInstance.
-PlayClient then pcall(finisherInstance.PlayClient,finisherInstance,unpack(args))
-elseif logger then logger:Warn('Finisher missing PlayClient:',finisherName)end
-end return UnlockAllSkins end function __DARKLUA_BUNDLE_MODULES.e()local v=
-__DARKLUA_BUNDLE_MODULES.cache.e if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end do local function
-__modImpl()local repo=
+then dummyModel:Destroy()end if dummyKey and self.DummyModels[dummyKey]==
+dummyModel then self.DummyModels[dummyKey]=nil end end)end return end if
+finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
+finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
+finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
+PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
+'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
+function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
+end end do local function __modImpl()local repo=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local function loadRemote(path)local source=game:HttpGet(repo..path)local chunk,
 err=loadstring(source)if not chunk then error('[Blossom] UI load failed: '..
