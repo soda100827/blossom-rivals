@@ -26,6 +26,7 @@ local UnlockAllSkins = {
 	Favorites = {},
 	Originals = {},
 	FinisherCache = {},
+	DebugEnabled = true,
 }
 
 local CONFIG_DIR = "BlossomUnlockAll"
@@ -37,6 +38,28 @@ local function safeRequire(moduleRef)
 		return result
 	end
 	return nil
+end
+
+function UnlockAllSkins:Debug(message, ...)
+	if not self.DebugEnabled then
+		return
+	end
+	if self.Logger and self.Logger.Info then
+		self.Logger:Info(message, ...)
+	else
+		print("[Blossom]", message, ...)
+	end
+end
+
+function UnlockAllSkins:DebugWarn(message, ...)
+	if not self.DebugEnabled then
+		return
+	end
+	if self.Logger and self.Logger.Warn then
+		self.Logger:Warn(message, ...)
+	else
+		warn("[Blossom] " .. tostring(message), ...)
+	end
 end
 
 function UnlockAllSkins:Init(Client)
@@ -73,6 +96,8 @@ function UnlockAllSkins:EnsureInstalled()
 		pcall(function()
 			self.EnumLibrary:WaitForEnumBuilder()
 		end)
+	else
+		self:DebugWarn("EnumLibrary missing; finisher name decode may fail.")
 	end
 	self.CosmeticLibrary = safeRequire(ReplicatedStorage.Modules:WaitForChild("CosmeticLibrary", 10))
 	self.ItemLibrary = safeRequire(ReplicatedStorage.Modules:WaitForChild("ItemLibrary", 10))
@@ -101,6 +126,9 @@ function UnlockAllSkins:EnsureInstalled()
 		local modules = self.PlayerScripts and self.PlayerScripts:WaitForChild("Modules", 10) or nil
 		self.ClientEntity = modules and safeRequire(modules.ClientReplicatedClasses.ClientEntity) or nil
 	end)
+	if not self.ClientEntity then
+		self:DebugWarn("ClientEntity module missing; finisher hook may not attach.")
+	end
 
 	self:InstallCosmeticOverrides()
 	self:InstallDataOverrides()
@@ -556,6 +584,7 @@ function UnlockAllSkins:InstallEntityHooks()
 	self.ClientEntity.ReplicateFromServer = function(selfObj, action, ...)
 		if module.Enabled and action == "FinisherEffect" then
 			local args = { ... }
+			module:Debug("FinisherEffect received.")
 			local killerName = args[3]
 			local decodedKiller = killerName
 			if type(killerName) == "userdata" and module.EnumLibrary and module.EnumLibrary.FromEnum then
@@ -567,6 +596,7 @@ function UnlockAllSkins:InstallEntityHooks()
 			local isOurKill = tostring(decodedKiller) == module.Player.Name
 				or tostring(decodedKiller):lower() == module.Player.Name:lower()
 			if isOurKill and module.LastUsedWeapon and module.Equipped[module.LastUsedWeapon] and module.Equipped[module.LastUsedWeapon].Finisher then
+				module:Debug("Using equipped finisher for weapon:", module.LastUsedWeapon)
 				local finisherData = module.Equipped[module.LastUsedWeapon].Finisher
 				local finisherEnum = finisherData.Enum
 				if not finisherEnum and module.EnumLibrary then
@@ -576,6 +606,7 @@ function UnlockAllSkins:InstallEntityHooks()
 					end
 				end
 				if finisherEnum then
+					module:Debug("Resolved finisher enum:", finisherEnum)
 					args[1] = finisherEnum
 					module:PlayFinisherClient(args[1], args)
 					return module.Originals.EntityHooks.ReplicateFromServer(selfObj, action, unpack(args))
@@ -584,6 +615,7 @@ function UnlockAllSkins:InstallEntityHooks()
 		end
 		if module.Enabled and action == "FinisherEffect" then
 			local args = { ... }
+			module:Debug("Playing finisher from server args.")
 			module:PlayFinisherClient(args[1], args)
 		end
 		return module.Originals.EntityHooks.ReplicateFromServer(selfObj, action, ...)
@@ -600,8 +632,10 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	end
 
 	if type(finisherName) ~= "string" then
+		self:DebugWarn("Finisher name decode failed:", finisherId)
 		return
 	end
+	self:Debug("Finisher name:", finisherName)
 
 	local cached = self.FinisherCache[finisherName]
 	local finisherClass = cached
@@ -610,16 +644,19 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		finishersFolder = finishersFolder and finishersFolder:FindFirstChild("Finishers") or nil
 		local finisherModule = finishersFolder and finishersFolder:FindFirstChild(finisherName) or nil
 		if not finisherModule then
+			self:DebugWarn("Finisher module not found:", finisherName)
 			return
 		end
 		finisherClass = safeRequire(finisherModule)
 		if not finisherClass then
+			self:DebugWarn("Finisher require failed:", finisherName)
 			return
 		end
 		self.FinisherCache[finisherName] = finisherClass
 	end
 
 	if not finisherClass.new then
+		self:DebugWarn("Finisher class missing new():", finisherName)
 		return
 	end
 
@@ -628,19 +665,23 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		finisherInstance = finisherClass.new(unpack(args))
 	end)
 	if not finisherInstance then
+		self:DebugWarn("Finisher new(...) failed; retrying without args:", finisherName)
 		pcall(function()
 			finisherInstance = finisherClass.new()
 		end)
 	end
 
 	if not finisherInstance then
+		self:DebugWarn("Finisher instance creation failed:", finisherName)
 		return
 	end
 
 	if finisherInstance.PlayServer then
+		self:Debug("Running PlayServer:", finisherName)
 		pcall(finisherInstance.PlayServer, finisherInstance)
 	end
 	if finisherInstance.PlayClient then
+		self:Debug("Running PlayClient:", finisherName)
 		pcall(finisherInstance.PlayClient, finisherInstance, unpack(args))
 	end
 end
