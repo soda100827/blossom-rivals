@@ -693,6 +693,27 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		if not finisherModule then
 			if logger then
 				logger:Warn("Finisher module not found:", finisherName)
+				if finishersFolder then
+					local children = finishersFolder:GetChildren()
+					logger:Info("Finishers folder children:", #children)
+					local maxList = math.min(#children, 20)
+					for i = 1, maxList do
+						local child = children[i]
+						local enumText = ""
+						if self.EnumLibrary and self.EnumLibrary.ToEnum then
+							local ok, enumId = pcall(self.EnumLibrary.ToEnum, self.EnumLibrary, child.Name)
+							if ok and enumId then
+								enumText = tostring(enumId)
+							end
+						end
+						logger:Info("Finisher candidate:", child.Name, "enum:", enumText)
+					end
+					if #children > maxList then
+						logger:Info("Finisher candidates truncated:", maxList, "of", #children)
+					end
+				else
+					logger:Warn("Finishers folder not found under ReplicatedStorage.Modules")
+				end
 			end
 			return
 		end

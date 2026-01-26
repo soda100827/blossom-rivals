@@ -470,20 +470,29 @@ finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.ToEnum,
 self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==finisherId
 then finisherModule=child finisherName=child.Name finisherEnum=enumId break end
 end end if not finisherModule then if logger then logger:Warn(
-'Finisher module not found:',finisherName)end return end finisherClass=
-safeRequire(finisherModule)if not finisherClass then if logger then logger:Warn(
-'Failed to require finisher module:',finisherName)end return end self.
-FinisherCache[finisherName]=finisherClass end if not finisherClass.new then if
-logger then logger:Warn('Finisher class missing constructor:',finisherName)end
-return end local finisherInstance=nil pcall(function()finisherInstance=
-finisherClass.new(unpack(args))end)if not finisherInstance then pcall(function()
-finisherInstance=finisherClass.new()end)end if not finisherInstance then if
-logger then logger:Warn('Finisher instance not created:',finisherName)end return
-end if logger then logger:Info('Finisher instance created:',finisherName)end if
-finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
-finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
-finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
-PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
+'Finisher module not found:',finisherName)if finishersFolder then local children
+=finishersFolder:GetChildren()logger:Info('Finishers folder children:',#children
+)local maxList=math.min(#children,20)for i=1,maxList do local child=children[i]
+local enumText=''if self.EnumLibrary and self.EnumLibrary.ToEnum then local ok,
+enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if ok and
+enumId then enumText=tostring(enumId)end end logger:Info('Finisher candidate:',
+child.Name,'enum:',enumText)end if#children>maxList then logger:Info(
+'Finisher candidates truncated:',maxList,'of',#children)end else logger:Warn(
+'Finishers folder not found under ReplicatedStorage.Modules')end end return end
+finisherClass=safeRequire(finisherModule)if not finisherClass then if logger
+then logger:Warn('Failed to require finisher module:',finisherName)end return
+end self.FinisherCache[finisherName]=finisherClass end if not finisherClass.new
+then if logger then logger:Warn('Finisher class missing constructor:',
+finisherName)end return end local finisherInstance=nil pcall(function()
+finisherInstance=finisherClass.new(unpack(args))end)if not finisherInstance then
+pcall(function()finisherInstance=finisherClass.new()end)end if not
+finisherInstance then if logger then logger:Warn(
+'Finisher instance not created:',finisherName)end return end if logger then
+logger:Info('Finisher instance created:',finisherName)end if finisherInstance.
+PlayServer then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger
+then logger:Warn('Finisher missing PlayServer:',finisherName)end if
+finisherInstance.PlayClient then pcall(finisherInstance.PlayClient,
+finisherInstance,unpack(args))elseif logger then logger:Warn(
 'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
 function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
