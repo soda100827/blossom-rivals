@@ -1,0 +1,5 @@
+[package]
+name = "soda100827/maid"
+version = "0.4.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"

@@ -846,6 +846,32 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		return false
 	end
 
+	local function isLocalEliminator(value)
+		if not self.Player or typeof(value) ~= "Instance" then
+			return false
+		end
+		if value:IsA("Player") then
+			return value == self.Player
+		end
+		local character = self.Player.Character
+		if not character then
+			return false
+		end
+		if value == character then
+			return true
+		end
+		if value:IsA("Model") and value == character then
+			return true
+		end
+		if value:IsA("Humanoid") and value.Parent == character then
+			return true
+		end
+		if value:IsA("BasePart") and value:IsDescendantOf(character) then
+			return true
+		end
+		return false
+	end
+
 	local subject = nil
 	local subjectSource = nil
 	if args then
@@ -928,9 +954,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		)
 	end
 
+	local eliminator = args and args[3] or nil
+	if isLocalSubject(subject) and not isLocalEliminator(eliminator) then
+		if logger then
+			logger:Warn("Skipping finisher on local subject; eliminator not local:", eliminator)
+		end
+		return
+	end
+
 	local finisherInstance = nil
 	local isFinal = args and args[2] or nil
-	local eliminator = args and args[3] or nil
 	local okNew, newErr = pcall(function()
 		finisherInstance = finisherClass.new(subject, isFinal, eliminator)
 	end)
