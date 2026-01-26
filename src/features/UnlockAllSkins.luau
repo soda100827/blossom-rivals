@@ -630,6 +630,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	if logger then
 		logger:Info("FinisherEffect received.")
 		logger:Info("Finisher id:", finisherId, "type:", type(finisherId))
+		if args then
+			logger:Info("Finisher args count:", #args)
+			local maxArgs = math.min(#args, 6)
+			for i = 1, maxArgs do
+				logger:Info("Finisher arg", i, "type:", type(args[i]), "value:", args[i])
+			end
+			if #args > maxArgs then
+				logger:Info("Finisher args truncated:", maxArgs, "of", #args)
+			end
+		end
 	end
 
 	local finisherName = finisherId
@@ -742,12 +752,17 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		local okFallback, fallbackErr = pcall(function()
 			finisherInstance = finisherClass.new()
 		end)
-		if logger and (not okNew or not okFallback) then
+		if logger then
+			logger:Info("Finisher constructor status:", "okNew", okNew, "okFallback", okFallback)
 			if not okNew then
 				logger:Warn("Finisher constructor failed with args:", finisherName, newErr)
+			elseif okNew and not finisherInstance then
+				logger:Warn("Finisher constructor returned nil with args:", finisherName)
 			end
 			if not okFallback then
 				logger:Warn("Finisher constructor failed with no args:", finisherName, fallbackErr)
+			elseif okFallback and not finisherInstance then
+				logger:Warn("Finisher constructor returned nil with no args:", finisherName)
 			end
 		end
 	end

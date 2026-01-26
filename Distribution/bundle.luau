@@ -445,31 +445,34 @@ and action=='FinisherEffect'then local args={...}module:PlayFinisherClient(args[
 1],args)end return module.Originals.EntityHooks.ReplicateFromServer(selfObj,
 action,...)end end function UnlockAllSkins:PlayFinisherClient(finisherId,args)
 local logger=self.Logger if logger then logger:Info('FinisherEffect received.')
-logger:Info('Finisher id:',finisherId,'type:',type(finisherId))end local
-finisherName=finisherId local finisherEnum=nil if type(finisherId)=='userdata'
-and self.EnumLibrary and self.EnumLibrary.FromEnum then finisherEnum=finisherId
-local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if
-ok and decoded then finisherName=decoded end elseif type(finisherId)=='string'
-and self.EnumLibrary and self.EnumLibrary.ToEnum then local ok,enumId=pcall(self
-.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok and enumId then
-finisherEnum=enumId end end if type(finisherName)~='string'then if logger then
-logger:Warn('Finisher name not a string:',finisherName)end return end if logger
-then logger:Info('Finisher name:',finisherName,'enum:',finisherEnum)end local
-cached=self.FinisherCache[finisherName]local finisherClass=cached if not
-finisherClass then local finishersFolder=ReplicatedStorage:FindFirstChild(
-'Modules')finishersFolder=finishersFolder and finishersFolder:FindFirstChild(
-'Finishers')or nil local finisherModule=finishersFolder and finishersFolder:
-FindFirstChild(finisherName)or nil if not finisherModule and finishersFolder and
-finisherEnum and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child
-in ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.
-EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if ok and enumId==finisherEnum
-then finisherModule=child finisherName=child.Name break end end end if not
-finisherModule and finishersFolder and type(finisherId)=='string'and self.
-EnumLibrary and self.EnumLibrary.ToEnum then for _,child in ipairs(
-finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.ToEnum,
-self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==finisherId
-then finisherModule=child finisherName=child.Name finisherEnum=enumId break end
-end end if not finisherModule then if logger then logger:Warn(
+logger:Info('Finisher id:',finisherId,'type:',type(finisherId))if args then
+logger:Info('Finisher args count:',#args)local maxArgs=math.min(#args,6)for i=1,
+maxArgs do logger:Info('Finisher arg',i,'type:',type(args[i]),'value:',args[i])
+end if#args>maxArgs then logger:Info('Finisher args truncated:',maxArgs,'of',#
+args)end end end local finisherName=finisherId local finisherEnum=nil if type(
+finisherId)=='userdata'and self.EnumLibrary and self.EnumLibrary.FromEnum then
+finisherEnum=finisherId local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.
+EnumLibrary,finisherId)if ok and decoded then finisherName=decoded end elseif
+type(finisherId)=='string'and self.EnumLibrary and self.EnumLibrary.ToEnum then
+local ok,enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok
+and enumId then finisherEnum=enumId end end if type(finisherName)~='string'then
+if logger then logger:Warn('Finisher name not a string:',finisherName)end return
+end if logger then logger:Info('Finisher name:',finisherName,'enum:',
+finisherEnum)end local cached=self.FinisherCache[finisherName]local
+finisherClass=cached if not finisherClass then local finishersFolder=
+ReplicatedStorage:FindFirstChild('Modules')finishersFolder=finishersFolder and
+finishersFolder:FindFirstChild('Finishers')or nil local finisherModule=
+finishersFolder and finishersFolder:FindFirstChild(finisherName)or nil if not
+finisherModule and finishersFolder and finisherEnum and self.EnumLibrary and
+self.EnumLibrary.ToEnum then for _,child in ipairs(finishersFolder:GetChildren()
+)do local ok,enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if
+ok and enumId==finisherEnum then finisherModule=child finisherName=child.Name
+break end end end if not finisherModule and finishersFolder and type(finisherId)
+=='string'and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child in
+ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.
+ToEnum,self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==
+finisherId then finisherModule=child finisherName=child.Name finisherEnum=enumId
+break end end end if not finisherModule then if logger then logger:Warn(
 'Finisher module not found:',finisherName)if finishersFolder then local children
 =finishersFolder:GetChildren()logger:Info('Finishers folder children:',#children
 )local maxList=math.min(#children,20)for i=1,maxList do local child=children[i]
@@ -486,17 +489,21 @@ then if logger then logger:Warn('Finisher class missing constructor:',
 finisherName)end return end local finisherInstance=nil local okNew,newErr=pcall(
 function()finisherInstance=finisherClass.new(unpack(args))end)if not
 finisherInstance then local okFallback,fallbackErr=pcall(function()
-finisherInstance=finisherClass.new()end)if logger and(not okNew or not
-okFallback)then if not okNew then logger:Warn(
-'Finisher constructor failed with args:',finisherName,newErr)end if not
+finisherInstance=finisherClass.new()end)if logger then logger:Info(
+'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
+okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
+newErr)elseif okNew and not finisherInstance then logger:Warn(
+'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
-finisherName,fallbackErr)end end end if not finisherInstance then if logger then
-logger:Warn('Finisher instance not created:',finisherName)end return end if
-logger then logger:Info('Finisher instance created:',finisherName)end if
-finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
-finisherInstance)elseif logger then logger:Warn('Finisher missing PlayServer:',
-finisherName)end if finisherInstance.PlayClient then pcall(finisherInstance.
-PlayClient,finisherInstance,unpack(args))elseif logger then logger:Warn(
+finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
+Warn('Finisher constructor returned nil with no args:',finisherName)end end end
+if not finisherInstance then if logger then logger:Warn(
+'Finisher instance not created:',finisherName)end return end if logger then
+logger:Info('Finisher instance created:',finisherName)end if finisherInstance.
+PlayServer then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger
+then logger:Warn('Finisher missing PlayServer:',finisherName)end if
+finisherInstance.PlayClient then pcall(finisherInstance.PlayClient,
+finisherInstance,unpack(args))elseif logger then logger:Warn(
 'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
 function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
