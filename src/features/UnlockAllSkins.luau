@@ -1091,7 +1091,10 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	end
 
 	if finisherInstance.PlayServer then
-		pcall(finisherInstance.PlayServer, finisherInstance)
+		local runService = game:GetService("RunService")
+		if runService:IsServer() then
+			pcall(finisherInstance.PlayServer, finisherInstance)
+		end
 	elseif logger then
 		logger:Warn("Finisher missing PlayServer:", finisherName)
 	end

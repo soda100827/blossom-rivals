@@ -586,8 +586,9 @@ Warn('Finisher constructor returned nil with no args:',finisherName)end end end
 if not finisherInstance then if logger then logger:Warn(
 'Finisher instance not created:',finisherName)end return end if logger then
 logger:Info('Finisher instance created:',finisherName)end if finisherInstance.
-PlayServer then pcall(finisherInstance.PlayServer,finisherInstance)elseif logger
-then logger:Warn('Finisher missing PlayServer:',finisherName)end if
+PlayServer then local runService=game:GetService('RunService')if runService:
+IsServer()then pcall(finisherInstance.PlayServer,finisherInstance)end elseif
+logger then logger:Warn('Finisher missing PlayServer:',finisherName)end if
 finisherInstance.PlayClient then pcall(finisherInstance.PlayClient,
 finisherInstance,unpack(args))elseif logger then logger:Warn(
 'Finisher missing PlayClient:',finisherName)end end return UnlockAllSkins end
