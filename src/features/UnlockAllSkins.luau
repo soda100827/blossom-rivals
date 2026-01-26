@@ -828,6 +828,35 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		return nil
 	end
 
+	local function createDummyFromSubject(subjectValue)
+		if typeof(subjectValue) ~= "Instance" then
+			return nil
+		end
+		local model = nil
+		if subjectValue:IsA("Humanoid") then
+			model = subjectValue.Parent
+		elseif subjectValue:IsA("BasePart") then
+			model = subjectValue:FindFirstAncestorOfClass("Model")
+		elseif subjectValue:IsA("Model") then
+			model = subjectValue
+		end
+		if not model or not model:IsA("Model") then
+			return nil
+		end
+		local wasArchivable = model.Archivable
+		model.Archivable = true
+		local clone = model:Clone()
+		model.Archivable = wasArchivable
+		clone:PivotTo(model:GetPivot())
+		clone.Parent = workspace
+		local humanoid = clone:FindFirstChildOfClass("Humanoid")
+		if not humanoid then
+			clone:Destroy()
+			return nil
+		end
+		return humanoid, clone
+	end
+
 	local function resolveSubjectFromTable(tbl, depth)
 		if type(tbl) ~= "table" or depth <= 0 then
 			return nil
@@ -1057,6 +1086,12 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	end
 
 	local finisherInstance = nil
+	local dummyModel = nil
+	local dummyHumanoid = nil
+	dummyHumanoid, dummyModel = createDummyFromSubject(subject)
+	if dummyHumanoid then
+		subject = dummyHumanoid
+	end
 	local isFinal = args and args[2]
 	if isFinal == nil then
 		isFinal = false
@@ -1091,6 +1126,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		if logger then
 			logger:Warn("Finisher instance not created:", finisherName)
 		end
+		if dummyModel and dummyModel.Parent then
+			dummyModel:Destroy()
+		end
 		return
 	end
 	if logger then
@@ -1109,6 +1147,13 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 
 	if finisherInstance.Simulate then
 		pcall(finisherInstance.Simulate, finisherInstance)
+		if dummyModel then
+			task.delay(6, function()
+				if dummyModel and dummyModel.Parent then
+					dummyModel:Destroy()
+				end
+			end)
+		end
 		return
 	end
 
