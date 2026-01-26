@@ -634,7 +634,12 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 			logger:Info("Finisher args count:", #args)
 			local maxArgs = math.min(#args, 6)
 			for i = 1, maxArgs do
-				logger:Info("Finisher arg", i, "type:", type(args[i]), "value:", args[i])
+				local valueType = type(args[i])
+				local valueKind = ""
+				if valueType == "userdata" then
+					valueKind = tostring(typeof(args[i]))
+				end
+				logger:Info("Finisher arg", i, "type:", valueType, "kind:", valueKind, "value:", args[i])
 			end
 			if #args > maxArgs then
 				logger:Info("Finisher args truncated:", maxArgs, "of", #args)
@@ -796,6 +801,26 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		return nil
 	end
 
+	local function logTableSummary(tbl)
+		if not logger or type(tbl) ~= "table" then
+			return
+		end
+		local count = 0
+		for key, value in pairs(tbl) do
+			count += 1
+			if count > 12 then
+				logger:Info("Finisher table keys truncated:", count)
+				break
+			end
+			local valueType = type(value)
+			local valueKind = ""
+			if valueType == "userdata" then
+				valueKind = tostring(typeof(value))
+			end
+			logger:Info("Finisher table key:", key, "type:", valueType, "kind:", valueKind, "value:", value)
+		end
+	end
+
 	local subject = nil
 	if args then
 		subject = resolveSubject(args[2])
@@ -807,6 +832,29 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		end
 		if not subject then
 			subject = resolveSubject(args[3])
+		end
+		if not subject and type(args[4]) == "table" then
+			local tableKeys = {
+				"Subject",
+				"Target",
+				"Victim",
+				"Character",
+				"Model",
+				"Humanoid",
+				"RootPart",
+				"HumanoidRootPart",
+			}
+			for _, key in ipairs(tableKeys) do
+				if args[4][key] then
+					subject = resolveSubject(args[4][key])
+					if subject then
+						break
+					end
+				end
+			end
+		end
+		if not subject and type(args[4]) == "table" then
+			logTableSummary(args[4])
 		end
 	end
 

@@ -447,32 +447,34 @@ action,...)end end function UnlockAllSkins:PlayFinisherClient(finisherId,args)
 local logger=self.Logger if logger then logger:Info('FinisherEffect received.')
 logger:Info('Finisher id:',finisherId,'type:',type(finisherId))if args then
 logger:Info('Finisher args count:',#args)local maxArgs=math.min(#args,6)for i=1,
-maxArgs do logger:Info('Finisher arg',i,'type:',type(args[i]),'value:',args[i])
-end if#args>maxArgs then logger:Info('Finisher args truncated:',maxArgs,'of',#
-args)end end end local finisherName=finisherId local finisherEnum=nil if type(
-finisherId)=='userdata'and self.EnumLibrary and self.EnumLibrary.FromEnum then
-finisherEnum=finisherId local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.
-EnumLibrary,finisherId)if ok and decoded then finisherName=decoded end elseif
-type(finisherId)=='string'and self.EnumLibrary and self.EnumLibrary.ToEnum then
-local ok,enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok
-and enumId then finisherEnum=enumId end end if type(finisherName)~='string'then
-if logger then logger:Warn('Finisher name not a string:',finisherName)end return
-end if logger then logger:Info('Finisher name:',finisherName,'enum:',
-finisherEnum)end local cached=self.FinisherCache[finisherName]local
-finisherClass=cached if not finisherClass then local finishersFolder=
-ReplicatedStorage:FindFirstChild('Modules')finishersFolder=finishersFolder and
-finishersFolder:FindFirstChild('Finishers')or nil local finisherModule=
-finishersFolder and finishersFolder:FindFirstChild(finisherName)or nil if not
-finisherModule and finishersFolder and finisherEnum and self.EnumLibrary and
-self.EnumLibrary.ToEnum then for _,child in ipairs(finishersFolder:GetChildren()
-)do local ok,enumId=pcall(self.EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if
-ok and enumId==finisherEnum then finisherModule=child finisherName=child.Name
-break end end end if not finisherModule and finishersFolder and type(finisherId)
-=='string'and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child in
-ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.
-ToEnum,self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==
-finisherId then finisherModule=child finisherName=child.Name finisherEnum=enumId
-break end end end if not finisherModule then if logger then logger:Warn(
+maxArgs do local valueType=type(args[i])local valueKind=''if valueType==
+'userdata'then valueKind=tostring(typeof(args[i]))end logger:Info('Finisher arg'
+,i,'type:',valueType,'kind:',valueKind,'value:',args[i])end if#args>maxArgs then
+logger:Info('Finisher args truncated:',maxArgs,'of',#args)end end end local
+finisherName=finisherId local finisherEnum=nil if type(finisherId)=='userdata'
+and self.EnumLibrary and self.EnumLibrary.FromEnum then finisherEnum=finisherId
+local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if
+ok and decoded then finisherName=decoded end elseif type(finisherId)=='string'
+and self.EnumLibrary and self.EnumLibrary.ToEnum then local ok,enumId=pcall(self
+.EnumLibrary.ToEnum,self.EnumLibrary,finisherId)if ok and enumId then
+finisherEnum=enumId end end if type(finisherName)~='string'then if logger then
+logger:Warn('Finisher name not a string:',finisherName)end return end if logger
+then logger:Info('Finisher name:',finisherName,'enum:',finisherEnum)end local
+cached=self.FinisherCache[finisherName]local finisherClass=cached if not
+finisherClass then local finishersFolder=ReplicatedStorage:FindFirstChild(
+'Modules')finishersFolder=finishersFolder and finishersFolder:FindFirstChild(
+'Finishers')or nil local finisherModule=finishersFolder and finishersFolder:
+FindFirstChild(finisherName)or nil if not finisherModule and finishersFolder and
+finisherEnum and self.EnumLibrary and self.EnumLibrary.ToEnum then for _,child
+in ipairs(finishersFolder:GetChildren())do local ok,enumId=pcall(self.
+EnumLibrary.ToEnum,self.EnumLibrary,child.Name)if ok and enumId==finisherEnum
+then finisherModule=child finisherName=child.Name break end end end if not
+finisherModule and finishersFolder and type(finisherId)=='string'and self.
+EnumLibrary and self.EnumLibrary.ToEnum then for _,child in ipairs(
+finishersFolder:GetChildren())do local ok,enumId=pcall(self.EnumLibrary.ToEnum,
+self.EnumLibrary,child.Name)if ok and enumId and tostring(enumId)==finisherId
+then finisherModule=child finisherName=child.Name finisherEnum=enumId break end
+end end if not finisherModule then if logger then logger:Warn(
 'Finisher module not found:',finisherName)if finishersFolder then local children
 =finishersFolder:GetChildren()logger:Info('Finishers folder children:',#children
 )local maxList=math.min(#children,20)for i=1,maxList do local child=children[i]
@@ -499,20 +501,31 @@ nil end local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or
 depth<=0 then return nil end for _,value in pairs(tbl)do local direct=
 resolveSubject(value)if direct then return direct end if type(value)=='table'
 then local nested=resolveSubjectFromTable(value,depth-1)if nested then return
-nested end end end return nil end local subject=nil if args then subject=
-resolveSubject(args[2])if not subject then subject=resolveSubject(args[4])end if
-not subject then subject=resolveSubjectFromTable(args[4],2)end if not subject
-then subject=resolveSubject(args[3])end end if not subject then if logger then
-logger:Warn('Finisher subject not found for:',finisherName)end return end if
-logger then logger:Info('Finisher subject resolved:',subject,'class:',subject.
-ClassName)end local finisherInstance=nil local isFinal=args and args[2]or nil
-local eliminator=args and args[3]or nil local okNew,newErr=pcall(function()
-finisherInstance=finisherClass.new(subject,isFinal,eliminator)end)if not
-finisherInstance then local okFallback,fallbackErr=pcall(function()
-finisherInstance=finisherClass.new()end)if logger then logger:Info(
-'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
-okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
-newErr)elseif okNew and not finisherInstance then logger:Warn(
+nested end end end return nil end local function logTableSummary(tbl)if not
+logger or type(tbl)~='table'then return end local count=0 for key,value in
+pairs(tbl)do count+=1 if count>12 then logger:Info(
+'Finisher table keys truncated:',count)break end local valueType=type(value)
+local valueKind=''if valueType=='userdata'then valueKind=tostring(typeof(value))
+end logger:Info('Finisher table key:',key,'type:',valueType,'kind:',valueKind,
+'value:',value)end end local subject=nil if args then subject=resolveSubject(
+args[2])if not subject then subject=resolveSubject(args[4])end if not subject
+then subject=resolveSubjectFromTable(args[4],2)end if not subject then subject=
+resolveSubject(args[3])end if not subject and type(args[4])=='table'then local
+tableKeys={'Subject','Target','Victim','Character','Model','Humanoid','RootPart'
+,'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then subject
+=resolveSubject(args[4][key])if subject then break end end end end if not
+subject and type(args[4])=='table'then logTableSummary(args[4])end end if not
+subject then if logger then logger:Warn('Finisher subject not found for:',
+finisherName)end return end if logger then logger:Info(
+'Finisher subject resolved:',subject,'class:',subject.ClassName)end local
+finisherInstance=nil local isFinal=args and args[2]or nil local eliminator=args
+and args[3]or nil local okNew,newErr=pcall(function()finisherInstance=
+finisherClass.new(subject,isFinal,eliminator)end)if not finisherInstance then
+local okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new(
+)end)if logger then logger:Info('Finisher constructor status:','okNew',okNew,
+'okFallback',okFallback)if not okNew then logger:Warn(
+'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
+not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
