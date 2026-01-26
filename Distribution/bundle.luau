@@ -513,10 +513,17 @@ then return false end if value==character then return true end local humanoid=
 character:FindFirstChildOfClass('Humanoid')if humanoid and value==humanoid then
 return true end local root=character:FindFirstChild('HumanoidRootPart')or
 character.PrimaryPart if root and value==root then return true end if value:IsA(
-'Model')and value==character then return true end return false end local subject
-=nil local subjectSource=nil if args then if type(args[4])=='table'then local
-tableKeys={'Victim','Target','Subject','Character','Model','Humanoid','RootPart'
-,'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then local
+'Model')and value==character then return true end return false end
+local function isLocalEliminator(value)if not self.Player or typeof(value)~=
+'Instance'then return false end if value:IsA('Player')then return value==self.
+Player end local character=self.Player.Character if not character then return
+false end if value==character then return true end if value:IsA('Model')and
+value==character then return true end if value:IsA('Humanoid')and value.Parent==
+character then return true end if value:IsA('BasePart')and value:IsDescendantOf(
+character)then return true end return false end local subject=nil local
+subjectSource=nil if args then if type(args[4])=='table'then local tableKeys={
+'Victim','Target','Subject','Character','Model','Humanoid','RootPart',
+'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then local
 candidate=resolveSubject(args[4][key])if candidate and not isLocalSubject(
 candidate)then subject=candidate subjectSource='args[4].'..key break end end end
 end if not subject then local candidate=resolveSubject(args[4])if candidate and
@@ -533,15 +540,17 @@ subjectSource='fallback local'end if not subject and type(args[4])=='table'then
 logTableSummary(args[4])end end if not subject then if logger then logger:Warn(
 'Finisher subject not found for:',finisherName)end return end if logger then
 logger:Info('Finisher subject resolved:',subject,'class:',subject.ClassName,
-'source:',subjectSource,'isLocal:',isLocalSubject(subject))end local
-finisherInstance=nil local isFinal=args and args[2]or nil local eliminator=args
-and args[3]or nil local okNew,newErr=pcall(function()finisherInstance=
-finisherClass.new(subject,isFinal,eliminator)end)if not finisherInstance then
-local okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new(
-)end)if logger then logger:Info('Finisher constructor status:','okNew',okNew,
-'okFallback',okFallback)if not okNew then logger:Warn(
-'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
-not finisherInstance then logger:Warn(
+'source:',subjectSource,'isLocal:',isLocalSubject(subject))end local eliminator=
+args and args[3]or nil if isLocalSubject(subject)and not isLocalEliminator(
+eliminator)then if logger then logger:Warn(
+'Skipping finisher on local subject; eliminator not local:',eliminator)end
+return end local finisherInstance=nil local isFinal=args and args[2]or nil local
+okNew,newErr=pcall(function()finisherInstance=finisherClass.new(subject,isFinal,
+eliminator)end)if not finisherInstance then local okFallback,fallbackErr=pcall(
+function()finisherInstance=finisherClass.new()end)if logger then logger:Info(
+'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
+okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
+newErr)elseif okNew and not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:
