@@ -36,6 +36,24 @@ local MODULES: { { Name: string, Path: any } } = {
 	{ Name = "Interface", Path = require("src/ui/Interface") },
 }
 
+local function disableAnalyticsPipeline()
+	local success, err = pcall(function()
+		local rf = game:GetService("ReplicatedFirst")
+		local controller = rf:FindFirstChild("AnalyticsPipelineController")
+		if not controller then
+			controller = rf:WaitForChild("AnalyticsPipelineController", 10)
+		end
+		if controller then
+			controller.Disabled = true
+			print(controller.Disabled)
+		end
+	end)
+
+	if not success then
+		warn("[Blossom] Failed to disable AnalyticsPipelineController:", err)
+	end
+end
+
 function Client:LoadModule(name, moduleOrPath)
 	if self.Modules[name] then
 		self.Logger:Warn("Module already loaded:", name)
@@ -101,6 +119,7 @@ function Client:Start()
 	end
 	self.IsRunning = true
 
+	disableAnalyticsPipeline()
 	self.Logger:Info("Client initializing...")
 
 	-- Load Features

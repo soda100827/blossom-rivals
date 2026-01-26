@@ -144,6 +144,16 @@ function Interface:Mount()
 				end
 			end,
 		})
+		:AddColorPicker("ESPNameOutlineColor", {
+			Default = Color3.new(0, 0, 0),
+			Title = "Name Outline",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetNameOutlineColor(value)
+				end
+			end,
+		})
 
 	-- Weapon
 	espGroup
@@ -164,6 +174,16 @@ function Interface:Mount()
 				local mod = self.Client.Modules.Visuals
 				if mod then
 					mod:SetWeaponColor(value)
+				end
+			end,
+		})
+		:AddColorPicker("ESPWeaponOutlineColor", {
+			Default = Color3.new(0, 0, 0),
+			Title = "Weapon Outline",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetWeaponOutlineColor(value)
 				end
 			end,
 		})
@@ -199,6 +219,16 @@ function Interface:Mount()
 				end
 			end,
 		})
+		:AddColorPicker("ESPDistanceOutlineColor", {
+			Default = Color3.new(0, 0, 0),
+			Title = "Distance Outline",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetDistanceOutlineColor(value)
+				end
+			end,
+		})
 
 	-- Box
 	espGroup
@@ -222,6 +252,16 @@ function Interface:Mount()
 				end
 			end,
 		})
+		:AddColorPicker("ESPBoxOutlineColor", {
+			Default = Color3.new(0, 0, 0),
+			Title = "Box Outline",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetBoxOutlineColor(value)
+				end
+			end,
+		})
 
 	-- Skeleton
 	espGroup
@@ -242,6 +282,16 @@ function Interface:Mount()
 				local mod = self.Client.Modules.Visuals
 				if mod then
 					mod:SetSkeletonColor(value)
+				end
+			end,
+		})
+		:AddColorPicker("ESPSkeletonOutlineColor", {
+			Default = Color3.new(0, 0, 0),
+			Title = "Skeleton Outline",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetSkeletonOutlineColor(value)
 				end
 			end,
 		})

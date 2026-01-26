@@ -31,6 +31,11 @@ local Visuals = {
 		SkeletonColor = Color3.new(1, 1, 1),
 		HealthbarColor = Color3.new(0, 1, 0), -- Green by default
 		HealthbarOutlineColor = Color3.new(0, 0, 0),
+		NameOutlineColor = Color3.new(0, 0, 0),
+		WeaponOutlineColor = Color3.new(0, 0, 0),
+		DistanceOutlineColor = Color3.new(0, 0, 0),
+		BoxOutlineColor = Color3.new(0, 0, 0),
+		SkeletonOutlineColor = Color3.new(0, 0, 0),
 		HighlightFill = Color3.new(1, 0, 0),
 		HighlightOutline = Color3.new(1, 1, 1),
 
@@ -116,6 +121,21 @@ function Visuals:SetHealthbarColor(color: Color3)
 end
 function Visuals:SetHealthbarOutlineColor(color: Color3)
 	self.Settings.HealthbarOutlineColor = color
+end
+function Visuals:SetNameOutlineColor(color: Color3)
+	self.Settings.NameOutlineColor = color
+end
+function Visuals:SetWeaponOutlineColor(color: Color3)
+	self.Settings.WeaponOutlineColor = color
+end
+function Visuals:SetDistanceOutlineColor(color: Color3)
+	self.Settings.DistanceOutlineColor = color
+end
+function Visuals:SetBoxOutlineColor(color: Color3)
+	self.Settings.BoxOutlineColor = color
+end
+function Visuals:SetSkeletonOutlineColor(color: Color3)
+	self.Settings.SkeletonOutlineColor = color
 end
 function Visuals:SetHighlightFill(color: Color3)
 	self.Settings.HighlightFill = color
@@ -238,6 +258,7 @@ function Visuals:EnsurePlayerDrawings(player)
 		HealthbarOutline = Drawing.new("Square"),
 		Healthbar = Drawing.new("Square"),
 		Skeleton = {},
+		SkeletonOutline = {},
 	}
 
 	-- Init Text
@@ -262,6 +283,10 @@ function Visuals:EnsurePlayerDrawings(player)
 		local line = Drawing.new("Line")
 		line.Visible = false
 		table.insert(group.Skeleton, line)
+
+		local outline = Drawing.new("Line")
+		outline.Visible = false
+		table.insert(group.SkeletonOutline, outline)
 	end
 
 	self.Drawings[player] = group
@@ -371,7 +396,7 @@ function Visuals:Render()
 			-- Outline
 			group.BoxOutline.Size = boxSize
 			group.BoxOutline.Position = boxPos
-			group.BoxOutline.Color = Color3.new(0, 0, 0)
+			group.BoxOutline.Color = self.Settings.BoxOutlineColor
 			group.BoxOutline.Thickness = self.Settings.BoxThickness + 2
 			group.BoxOutline.Visible = true
 			group.BoxOutline.ZIndex = 1
@@ -396,7 +421,7 @@ function Visuals:Render()
 			-- Background/Border (Black)
 			group.HealthbarOutline.Size = Vector2.new(4, height + 2)
 			group.HealthbarOutline.Position = Vector2.new(boxPos.X - 6, boxPos.Y - 1)
-			group.HealthbarOutline.Color = Color3.new(0, 0, 0)
+			group.HealthbarOutline.Color = self.Settings.HealthbarOutlineColor
 			group.HealthbarOutline.Filled = true
 			group.HealthbarOutline.Visible = true
 			group.HealthbarOutline.ZIndex = 1
@@ -421,6 +446,7 @@ function Visuals:Render()
 			group.Name.Size = self.Settings.TextSize
 			group.Name.Color = self.Settings.TextColor
 			group.Name.Outline = self.Settings.Outline
+			group.Name.OutlineColor = self.Settings.NameOutlineColor
 			group.Name.Position = Vector2.new(rootPos.X, boxPos.Y - self.Settings.TextSize - 2)
 			group.Name.Visible = true
 		else
@@ -435,6 +461,7 @@ function Visuals:Render()
 				group.Weapon.Size = self.Settings.TextSize
 				group.Weapon.Color = self.Settings.WeaponColor
 				group.Weapon.Outline = self.Settings.Outline
+				group.Weapon.OutlineColor = self.Settings.WeaponOutlineColor
 				group.Weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textYOffset)
 				group.Weapon.Visible = true
 				textYOffset = textYOffset + self.Settings.TextSize
@@ -451,6 +478,7 @@ function Visuals:Render()
 			group.Distance.Size = self.Settings.TextSize
 			group.Distance.Color = self.Settings.DistanceColor
 			group.Distance.Outline = self.Settings.Outline
+			group.Distance.OutlineColor = self.Settings.DistanceOutlineColor
 			group.Distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textYOffset)
 			group.Distance.Visible = true
 			textYOffset = textYOffset + self.Settings.TextSize
@@ -460,16 +488,19 @@ function Visuals:Render()
 
 		-- Skeleton
 		if self.Settings.ShowSkeleton then
-			self:UpdateSkeleton(group.Skeleton, character)
+			self:UpdateSkeleton(group.Skeleton, group.SkeletonOutline, character)
 		else
 			for _, l in pairs(group.Skeleton) do
+				l.Visible = false
+			end
+			for _, l in pairs(group.SkeletonOutline) do
 				l.Visible = false
 			end
 		end
 	end
 end
 
-function Visuals:UpdateSkeleton(skeletonLines, character)
+function Visuals:UpdateSkeleton(skeletonLines, skeletonOutlineLines, character)
 	local R15_JOINTS = {
 		{ "Head", "UpperTorso" },
 		{ "UpperTorso", "LowerTorso" },
@@ -498,6 +529,16 @@ function Visuals:UpdateSkeleton(skeletonLines, character)
 			local v2, o2 = Camera:WorldToViewportPoint(p2.Position)
 
 			if o1 and o2 then
+				local outline = skeletonOutlineLines[lineIdx]
+				if outline then
+					outline.From = Vector2.new(v1.X, v1.Y)
+					outline.To = Vector2.new(v2.X, v2.Y)
+					outline.Color = self.Settings.SkeletonOutlineColor
+					outline.Thickness = self.Settings.SkeletonThickness + 2
+					outline.Visible = true
+					outline.ZIndex = 1
+				end
+
 				local line = skeletonLines[lineIdx]
 				if line then
 					line.From = Vector2.new(v1.X, v1.Y)
@@ -505,6 +546,7 @@ function Visuals:UpdateSkeleton(skeletonLines, character)
 					line.Color = self.Settings.SkeletonColor
 					line.Thickness = self.Settings.SkeletonThickness
 					line.Visible = true
+					line.ZIndex = 2
 					lineIdx = lineIdx + 1
 				end
 			end
@@ -514,6 +556,9 @@ function Visuals:UpdateSkeleton(skeletonLines, character)
 	-- Hide unused lines
 	for i = lineIdx, #skeletonLines do
 		skeletonLines[i].Visible = false
+	end
+	for i = lineIdx, #skeletonOutlineLines do
+		skeletonOutlineLines[i].Visible = false
 	end
 end
 
