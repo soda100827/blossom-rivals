@@ -596,9 +596,8 @@ dummyHumanoid=nil local dummyKey=nil if type(entity)=='table'and entity.Model
 then dummyKey=entity.Model elseif typeof(entity)=='Instance'then dummyKey=entity
 elseif typeof(subject)=='Instance'then dummyKey=subject:
 FindFirstAncestorOfClass('Model')or subject end if dummyKey and self.DummyModels
-[dummyKey]and self.DummyModels[dummyKey].Parent then dummyModel=self.DummyModels
-[dummyKey]dummyHumanoid=dummyModel:FindFirstChildOfClass('Humanoid')else
-dummyHumanoid,dummyModel=createDummyFromSubject(subject)end if dummyHumanoid
+[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[dummyKey]=
+nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if dummyHumanoid
 then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if dummyKey then
 self.DummyModels[dummyKey]=dummyModel end end local isFinal=args and args[2]if
 isFinal==nil then isFinal=false end local eliminatorArg=eliminator if dummyModel
@@ -624,7 +623,7 @@ SetSerial and args then local serialValue=args[4]if type(serialValue)=='table'
 and serialValue.Seed then serialValue=serialValue.Seed end if serialValue~=nil
 then pcall(finisherInstance.SetSerial,finisherInstance,serialValue)end end if
 finisherInstance.Simulate then pcall(finisherInstance.Simulate,finisherInstance)
-if dummyModel then task.delay(6,function()if dummyModel and dummyModel.Parent
+if dummyModel then task.delay(3,function()if dummyModel and dummyModel.Parent
 then dummyModel:Destroy()end if dummyKey and self.DummyModels[dummyKey]==
 dummyModel then self.DummyModels[dummyKey]=nil end end)end return end if
 finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
