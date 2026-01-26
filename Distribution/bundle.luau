@@ -486,9 +486,28 @@ finisherClass=safeRequire(finisherModule)if not finisherClass then if logger
 then logger:Warn('Failed to require finisher module:',finisherName)end return
 end self.FinisherCache[finisherName]=finisherClass end if not finisherClass.new
 then if logger then logger:Warn('Finisher class missing constructor:',
-finisherName)end return end local finisherInstance=nil local ctorArgs={}if args
-then for i=2,#args do ctorArgs[i-1]=args[i]end end local okNew,newErr=pcall(
-function()finisherInstance=finisherClass.new(unpack(ctorArgs))end)if not
+finisherName)end return end local function resolveSubject(value)if typeof(value)
+~='Instance'then return nil end if value:IsA('Humanoid')or value:IsA('BasePart')
+then return value end if value:IsA('Player')then local character=value.Character
+if character then local humanoid=character:FindFirstChildOfClass('Humanoid')if
+humanoid then return humanoid end local root=character:FindFirstChild(
+'HumanoidRootPart')or character.PrimaryPart if root then return root end end end
+if value:IsA('Model')then local humanoid=value:FindFirstChildOfClass('Humanoid')
+if humanoid then return humanoid end local root=value:FindFirstChild(
+'HumanoidRootPart')or value.PrimaryPart if root then return root end end return
+nil end local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or
+depth<=0 then return nil end for _,value in pairs(tbl)do local direct=
+resolveSubject(value)if direct then return direct end if type(value)=='table'
+then local nested=resolveSubjectFromTable(value,depth-1)if nested then return
+nested end end end return nil end local subject=nil if args then subject=
+resolveSubject(args[2])if not subject then subject=resolveSubject(args[4])end if
+not subject then subject=resolveSubjectFromTable(args[4],2)end if not subject
+then subject=resolveSubject(args[3])end end if not subject then if logger then
+logger:Warn('Finisher subject not found for:',finisherName)end return end if
+logger then logger:Info('Finisher subject resolved:',subject,'class:',subject.
+ClassName)end local finisherInstance=nil local isFinal=args and args[2]or nil
+local eliminator=args and args[3]or nil local okNew,newErr=pcall(function()
+finisherInstance=finisherClass.new(subject,isFinal,eliminator)end)if not
 finisherInstance then local okFallback,fallbackErr=pcall(function()
 finisherInstance=finisherClass.new()end)if logger then logger:Info(
 'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
