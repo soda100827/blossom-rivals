@@ -519,14 +519,23 @@ then return nil end local wasArchivable=model.Archivable model.Archivable=true
 local clone=model:Clone()model.Archivable=wasArchivable clone:PivotTo(model:
 GetPivot())clone.Parent=workspace local humanoid=clone:FindFirstChildOfClass(
 'Humanoid')if not humanoid then clone:Destroy()return nil end return humanoid,
-clone end local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'
-or depth<=0 then return nil end for _,value in pairs(tbl)do local direct=
-resolveSubject(value)if direct then return direct end if type(value)=='table'
-then local nested=resolveSubjectFromTable(value,depth-1)if nested then return
-nested end end end return nil end local function resolveNonLocalSubjectFromTable
-(tbl,depth)if type(tbl)~='table'or depth<=0 then return nil end for _,value in
-pairs(tbl)do local direct=resolveSubject(value)if direct and not isLocalSubject(
-direct)then return direct end if type(value)=='table'then local nested=
+clone end local function setupDummyForPreview(dummyHumanoid)local model=
+dummyHumanoid.Parent if not model or not model:IsA('Model')then return end local
+root=model:FindFirstChild('HumanoidRootPart')if root then root.
+AssemblyLinearVelocity=Vector3.new(0,0,0)root.AssemblyAngularVelocity=Vector3.
+new(0,0,0)end dummyHumanoid.Health=0 local parts={}for _,child in pairs(model:
+GetChildren())do if child:IsA('BasePart')then child.CanCollide=true table.
+insert(parts,child)end end for i=1,#parts do local part=parts[i]for j=1,#parts
+do if i~=j then local constraint=Instance.new('NoCollisionConstraint')constraint
+.Part0=part constraint.Part1=parts[j]constraint.Parent=part end end end end
+local function resolveSubjectFromTable(tbl,depth)if type(tbl)~='table'or depth<=
+0 then return nil end for _,value in pairs(tbl)do local direct=resolveSubject(
+value)if direct then return direct end if type(value)=='table'then local nested=
+resolveSubjectFromTable(value,depth-1)if nested then return nested end end end
+return nil end local function resolveNonLocalSubjectFromTable(tbl,depth)if type(
+tbl)~='table'or depth<=0 then return nil end for _,value in pairs(tbl)do local
+direct=resolveSubject(value)if direct and not isLocalSubject(direct)then return
+direct end if type(value)=='table'then local nested=
 resolveNonLocalSubjectFromTable(value,depth-1)if nested then return nested end
 end end return nil end local function logTableSummary(tbl)if not logger or type(
 tbl)~='table'then return end local count=0 for key,value in pairs(tbl)do count+=
@@ -584,17 +593,17 @@ eliminator)end return end local finisherInstance=nil local dummyModel=nil local
 dummyHumanoid=nil local dummyKey=entity or subject if dummyKey and self.
 DummyModels[dummyKey]then self.DummyModels[dummyKey]:Destroy()self.DummyModels[
 dummyKey]=nil end dummyHumanoid,dummyModel=createDummyFromSubject(subject)if
-dummyHumanoid then subject=dummyHumanoid if dummyKey then self.DummyModels[
-dummyKey]=dummyModel end end local isFinal=args and args[2]if isFinal==nil then
-isFinal=false end local eliminatorArg=eliminator if typeof(eliminator)==
-'Instance'and eliminator:IsA('Player')then eliminatorArg={Character=eliminator.
-Character}end local okNew,newErr=pcall(function()finisherInstance=finisherClass.
-new(subject,isFinal,eliminatorArg)end)if not finisherInstance then local
-okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new()end)
-if logger then logger:Info('Finisher constructor status:','okNew',okNew,
-'okFallback',okFallback)if not okNew then logger:Warn(
-'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
-not finisherInstance then logger:Warn(
+dummyHumanoid then subject=dummyHumanoid setupDummyForPreview(dummyHumanoid)if
+dummyKey then self.DummyModels[dummyKey]=dummyModel end end local isFinal=args
+and args[2]if isFinal==nil then isFinal=false end local eliminatorArg=eliminator
+if typeof(eliminator)=='Instance'and eliminator:IsA('Player')then eliminatorArg=
+{Character=eliminator.Character}end local okNew,newErr=pcall(function()
+finisherInstance=finisherClass.new(subject,isFinal,eliminatorArg)end)if not
+finisherInstance then local okFallback,fallbackErr=pcall(function()
+finisherInstance=finisherClass.new()end)if logger then logger:Info(
+'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
+okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
+newErr)elseif okNew and not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:

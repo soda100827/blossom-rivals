@@ -858,6 +858,37 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 		return humanoid, clone
 	end
 
+	local function setupDummyForPreview(dummyHumanoid: Humanoid)
+		local model = dummyHumanoid.Parent
+		if not model or not model:IsA("Model") then
+			return
+		end
+		local root = model:FindFirstChild("HumanoidRootPart")
+		if root then
+			root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+			root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+		end
+		dummyHumanoid.Health = 0
+		local parts = {}
+		for _, child in pairs(model:GetChildren()) do
+			if child:IsA("BasePart") then
+				child.CanCollide = true
+				table.insert(parts, child)
+			end
+		end
+		for i = 1, #parts do
+			local part = parts[i]
+			for j = 1, #parts do
+				if i ~= j then
+					local constraint = Instance.new("NoCollisionConstraint")
+					constraint.Part0 = part
+					constraint.Part1 = parts[j]
+					constraint.Parent = part
+				end
+			end
+		end
+	end
+
 	local function resolveSubjectFromTable(tbl, depth)
 		if type(tbl) ~= "table" or depth <= 0 then
 			return nil
@@ -1097,6 +1128,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args, entity)
 	dummyHumanoid, dummyModel = createDummyFromSubject(subject)
 	if dummyHumanoid then
 		subject = dummyHumanoid
+		setupDummyForPreview(dummyHumanoid)
 		if dummyKey then
 			self.DummyModels[dummyKey] = dummyModel
 		end
