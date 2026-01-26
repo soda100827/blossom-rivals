@@ -6,7 +6,6 @@ local HttpService = game:GetService("HttpService")
 local UnlockAllSkins = {
 	Enabled = false,
 	Installed = false,
-	Logger = nil,
 	Player = nil,
 	PlayerScripts = nil,
 	Controllers = nil,
@@ -76,20 +75,22 @@ function UnlockAllSkins:EnsureInstalled()
 	end
 	self.CosmeticLibrary = safeRequire(ReplicatedStorage.Modules:WaitForChild("CosmeticLibrary", 10))
 	self.ItemLibrary = safeRequire(ReplicatedStorage.Modules:WaitForChild("ItemLibrary", 10))
-	self.DataController = self.Controllers and safeRequire(self.Controllers:WaitForChild("PlayerDataController", 10)) or nil
+	self.DataController = self.Controllers and safeRequire(self.Controllers:WaitForChild("PlayerDataController", 10))
+		or nil
 
 	pcall(function()
-		self.FighterController = self.Controllers and safeRequire(self.Controllers:WaitForChild("FighterController", 10)) or nil
+		self.FighterController = self.Controllers
+				and safeRequire(self.Controllers:WaitForChild("FighterController", 10))
+			or nil
 	end)
 	pcall(function()
 		local modules = self.PlayerScripts and self.PlayerScripts:WaitForChild("Modules", 10) or nil
-		self.ClientItem =
-			modules and safeRequire(modules.ClientReplicatedClasses.ClientFighter.ClientItem) or nil
+		self.ClientItem = modules and safeRequire(modules.ClientReplicatedClasses.ClientFighter.ClientItem) or nil
 	end)
 	pcall(function()
 		local modules = self.PlayerScripts and self.PlayerScripts:WaitForChild("Modules", 10) or nil
 		local viewModelModule = modules
-			and modules.ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild("ClientViewModel")
+				and modules.ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild("ClientViewModel")
 			or nil
 		self.ClientViewModel = viewModelModule and safeRequire(viewModelModule) or nil
 	end)
@@ -181,7 +182,8 @@ function UnlockAllSkins:LoadConfig()
 			for weapon, cosmetics in pairs(config.equipped) do
 				self.Equipped[weapon] = {}
 				for cosmeticType, cosmeticData in pairs(cosmetics) do
-					local cloned = self:CloneCosmetic(cosmeticData.name, cosmeticType, { inverted = cosmeticData.inverted })
+					local cloned =
+						self:CloneCosmetic(cosmeticData.name, cosmeticType, { inverted = cosmeticData.inverted })
 					if cloned then
 						cloned.Seed = cosmeticData.seed
 						self.Equipped[weapon][cosmeticType] = cloned
@@ -278,9 +280,11 @@ function UnlockAllSkins:InstallDataOverrides()
 					proxy[k] = v
 				end
 			end
-			return setmetatable(proxy, { __index = function()
-				return true
-			end })
+			return setmetatable(proxy, {
+				__index = function()
+					return true
+				end,
+			})
 		end
 		if key == "FavoritedCosmetics" then
 			local result = data and table.clone(data) or {}
@@ -433,7 +437,12 @@ function UnlockAllSkins:InstallViewModelHooks()
 			local weaponName = selfObj.Name
 			local weaponPlayer = selfObj.ClientFighter and selfObj.ClientFighter.Player
 			module.ConstructingWeapon = (weaponPlayer == module.Player) and weaponName or nil
-			if weaponPlayer == module.Player and module.Equipped[weaponName] and module.Equipped[weaponName].Skin and viewmodelRef then
+			if
+				weaponPlayer == module.Player
+				and module.Equipped[weaponName]
+				and module.Equipped[weaponName].Skin
+				and viewmodelRef
+			then
 				local dataKey, skinKey, nameKey = selfObj:ToEnum("Data"), selfObj:ToEnum("Skin"), selfObj:ToEnum("Name")
 				if viewmodelRef[dataKey] then
 					viewmodelRef[dataKey][skinKey] = module.Equipped[weaponName].Skin
@@ -454,8 +463,15 @@ function UnlockAllSkins:InstallViewModelHooks()
 		self.ClientViewModel.GetWrap = function(selfObj)
 			if module.Enabled then
 				local weaponName = selfObj.ClientItem and selfObj.ClientItem.Name
-				local weaponPlayer = selfObj.ClientItem and selfObj.ClientItem.ClientFighter and selfObj.ClientItem.ClientFighter.Player
-				if weaponName and weaponPlayer == module.Player and module.Equipped[weaponName] and module.Equipped[weaponName].Wrap then
+				local weaponPlayer = selfObj.ClientItem
+					and selfObj.ClientItem.ClientFighter
+					and selfObj.ClientItem.ClientFighter.Player
+				if
+					weaponName
+					and weaponPlayer == module.Player
+					and module.Equipped[weaponName]
+					and module.Equipped[weaponName].Wrap
+				then
 					return module.Equipped[weaponName].Wrap
 				end
 			end
@@ -484,7 +500,13 @@ function UnlockAllSkins:InstallViewModelHooks()
 				end
 			end
 			local result = module.Originals.ViewModelHooks.NewViewModel(replicatedData, clientItem)
-			if module.Enabled and weaponPlayer == module.Player and module.Equipped[weaponName] and module.Equipped[weaponName].Wrap and result._UpdateWrap then
+			if
+				module.Enabled
+				and weaponPlayer == module.Player
+				and module.Equipped[weaponName]
+				and module.Equipped[weaponName].Wrap
+				and result._UpdateWrap
+			then
 				result:_UpdateWrap()
 				task.delay(0.1, function()
 					if not result._destroyed then
@@ -506,8 +528,16 @@ function UnlockAllSkins:InstallViewModelHooks()
 				return module.Originals.ViewModelHooks.GetViewModelImageFromWeaponData(library, weaponData, highRes)
 			end
 			local weaponName = weaponData.Name
-			local shouldShowSkin = (weaponData.Skin and module.Equipped[weaponName] and weaponData.Skin == module.Equipped[weaponName].Skin)
-				or (module.ViewingProfile == module.Player and module.Equipped[weaponName] and module.Equipped[weaponName].Skin)
+			local shouldShowSkin = (
+				weaponData.Skin
+				and module.Equipped[weaponName]
+				and weaponData.Skin == module.Equipped[weaponName].Skin
+			)
+				or (
+					module.ViewingProfile == module.Player
+					and module.Equipped[weaponName]
+					and module.Equipped[weaponName].Skin
+				)
 			if shouldShowSkin and module.Equipped[weaponName] and module.Equipped[weaponName].Skin then
 				local skinInfo = library.ViewModels[module.Equipped[weaponName].Skin.Name]
 				if skinInfo then
@@ -566,7 +596,12 @@ function UnlockAllSkins:InstallEntityHooks()
 			end
 			local isOurKill = tostring(decodedKiller) == module.Player.Name
 				or tostring(decodedKiller):lower() == module.Player.Name:lower()
-			if isOurKill and module.LastUsedWeapon and module.Equipped[module.LastUsedWeapon] and module.Equipped[module.LastUsedWeapon].Finisher then
+			if
+				isOurKill
+				and module.LastUsedWeapon
+				and module.Equipped[module.LastUsedWeapon]
+				and module.Equipped[module.LastUsedWeapon].Finisher
+			then
 				local finisherData = module.Equipped[module.LastUsedWeapon].Finisher
 				local finisherEnum = finisherData.Enum
 				if not finisherEnum and module.EnumLibrary then
@@ -591,6 +626,8 @@ function UnlockAllSkins:InstallEntityHooks()
 end
 
 function UnlockAllSkins:PlayFinisherClient(finisherId, args)
+	print("Called PlayFinisherClient")
+
 	local finisherName = finisherId
 	if type(finisherId) == "userdata" and self.EnumLibrary and self.EnumLibrary.FromEnum then
 		local ok, decoded = pcall(self.EnumLibrary.FromEnum, self.EnumLibrary, finisherId)
@@ -632,6 +669,8 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 			finisherInstance = finisherClass.new()
 		end)
 	end
+
+	print(finisherInstance)
 
 	if not finisherInstance then
 		return

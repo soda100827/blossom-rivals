@@ -222,41 +222,40 @@ __DARKLUA_BUNDLE_MODULES.cache.d if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local ReplicatedStorage=game:
 GetService('ReplicatedStorage')local HttpService=game:GetService('HttpService')
-local UnlockAllSkins={Enabled=false,Installed=false,Logger=nil,Player=nil,
-PlayerScripts=nil,Controllers=nil,EnumLibrary=nil,CosmeticLibrary=nil,
-ItemLibrary=nil,DataController=nil,FighterController=nil,ClientItem=nil,
-ClientViewModel=nil,ViewProfile=nil,ClientEntity=nil,LastUsedWeapon=nil,
-ConstructingWeapon=nil,ViewingProfile=nil,Equipped={},Favorites={},Originals={},
-FinisherCache={}}local CONFIG_DIR='BlossomUnlockAll'local CONFIG_FILE=CONFIG_DIR
-..'/config.json'local function safeRequire(moduleRef)local ok,result=pcall(
-require,moduleRef)if ok then return result end return nil end function
-UnlockAllSkins:Init(Client)self.Client=Client self.Logger=Client.Logger self.
-Player=Players.LocalPlayer if self.Player then self.PlayerScripts=self.Player:
-WaitForChild('PlayerScripts',10)self.Controllers=self.PlayerScripts and self.
-PlayerScripts:WaitForChild('Controllers',10)or nil end end function
-UnlockAllSkins:Toggle(state)if self.Enabled==state then return end self.Enabled=
-state if state then self:EnsureInstalled()self:LoadConfig()self:
-ReplicateInventory()else self:ReplicateInventory()end end function
-UnlockAllSkins:EnsureInstalled()if self.Installed then return end self.
-EnumLibrary=safeRequire(ReplicatedStorage.Modules:WaitForChild('EnumLibrary',10)
-)if self.EnumLibrary then pcall(function()self.EnumLibrary:WaitForEnumBuilder()
-end)end self.CosmeticLibrary=safeRequire(ReplicatedStorage.Modules:WaitForChild(
-'CosmeticLibrary',10))self.ItemLibrary=safeRequire(ReplicatedStorage.Modules:
-WaitForChild('ItemLibrary',10))self.DataController=self.Controllers and
-safeRequire(self.Controllers:WaitForChild('PlayerDataController',10))or nil
-pcall(function()self.FighterController=self.Controllers and safeRequire(self.
-Controllers:WaitForChild('FighterController',10))or nil end)pcall(function()
-local modules=self.PlayerScripts and self.PlayerScripts:WaitForChild('Modules',
-10)or nil self.ClientItem=modules and safeRequire(modules.
-ClientReplicatedClasses.ClientFighter.ClientItem)or nil end)pcall(function()
-local modules=self.PlayerScripts and self.PlayerScripts:WaitForChild('Modules',
-10)or nil local viewModelModule=modules and modules.ClientReplicatedClasses.
-ClientFighter.ClientItem:FindFirstChild('ClientViewModel')or nil self.
-ClientViewModel=viewModelModule and safeRequire(viewModelModule)or nil end)
+local UnlockAllSkins={Enabled=false,Installed=false,Player=nil,PlayerScripts=nil
+,Controllers=nil,EnumLibrary=nil,CosmeticLibrary=nil,ItemLibrary=nil,
+DataController=nil,FighterController=nil,ClientItem=nil,ClientViewModel=nil,
+ViewProfile=nil,ClientEntity=nil,LastUsedWeapon=nil,ConstructingWeapon=nil,
+ViewingProfile=nil,Equipped={},Favorites={},Originals={},FinisherCache={}}local
+CONFIG_DIR='BlossomUnlockAll'local CONFIG_FILE=CONFIG_DIR..'/config.json'
+local function safeRequire(moduleRef)local ok,result=pcall(require,moduleRef)if
+ok then return result end return nil end function UnlockAllSkins:Init(Client)
+self.Client=Client self.Logger=Client.Logger self.Player=Players.LocalPlayer if
+self.Player then self.PlayerScripts=self.Player:WaitForChild('PlayerScripts',10)
+self.Controllers=self.PlayerScripts and self.PlayerScripts:WaitForChild(
+'Controllers',10)or nil end end function UnlockAllSkins:Toggle(state)if self.
+Enabled==state then return end self.Enabled=state if state then self:
+EnsureInstalled()self:LoadConfig()self:ReplicateInventory()else self:
+ReplicateInventory()end end function UnlockAllSkins:EnsureInstalled()if self.
+Installed then return end self.EnumLibrary=safeRequire(ReplicatedStorage.Modules
+:WaitForChild('EnumLibrary',10))if self.EnumLibrary then pcall(function()self.
+EnumLibrary:WaitForEnumBuilder()end)end self.CosmeticLibrary=safeRequire(
+ReplicatedStorage.Modules:WaitForChild('CosmeticLibrary',10))self.ItemLibrary=
+safeRequire(ReplicatedStorage.Modules:WaitForChild('ItemLibrary',10))self.
+DataController=self.Controllers and safeRequire(self.Controllers:WaitForChild(
+'PlayerDataController',10))or nil pcall(function()self.FighterController=self.
+Controllers and safeRequire(self.Controllers:WaitForChild('FighterController',10
+))or nil end)pcall(function()local modules=self.PlayerScripts and self.
+PlayerScripts:WaitForChild('Modules',10)or nil self.ClientItem=modules and
+safeRequire(modules.ClientReplicatedClasses.ClientFighter.ClientItem)or nil end)
 pcall(function()local modules=self.PlayerScripts and self.PlayerScripts:
-WaitForChild('Modules',10)or nil self.ViewProfile=modules and safeRequire(
-modules.Pages.ViewProfile)or nil end)pcall(function()local modules=self.
-PlayerScripts and self.PlayerScripts:WaitForChild('Modules',10)or nil self.
+WaitForChild('Modules',10)or nil local viewModelModule=modules and modules.
+ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild(
+'ClientViewModel')or nil self.ClientViewModel=viewModelModule and safeRequire(
+viewModelModule)or nil end)pcall(function()local modules=self.PlayerScripts and
+self.PlayerScripts:WaitForChild('Modules',10)or nil self.ViewProfile=modules and
+safeRequire(modules.Pages.ViewProfile)or nil end)pcall(function()local modules=
+self.PlayerScripts and self.PlayerScripts:WaitForChild('Modules',10)or nil self.
 ClientEntity=modules and safeRequire(modules.ClientReplicatedClasses.
 ClientEntity)or nil end)self:InstallCosmeticOverrides()self:
 InstallDataOverrides()self:InstallRemoteHooks()self:InstallViewModelHooks()self:
@@ -445,26 +444,27 @@ ReplicateFromServer(selfObj,action,unpack(args))end end end if module.Enabled
 and action=='FinisherEffect'then local args={...}module:PlayFinisherClient(args[
 1],args)end return module.Originals.EntityHooks.ReplicateFromServer(selfObj,
 action,...)end end function UnlockAllSkins:PlayFinisherClient(finisherId,args)
-local finisherName=finisherId if type(finisherId)=='userdata'and self.
-EnumLibrary and self.EnumLibrary.FromEnum then local ok,decoded=pcall(self.
-EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if ok and decoded then
-finisherName=decoded end end if type(finisherName)~='string'then return end
-local cached=self.FinisherCache[finisherName]local finisherClass=cached if not
-finisherClass then local finishersFolder=ReplicatedStorage:FindFirstChild(
-'Modules')finishersFolder=finishersFolder and finishersFolder:FindFirstChild(
-'Finishers')or nil local finisherModule=finishersFolder and finishersFolder:
-FindFirstChild(finisherName)or nil if not finisherModule then return end
-finisherClass=safeRequire(finisherModule)if not finisherClass then return end
-self.FinisherCache[finisherName]=finisherClass end if not finisherClass.new then
-return end local finisherInstance=nil pcall(function()finisherInstance=
-finisherClass.new(unpack(args))end)if not finisherInstance then pcall(function()
-finisherInstance=finisherClass.new()end)end if not finisherInstance then return
-end if finisherInstance.PlayServer then pcall(finisherInstance.PlayServer,
-finisherInstance)end if finisherInstance.PlayClient then pcall(finisherInstance.
-PlayClient,finisherInstance,unpack(args))end end return UnlockAllSkins end
-function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
-end end do local function __modImpl()local repo=
+print('Called PlayFinisherClient')local finisherName=finisherId if type(
+finisherId)=='userdata'and self.EnumLibrary and self.EnumLibrary.FromEnum then
+local ok,decoded=pcall(self.EnumLibrary.FromEnum,self.EnumLibrary,finisherId)if
+ok and decoded then finisherName=decoded end end if type(finisherName)~='string'
+then return end local cached=self.FinisherCache[finisherName]local finisherClass
+=cached if not finisherClass then local finishersFolder=ReplicatedStorage:
+FindFirstChild('Modules')finishersFolder=finishersFolder and finishersFolder:
+FindFirstChild('Finishers')or nil local finisherModule=finishersFolder and
+finishersFolder:FindFirstChild(finisherName)or nil if not finisherModule then
+return end finisherClass=safeRequire(finisherModule)if not finisherClass then
+return end self.FinisherCache[finisherName]=finisherClass end if not
+finisherClass.new then return end local finisherInstance=nil pcall(function()
+finisherInstance=finisherClass.new(unpack(args))end)if not finisherInstance then
+pcall(function()finisherInstance=finisherClass.new()end)end print(
+finisherInstance)if not finisherInstance then return end if finisherInstance.
+PlayServer then pcall(finisherInstance.PlayServer,finisherInstance)end if
+finisherInstance.PlayClient then pcall(finisherInstance.PlayClient,
+finisherInstance,unpack(args))end end return UnlockAllSkins end function
+__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
+do local function __modImpl()local repo=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local function loadRemote(path)local source=game:HttpGet(repo..path)local chunk,
 err=loadstring(source)if not chunk then error('[Blossom] UI load failed: '..
