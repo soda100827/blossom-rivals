@@ -629,7 +629,9 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	print("Called PlayFinisherClient")
 
 	local finisherName = finisherId
+	local finisherEnum = nil
 	if type(finisherId) == "userdata" and self.EnumLibrary and self.EnumLibrary.FromEnum then
+		finisherEnum = finisherId
 		local ok, decoded = pcall(self.EnumLibrary.FromEnum, self.EnumLibrary, finisherId)
 		if ok and decoded then
 			finisherName = decoded
@@ -646,6 +648,16 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		local finishersFolder = ReplicatedStorage:FindFirstChild("Modules")
 		finishersFolder = finishersFolder and finishersFolder:FindFirstChild("Finishers") or nil
 		local finisherModule = finishersFolder and finishersFolder:FindFirstChild(finisherName) or nil
+		if not finisherModule and finishersFolder and finisherEnum and self.EnumLibrary and self.EnumLibrary.ToEnum then
+			for _, child in ipairs(finishersFolder:GetChildren()) do
+				local ok, enumId = pcall(self.EnumLibrary.ToEnum, self.EnumLibrary, child.Name)
+				if ok and enumId == finisherEnum then
+					finisherModule = child
+					finisherName = child.Name
+					break
+				end
+			end
+		end
 		if not finisherModule then
 			return
 		end
