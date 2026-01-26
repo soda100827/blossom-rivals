@@ -507,25 +507,28 @@ pairs(tbl)do count+=1 if count>12 then logger:Info(
 'Finisher table keys truncated:',count)break end local valueType=type(value)
 local valueKind=''if valueType=='userdata'then valueKind=tostring(typeof(value))
 end logger:Info('Finisher table key:',key,'type:',valueType,'kind:',valueKind,
-'value:',value)end end local subject=nil if args then subject=resolveSubject(
-args[2])if not subject then subject=resolveSubject(args[4])end if not subject
-then subject=resolveSubjectFromTable(args[4],2)end if not subject then subject=
-resolveSubject(args[3])end if not subject and type(args[4])=='table'then local
-tableKeys={'Subject','Target','Victim','Character','Model','Humanoid','RootPart'
-,'HumanoidRootPart'}for _,key in ipairs(tableKeys)do if args[4][key]then subject
-=resolveSubject(args[4][key])if subject then break end end end end if not
-subject and type(args[4])=='table'then logTableSummary(args[4])end end if not
-subject then if logger then logger:Warn('Finisher subject not found for:',
-finisherName)end return end if logger then logger:Info(
-'Finisher subject resolved:',subject,'class:',subject.ClassName)end local
-finisherInstance=nil local isFinal=args and args[2]or nil local eliminator=args
-and args[3]or nil local okNew,newErr=pcall(function()finisherInstance=
-finisherClass.new(subject,isFinal,eliminator)end)if not finisherInstance then
-local okFallback,fallbackErr=pcall(function()finisherInstance=finisherClass.new(
-)end)if logger then logger:Info('Finisher constructor status:','okNew',okNew,
-'okFallback',okFallback)if not okNew then logger:Warn(
-'Finisher constructor failed with args:',finisherName,newErr)elseif okNew and
-not finisherInstance then logger:Warn(
+'value:',value)end end local subject=nil local subjectSource=nil if args then if
+type(args[4])=='table'then local tableKeys={'Victim','Target','Subject',
+'Character','Model','Humanoid','RootPart','HumanoidRootPart'}for _,key in
+ipairs(tableKeys)do if args[4][key]then subject=resolveSubject(args[4][key])if
+subject then subjectSource='args[4].'..key break end end end end if not subject
+then subject=resolveSubject(args[4])if subject then subjectSource='args[4]'end
+end if not subject then subject=resolveSubjectFromTable(args[4],2)if subject
+then subjectSource='args[4] table scan'end end if not subject then subject=
+resolveSubject(args[2])if subject then subjectSource='args[2]'end end if not
+subject then subject=resolveSubject(args[3])if subject then subjectSource=
+'args[3]'end end if not subject and type(args[4])=='table'then logTableSummary(
+args[4])end end if not subject then if logger then logger:Warn(
+'Finisher subject not found for:',finisherName)end return end if logger then
+logger:Info('Finisher subject resolved:',subject,'class:',subject.ClassName,
+'source:',subjectSource)end local finisherInstance=nil local isFinal=args and
+args[2]or nil local eliminator=args and args[3]or nil local okNew,newErr=pcall(
+function()finisherInstance=finisherClass.new(subject,isFinal,eliminator)end)if
+not finisherInstance then local okFallback,fallbackErr=pcall(function()
+finisherInstance=finisherClass.new()end)if logger then logger:Info(
+'Finisher constructor status:','okNew',okNew,'okFallback',okFallback)if not
+okNew then logger:Warn('Finisher constructor failed with args:',finisherName,
+newErr)elseif okNew and not finisherInstance then logger:Warn(
 'Finisher constructor returned nil with args:',finisherName)end if not
 okFallback then logger:Warn('Finisher constructor failed with no args:',
 finisherName,fallbackErr)elseif okFallback and not finisherInstance then logger:

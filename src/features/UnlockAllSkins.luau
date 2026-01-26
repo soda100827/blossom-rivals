@@ -822,22 +822,13 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 	end
 
 	local subject = nil
+	local subjectSource = nil
 	if args then
-		subject = resolveSubject(args[2])
-		if not subject then
-			subject = resolveSubject(args[4])
-		end
-		if not subject then
-			subject = resolveSubjectFromTable(args[4], 2)
-		end
-		if not subject then
-			subject = resolveSubject(args[3])
-		end
-		if not subject and type(args[4]) == "table" then
+		if type(args[4]) == "table" then
 			local tableKeys = {
-				"Subject",
-				"Target",
 				"Victim",
+				"Target",
+				"Subject",
 				"Character",
 				"Model",
 				"Humanoid",
@@ -848,9 +839,34 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 				if args[4][key] then
 					subject = resolveSubject(args[4][key])
 					if subject then
+						subjectSource = "args[4]." .. key
 						break
 					end
 				end
+			end
+		end
+		if not subject then
+			subject = resolveSubject(args[4])
+			if subject then
+				subjectSource = "args[4]"
+			end
+		end
+		if not subject then
+			subject = resolveSubjectFromTable(args[4], 2)
+			if subject then
+				subjectSource = "args[4] table scan"
+			end
+		end
+		if not subject then
+			subject = resolveSubject(args[2])
+			if subject then
+				subjectSource = "args[2]"
+			end
+		end
+		if not subject then
+			subject = resolveSubject(args[3])
+			if subject then
+				subjectSource = "args[3]"
 			end
 		end
 		if not subject and type(args[4]) == "table" then
@@ -865,7 +881,7 @@ function UnlockAllSkins:PlayFinisherClient(finisherId, args)
 		return
 	end
 	if logger then
-		logger:Info("Finisher subject resolved:", subject, "class:", subject.ClassName)
+		logger:Info("Finisher subject resolved:", subject, "class:", subject.ClassName, "source:", subjectSource)
 	end
 
 	local finisherInstance = nil
