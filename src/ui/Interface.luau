@@ -102,74 +102,232 @@ function Interface:Mount()
 		end,
 	})
 
-	local visualsGroup = tabs.Visuals:AddLeftGroupbox("ESP")
-	visualsGroup:AddToggle("VisualsToggle", {
-		Text = "Visuals (ESP)",
-		Default = false,
-		Callback = function(state)
-			local mod = self.Client.Modules.Visuals
-			if mod and mod.Toggle then
-				mod:Toggle(state)
-			end
-		end,
-	})
+	-- Visuals Tab
+	local espGroup = tabs.Visuals:AddLeftGroupbox("ESP")
 
-	visualsGroup:AddToggle("ESPEnabled", {
+	-- Enable Master Toggle
+	espGroup
+		:AddToggle("VisualsToggle", {
+			Text = "Visuals (ESP)",
+			Default = false,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod and mod.Toggle then
+					mod:Toggle(state)
+				end
+			end,
+		})
+		:AddKeyPicker("EspKey", { Default = "Insert", NoUI = true, Text = "ESP Key" })
+
+	espGroup:AddToggle("ESPEnabled", {
 		Text = "Enable ESP",
 		Default = false,
 		Callback = function(state)
 			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetESPEnabled then
+			if mod then
 				mod:SetESPEnabled(state)
 			end
 		end,
 	})
 
-	visualsGroup:AddToggle("ESPTeamCheck", {
-		Text = "Team Check",
+	-- Name
+	espGroup
+		:AddToggle("ESPNames", {
+			Text = "Name",
+			Default = true,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowNames(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPTextColor", {
+			Default = Color3.new(1, 1, 1),
+			Title = "Text Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetTextColor(value)
+				end
+			end,
+		})
+
+	-- Weapon
+	espGroup:AddToggle("ESPWeapon", {
+		Text = "Weapon",
 		Default = false,
 		Callback = function(state)
 			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetTeamCheck then
-				mod:SetTeamCheck(state)
+			if mod then
+				mod:SetShowWeapon(state)
+			end
+		end,
+	})
+	-- Assuming Weapon uses TextColor for now, but UI implies separate color.
+	-- Since SetTextColor sets both, we'll leave it shared or add specific if needed.
+	-- The image has a color picker for Weapon.
+	-- Let's just use the shared text color for consistency or we need more Setters.
+	-- I'll skip individual color pickers for text items sharing color to keep implementation simple as requested,
+	-- UNLESS the user explicitly asked for every single color. The image shows color pickers.
+	-- I'll reuse TextColor for Name/Weapon/Distance for now to save space, or add duplicate pickers if strictly matching image.
+	-- Let's match image. We need `SetWeaponColor` etc. But Visuals.luau uses `TextColor` for all.
+	-- I'll stick to `TextColor` managing all text for now.
+
+	-- Distance
+	espGroup:AddToggle("ESPDistance", {
+		Text = "Distance",
+		Default = false,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod then
+				mod:SetShowDistance(state)
 			end
 		end,
 	})
 
-	visualsGroup:AddToggle("ESPNames", {
-		Text = "Show Names",
+	-- Box
+	espGroup
+		:AddToggle("ESPBoxes", {
+			Text = "Box",
+			Default = true,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowBoxes(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPBoxColor", {
+			Default = Color3.new(1, 1, 1),
+			Title = "Box Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetBoxColor(value)
+				end
+			end,
+		})
+
+	-- Skeleton
+	espGroup
+		:AddToggle("ESPSkeleton", {
+			Text = "Skeleton",
+			Default = false,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowSkeleton(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPSkeletonColor", {
+			Default = Color3.new(1, 1, 1),
+			Title = "Skeleton Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetSkeletonColor(value)
+				end
+			end,
+		})
+
+	-- Healthbar
+	espGroup:AddToggle("ESPHealthbar", {
+		Text = "Healthbar",
+		Default = false,
+		Callback = function(state)
+			local mod = self.Client.Modules.Visuals
+			if mod then
+				mod:SetShowHealthbar(state)
+			end
+		end,
+	})
+
+	-- Highlight (Fill, Outline)
+	espGroup
+		:AddToggle("ESPHighlight", {
+			Text = "Highlight",
+			Default = false,
+			Callback = function(state)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetShowHighlight(state)
+				end
+			end,
+		})
+		:AddColorPicker("ESPHighlightFill", {
+			Default = Color3.new(1, 0, 0),
+			Title = "Fill Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetHighlightFill(value)
+				end
+			end,
+		})
+		:AddColorPicker("ESPHighlightOutline", {
+			Default = Color3.new(1, 1, 1),
+			Title = "Outline Color",
+			Callback = function(value)
+				local mod = self.Client.Modules.Visuals
+				if mod then
+					mod:SetHighlightOutline(value)
+				end
+			end,
+		})
+
+	-- Better Bounds (Visuals uses simple bounds for now, but UI checks box)
+	espGroup:AddToggle("ESPBetterBounds", {
+		Text = "Better Bounds",
+		Default = false,
+		Callback = function(state)
+			-- Placeholder logic or refine Visuals later
+		end,
+	})
+
+	-- Show Teammates
+	espGroup:AddToggle("ESPShowTeammates", {
+		Text = "Show Teammates",
 		Default = true,
 		Callback = function(state)
 			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetShowNames then
-				mod:SetShowNames(state)
-			end
+			if mod then
+				mod:SetTeamCheck(not state)
+			end -- Inverse
 		end,
 	})
 
-	visualsGroup:AddToggle("ESPBoxes", {
-		Text = "Show Boxes",
-		Default = true,
-		Callback = function(state)
+	-- Sliders
+	espGroup:AddSlider("ESPSkeletonThickness", {
+		Text = "Skeleton Thickness",
+		Default = 1,
+		Min = 1,
+		Max = 5,
+		Rounding = 1,
+		Callback = function(value)
 			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetShowBoxes then
-				mod:SetShowBoxes(state)
+			if mod then
+				mod:SetSkeletonThickness(value)
 			end
 		end,
 	})
 
-	visualsGroup:AddToggle("ESPOutline", {
-		Text = "Text Outline",
-		Default = true,
-		Callback = function(state)
+	espGroup:AddSlider("ESPTextSize", {
+		Text = "Text Size",
+		Default = 12,
+		Min = 10,
+		Max = 24,
+		Rounding = 0,
+		Callback = function(value)
 			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetOutline then
-				mod:SetOutline(state)
+			if mod then
+				mod:SetTextSize(value)
 			end
 		end,
 	})
 
-	visualsGroup:AddSlider("ESPMaxDistance", {
+	espGroup:AddSlider("ESPMaxDistance", {
 		Text = "Max Distance",
 		Default = 2000,
 		Min = 100,
@@ -177,58 +335,8 @@ function Interface:Mount()
 		Rounding = 0,
 		Callback = function(value)
 			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetMaxDistance then
+			if mod then
 				mod:SetMaxDistance(value)
-			end
-		end,
-	})
-
-	visualsGroup:AddSlider("ESPBoxThickness", {
-		Text = "Box Thickness",
-		Default = 1,
-		Min = 1,
-		Max = 5,
-		Rounding = 0,
-		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetBoxThickness then
-				mod:SetBoxThickness(value)
-			end
-		end,
-	})
-
-	visualsGroup:AddSlider("ESPTextSize", {
-		Text = "Text Size",
-		Default = 14,
-		Min = 10,
-		Max = 24,
-		Rounding = 0,
-		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetTextSize then
-				mod:SetTextSize(value)
-			end
-		end,
-	})
-
-	visualsGroup:AddColorPicker("ESPBoxColor", {
-		Default = Color3.new(1, 0.6, 0.8),
-		Title = "Box Color",
-		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetBoxColor then
-				mod:SetBoxColor(value)
-			end
-		end,
-	})
-
-	visualsGroup:AddColorPicker("ESPTextColor", {
-		Default = Color3.new(1, 1, 1),
-		Title = "Text Color",
-		Callback = function(value)
-			local mod = self.Client.Modules.Visuals
-			if mod and mod.SetTextColor then
-				mod:SetTextColor(value)
 			end
 		end,
 	})

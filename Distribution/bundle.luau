@@ -50,71 +50,147 @@ local v=__DARKLUA_BUNDLE_MODULES.cache.c if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.c=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
 GetService('RunService')local Workspace=game:GetService('Workspace')local
-LOCAL_PLAYER=Players.LocalPlayer local Visuals={Enabled=false,Connections={},
-Drawings={},Settings={ESPEnabled=false,ShowNames=true,ShowBoxes=true,TeamCheck=
-false,MaxDistance=2000,BoxColor=Color3.new(1,0.6,0.8),TextColor=Color3.new(1,1,1
-),BoxThickness=1,TextSize=14,Outline=true}}function Visuals:Init(Client)self.
+LOCAL_PLAYER=Players.LocalPlayer local Camera=Workspace.CurrentCamera local
+Visuals={Enabled=false,Connections={},Drawings={},Highlights={},Settings={
+ESPEnabled=false,ShowNames=true,ShowWeapon=false,ShowDistance=false,ShowBoxes=
+true,ShowSkeleton=false,ShowHealthbar=false,ShowHighlight=false,TeamCheck=false,
+MaxDistance=2000,BoxColor=Color3.new(1,1,1),TextColor=Color3.new(1,1,1),
+SkeletonColor=Color3.new(1,1,1),HealthbarColor=Color3.new(0,1,0),HighlightFill=
+Color3.new(1,0,0),HighlightOutline=Color3.new(1,1,1),BoxThickness=1,
+SkeletonThickness=1,TextSize=12,Outline=true}}function Visuals:Init(Client)self.
 Client=Client self.Logger=Client.Logger end function Visuals:Toggle(state)if
 self.Enabled==state then return end self.Enabled=state if state then self:
 Enable()else self:Disable()end end function Visuals:SetESPEnabled(state)self.
-Settings.ESPEnabled=state if not state then self:ClearDrawings()end end function
-Visuals:SetShowNames(state)self.Settings.ShowNames=state end function Visuals:
+Settings.ESPEnabled=state if not state then self:Clear()end end function Visuals
+:SetShowNames(state)self.Settings.ShowNames=state end function Visuals:
+SetShowWeapon(state)self.Settings.ShowWeapon=state end function Visuals:
+SetShowDistance(state)self.Settings.ShowDistance=state end function Visuals:
 SetShowBoxes(state)self.Settings.ShowBoxes=state end function Visuals:
-SetTeamCheck(state)self.Settings.TeamCheck=state end function Visuals:
-SetMaxDistance(value)self.Settings.MaxDistance=value end function Visuals:
-SetBoxColor(color)self.Settings.BoxColor=color end function Visuals:SetTextColor
-(color)self.Settings.TextColor=color end function Visuals:SetBoxThickness(value)
-self.Settings.BoxThickness=value end function Visuals:SetTextSize(value)self.
-Settings.TextSize=value end function Visuals:SetOutline(state)self.Settings.
-Outline=state end function Visuals:Enable()if not Drawing or type(Drawing.new)~=
-'function'then self.Logger:Warn('Drawing API not available; Visuals disabled.')
-self.Enabled=false return end local function onPlayerRemoving(player)self:
-RemovePlayerDrawings(player)end local function onPlayerAdded(player)if player==
-LOCAL_PLAYER then return end self:EnsurePlayerDrawings(player)end table.insert(
-self.Connections,Players.PlayerAdded:Connect(onPlayerAdded))table.insert(self.
-Connections,Players.PlayerRemoving:Connect(onPlayerRemoving))for _,player in
-ipairs(Players:GetPlayers())do onPlayerAdded(player)end table.insert(self.
-Connections,RunService.RenderStepped:Connect(function()self:Render()end))end
-function Visuals:Disable()for _,conn in ipairs(self.Connections)do conn:
-Disconnect()end self.Connections={}self:ClearDrawings()end function Visuals:
-Cleanup()self:Disable()end function Visuals:ClearDrawings()for player,group in
-pairs(self.Drawings)do self:DestroyDrawingGroup(group)self.Drawings[player]=nil
-end end function Visuals:EnsurePlayerDrawings(player)if self.Drawings[player]
-then return end self.Drawings[player]={Name=Drawing.new('Text'),Box=Drawing.new(
-'Square')}local group=self.Drawings[player]group.Name.Size=self.Settings.
-TextSize group.Name.Center=true group.Name.Outline=self.Settings.Outline group.
-Name.Color=self.Settings.TextColor group.Name.Visible=false group.Box.Thickness=
-self.Settings.BoxThickness group.Box.Filled=false group.Box.Color=self.Settings.
-BoxColor group.Box.Visible=false end function Visuals:RemovePlayerDrawings(
-player)local group=self.Drawings[player]if not group then return end self:
-DestroyDrawingGroup(group)self.Drawings[player]=nil end function Visuals:
-DestroyDrawingGroup(group)for _,drawing in pairs(group)do pcall(function()
-drawing:Remove()end)end end function Visuals:Render()if not self.Settings.
-ESPEnabled then self:ClearDrawings()return end local camera=Workspace.
-CurrentCamera if not camera then return end for player,group in pairs(self.
-Drawings)do local character=player.Character local humanoid=character and
-character:FindFirstChildOfClass('Humanoid')local root=character and character:
-FindFirstChild('HumanoidRootPart')if not character or not humanoid or humanoid.
-Health<=0 or not root then group.Name.Visible=false group.Box.Visible=false
-elseif self.Settings.TeamCheck and LOCAL_PLAYER.Team==player.Team then group.
-Name.Visible=false group.Box.Visible=false else local distance=(root.Position-
-camera.CFrame.Position).Magnitude if distance>self.Settings.MaxDistance then
-group.Name.Visible=false group.Box.Visible=false else local screenPos,onScreen=
-camera:WorldToViewportPoint(root.Position)if not onScreen then group.Name.
-Visible=false group.Box.Visible=false else local scale=math.clamp(1-(distance/
-self.Settings.MaxDistance),0.25,1)local boxWidth=60*scale local boxHeight=90*
-scale if self.Settings.ShowBoxes then group.Box.Thickness=self.Settings.
-BoxThickness group.Box.Color=self.Settings.BoxColor group.Box.Size=Vector2.new(
-boxWidth,boxHeight)group.Box.Position=Vector2.new(screenPos.X-boxWidth/2,
-screenPos.Y-boxHeight/2)group.Box.Visible=true else group.Box.Visible=false end
-if self.Settings.ShowNames then group.Name.Text=player.DisplayName or player.
-Name group.Name.Size=self.Settings.TextSize group.Name.Color=self.Settings.
-TextColor group.Name.Outline=self.Settings.Outline group.Name.Position=Vector2.
-new(screenPos.X,screenPos.Y-boxHeight/2-14)group.Name.Visible=true else group.
-Name.Visible=false end end end end end end return Visuals end function
-__DARKLUA_BUNDLE_MODULES.d()local v=__DARKLUA_BUNDLE_MODULES.cache.d if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end
-do local function __modImpl()local repo=
+SetShowSkeleton(state)self.Settings.ShowSkeleton=state end function Visuals:
+SetShowHealthbar(state)self.Settings.ShowHealthbar=state end function Visuals:
+SetShowHighlight(state)self.Settings.ShowHighlight=state if not state then self:
+ClearHighlights()end end function Visuals:SetTeamCheck(state)self.Settings.
+TeamCheck=state end function Visuals:SetMaxDistance(value)self.Settings.
+MaxDistance=value end function Visuals:SetBoxColor(color)self.Settings.BoxColor=
+color end function Visuals:SetTextColor(color)self.Settings.TextColor=color end
+function Visuals:SetSkeletonColor(color)self.Settings.SkeletonColor=color end
+function Visuals:SetHighlightFill(color)self.Settings.HighlightFill=color end
+function Visuals:SetHighlightOutline(color)self.Settings.HighlightOutline=color
+end function Visuals:SetBoxThickness(value)self.Settings.BoxThickness=value end
+function Visuals:SetSkeletonThickness(value)self.Settings.SkeletonThickness=
+value end function Visuals:SetTextSize(value)self.Settings.TextSize=value end
+function Visuals:SetOutline(state)self.Settings.Outline=state end function
+Visuals:Enable()if not Drawing then self.Logger:Warn(
+'Drawing API not available; Visuals disabled.')self.Enabled=false return end
+local function onPlayerRemoving(player)self:RemovePlayer(player)end
+local function onPlayerAdded(player)if player==LOCAL_PLAYER then return end end
+table.insert(self.Connections,Players.PlayerAdded:Connect(onPlayerAdded))table.
+insert(self.Connections,Players.PlayerRemoving:Connect(onPlayerRemoving))for _,
+player in ipairs(Players:GetPlayers())do onPlayerAdded(player)end table.insert(
+self.Connections,RunService.RenderStepped:Connect(function()self:Render()end))
+end function Visuals:Disable()for _,conn in ipairs(self.Connections)do conn:
+Disconnect()end self.Connections={}self:Clear()end function Visuals:Cleanup()
+self:Disable()end function Visuals:Clear()self:ClearDrawings()self:
+ClearHighlights()end function Visuals:ClearDrawings()for player,group in pairs(
+self.Drawings)do self:DestroyDrawingGroup(group)self.Drawings[player]=nil end
+end function Visuals:ClearHighlights()for player,hl in pairs(self.Highlights)do
+hl:Destroy()self.Highlights[player]=nil end end function Visuals:RemovePlayer(
+player)if self.Drawings[player]then self:DestroyDrawingGroup(self.Drawings[
+player])self.Drawings[player]=nil end if self.Highlights[player]then self.
+Highlights[player]:Destroy()self.Highlights[player]=nil end end function Visuals
+:DestroyDrawingGroup(group)for _,drawing in pairs(group)do if type(drawing)==
+'table'then for _,line in pairs(drawing)do line:Remove()end else drawing:Remove(
+)end end end function Visuals:EnsurePlayerDrawings(player)if self.Drawings[
+player]then return self.Drawings[player]end local group={Name=Drawing.new('Text'
+),Weapon=Drawing.new('Text'),Distance=Drawing.new('Text'),Box=Drawing.new(
+'Square'),BoxOutline=Drawing.new('Square'),Healthbar=Drawing.new('Square'),
+HealthbarOutline=Drawing.new('Square'),Skeleton={}}for _,key in ipairs({'Name',
+'Weapon','Distance'})do group[key].Center=true group[key].Outline=true group[key
+].Visible=false end for _,key in ipairs({'Box','BoxOutline','Healthbar',
+'HealthbarOutline'})do group[key].Visible=false group[key].Filled=false end
+group.Box.Filled=false group.BoxOutline.Filled=false group.Healthbar.Filled=true
+group.HealthbarOutline.Filled=true for i=1,16 do local line=Drawing.new('Line')
+line.Visible=false table.insert(group.Skeleton,line)end self.Drawings[player]=
+group return group end function Visuals:UpdateHighlight(player,character)if not
+self.Settings.ShowHighlight then if self.Highlights[player]then self.Highlights[
+player]:Destroy()self.Highlights[player]=nil end return end if not self.
+Highlights[player]then local hl=Instance.new('Highlight')hl.Name=
+'BlossomHighlight'hl.FillTransparency=0.5 hl.OutlineTransparency=0 hl.Parent=
+game:GetService('CoreGui')self.Highlights[player]=hl end local hl=self.
+Highlights[player]if hl.Adornee~=character then hl.Adornee=character end hl.
+FillColor=self.Settings.HighlightFill hl.OutlineColor=self.Settings.
+HighlightOutline hl.Enabled=true end function Visuals:Render()if not self.
+Settings.ESPEnabled then self:Clear()return end for _,player in ipairs(Players:
+GetPlayers())do if player==LOCAL_PLAYER then continue end local character=player
+.Character local humanoid=character and character:FindFirstChildOfClass(
+'Humanoid')local root=character and character:FindFirstChild('HumanoidRootPart')
+if not character or not root or not humanoid or humanoid.Health<=0 then self:
+RemovePlayer(player)continue end if self.Settings.TeamCheck and player.Team==
+LOCAL_PLAYER.Team then self:RemovePlayer(player)continue end local group=self:
+EnsurePlayerDrawings(player)local screenPos,onScreen=Camera:
+WorldToViewportPoint(root.Position)local distance=(root.Position-Camera.CFrame.
+Position).Magnitude if not onScreen or distance>self.Settings.MaxDistance then
+for _,d in pairs(group)do if type(d)=='table'then for _,l in pairs(d)do l.
+Visible=false end else d.Visible=false end end if self.Highlights[player]then
+self.Highlights[player].Enabled=false end continue end self:UpdateHighlight(
+player,character)local scale=math.clamp(1000/distance,0.1,1)local width,height=
+30*scale,50*scale local cf,size=character:GetBoundingBox()local tl=Camera:
+WorldToViewportPoint((cf*CFrame.new(size.X/2,size.Y/2,0)).Position)local tr=
+Camera:WorldToViewportPoint((cf*CFrame.new(-size.X/2,size.Y/2,0)).Position)local
+bl=Camera:WorldToViewportPoint((cf*CFrame.new(size.X/2,-size.Y/2,0)).Position)
+local br=Camera:WorldToViewportPoint((cf*CFrame.new(-size.X/2,-size.Y/2,0)).
+Position)local rootPos=Camera:WorldToViewportPoint(root.Position)local legPos=
+Camera:WorldToViewportPoint(root.Position-Vector3.new(0,3,0))local headPos=
+Camera:WorldToViewportPoint(root.Position+Vector3.new(0,2,0))height=math.abs(
+headPos.Y-legPos.Y)*1.5 width=height*0.6 local boxPos=Vector2.new(rootPos.X-
+width/2,rootPos.Y-height/2)local boxSize=Vector2.new(width,height)if self.
+Settings.ShowBoxes then group.Box.Size=boxSize group.Box.Position=boxPos group.
+Box.Color=self.Settings.BoxColor group.Box.Thickness=self.Settings.BoxThickness
+group.Box.Visible=true else group.Box.Visible=false end if self.Settings.
+ShowHealthbar then local healthPerc=humanoid.Health/humanoid.MaxHealth local
+barHeight=height*healthPerc group.HealthbarOutline.Size=Vector2.new(2,height)
+group.HealthbarOutline.Position=Vector2.new(boxPos.X-5,boxPos.Y)group.
+HealthbarOutline.Color=Color3.new(0,0,0)group.HealthbarOutline.Visible=true
+group.Healthbar.Size=Vector2.new(2,barHeight)group.Healthbar.Position=Vector2.
+new(boxPos.X-5,boxPos.Y+(height-barHeight))group.Healthbar.Color=Color3.fromRGB(
+255,0,0):Lerp(Color3.fromRGB(0,255,0),healthPerc)group.Healthbar.Visible=true
+else group.Healthbar.Visible=false group.HealthbarOutline.Visible=false end
+local textYOffset=0 if self.Settings.ShowNames then group.Name.Text=player.
+DisplayName or player.Name group.Name.Size=self.Settings.TextSize group.Name.
+Color=self.Settings.TextColor group.Name.Outline=self.Settings.Outline group.
+Name.Position=Vector2.new(rootPos.X,boxPos.Y-self.Settings.TextSize-2)group.Name
+.Visible=true else group.Name.Visible=false end if self.Settings.ShowWeapon then
+local tool=character:FindFirstChildOfClass('Tool')if tool then group.Weapon.Text
+=tool.Name group.Weapon.Size=self.Settings.TextSize group.Weapon.Color=self.
+Settings.TextColor group.Weapon.Outline=self.Settings.Outline group.Weapon.
+Position=Vector2.new(rootPos.X,boxPos.Y+height+2+textYOffset)group.Weapon.
+Visible=true textYOffset=textYOffset+self.Settings.TextSize else group.Weapon.
+Visible=false end else group.Weapon.Visible=false end if self.Settings.
+ShowDistance then group.Distance.Text=math.floor(distance)..' studs'group.
+Distance.Size=self.Settings.TextSize group.Distance.Color=self.Settings.
+TextColor group.Distance.Outline=self.Settings.Outline group.Distance.Position=
+Vector2.new(rootPos.X,boxPos.Y+height+2+textYOffset)group.Distance.Visible=true
+textYOffset=textYOffset+self.Settings.TextSize else group.Distance.Visible=false
+end if self.Settings.ShowSkeleton then self:UpdateSkeleton(group.Skeleton,
+character)else for _,l in pairs(group.Skeleton)do l.Visible=false end end end
+end function Visuals:UpdateSkeleton(skeletonLines,character)local R15_JOINTS={{
+'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
+'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
+'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
+,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',
+'LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm','RightLowerArm'},{
+'RightLowerArm','RightHand'}}local lineIdx=1 for _,pair in ipairs(R15_JOINTS)do
+local p1=character:FindFirstChild(pair[1])local p2=character:FindFirstChild(pair
+[2])if p1 and p2 then local v1,o1=Camera:WorldToViewportPoint(p1.Position)local
+v2,o2=Camera:WorldToViewportPoint(p2.Position)if o1 and o2 then local line=
+skeletonLines[lineIdx]if line then line.From=Vector2.new(v1.X,v1.Y)line.To=
+Vector2.new(v2.X,v2.Y)line.Color=self.Settings.SkeletonColor line.Thickness=self
+.Settings.SkeletonThickness line.Visible=true lineIdx=lineIdx+1 end end end end
+for i=lineIdx,#skeletonLines do skeletonLines[i].Visible=false end end return
+Visuals end function __DARKLUA_BUNDLE_MODULES.d()local v=
+__DARKLUA_BUNDLE_MODULES.cache.d if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end do local function
+__modImpl()local repo=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local function loadRemote(path)local source=game:HttpGet(repo..path)local chunk,
 err=loadstring(source)if not chunk then error('[Blossom] UI load failed: '..
@@ -141,49 +217,65 @@ MenuFadeTime=0.2})local tabs={Main=window:AddTab('Main'),Visuals=window:AddTab(
 'UI Settings')}local mainGroup=tabs.Main:AddLeftGroupbox('Main')mainGroup:
 AddToggle('MovementToggle',{Text='Movement Assist',Default=false,Callback=
 function(state)local mod=self.Client.Modules.Movement if mod and mod.Toggle then
-mod:Toggle(state)end end})local visualsGroup=tabs.Visuals:AddLeftGroupbox('ESP')
-visualsGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,
-Callback=function(state)local mod=self.Client.Modules.Visuals if mod and mod.
-Toggle then mod:Toggle(state)end end})visualsGroup:AddToggle('ESPEnabled',{Text=
-'Enable ESP',Default=false,Callback=function(state)local mod=self.Client.Modules
-.Visuals if mod and mod.SetESPEnabled then mod:SetESPEnabled(state)end end})
-visualsGroup:AddToggle('ESPTeamCheck',{Text='Team Check',Default=false,Callback=
-function(state)local mod=self.Client.Modules.Visuals if mod and mod.SetTeamCheck
-then mod:SetTeamCheck(state)end end})visualsGroup:AddToggle('ESPNames',{Text=
-'Show Names',Default=true,Callback=function(state)local mod=self.Client.Modules.
-Visuals if mod and mod.SetShowNames then mod:SetShowNames(state)end end})
-visualsGroup:AddToggle('ESPBoxes',{Text='Show Boxes',Default=true,Callback=
-function(state)local mod=self.Client.Modules.Visuals if mod and mod.SetShowBoxes
-then mod:SetShowBoxes(state)end end})visualsGroup:AddToggle('ESPOutline',{Text=
-'Text Outline',Default=true,Callback=function(state)local mod=self.Client.
-Modules.Visuals if mod and mod.SetOutline then mod:SetOutline(state)end end})
-visualsGroup:AddSlider('ESPMaxDistance',{Text='Max Distance',Default=2000,Min=
-100,Max=10000,Rounding=0,Callback=function(value)local mod=self.Client.Modules.
-Visuals if mod and mod.SetMaxDistance then mod:SetMaxDistance(value)end end})
-visualsGroup:AddSlider('ESPBoxThickness',{Text='Box Thickness',Default=1,Min=1,
-Max=5,Rounding=0,Callback=function(value)local mod=self.Client.Modules.Visuals
-if mod and mod.SetBoxThickness then mod:SetBoxThickness(value)end end})
-visualsGroup:AddSlider('ESPTextSize',{Text='Text Size',Default=14,Min=10,Max=24,
-Rounding=0,Callback=function(value)local mod=self.Client.Modules.Visuals if mod
-and mod.SetTextSize then mod:SetTextSize(value)end end})visualsGroup:
-AddColorPicker('ESPBoxColor',{Default=Color3.new(1,0.6,0.8),Title='Box Color',
-Callback=function(value)local mod=self.Client.Modules.Visuals if mod and mod.
-SetBoxColor then mod:SetBoxColor(value)end end})visualsGroup:AddColorPicker(
-'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
-value)local mod=self.Client.Modules.Visuals if mod and mod.SetTextColor then mod
-:SetTextColor(value)end end})local menuGroup=tabs['UI Settings']:
-AddLeftGroupbox('Menu')menuGroup:AddButton('Unload',function()Library:Unload()
-end)menuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{Default='End',
-NoUI=true,Text='Menu keybind'})Library.ToggleKeybind=Options.MenuKeybind
-ThemeManager:SetLibrary(Library)SaveManager:SetLibrary(Library)SaveManager:
-IgnoreThemeSettings()ThemeManager:SetFolder('Blossom')SaveManager:SetFolder(
-'Blossom')SaveManager:BuildConfigSection(tabs['UI Settings'])ThemeManager:
-ApplyToTab(tabs['UI Settings'])local miscGroup=tabs.Misc:AddLeftGroupbox(
-'Auto Load')miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,
-Callback=function(enabled)self.Client:SetTeleportQueue(enabled)end})miscGroup:
-AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
-enabled)if enabled then setNotifyMuted(Library,true)else setNotifyMuted(Library,
-false)end end})runAutoload(Library,SaveManager,false)self.Logger:Info(
+mod:Toggle(state)end end})local espGroup=tabs.Visuals:AddLeftGroupbox('ESP')
+espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=
+function(state)local mod=self.Client.Modules.Visuals if mod and mod.Toggle then
+mod:Toggle(state)end end}):AddKeyPicker('EspKey',{Default='Insert',NoUI=true,
+Text='ESP Key'})espGroup:AddToggle('ESPEnabled',{Text='Enable ESP',Default=false
+,Callback=function(state)local mod=self.Client.Modules.Visuals if mod then mod:
+SetESPEnabled(state)end end})espGroup:AddToggle('ESPNames',{Text='Name',Default=
+true,Callback=function(state)local mod=self.Client.Modules.Visuals if mod then
+mod:SetShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.
+new(1,1,1),Title='Text Color',Callback=function(value)local mod=self.Client.
+Modules.Visuals if mod then mod:SetTextColor(value)end end})espGroup:AddToggle(
+'ESPWeapon',{Text='Weapon',Default=false,Callback=function(state)local mod=self.
+Client.Modules.Visuals if mod then mod:SetShowWeapon(state)end end})espGroup:
+AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
+local mod=self.Client.Modules.Visuals if mod then mod:SetShowDistance(state)end
+end})espGroup:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(
+state)local mod=self.Client.Modules.Visuals if mod then mod:SetShowBoxes(state)
+end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title=
+'Box Color',Callback=function(value)local mod=self.Client.Modules.Visuals if mod
+then mod:SetBoxColor(value)end end})espGroup:AddToggle('ESPSkeleton',{Text=
+'Skeleton',Default=false,Callback=function(state)local mod=self.Client.Modules.
+Visuals if mod then mod:SetShowSkeleton(state)end end}):AddColorPicker(
+'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
+function(value)local mod=self.Client.Modules.Visuals if mod then mod:
+SetSkeletonColor(value)end end})espGroup:AddToggle('ESPHealthbar',{Text=
+'Healthbar',Default=false,Callback=function(state)local mod=self.Client.Modules.
+Visuals if mod then mod:SetShowHealthbar(state)end end})espGroup:AddToggle(
+'ESPHighlight',{Text='Highlight',Default=false,Callback=function(state)local mod
+=self.Client.Modules.Visuals if mod then mod:SetShowHighlight(state)end end}):
+AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',
+Callback=function(value)local mod=self.Client.Modules.Visuals if mod then mod:
+SetHighlightFill(value)end end}):AddColorPicker('ESPHighlightOutline',{Default=
+Color3.new(1,1,1),Title='Outline Color',Callback=function(value)local mod=self.
+Client.Modules.Visuals if mod then mod:SetHighlightOutline(value)end end})
+espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
+Callback=function(state)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+'Show Teammates',Default=true,Callback=function(state)local mod=self.Client.
+Modules.Visuals if mod then mod:SetTeamCheck(not state)end end})espGroup:
+AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',Default=1,Min=1,Max=
+5,Rounding=1,Callback=function(value)local mod=self.Client.Modules.Visuals if
+mod then mod:SetSkeletonThickness(value)end end})espGroup:AddSlider(
+'ESPTextSize',{Text='Text Size',Default=12,Min=10,Max=24,Rounding=0,Callback=
+function(value)local mod=self.Client.Modules.Visuals if mod then mod:
+SetTextSize(value)end end})espGroup:AddSlider('ESPMaxDistance',{Text=
+'Max Distance',Default=2000,Min=100,Max=10000,Rounding=0,Callback=function(value
+)local mod=self.Client.Modules.Visuals if mod then mod:SetMaxDistance(value)end
+end})local menuGroup=tabs['UI Settings']:AddLeftGroupbox('Menu')menuGroup:
+AddButton('Unload',function()Library:Unload()end)menuGroup:AddLabel('Menu bind')
+:AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})
+Library.ToggleKeybind=Options.MenuKeybind ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)SaveManager:IgnoreThemeSettings()ThemeManager:
+SetFolder('Blossom')SaveManager:SetFolder('Blossom')SaveManager:
+BuildConfigSection(tabs['UI Settings'])ThemeManager:ApplyToTab(tabs[
+'UI Settings'])local miscGroup=tabs.Misc:AddLeftGroupbox('Auto Load')miscGroup:
+AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=function(
+enabled)self.Client:SetTeleportQueue(enabled)end})miscGroup:AddToggle(
+'SilentMode',{Text='Silent Mode',Default=false,Callback=function(enabled)if
+enabled then setNotifyMuted(Library,true)else setNotifyMuted(Library,false)end
+end})runAutoload(Library,SaveManager,false)self.Logger:Info(
 'UI mounted successfully')end function Interface:Cleanup()if self.Library then
 self.Library:Unload()end end return Interface end function
 __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
