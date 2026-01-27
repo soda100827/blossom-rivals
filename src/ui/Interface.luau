@@ -130,55 +130,16 @@ local function _mount()
 	}
 
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
-	espGroup
-		:AddToggle("VisualsToggle", {
-			Text = "Visuals (ESP)",
-			Default = false,
-			Callback = function(state)
-				local mod = _state.client.Modules.Visuals
-				if mod and mod.setEspEnabled then
-					mod:setEspEnabled(state)
-				end
-
-				-- Manually sync KeyPicker toggle state since SyncToggleState is false
-				local getfenvAny = getfenv :: any
-				local env = getfenvAny(0) :: any
-				local getgenvFunc = env.getgenv
-				local Opts = (getgenvFunc and getgenvFunc().Options) or _G.Options
-				if Opts and Opts.EspKey then
-					Opts.EspKey.Toggled = state
-					Opts.EspKey:Update()
-				end
-			end,
-		})
-		:AddKeyPicker("EspKey", {
-			Default = "Insert",
-			SyncToggleState = false,
-			Mode = "Toggle",
-			Text = "ESP Key",
-			NoUI = false,
-			ChangedCallback = function(key)
-				-- Optional: handle key change if needed
-			end,
-		})
-
-	-- Connect key state to Visuals override
-	local visualsMod = _state.client.Modules.Visuals
-	if visualsMod and visualsMod.setOverrideCheck then
-		-- LinoriaLib exports Options global. We can access the KeyPicker state via Options.EspKey:GetState()
-		visualsMod:setOverrideCheck(function()
-			-- Need to access Options properly
-			local getfenvAny = getfenv :: any
-			local env = getfenvAny(0) :: any
-			local getgenvFunc = env.getgenv
-			local Opts = (getgenvFunc and getgenvFunc().Options) or _G.Options
-
-			if Opts and Opts.EspKey then
-				return Opts.EspKey:GetState()
+	espGroup:AddToggle("VisualsToggle", {
+		Text = "Visuals (ESP)",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setEspEnabled then
+				mod:setEspEnabled(state)
 			end
-			return false
-		end)
-	end
+		end,
+	})
 
 	espGroup
 		:AddToggle("ESPNames", {

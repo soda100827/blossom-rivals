@@ -335,13 +335,7 @@ local function _updateSkeleton(skeletonLines, skeletonOutlineLines, character: M
 end
 
 local function _render()
-	local isEspActive = _state.settings.isEspEnabled
-	-- If override check is present (e.g. from UI KeyPicker), it takes full precedence
-	if _state.overrideCheck then
-		isEspActive = _state.overrideCheck()
-	end
-
-	if not isEspActive then
+	if not _state.settings.isEspEnabled then
 		_clear()
 		return
 	end
