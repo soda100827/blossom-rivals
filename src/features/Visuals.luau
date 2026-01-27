@@ -338,6 +338,11 @@ local function _render()
 	end
 
 	local camera = _getCamera()
+	-- Safety check for LocalPlayer at render time (it might be nil if very early)
+	if not LOCAL_PLAYER then
+		return
+	end
+
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player == LOCAL_PLAYER or (LOCAL_PLAYER.Character and player.Character == LOCAL_PLAYER.Character) then
 			continue

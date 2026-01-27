@@ -151,18 +151,18 @@ To=Vector2.new(v2.X,v2.Y)line.Color=_state.settings.skeletonColor line.Thickness
 end end end end for i=lineIndex,#skeletonLines do skeletonLines[i].Visible=false
 end for i=lineIndex,#skeletonOutlineLines do skeletonOutlineLines[i].Visible=
 false end end local function _render()if not _state.settings.isEspEnabled then
-_clear()return end local camera=_getCamera()for _,player in ipairs(Players:
-GetPlayers())do if player==LOCAL_PLAYER or(LOCAL_PLAYER.Character and player.
-Character==LOCAL_PLAYER.Character)then continue end local character=player.
-Character local humanoid=character and character:FindFirstChildOfClass(
-'Humanoid')local root=character and character:FindFirstChild('HumanoidRootPart')
-if not character or not root or not humanoid or humanoid.Health<=0 then
-_removePlayer(player)continue end if _state.settings.shouldCheckTeam and player.
-Team==LOCAL_PLAYER.Team then _removePlayer(player)continue end local group=
-_ensurePlayerDrawings(player)local rootPart=root local distance=(rootPart.
-Position-camera.CFrame.Position).Magnitude local _,onScreen=camera:
-WorldToViewportPoint(rootPart.Position)if not onScreen or distance>_state.
-settings.maxDistance then _setGroupVisible(group,false)local highlight=_state.
+_clear()return end local camera=_getCamera()if not LOCAL_PLAYER then return end
+for _,player in ipairs(Players:GetPlayers())do if player==LOCAL_PLAYER or(
+LOCAL_PLAYER.Character and player.Character==LOCAL_PLAYER.Character)then
+continue end local character=player.Character local humanoid=character and
+character:FindFirstChildOfClass('Humanoid')local root=character and character:
+FindFirstChild('HumanoidRootPart')if not character or not root or not humanoid
+or humanoid.Health<=0 then _removePlayer(player)continue end if _state.settings.
+shouldCheckTeam and player.Team==LOCAL_PLAYER.Team then _removePlayer(player)
+continue end local group=_ensurePlayerDrawings(player)local rootPart=root local
+distance=(rootPart.Position-camera.CFrame.Position).Magnitude local _,onScreen=
+camera:WorldToViewportPoint(rootPart.Position)if not onScreen or distance>_state
+.settings.maxDistance then _setGroupVisible(group,false)local highlight=_state.
 highlights[player]if highlight then highlight.Enabled=false end continue end
 _updateHighlight(player,character)local rootPos=camera:WorldToViewportPoint(
 rootPart.Position)local legPos=camera:WorldToViewportPoint(rootPart.Position-
