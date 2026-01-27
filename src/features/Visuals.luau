@@ -26,8 +26,6 @@ local function getDrawingLib(): ExploitTypes.DrawingLibrary
 	return lib
 end
 
-local DRAWING = getDrawingLib() :: ExploitTypes.DrawingLibrary
-
 local DEFAULT_SETTINGS = {
 	isEspEnabled = false,
 	shouldShowNames = true,
@@ -202,14 +200,19 @@ local function _ensurePlayerDrawings(player: Player): any
 		return existing
 	end
 
+	local lib = getDrawingLib()
+	if not lib then
+		return nil
+	end
+
 	local group = {
-		name = DRAWING.new("Text"),
-		weapon = DRAWING.new("Text"),
-		distance = DRAWING.new("Text"),
-		boxOutline = DRAWING.new("Square"),
-		box = DRAWING.new("Square"),
-		healthbarOutline = DRAWING.new("Square"),
-		healthbar = DRAWING.new("Square"),
+		name = lib.new("Text"),
+		weapon = lib.new("Text"),
+		distance = lib.new("Text"),
+		boxOutline = lib.new("Square"),
+		box = lib.new("Square"),
+		healthbarOutline = lib.new("Square"),
+		healthbar = lib.new("Square"),
 		skeleton = {},
 		skeletonOutline = {},
 	}
@@ -228,11 +231,11 @@ local function _ensurePlayerDrawings(player: Player): any
 	group.healthbarOutline.Filled = true
 
 	for _ = 1, 16 do
-		local line = DRAWING.new("Line")
+		local line = lib.new("Line")
 		line.Visible = false
 		table.insert(group.skeleton, line)
 
-		local outline = DRAWING.new("Line")
+		local outline = lib.new("Line")
 		outline.Visible = false
 		table.insert(group.skeletonOutline, outline)
 	end
@@ -367,6 +370,9 @@ local function _render()
 		end
 
 		local group = _ensurePlayerDrawings(player)
+		if not group then
+			continue
+		end
 		local rootPart = root :: BasePart
 		local distance = (rootPart.Position - camera.CFrame.Position).Magnitude
 		local _, onScreen = camera:WorldToViewportPoint(rootPart.Position)
@@ -500,7 +506,7 @@ local function _connect()
 end
 
 local function _enable()
-	if not DRAWING then
+	if not getDrawingLib() then
 		_state.logger:warn("Drawing API not available; Visuals disabled.")
 		_state.isEnabled = false
 		return

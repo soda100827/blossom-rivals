@@ -76,49 +76,49 @@ RunService=game:GetService('RunService')local Workspace=game:GetService(
 __DARKLUA_BUNDLE_MODULES.d()local function getDrawingLib()local getfenvAny=
 getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib and g.getgenv then
 lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,'Drawing')end return
-lib end local DRAWING=(getDrawingLib())local DEFAULT_SETTINGS={isEspEnabled=
-false,shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
-shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
-shouldShowHighlight=false,shouldCheckTeam=false,maxDistance=2000,boxColor=Color3
-.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),
-distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=
-Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=
-Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=
-Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.
-new(0,0,0),highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),
-boxThickness=1,skeletonThickness=1,textSize=12,shouldOutline=true}local
-R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso',
-'LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{
-'LowerTorso','RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg'
-,'RightFoot'},{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{
-'LeftLowerArm','LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm',
-'RightLowerArm'},{'RightLowerArm','RightHand'}}local Visuals={}Visuals.__index=
-Visuals local _maid=nil local _state={client=nil,logger=nil,isEnabled=false,
-drawings={},highlights={},settings=table.clone(DEFAULT_SETTINGS),overrideCheck=
-nil}local _signals={}local function _getCamera()local camera=Workspace.
-CurrentCamera if not camera then camera=(Workspace:WaitForChild('Camera'))end
-return camera end local function _clearDrawings()for player,group in pairs(
-_state.drawings)do for _,drawing in pairs(group)do if type(drawing)=='table'then
-for _,line in pairs(drawing)do line:Remove()end else drawing:Remove()end end
-_state.drawings[player]=nil end end local function _clearHighlights()for player,
-highlight in pairs(_state.highlights)do if highlight~=nil then(highlight):
-Destroy()end _state.highlights[player]=nil end end local function _clear()
-_clearDrawings()_clearHighlights()end local function _removePlayer(player)local
-group=_state.drawings[player]if group then for _,drawing in pairs(group)do if
-type(drawing)=='table'then for _,line in pairs(drawing)do line:Remove()end else
-drawing:Remove()end end _state.drawings[player]=nil end local highlight=_state.
-highlights[player]if highlight~=nil then(highlight):Destroy()_state.highlights[
-player]=nil end end local function _ensurePlayerDrawings(player)local existing=
-_state.drawings[player]if existing then return existing end local group={name=
-DRAWING.new('Text'),weapon=DRAWING.new('Text'),distance=DRAWING.new('Text'),
-boxOutline=DRAWING.new('Square'),box=DRAWING.new('Square'),healthbarOutline=
-DRAWING.new('Square'),healthbar=DRAWING.new('Square'),skeleton={},
-skeletonOutline={}}for _,key in ipairs({'name','weapon','distance'})do group[key
-].Center=true group[key].Outline=true group[key].Visible=false end for _,key in
-ipairs({'box','boxOutline','healthbar','healthbarOutline'})do group[key].Visible
-=false group[key].Filled=false end group.healthbar.Filled=true group.
-healthbarOutline.Filled=true for _=1,16 do local line=DRAWING.new('Line')line.
-Visible=false table.insert(group.skeleton,line)local outline=DRAWING.new('Line')
+lib end local DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames=true,
+shouldShowWeapon=false,shouldShowDistance=false,shouldShowBoxes=true,
+shouldShowSkeleton=false,shouldShowHealthbar=false,shouldShowHighlight=false,
+shouldCheckTeam=false,maxDistance=2000,boxColor=Color3.new(1,1,1),textColor=
+Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),
+skeletonColor=Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),
+healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=Color3.new(0,0,0),
+weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=Color3.new(0,0,0),
+boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.new(0,0,0),
+highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),boxThickness=
+1,skeletonThickness=1,textSize=12,shouldOutline=true}local R15_JOINTS={{'Head',
+'UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
+'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
+'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
+,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',
+'LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm','RightLowerArm'},{
+'RightLowerArm','RightHand'}}local Visuals={}Visuals.__index=Visuals local _maid
+=nil local _state={client=nil,logger=nil,isEnabled=false,drawings={},highlights=
+{},settings=table.clone(DEFAULT_SETTINGS),overrideCheck=nil}local _signals={}
+local function _getCamera()local camera=Workspace.CurrentCamera if not camera
+then camera=(Workspace:WaitForChild('Camera'))end return camera end
+local function _clearDrawings()for player,group in pairs(_state.drawings)do for
+_,drawing in pairs(group)do if type(drawing)=='table'then for _,line in pairs(
+drawing)do line:Remove()end else drawing:Remove()end end _state.drawings[player]
+=nil end end local function _clearHighlights()for player,highlight in pairs(
+_state.highlights)do if highlight~=nil then(highlight):Destroy()end _state.
+highlights[player]=nil end end local function _clear()_clearDrawings()
+_clearHighlights()end local function _removePlayer(player)local group=_state.
+drawings[player]if group then for _,drawing in pairs(group)do if type(drawing)==
+'table'then for _,line in pairs(drawing)do line:Remove()end else drawing:Remove(
+)end end _state.drawings[player]=nil end local highlight=_state.highlights[
+player]if highlight~=nil then(highlight):Destroy()_state.highlights[player]=nil
+end end local function _ensurePlayerDrawings(player)local existing=_state.
+drawings[player]if existing then return existing end local lib=getDrawingLib()if
+not lib then return nil end local group={name=lib.new('Text'),weapon=lib.new(
+'Text'),distance=lib.new('Text'),boxOutline=lib.new('Square'),box=lib.new(
+'Square'),healthbarOutline=lib.new('Square'),healthbar=lib.new('Square'),
+skeleton={},skeletonOutline={}}for _,key in ipairs({'name','weapon','distance'})
+do group[key].Center=true group[key].Outline=true group[key].Visible=false end
+for _,key in ipairs({'box','boxOutline','healthbar','healthbarOutline'})do group
+[key].Visible=false group[key].Filled=false end group.healthbar.Filled=true
+group.healthbarOutline.Filled=true for _=1,16 do local line=lib.new('Line')line.
+Visible=false table.insert(group.skeleton,line)local outline=lib.new('Line')
 outline.Visible=false table.insert(group.skeletonOutline,outline)end _state.
 drawings[player]=group return group end local function _updateHighlight(player,
 character)if not _state.settings.shouldShowHighlight then local highlight=_state
@@ -160,40 +160,41 @@ Character local humanoid=character and character:FindFirstChildOfClass(
 if not character or not root or not humanoid or humanoid.Health<=0 then
 _removePlayer(player)continue end if _state.settings.shouldCheckTeam and player.
 Team==localPlayer.Team then _removePlayer(player)continue end local group=
-_ensurePlayerDrawings(player)local rootPart=root local distance=(rootPart.
-Position-camera.CFrame.Position).Magnitude local _,onScreen=camera:
-WorldToViewportPoint(rootPart.Position)if not onScreen or distance>_state.
-settings.maxDistance then _setGroupVisible(group,false)local highlight=_state.
-highlights[player]if highlight then highlight.Enabled=false end continue end
-_updateHighlight(player,character)local rootPos=camera:WorldToViewportPoint(
-rootPart.Position)local legPos=camera:WorldToViewportPoint(rootPart.Position-
-Vector3.new(0,3,0))local headPos=camera:WorldToViewportPoint(rootPart.Position+
-Vector3.new(0,2,0))local height=math.abs(headPos.Y-legPos.Y)*1.5 local width=
-height*0.6 local boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-height/2)local
-boxSize=Vector2.new(width,height)if _state.settings.shouldShowBoxes then group.
-boxOutline.Size=boxSize group.boxOutline.Position=boxPos group.boxOutline.Color=
-_state.settings.boxOutlineColor group.boxOutline.Thickness=_state.settings.
-boxThickness+2 group.boxOutline.Visible=true group.boxOutline.ZIndex=1 group.box
-.Size=boxSize group.box.Position=boxPos group.box.Color=_state.settings.boxColor
-group.box.Thickness=_state.settings.boxThickness group.box.Visible=true group.
-box.ZIndex=2 else group.box.Visible=false group.boxOutline.Visible=false end if
-_state.settings.shouldShowHealthbar then local healthPerc=math.clamp(humanoid.
-Health/humanoid.MaxHealth,0,1)local barHeight=height*healthPerc group.
-healthbarOutline.Size=Vector2.new(4,height+2)group.healthbarOutline.Position=
-Vector2.new(boxPos.X-6,boxPos.Y-1)group.healthbarOutline.Color=_state.settings.
-healthbarOutlineColor group.healthbarOutline.Filled=true group.healthbarOutline.
-Visible=true group.healthbarOutline.ZIndex=1 group.healthbar.Size=Vector2.new(2,
-barHeight)group.healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-
-barHeight))group.healthbar.Color=_state.settings.healthbarColor:Lerp(Color3.new(
-1,0,0),1-healthPerc)group.healthbar.Filled=true group.healthbar.Visible=true
-group.healthbar.ZIndex=2 else group.healthbar.Visible=false group.
-healthbarOutline.Visible=false end local textOffset=0 if _state.settings.
-shouldShowNames then group.name.Text=player.DisplayName or player.Name group.
-name.Size=_state.settings.textSize group.name.Color=_state.settings.textColor
-group.name.Outline=_state.settings.shouldOutline group.name.OutlineColor=_state.
-settings.nameOutlineColor group.name.Position=Vector2.new(rootPos.X,boxPos.Y-
-_state.settings.textSize-2)group.name.Visible=true else group.name.Visible=false
-end if _state.settings.shouldShowWeapon then local tool=character:
+_ensurePlayerDrawings(player)if not group then continue end local rootPart=root
+local distance=(rootPart.Position-camera.CFrame.Position).Magnitude local _,
+onScreen=camera:WorldToViewportPoint(rootPart.Position)if not onScreen or
+distance>_state.settings.maxDistance then _setGroupVisible(group,false)local
+highlight=_state.highlights[player]if highlight then highlight.Enabled=false end
+continue end _updateHighlight(player,character)local rootPos=camera:
+WorldToViewportPoint(rootPart.Position)local legPos=camera:WorldToViewportPoint(
+rootPart.Position-Vector3.new(0,3,0))local headPos=camera:WorldToViewportPoint(
+rootPart.Position+Vector3.new(0,2,0))local height=math.abs(headPos.Y-legPos.Y)*
+1.5 local width=height*0.6 local boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-
+height/2)local boxSize=Vector2.new(width,height)if _state.settings.
+shouldShowBoxes then group.boxOutline.Size=boxSize group.boxOutline.Position=
+boxPos group.boxOutline.Color=_state.settings.boxOutlineColor group.boxOutline.
+Thickness=_state.settings.boxThickness+2 group.boxOutline.Visible=true group.
+boxOutline.ZIndex=1 group.box.Size=boxSize group.box.Position=boxPos group.box.
+Color=_state.settings.boxColor group.box.Thickness=_state.settings.boxThickness
+group.box.Visible=true group.box.ZIndex=2 else group.box.Visible=false group.
+boxOutline.Visible=false end if _state.settings.shouldShowHealthbar then local
+healthPerc=math.clamp(humanoid.Health/humanoid.MaxHealth,0,1)local barHeight=
+height*healthPerc group.healthbarOutline.Size=Vector2.new(4,height+2)group.
+healthbarOutline.Position=Vector2.new(boxPos.X-6,boxPos.Y-1)group.
+healthbarOutline.Color=_state.settings.healthbarOutlineColor group.
+healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
+healthbarOutline.ZIndex=1 group.healthbar.Size=Vector2.new(2,barHeight)group.
+healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-barHeight))group.
+healthbar.Color=_state.settings.healthbarColor:Lerp(Color3.new(1,0,0),1-
+healthPerc)group.healthbar.Filled=true group.healthbar.Visible=true group.
+healthbar.ZIndex=2 else group.healthbar.Visible=false group.healthbarOutline.
+Visible=false end local textOffset=0 if _state.settings.shouldShowNames then
+group.name.Text=player.DisplayName or player.Name group.name.Size=_state.
+settings.textSize group.name.Color=_state.settings.textColor group.name.Outline=
+_state.settings.shouldOutline group.name.OutlineColor=_state.settings.
+nameOutlineColor group.name.Position=Vector2.new(rootPos.X,boxPos.Y-_state.
+settings.textSize-2)group.name.Visible=true else group.name.Visible=false end if
+_state.settings.shouldShowWeapon then local tool=character:
 FindFirstChildOfClass('Tool')if tool then group.weapon.Text=tool.Name group.
 weapon.Size=_state.settings.textSize group.weapon.Color=_state.settings.
 weaponColor group.weapon.Outline=_state.settings.shouldOutline group.weapon.
@@ -213,8 +214,8 @@ _,line in pairs(group.skeletonOutline)do line.Visible=false end end end end
 local function _connect()_maid:DoCleaning()local removeConn=Players.
 PlayerRemoving:Connect(function(player)_removePlayer(player)end)_maid:GiveTask(
 removeConn)local renderConn=RunService.RenderStepped:Connect(function()_render()
-end)_maid:GiveTask(renderConn)end local function _enable()if not DRAWING then
-_state.logger:warn('Drawing API not available; Visuals disabled.')_state.
+end)_maid:GiveTask(renderConn)end local function _enable()if not getDrawingLib()
+then _state.logger:warn('Drawing API not available; Visuals disabled.')_state.
 isEnabled=false return end _connect()end local function _disable()_maid:
 DoCleaning()_clear()end function Visuals.init(self,client)_state.client=client
 _state.logger=client.Logger _maid=Maid.new()end function Visuals.cleanup(self)
