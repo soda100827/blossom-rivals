@@ -339,7 +339,7 @@ local function _render()
 
 	local camera = _getCamera()
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player == LOCAL_PLAYER then
+		if player == LOCAL_PLAYER or (LOCAL_PLAYER.Character and player.Character == LOCAL_PLAYER.Character) then
 			continue
 		end
 

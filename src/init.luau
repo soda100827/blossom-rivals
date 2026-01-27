@@ -48,8 +48,10 @@ export type BlossomClient = {
 	Modules: { [string]: Module },
 	Started: Signal,
 	Stopped: Signal,
+	IsSilent: boolean,
 	loadModule: (self: BlossomClient, name: string, moduleOrPath: ModuleOrPath) -> (),
 	setTeleportQueue: (self: BlossomClient, shouldEnable: boolean) -> (),
+	setSilent: (self: BlossomClient, isSilent: boolean) -> (),
 	start: (self: BlossomClient) -> (),
 	destroy: (self: BlossomClient) -> (),
 }
@@ -62,10 +64,15 @@ local _maid = Maid.new()
 local _state: {
 	isRunning: boolean,
 	shouldTeleportQueue: boolean,
+	isSilent: boolean,
 	logger: LoggerInstance,
 } = {
 	isRunning = false,
 	shouldTeleportQueue = false,
+	isSilent = (function()
+		local g = getfenv(0) :: any
+		return g.BlossomSilent or (g.getgenv and g.getgenv().BlossomSilent) or false
+	end)(),
 	logger = nil :: any,
 }
 local _signals: { started: Signal, stopped: Signal } = {
@@ -114,9 +121,12 @@ local function _handleTeleportQueue(shouldEnable: boolean)
 
 		if queueOnTeleport then
 			_state.logger:info("Queueing auto-load script...")
-			-- Debug print included as requested
+			local silentFlag = _state.isSilent and "getgenv().BlossomSilent = true; _G.BlossomSilent = true;" or ""
 			queueOnTeleport(
-				([[print("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL)
+				([[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):format(
+					silentFlag,
+					BUNDLE_URL
+				)
 			)
 		else
 			_state.logger:warn("queue_on_teleport function not found!")
@@ -127,7 +137,6 @@ local function _handleTeleportQueue(shouldEnable: boolean)
 			_state.logger:info("Clearing teleport queue...")
 			clearTeleportQueue()
 		else
-			-- If we can't clear, we can't do much. Warning is appropriate.
 			_state.logger:warn("clear_teleport_queue function not found!")
 		end
 	end
@@ -135,8 +144,7 @@ end
 
 local function _connect()
 	_maid:DoCleaning()
-	-- Keeping _connect for backward compatibility or other signals if needed,
-	-- but for now teleport queue is handled immediately in setTeleportQueue.
+	-- Refresh queue if needed (e.g. silent state changed)
 	if _state.shouldTeleportQueue then
 		_handleTeleportQueue(true)
 	end
@@ -188,6 +196,17 @@ function Client.setTeleportQueue(self: BlossomClient, shouldEnable: boolean): ()
 	end
 end
 
+function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
+	if _state.isSilent == isSilent then
+		return
+	end
+	_state.isSilent = isSilent
+	-- If teleport queue is active, we need to update the script string
+	if _state.shouldTeleportQueue and _state.isRunning then
+		_handleTeleportQueue(true)
+	end
+end
+
 function Client.start(self: BlossomClient): ()
 	if _state.isRunning then
 		return
@@ -231,6 +250,7 @@ client.Logger = loggerModule.new("Blossom")
 client.Modules = _modules
 client.Started = _signals.started
 client.Stopped = _signals.stopped
+client.IsSilent = _state.isSilent
 
 _state.logger = client.Logger
 

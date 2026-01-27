@@ -152,8 +152,9 @@ end end end end for i=lineIndex,#skeletonLines do skeletonLines[i].Visible=false
 end for i=lineIndex,#skeletonOutlineLines do skeletonOutlineLines[i].Visible=
 false end end local function _render()if not _state.settings.isEspEnabled then
 _clear()return end local camera=_getCamera()for _,player in ipairs(Players:
-GetPlayers())do if player==LOCAL_PLAYER then continue end local character=player
-.Character local humanoid=character and character:FindFirstChildOfClass(
+GetPlayers())do if player==LOCAL_PLAYER or(LOCAL_PLAYER.Character and player.
+Character==LOCAL_PLAYER.Character)then continue end local character=player.
+Character local humanoid=character and character:FindFirstChildOfClass(
 'Humanoid')local root=character and character:FindFirstChild('HumanoidRootPart')
 if not character or not root or not humanoid or humanoid.Health<=0 then
 _removePlayer(player)continue end if _state.settings.shouldCheckTeam and player.
@@ -282,75 +283,75 @@ logger local library=_loadRemote('Library.lua',logger)local themeManager=
 _loadRemote('addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
 'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
 themeManager _state.saveManager=saveManager local window=library:CreateWindow({
-Title='Blossom '.._state.client.Version,Center=true,AutoShow=true,TabPadding=8,
-MenuFadeTime=0.2})local tabs={visuals=window:AddTab('Visuals'),misc=window:
-AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local espGroup=tabs.
-visuals:AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text=
-'Visuals (ESP)',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.toggle then mod:toggle(state)if mod.setEspEnabled
-then mod:setEspEnabled(state)end end end}):AddKeyPicker('EspKey',{Default=
-'Insert',NoUI=true,Text='ESP Key'})espGroup:AddToggle('ESPNames',{Text='Name',
-Default=true,Callback=function(state)local mod=_state.client.Modules.Visuals if
-mod and mod.setShowNames then mod:setShowNames(state)end end}):AddColorPicker(
-'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
-value)local mod=_state.client.Modules.Visuals if mod and mod.setTextColor then
-mod:setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
-Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
-setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'
-,Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals
-if mod and mod.setShowWeapon then mod:setShowWeapon(state)end end}):
-AddColorPicker('ESPWeaponColor',{Default=Color3.new(1,1,1),Title='Weapon Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponColor then mod:setWeaponColor(value)end end}):AddColorPicker(
-'ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title='Weapon Outline',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end end})espGroup:
-AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowDistance then mod:
-setShowDistance(state)end end}):AddColorPicker('ESPDistanceColor',{Default=
-Color3.new(1,1,1),Title='Distance Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setDistanceColor then mod:
-setDistanceColor(value)end end}):AddColorPicker('ESPDistanceOutlineColor',{
-Default=Color3.new(0,0,0),Title='Distance Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setDistanceOutlineColor then
-mod:setDistanceOutlineColor(value)end end})espGroup:AddToggle('ESPBoxes',{Text=
-'Box',Default=true,Callback=function(state)local mod=_state.client.Modules.
-Visuals if mod and mod.setShowBoxes then mod:setShowBoxes(state)end end}):
-AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title='Box Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxColor then mod:setBoxColor(value)end end}):AddColorPicker(
-'ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title='Box Outline',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})espGroup:
-AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowSkeleton then mod:
-setShowSkeleton(state)end end}):AddColorPicker('ESPSkeletonColor',{Default=
-Color3.new(1,1,1),Title='Skeleton Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setSkeletonColor then mod:
-setSkeletonColor(value)end end}):AddColorPicker('ESPSkeletonOutlineColor',{
-Default=Color3.new(0,0,0),Title='Skeleton Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setSkeletonOutlineColor then
-mod:setSkeletonOutlineColor(value)end end})espGroup:AddToggle('ESPHealthbar',{
-Text='Healthbar',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.setShowHealthbar then mod:setShowHealthbar(state)
-end end}):AddColorPicker('ESPHealthbarColor',{Default=Color3.new(0,1,0),Title=
-'Health Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarColor then mod:setHealthbarColor(value)end end}):
-AddColorPicker('ESPHealthbarOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarOutlineColor then mod:setHealthbarOutlineColor(value)
-end end})espGroup:AddToggle('ESPHighlight',{Text='Highlight',Default=false,
+Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
+IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={visuals=window:AddTab(
+'Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}
+local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
+'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
+state)if mod.setEspEnabled then mod:setEspEnabled(state)end end end}):
+AddKeyPicker('EspKey',{Default='Insert',NoUI=true,Text='ESP Key'})espGroup:
+AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(state)local mod
+=_state.client.Modules.Visuals if mod and mod.setShowNames then mod:
+setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1
+,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}):
+AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
+espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
+mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
+Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
+value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
+),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
+value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
 Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowHighlight then mod:setShowHighlight(state)end end}):AddColorPicker(
-'ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',Callback=
+setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
+'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightFill then mod:setHighlightFill(value)end end}):AddColorPicker(
-'ESPHighlightOutline',{Default=Color3.new(1,1,1),Title='Outline Color',Callback=
+setDistanceColor then mod:setDistanceColor(value)end end}):AddColorPicker(
+'ESPDistanceOutlineColor',{Default=Color3.new(0,0,0),Title='Distance Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setDistanceOutlineColor then mod:setDistanceOutlineColor(value)end end})espGroup
+:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(state)local mod
+=_state.client.Modules.Visuals if mod and mod.setShowBoxes then mod:
+setShowBoxes(state)end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,
+1,1),Title='Box Color',Callback=function(value)local mod=_state.client.Modules.
+Visuals if mod and mod.setBoxColor then mod:setBoxColor(value)end end}):
+AddColorPicker('ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Box Outline',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})
+espGroup:AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowSkeleton then mod:setShowSkeleton(state)end end}):AddColorPicker(
+'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
-AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Callback=
-function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+setSkeletonColor then mod:setSkeletonColor(value)end end}):AddColorPicker(
+'ESPSkeletonOutlineColor',{Default=Color3.new(0,0,0),Title='Skeleton Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setSkeletonOutlineColor then mod:setSkeletonOutlineColor(value)end end})espGroup
+:AddToggle('ESPHealthbar',{Text='Healthbar',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowHealthbar
+then mod:setShowHealthbar(state)end end}):AddColorPicker('ESPHealthbarColor',{
+Default=Color3.new(0,1,0),Title='Health Color',Callback=function(value)local mod
+=_state.client.Modules.Visuals if mod and mod.setHealthbarColor then mod:
+setHealthbarColor(value)end end}):AddColorPicker('ESPHealthbarOutlineColor',{
+Default=Color3.new(0,0,0),Title='Outline Color',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setHealthbarOutlineColor then
+mod:setHealthbarOutlineColor(value)end end})espGroup:AddToggle('ESPHighlight',{
+Text='Highlight',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.setShowHighlight then mod:setShowHighlight(state)
+end end}):AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title=
+'Fill Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setHighlightFill then mod:setHighlightFill(value)end end}):
+AddColorPicker('ESPHighlightOutline',{Default=Color3.new(1,1,1),Title=
+'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setHighlightOutline then mod:setHighlightOutline(value)end end})
+espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
+Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',
@@ -375,28 +376,31 @@ AddLeftGroupbox('Auto Load')miscGroup:AddToggle('TeleportQueue',{Text=
 'Auto Load',Default=false,Callback=function(enabled)_state.client:
 setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
 'Silent Mode',Default=false,Callback=function(enabled)_setNotifyMuted(library,
-enabled)end})_runAutoload(library,saveManager,false)logger:info(
-'UI mounted successfully')end function Interface.init(self,client)_state.client=
-client _state.logger=client.Logger _maid=Maid.new()_connect()_mount()end
-function Interface.cleanup(self)_maid:DoCleaning()if _state.library then _state.
-library:Unload()end _state.isMounted=false end return Interface end function
-__DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-end local ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
+enabled)_state.client:setSilent(enabled)end})_runAutoload(library,saveManager,
+false)logger:info('UI mounted successfully')end function Interface.init(self,
+client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
+_connect()_mount()end function Interface.cleanup(self)_maid:DoCleaning()if
+_state.library then _state.library:Unload()end _state.isMounted=false end return
+Interface end function __DARKLUA_BUNDLE_MODULES.f()local v=
+__DARKLUA_BUNDLE_MODULES.cache.f if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end end local
+ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
 __DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
 local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
 'Interface',loader=(__DARKLUA_BUNDLE_MODULES.f())}}local Client={}Client.__index
 =Client local _maid=Maid.new()local _state={isRunning=false,shouldTeleportQueue=
-false,logger=nil}local _signals={started=Signal.new(),stopped=Signal.new()}local
-_modules={}local function _disableAnalyticsPipeline(logger)local success,err=
-pcall(function()local controller=ReplicatedFirst:FindFirstChild(
-'AnalyticsPipelineController')if not controller then controller=ReplicatedFirst:
-WaitForChild('AnalyticsPipelineController',10)end if controller then(controller)
-.Disabled=true logger:info('AnalyticsPipelineController Disabled')end end)if not
-success then logger:warn('Failed to disable AnalyticsPipelineController:',err)
-end end local function _getQueueOnTeleport()local env=(getfenv())return env.
+false,isSilent=(function()local g=(getfenv(0))return g.BlossomSilent or(g.
+getgenv and g.getgenv().BlossomSilent)or false end)(),logger=nil}local _signals=
+{started=Signal.new(),stopped=Signal.new()}local _modules={}local function
+_disableAnalyticsPipeline(logger)local success,err=pcall(function()local
+controller=ReplicatedFirst:FindFirstChild('AnalyticsPipelineController')if not
+controller then controller=ReplicatedFirst:WaitForChild(
+'AnalyticsPipelineController',10)end if controller then(controller).Disabled=
+true logger:info('AnalyticsPipelineController Disabled')end end)if not success
+then logger:warn('Failed to disable AnalyticsPipelineController:',err)end end
+local function _getQueueOnTeleport()local env=(getfenv())return env.
 queue_on_teleport or env.queueonteleport or(env.syn and env.syn.
 queue_on_teleport)end local function _getClearTeleportQueue()local env=(getfenv(
 ))return env.clear_teleport_queue or env.clearteleportqueue or(env.syn and env.
@@ -404,35 +408,39 @@ syn.clear_teleport_queue)end local function _handleTeleportQueue(shouldEnable)if
 shouldEnable then local queueOnTeleport=_getQueueOnTeleport()local
 clearTeleportQueue=_getClearTeleportQueue()if clearTeleportQueue then
 clearTeleportQueue()end if queueOnTeleport then _state.logger:info(
-'Queueing auto-load script...')queueOnTeleport((
-[[print("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(
-BUNDLE_URL))else _state.logger:warn('queue_on_teleport function not found!')end
-else local clearTeleportQueue=_getClearTeleportQueue()if clearTeleportQueue then
-_state.logger:info('Clearing teleport queue...')clearTeleportQueue()else _state.
-logger:warn('clear_teleport_queue function not found!')end end end
-local function _connect()_maid:DoCleaning()if _state.shouldTeleportQueue then
-_handleTeleportQueue(true)end end local function _getModuleInit(moduleResult)
-return moduleResult.init or moduleResult.Init end local function
-_getModuleCleanup(moduleResult)return moduleResult.cleanup or moduleResult.
-Cleanup end function Client.loadModule(self,name,moduleOrPath)if _modules[name]
-then _state.logger:warn('Module already loaded:',name)return end local loader=
-function()if type(moduleOrPath)=='string'then local dynamicRequire=require
-return dynamicRequire(moduleOrPath)end return moduleOrPath end local success,
-result=pcall(loader)if success then local moduleResult=result _modules[name]=
-moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then task.
-spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
-'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
-result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
-shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(
-shouldEnable)end end function Client.start(self)if _state.isRunning then return
-end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)_state.logger:
-info('Client initializing...')for _,entry in ipairs(MODULES)do self:loadModule(
-entry.name,entry.loader)end _connect()_signals.started:Fire()end function Client
-.destroy(self)if not _state.isRunning then return end _state.isRunning=false
-_signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in pairs(_modules)do
-local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn then pcall(
-cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')end local
-loggerModule=(Logger)local client=((setmetatable({},Client)))client.Version=
-'1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules client.
-Started=_signals.started client.Stopped=_signals.stopped _state.logger=client.
-Logger return client:start()
+'Queueing auto-load script...')local silentFlag=_state.isSilent and
+'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''queueOnTeleport((
+[[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):
+format(silentFlag,BUNDLE_URL))else _state.logger:warn(
+'queue_on_teleport function not found!')end else local clearTeleportQueue=
+_getClearTeleportQueue()if clearTeleportQueue then _state.logger:info(
+'Clearing teleport queue...')clearTeleportQueue()else _state.logger:warn(
+'clear_teleport_queue function not found!')end end end local function _connect()
+_maid:DoCleaning()if _state.shouldTeleportQueue then _handleTeleportQueue(true)
+end end local function _getModuleInit(moduleResult)return moduleResult.init or
+moduleResult.Init end local function _getModuleCleanup(moduleResult)return
+moduleResult.cleanup or moduleResult.Cleanup end function Client.loadModule(self
+,name,moduleOrPath)if _modules[name]then _state.logger:warn(
+'Module already loaded:',name)return end local loader=function()if type(
+moduleOrPath)=='string'then local dynamicRequire=require return dynamicRequire(
+moduleOrPath)end return moduleOrPath end local success,result=pcall(loader)if
+success then local moduleResult=result _modules[name]=moduleResult local initFn=
+(_getModuleInit(moduleResult))if initFn then task.spawn(function()initFn(
+moduleResult,self)end)end _state.logger:info('Loaded module:',name)else _state.
+logger:warn('Failed to load module:',name,result)end end function Client.
+setTeleportQueue(self,shouldEnable)_state.shouldTeleportQueue=shouldEnable if
+_state.isRunning then _handleTeleportQueue(shouldEnable)end end function Client.
+setSilent(self,isSilent)if _state.isSilent==isSilent then return end _state.
+isSilent=isSilent if _state.shouldTeleportQueue and _state.isRunning then
+_handleTeleportQueue(true)end end function Client.start(self)if _state.isRunning
+then return end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)
+_state.logger:info('Client initializing...')for _,entry in ipairs(MODULES)do
+self:loadModule(entry.name,entry.loader)end _connect()_signals.started:Fire()end
+function Client.destroy(self)if not _state.isRunning then return end _state.
+isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in
+pairs(_modules)do local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn
+then pcall(cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')
+end local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
+Version='1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules
+client.Started=_signals.started client.Stopped=_signals.stopped client.IsSilent=
+_state.isSilent _state.logger=client.Logger return client:start()

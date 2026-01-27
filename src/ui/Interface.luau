@@ -118,7 +118,7 @@ local function _mount()
 	local window = library:CreateWindow({
 		Title = "Blossom " .. _state.client.Version,
 		Center = true,
-		AutoShow = true,
+		AutoShow = not _state.client.IsSilent,
 		TabPadding = 8,
 		MenuFadeTime = 0.2,
 	})
@@ -466,6 +466,7 @@ local function _mount()
 		Default = false,
 		Callback = function(enabled)
 			_setNotifyMuted(library, enabled)
+			_state.client:setSilent(enabled)
 		end,
 	})
 
