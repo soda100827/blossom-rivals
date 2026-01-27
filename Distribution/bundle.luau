@@ -291,69 +291,68 @@ local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
 'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
 local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
 state)if mod.setEspEnabled then mod:setEspEnabled(state)end end end}):
-AddKeyPicker('EspKey',{Default='Insert',SyncToggleState=true,Mode='Toggle',Text=
-'ESP Key (Right Click)',NoUI=false})espGroup:AddToggle('ESPNames',{Text='Name',
-Default=true,Callback=function(state)local mod=_state.client.Modules.Visuals if
-mod and mod.setShowNames then mod:setShowNames(state)end end}):AddColorPicker(
-'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
-value)local mod=_state.client.Modules.Visuals if mod and mod.setTextColor then
-mod:setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
-Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
-setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'
-,Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals
-if mod and mod.setShowWeapon then mod:setShowWeapon(state)end end}):
-AddColorPicker('ESPWeaponColor',{Default=Color3.new(1,1,1),Title='Weapon Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponColor then mod:setWeaponColor(value)end end}):AddColorPicker(
-'ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title='Weapon Outline',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end end})espGroup:
-AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowDistance then mod:
-setShowDistance(state)end end}):AddColorPicker('ESPDistanceColor',{Default=
-Color3.new(1,1,1),Title='Distance Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setDistanceColor then mod:
-setDistanceColor(value)end end}):AddColorPicker('ESPDistanceOutlineColor',{
-Default=Color3.new(0,0,0),Title='Distance Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setDistanceOutlineColor then
-mod:setDistanceOutlineColor(value)end end})espGroup:AddToggle('ESPBoxes',{Text=
-'Box',Default=true,Callback=function(state)local mod=_state.client.Modules.
-Visuals if mod and mod.setShowBoxes then mod:setShowBoxes(state)end end}):
-AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title='Box Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxColor then mod:setBoxColor(value)end end}):AddColorPicker(
-'ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title='Box Outline',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})espGroup:
-AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowSkeleton then mod:
-setShowSkeleton(state)end end}):AddColorPicker('ESPSkeletonColor',{Default=
-Color3.new(1,1,1),Title='Skeleton Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setSkeletonColor then mod:
-setSkeletonColor(value)end end}):AddColorPicker('ESPSkeletonOutlineColor',{
-Default=Color3.new(0,0,0),Title='Skeleton Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setSkeletonOutlineColor then
-mod:setSkeletonOutlineColor(value)end end})espGroup:AddToggle('ESPHealthbar',{
-Text='Healthbar',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.setShowHealthbar then mod:setShowHealthbar(state)
-end end}):AddColorPicker('ESPHealthbarColor',{Default=Color3.new(0,1,0),Title=
-'Health Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarColor then mod:setHealthbarColor(value)end end}):
-AddColorPicker('ESPHealthbarOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarOutlineColor then mod:setHealthbarOutlineColor(value)
-end end})espGroup:AddToggle('ESPHighlight',{Text='Highlight',Default=false,
+AddKeyPicker('EspKey',{Default='Insert',Text='ESP Key',NoUI=false})espGroup:
+AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(state)local mod
+=_state.client.Modules.Visuals if mod and mod.setShowNames then mod:
+setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1
+,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}):
+AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
+espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
+mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
+Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
+value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
+),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
+value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
 Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowHighlight then mod:setShowHighlight(state)end end}):AddColorPicker(
-'ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',Callback=
+setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
+'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightFill then mod:setHighlightFill(value)end end}):AddColorPicker(
-'ESPHighlightOutline',{Default=Color3.new(1,1,1),Title='Outline Color',Callback=
+setDistanceColor then mod:setDistanceColor(value)end end}):AddColorPicker(
+'ESPDistanceOutlineColor',{Default=Color3.new(0,0,0),Title='Distance Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setDistanceOutlineColor then mod:setDistanceOutlineColor(value)end end})espGroup
+:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(state)local mod
+=_state.client.Modules.Visuals if mod and mod.setShowBoxes then mod:
+setShowBoxes(state)end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,
+1,1),Title='Box Color',Callback=function(value)local mod=_state.client.Modules.
+Visuals if mod and mod.setBoxColor then mod:setBoxColor(value)end end}):
+AddColorPicker('ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Box Outline',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})
+espGroup:AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowSkeleton then mod:setShowSkeleton(state)end end}):AddColorPicker(
+'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
-AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Callback=
-function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+setSkeletonColor then mod:setSkeletonColor(value)end end}):AddColorPicker(
+'ESPSkeletonOutlineColor',{Default=Color3.new(0,0,0),Title='Skeleton Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setSkeletonOutlineColor then mod:setSkeletonOutlineColor(value)end end})espGroup
+:AddToggle('ESPHealthbar',{Text='Healthbar',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowHealthbar
+then mod:setShowHealthbar(state)end end}):AddColorPicker('ESPHealthbarColor',{
+Default=Color3.new(0,1,0),Title='Health Color',Callback=function(value)local mod
+=_state.client.Modules.Visuals if mod and mod.setHealthbarColor then mod:
+setHealthbarColor(value)end end}):AddColorPicker('ESPHealthbarOutlineColor',{
+Default=Color3.new(0,0,0),Title='Outline Color',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setHealthbarOutlineColor then
+mod:setHealthbarOutlineColor(value)end end})espGroup:AddToggle('ESPHighlight',{
+Text='Highlight',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.setShowHighlight then mod:setShowHighlight(state)
+end end}):AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title=
+'Fill Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setHighlightFill then mod:setHighlightFill(value)end end}):
+AddColorPicker('ESPHighlightOutline',{Default=Color3.new(1,1,1),Title=
+'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setHighlightOutline then mod:setHighlightOutline(value)end end})
+espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
+Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',

@@ -146,9 +146,7 @@ local function _mount()
 		})
 		:AddKeyPicker("EspKey", {
 			Default = "Insert",
-			SyncToggleState = true,
-			Mode = "Toggle",
-			Text = "ESP Key (Right Click)",
+			Text = "ESP Key",
 			NoUI = false,
 		})
 
