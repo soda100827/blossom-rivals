@@ -93,9 +93,8 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 end
 
 local function _getQueueOnTeleport(): ((string) -> ())?
-	local globals = _G :: any
-	local synCompat = globals.syn
-	return queue_on_teleport or queueonteleport or (synCompat and synCompat.queue_on_teleport)
+	local env = getfenv() :: any
+	return env.queue_on_teleport or env.queueonteleport or (env.syn and env.syn.queue_on_teleport)
 end
 
 local function _connect()
