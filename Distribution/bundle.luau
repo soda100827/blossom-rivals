@@ -399,28 +399,30 @@ if not queueOnTeleport then _state.logger:warn(
 if not player then _state.logger:warn(
 'LocalPlayer not available for teleport queue.')return end local conn=player.
 OnTeleport:Connect(function(state)if state==Enum.TeleportState.Started then
-queueOnTeleport(('loadstring(game:HttpGet("%s"))()'):format(BUNDLE_URL))end end)
-_maid:GiveTask(conn)end local function _getModuleInit(moduleResult)return
-moduleResult.init or moduleResult.Init end local function _getModuleCleanup(
-moduleResult)return moduleResult.cleanup or moduleResult.Cleanup end function
-Client.loadModule(self,name,moduleOrPath)if _modules[name]then _state.logger:
-warn('Module already loaded:',name)return end local loader=function()if type(
-moduleOrPath)=='string'then local dynamicRequire=require return dynamicRequire(
-moduleOrPath)end return moduleOrPath end local success,result=pcall(loader)if
-success then local moduleResult=result _modules[name]=moduleResult local initFn=
-(_getModuleInit(moduleResult))if initFn then task.spawn(function()initFn(
-moduleResult,self)end)end _state.logger:info('Loaded module:',name)else _state.
-logger:warn('Failed to load module:',name,result)end end function Client.
-setTeleportQueue(self,shouldEnable)_state.shouldTeleportQueue=shouldEnable if
-_state.isRunning then _connect()end end function Client.start(self)if _state.
-isRunning then return end _state.isRunning=true _disableAnalyticsPipeline(_state
-.logger)_state.logger:info('Client initializing...')for _,entry in ipairs(
-MODULES)do self:loadModule(entry.name,entry.loader)end _connect()_signals.
-started:Fire()end function Client.destroy(self)if not _state.isRunning then
-return end _state.isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _
-,moduleResult in pairs(_modules)do local cleanupFn=(_getModuleCleanup(
-moduleResult))if cleanupFn then pcall(cleanupFn,moduleResult)end end _state.
-logger:info('Client stopped.')end local loggerModule=(Logger)local client=((
-setmetatable({},Client)))client.Version='1.0.0'client.Logger=loggerModule.new(
-'Blossom')client.Modules=_modules client.Started=_signals.started client.Stopped
-=_signals.stopped _state.logger=client.Logger return client:start()
+_state.logger:info('Teleport started; queueing auto-load.')queueOnTeleport((
+[[warn("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(
+BUNDLE_URL))end end)_maid:GiveTask(conn)end local function _getModuleInit(
+moduleResult)return moduleResult.init or moduleResult.Init end local function
+_getModuleCleanup(moduleResult)return moduleResult.cleanup or moduleResult.
+Cleanup end function Client.loadModule(self,name,moduleOrPath)if _modules[name]
+then _state.logger:warn('Module already loaded:',name)return end local loader=
+function()if type(moduleOrPath)=='string'then local dynamicRequire=require
+return dynamicRequire(moduleOrPath)end return moduleOrPath end local success,
+result=pcall(loader)if success then local moduleResult=result _modules[name]=
+moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then task.
+spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
+'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
+result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
+shouldTeleportQueue=shouldEnable if _state.isRunning then _connect()end end
+function Client.start(self)if _state.isRunning then return end _state.isRunning=
+true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
+'Client initializing...')for _,entry in ipairs(MODULES)do self:loadModule(entry.
+name,entry.loader)end _connect()_signals.started:Fire()end function Client.
+destroy(self)if not _state.isRunning then return end _state.isRunning=false
+_signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in pairs(_modules)do
+local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn then pcall(
+cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')end local
+loggerModule=(Logger)local client=((setmetatable({},Client)))client.Version=
+'1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules client.
+Started=_signals.started client.Stopped=_signals.stopped _state.logger=client.
+Logger return client:start()

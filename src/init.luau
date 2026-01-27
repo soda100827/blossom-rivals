@@ -118,7 +118,8 @@ local function _connect()
 
 	local conn = player.OnTeleport:Connect(function(state)
 		if state == Enum.TeleportState.Started then
-			queueOnTeleport(([[loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL))
+			_state.logger:info("Teleport started; queueing auto-load.")
+			queueOnTeleport(([[warn("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL))
 		end
 	end)
 	_maid:GiveTask(conn)
