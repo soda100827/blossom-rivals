@@ -135,6 +135,9 @@ local function _mount()
 		Default = false,
 		Callback = function(state)
 			local mod = _state.client.Modules.Visuals
+			if mod and mod.toggle then
+				mod:toggle(state)
+			end
 			if mod and mod.setEspEnabled then
 				mod:setEspEnabled(state)
 			end
