@@ -151,10 +151,10 @@ To=Vector2.new(v2.X,v2.Y)line.Color=_state.settings.skeletonColor line.Thickness
 end end end end for i=lineIndex,#skeletonLines do skeletonLines[i].Visible=false
 end for i=lineIndex,#skeletonOutlineLines do skeletonOutlineLines[i].Visible=
 false end end local function _render()local isEspActive=_state.settings.
-isEspEnabled if _state.overrideCheck and _state.overrideCheck()then isEspActive=
-true end if not isEspActive then _clear()return end local camera=_getCamera()
-local localPlayer=Players.LocalPlayer if not localPlayer then return end for _,
-player in ipairs(Players:GetPlayers())do if player==localPlayer or(localPlayer.
+isEspEnabled if _state.overrideCheck then isEspActive=_state.overrideCheck()end
+if not isEspActive then _clear()return end local camera=_getCamera()local
+localPlayer=Players.LocalPlayer if not localPlayer then return end for _,player
+in ipairs(Players:GetPlayers())do if player==localPlayer or(localPlayer.
 Character and player.Character==localPlayer.Character)then continue end local
 character=player.Character local humanoid=character and character:
 FindFirstChildOfClass('Humanoid')local root=character and character:
@@ -291,20 +291,22 @@ IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={visuals=window:AddTab(
 'Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}
 local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
 'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
-state)if mod.setEspEnabled then mod:setEspEnabled(state)end end end}):
-AddKeyPicker('EspKey',{Default='Insert',SyncToggleState=false,Mode='Toggle',Text
-='ESP Key',NoUI=false,ChangedCallback=function(key)end})local visualsMod=_state.
-client.Modules.Visuals if visualsMod and visualsMod.setOverrideCheck then
-visualsMod:setOverrideCheck(function()local getfenvAny=getfenv local env=(
-getfenvAny(0))local getgenvFunc=env.getgenv local Opts=(getgenvFunc and
-getgenvFunc().Options)or _G.Options if Opts and Opts.EspKey then return Opts.
-EspKey:GetState()end return false end)end espGroup:AddToggle('ESPNames',{Text=
-'Name',Default=true,Callback=function(state)local mod=_state.client.Modules.
-Visuals if mod and mod.setShowNames then mod:setShowNames(state)end end}):
-AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setTextColor then mod:setTextColor(value)end end}):AddColorPicker(
+local mod=_state.client.Modules.Visuals if mod and mod.setEspEnabled then mod:
+setEspEnabled(state)end local getfenvAny=getfenv local env=(getfenvAny(0))local
+getgenvFunc=env.getgenv local Opts=(getgenvFunc and getgenvFunc().Options)or _G.
+Options if Opts and Opts.EspKey then Opts.EspKey.Toggled=state Opts.EspKey:
+Update()end end}):AddKeyPicker('EspKey',{Default='Insert',SyncToggleState=false,
+Mode='Toggle',Text='ESP Key',NoUI=false,ChangedCallback=function(key)end})local
+visualsMod=_state.client.Modules.Visuals if visualsMod and visualsMod.
+setOverrideCheck then visualsMod:setOverrideCheck(function()local getfenvAny=
+getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local Opts=(
+getgenvFunc and getgenvFunc().Options)or _G.Options if Opts and Opts.EspKey then
+return Opts.EspKey:GetState()end return false end)end espGroup:AddToggle(
+'ESPNames',{Text='Name',Default=true,Callback=function(state)local mod=_state.
+client.Modules.Visuals if mod and mod.setShowNames then mod:setShowNames(state)
+end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title=
+'Text Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setTextColor then mod:setTextColor(value)end end}):AddColorPicker(
 'ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title='Name Outline',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
 setNameOutlineColor then mod:setNameOutlineColor(value)end end})espGroup:

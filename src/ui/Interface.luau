@@ -136,11 +136,18 @@ local function _mount()
 			Default = false,
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
-				if mod and mod.toggle then
-					mod:toggle(state)
-					if mod.setEspEnabled then
-						mod:setEspEnabled(state)
-					end
+				if mod and mod.setEspEnabled then
+					mod:setEspEnabled(state)
+				end
+
+				-- Manually sync KeyPicker toggle state since SyncToggleState is false
+				local getfenvAny = getfenv :: any
+				local env = getfenvAny(0) :: any
+				local getgenvFunc = env.getgenv
+				local Opts = (getgenvFunc and getgenvFunc().Options) or _G.Options
+				if Opts and Opts.EspKey then
+					Opts.EspKey.Toggled = state
+					Opts.EspKey:Update()
 				end
 			end,
 		})

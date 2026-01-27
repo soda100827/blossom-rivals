@@ -336,8 +336,9 @@ end
 
 local function _render()
 	local isEspActive = _state.settings.isEspEnabled
-	if _state.overrideCheck and _state.overrideCheck() then
-		isEspActive = true
+	-- If override check is present (e.g. from UI KeyPicker), it takes full precedence
+	if _state.overrideCheck then
+		isEspActive = _state.overrideCheck()
 	end
 
 	if not isEspActive then
