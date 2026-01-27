@@ -12,7 +12,6 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 local ExploitTypes = require("../types/ExploitTypes")
 
 --// Constants
-local LOCAL_PLAYER = Players.LocalPlayer
 
 local function getDrawingLib(): ExploitTypes.DrawingLibrary
 	local g = getfenv(0) :: any
@@ -339,12 +338,13 @@ local function _render()
 
 	local camera = _getCamera()
 	-- Safety check for LocalPlayer at render time (it might be nil if very early)
-	if not LOCAL_PLAYER then
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
 		return
 	end
 
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player == LOCAL_PLAYER or (LOCAL_PLAYER.Character and player.Character == LOCAL_PLAYER.Character) then
+		if player == localPlayer or (localPlayer.Character and player.Character == localPlayer.Character) then
 			continue
 		end
 
@@ -357,7 +357,7 @@ local function _render()
 			continue
 		end
 
-		if _state.settings.shouldCheckTeam and player.Team == LOCAL_PLAYER.Team then
+		if _state.settings.shouldCheckTeam and player.Team == localPlayer.Team then
 			_removePlayer(player)
 			continue
 		end
