@@ -6,7 +6,7 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 
 --// Dependencies (require)
 local Logger = require("src/utils/Logger")
-local Maid = require("Packages/maid")
+local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid")
 local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
 
 --// Constants

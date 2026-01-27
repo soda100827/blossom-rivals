@@ -1,7 +1,7 @@
 --!strict
 
 --// Dependencies (require)
-local Maid = require("Packages/maid") :: any
+local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
 local REPO_URL = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
