@@ -146,10 +146,32 @@ local function _mount()
 		})
 		:AddKeyPicker("EspKey", {
 			Default = "Insert",
-			SyncToggleState = true,
+			SyncToggleState = false,
+			Mode = "Toggle",
 			Text = "ESP Key",
 			NoUI = false,
+			ChangedCallback = function(key)
+				-- Optional: handle key change if needed
+			end,
 		})
+
+	-- Connect key state to Visuals override
+	local visualsMod = _state.client.Modules.Visuals
+	if visualsMod and visualsMod.setOverrideCheck then
+		-- LinoriaLib exports Options global. We can access the KeyPicker state via Options.EspKey:GetState()
+		visualsMod:setOverrideCheck(function()
+			-- Need to access Options properly
+			local getfenvAny = getfenv :: any
+			local env = getfenvAny(0) :: any
+			local getgenvFunc = env.getgenv
+			local Opts = (getgenvFunc and getgenvFunc().Options) or _G.Options
+
+			if Opts and Opts.EspKey then
+				return Opts.EspKey:GetState()
+			end
+			return false
+		end)
+	end
 
 	espGroup
 		:AddToggle("ESPNames", {

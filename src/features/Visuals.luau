@@ -109,6 +109,7 @@ export type Visuals = {
 	setSkeletonThickness: (self: Visuals, value: number) -> (),
 	setTextSize: (self: Visuals, value: number) -> (),
 	setOutline: (self: Visuals, isEnabled: boolean) -> (),
+	setOverrideCheck: (self: Visuals, check: () -> boolean) -> (),
 }
 
 --// Private state
@@ -123,6 +124,7 @@ local _state: {
 	drawings: { [Player]: any },
 	highlights: { [Player]: Highlight? },
 	settings: typeof(DEFAULT_SETTINGS),
+	overrideCheck: (() -> boolean)?,
 } =
 	{
 		client = nil :: any,
@@ -131,6 +133,7 @@ local _state: {
 		drawings = {},
 		highlights = {},
 		settings = table.clone(DEFAULT_SETTINGS),
+		overrideCheck = nil,
 	}
 local _signals = {}
 
@@ -332,7 +335,12 @@ local function _updateSkeleton(skeletonLines, skeletonOutlineLines, character: M
 end
 
 local function _render()
-	if not _state.settings.isEspEnabled then
+	local isEspActive = _state.settings.isEspEnabled
+	if _state.overrideCheck and _state.overrideCheck() then
+		isEspActive = true
+	end
+
+	if not isEspActive then
 		_clear()
 		return
 	end
@@ -650,6 +658,10 @@ end
 
 function Visuals.setOutline(self: Visuals, isEnabled: boolean): ()
 	_state.settings.shouldOutline = isEnabled
+end
+
+function Visuals.setOverrideCheck(self: Visuals, check: () -> boolean): ()
+	_state.overrideCheck = check
 end
 
 return Visuals
