@@ -438,9 +438,10 @@ local function _mount()
 		NoUI = true,
 		Text = "Menu keybind",
 	})
-	local options = library.Options
-	if options and options.MenuKeybind then
-		library.ToggleKeybind = options.MenuKeybind
+	-- LinoriaLib exports Options to the global environment
+	local GlobalOptions = (getgenv and getgenv().Options) or _G.Options
+	if GlobalOptions and GlobalOptions.MenuKeybind then
+		library.ToggleKeybind = GlobalOptions.MenuKeybind
 	end
 
 	themeManager:SetLibrary(library)

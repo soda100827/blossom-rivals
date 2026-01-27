@@ -359,14 +359,15 @@ setTextSize(value)end end})espGroup:AddSlider('ESPMaxDistance',{Text=
 setMaxDistance(value)end end})local menuGroup=tabs.uiSettings:AddLeftGroupbox(
 'Menu')menuGroup:AddButton('Unload',function()library:Unload()end)menuGroup:
 AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text=
-'Menu keybind'})local options=library.Options if options and options.MenuKeybind
-then library.ToggleKeybind=options.MenuKeybind end themeManager:SetLibrary(
-library)saveManager:SetLibrary(library)saveManager:IgnoreThemeSettings()
-themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
-BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local
-miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:AddToggle(
-'TeleportQueue',{Text='Auto Load',Default=false,Callback=function(enabled)_state
-.client:setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
+'Menu keybind'})local GlobalOptions=(getgenv and getgenv().Options)or _G.Options
+if GlobalOptions and GlobalOptions.MenuKeybind then library.ToggleKeybind=
+GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
+SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
+'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
+uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local miscGroup=tabs.misc:
+AddLeftGroupbox('Auto Load')miscGroup:AddToggle('TeleportQueue',{Text=
+'Auto Load',Default=false,Callback=function(enabled)_state.client:
+setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
 'Silent Mode',Default=false,Callback=function(enabled)_setNotifyMuted(library,
 enabled)end})_runAutoload(library,saveManager,false)logger:info(
 'UI mounted successfully')end function Interface.init(self,client)_state.client=
@@ -392,17 +393,21 @@ WaitForChild('AnalyticsPipelineController',10)end if controller then(controller)
 success then logger:warn('Failed to disable AnalyticsPipelineController:',err)
 end end local function _getQueueOnTeleport()local env=(getfenv())return env.
 queue_on_teleport or env.queueonteleport or(env.syn and env.syn.
-queue_on_teleport)end local function _connect()_maid:DoCleaning()if not _state.
-shouldTeleportQueue then return end local queueOnTeleport=_getQueueOnTeleport()
-if not queueOnTeleport then _state.logger:warn(
-'queue_on_teleport not available.')return end local player=Players.LocalPlayer
-if not player then _state.logger:warn(
-'LocalPlayer not available for teleport queue.')return end local conn=player.
-OnTeleport:Connect(function(state)if state==Enum.TeleportState.Started then
-_state.logger:info('Teleport started; queueing auto-load.')queueOnTeleport((
-[[warn("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(
-BUNDLE_URL))end end)_maid:GiveTask(conn)end local function _getModuleInit(
-moduleResult)return moduleResult.init or moduleResult.Init end local function
+queue_on_teleport)end local function _getClearTeleportQueue()local env=(getfenv(
+))return env.clear_teleport_queue or env.clearteleportqueue or(env.syn and env.
+syn.clear_teleport_queue)end local function _handleTeleportQueue(shouldEnable)if
+shouldEnable then local queueOnTeleport=_getQueueOnTeleport()local
+clearTeleportQueue=_getClearTeleportQueue()if clearTeleportQueue then
+clearTeleportQueue()end if queueOnTeleport then _state.logger:info(
+'Queueing auto-load script...')queueOnTeleport((
+[[print("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(
+BUNDLE_URL))else _state.logger:warn('queue_on_teleport function not found!')end
+else local clearTeleportQueue=_getClearTeleportQueue()if clearTeleportQueue then
+_state.logger:info('Clearing teleport queue...')clearTeleportQueue()else _state.
+logger:warn('clear_teleport_queue function not found!')end end end
+local function _connect()_maid:DoCleaning()if _state.shouldTeleportQueue then
+_handleTeleportQueue(true)end end local function _getModuleInit(moduleResult)
+return moduleResult.init or moduleResult.Init end local function
 _getModuleCleanup(moduleResult)return moduleResult.cleanup or moduleResult.
 Cleanup end function Client.loadModule(self,name,moduleOrPath)if _modules[name]
 then _state.logger:warn('Module already loaded:',name)return end local loader=
@@ -413,12 +418,12 @@ moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then task.
 spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
 'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
 result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
-shouldTeleportQueue=shouldEnable if _state.isRunning then _connect()end end
-function Client.start(self)if _state.isRunning then return end _state.isRunning=
-true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
-'Client initializing...')for _,entry in ipairs(MODULES)do self:loadModule(entry.
-name,entry.loader)end _connect()_signals.started:Fire()end function Client.
-destroy(self)if not _state.isRunning then return end _state.isRunning=false
+shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(
+shouldEnable)end end function Client.start(self)if _state.isRunning then return
+end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)_state.logger:
+info('Client initializing...')for _,entry in ipairs(MODULES)do self:loadModule(
+entry.name,entry.loader)end _connect()_signals.started:Fire()end function Client
+.destroy(self)if not _state.isRunning then return end _state.isRunning=false
 _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in pairs(_modules)do
 local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn then pcall(
 cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')end local

@@ -98,31 +98,49 @@ local function _getQueueOnTeleport(): ((string) -> ())?
 	return env.queue_on_teleport or env.queueonteleport or (env.syn and env.syn.queue_on_teleport)
 end
 
+local function _getClearTeleportQueue(): (() -> ())?
+	local env = getfenv() :: any
+	return env.clear_teleport_queue or env.clearteleportqueue or (env.syn and env.syn.clear_teleport_queue)
+end
+
+local function _handleTeleportQueue(shouldEnable: boolean)
+	if shouldEnable then
+		local queueOnTeleport = _getQueueOnTeleport()
+		local clearTeleportQueue = _getClearTeleportQueue()
+
+		-- Attempt to clear first to avoid duplicates if possible
+		if clearTeleportQueue then
+			clearTeleportQueue()
+		end
+
+		if queueOnTeleport then
+			_state.logger:info("Queueing auto-load script...")
+			-- Debug print included as requested
+			queueOnTeleport(
+				([[print("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL)
+			)
+		else
+			_state.logger:warn("queue_on_teleport function not found!")
+		end
+	else
+		local clearTeleportQueue = _getClearTeleportQueue()
+		if clearTeleportQueue then
+			_state.logger:info("Clearing teleport queue...")
+			clearTeleportQueue()
+		else
+			-- If we can't clear, we can't do much. Warning is appropriate.
+			_state.logger:warn("clear_teleport_queue function not found!")
+		end
+	end
+end
+
 local function _connect()
 	_maid:DoCleaning()
-	if not _state.shouldTeleportQueue then
-		return
+	-- Keeping _connect for backward compatibility or other signals if needed,
+	-- but for now teleport queue is handled immediately in setTeleportQueue.
+	if _state.shouldTeleportQueue then
+		_handleTeleportQueue(true)
 	end
-
-	local queueOnTeleport = _getQueueOnTeleport()
-	if not queueOnTeleport then
-		_state.logger:warn("queue_on_teleport not available.")
-		return
-	end
-
-	local player = Players.LocalPlayer
-	if not player then
-		_state.logger:warn("LocalPlayer not available for teleport queue.")
-		return
-	end
-
-	local conn = player.OnTeleport:Connect(function(state)
-		if state == Enum.TeleportState.Started then
-			_state.logger:info("Teleport started; queueing auto-load.")
-			queueOnTeleport(([[warn("Blossom: Auto-loading..."); loadstring(game:HttpGet("%s"))()]]):format(BUNDLE_URL))
-		end
-	end)
-	_maid:GiveTask(conn)
 end
 
 local function _getModuleInit(moduleResult: Module)
@@ -167,7 +185,7 @@ end
 function Client.setTeleportQueue(self: BlossomClient, shouldEnable: boolean): ()
 	_state.shouldTeleportQueue = shouldEnable
 	if _state.isRunning then
-		_connect()
+		_handleTeleportQueue(shouldEnable)
 	end
 end
 
