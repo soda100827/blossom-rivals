@@ -1,5 +1,7 @@
 --!strict
 
+--// Services
+
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
@@ -28,8 +30,12 @@ local _state = {
 local _signals = {}
 
 --// Private helpers
+local function _httpGet(url: string): string
+	return (game :: any):HttpGet(url)
+end
+
 local function _loadRemote(path: string, logger: any): any
-	local source = game:HttpGet(REPO_URL .. path)
+	local source = _httpGet(REPO_URL .. path)
 	local chunk, err = loadstring(source)
 	if not chunk then
 		if logger then

@@ -10,7 +10,7 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
 local LOCAL_PLAYER = Players.LocalPlayer
-local Drawing = Drawing :: any
+local DRAWING = rawget(_G, "Drawing") :: any
 
 local DEFAULT_SETTINGS = {
 	isEspEnabled = false,
@@ -184,13 +184,13 @@ local function _ensurePlayerDrawings(player: Player): any
 	end
 
 	local group = {
-		name = Drawing.new("Text"),
-		weapon = Drawing.new("Text"),
-		distance = Drawing.new("Text"),
-		boxOutline = Drawing.new("Square"),
-		box = Drawing.new("Square"),
-		healthbarOutline = Drawing.new("Square"),
-		healthbar = Drawing.new("Square"),
+		name = DRAWING.new("Text"),
+		weapon = DRAWING.new("Text"),
+		distance = DRAWING.new("Text"),
+		boxOutline = DRAWING.new("Square"),
+		box = DRAWING.new("Square"),
+		healthbarOutline = DRAWING.new("Square"),
+		healthbar = DRAWING.new("Square"),
 		skeleton = {},
 		skeletonOutline = {},
 	}
@@ -209,11 +209,11 @@ local function _ensurePlayerDrawings(player: Player): any
 	group.healthbarOutline.Filled = true
 
 	for _ = 1, 16 do
-		local line = Drawing.new("Line")
+		local line = DRAWING.new("Line")
 		line.Visible = false
 		table.insert(group.skeleton, line)
 
-		local outline = Drawing.new("Line")
+		local outline = DRAWING.new("Line")
 		outline.Visible = false
 		table.insert(group.skeletonOutline, outline)
 	end
@@ -475,7 +475,7 @@ local function _connect()
 end
 
 local function _enable()
-	if not Drawing then
+	if not DRAWING then
 		_state.logger:warn("Drawing API not available; Visuals disabled.")
 		_state.isEnabled = false
 		return

@@ -70,56 +70,56 @@ not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.c=v end return v.c
 end end do local function __modImpl()local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')local Workspace=game:GetService(
 'Workspace')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local LOCAL_PLAYER=Players.
-LocalPlayer local Drawing=Drawing local DEFAULT_SETTINGS={isEspEnabled=false,
-shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
-shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
-shouldShowHighlight=false,shouldCheckTeam=false,maxDistance=2000,boxColor=Color3
-.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),
-distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=
-Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=
-Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=
-Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.
-new(0,0,0),highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),
-boxThickness=1,skeletonThickness=1,textSize=12,shouldOutline=true}local
-R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso',
-'LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{
-'LowerTorso','RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg'
-,'RightFoot'},{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{
-'LeftLowerArm','LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm',
-'RightLowerArm'},{'RightLowerArm','RightHand'}}local Visuals={}Visuals.__index=
-Visuals local _maid=nil local _state={client=nil,logger=nil,isEnabled=false,
-drawings={},highlights={},settings=table.clone(DEFAULT_SETTINGS)}local _signals=
-{}local function _getCamera()local camera=Workspace.CurrentCamera if not camera
-then camera=(Workspace:WaitForChild('Camera'))end return camera end
-local function _clearDrawings()for player,group in pairs(_state.drawings)do for
-_,drawing in pairs(group)do if type(drawing)=='table'then for _,line in pairs(
-drawing)do line:Remove()end else drawing:Remove()end end _state.drawings[player]
-=nil end end local function _clearHighlights()for player,highlight in pairs(
-_state.highlights)do if highlight~=nil then(highlight):Destroy()end _state.
-highlights[player]=nil end end local function _clear()_clearDrawings()
-_clearHighlights()end local function _removePlayer(player)local group=_state.
-drawings[player]if group then for _,drawing in pairs(group)do if type(drawing)==
+LocalPlayer local DRAWING=(rawget(_G,'Drawing'))local DEFAULT_SETTINGS={
+isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false,
+shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
+shouldShowHealthbar=false,shouldShowHighlight=false,shouldCheckTeam=false,
+maxDistance=2000,boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),
+weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),skeletonColor=
+Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.
+new(0,0,0),nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,
+0),distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
+skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
+highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
+12,shouldOutline=true}local R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
+'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
+'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
+'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
+'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
+'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
+}local Visuals={}Visuals.__index=Visuals local _maid=nil local _state={client=
+nil,logger=nil,isEnabled=false,drawings={},highlights={},settings=table.clone(
+DEFAULT_SETTINGS)}local _signals={}local function _getCamera()local camera=
+Workspace.CurrentCamera if not camera then camera=(Workspace:WaitForChild(
+'Camera'))end return camera end local function _clearDrawings()for player,group
+in pairs(_state.drawings)do for _,drawing in pairs(group)do if type(drawing)==
 'table'then for _,line in pairs(drawing)do line:Remove()end else drawing:Remove(
-)end end _state.drawings[player]=nil end local highlight=_state.highlights[
-player]if highlight~=nil then(highlight):Destroy()_state.highlights[player]=nil
-end end local function _ensurePlayerDrawings(player)local existing=_state.
-drawings[player]if existing then return existing end local group={name=Drawing.
-new('Text'),weapon=Drawing.new('Text'),distance=Drawing.new('Text'),boxOutline=
-Drawing.new('Square'),box=Drawing.new('Square'),healthbarOutline=Drawing.new(
-'Square'),healthbar=Drawing.new('Square'),skeleton={},skeletonOutline={}}for _,
-key in ipairs({'name','weapon','distance'})do group[key].Center=true group[key].
-Outline=true group[key].Visible=false end for _,key in ipairs({'box',
-'boxOutline','healthbar','healthbarOutline'})do group[key].Visible=false group[
-key].Filled=false end group.healthbar.Filled=true group.healthbarOutline.Filled=
-true for _=1,16 do local line=Drawing.new('Line')line.Visible=false table.
-insert(group.skeleton,line)local outline=Drawing.new('Line')outline.Visible=
-false table.insert(group.skeletonOutline,outline)end _state.drawings[player]=
-group return group end local function _updateHighlight(player,character)if not
-_state.settings.shouldShowHighlight then local highlight=_state.highlights[
-player]if highlight then highlight:Destroy()_state.highlights[player]=nil end
-return end local highlight=_state.highlights[player]if not highlight then local
-created=Instance.new('Highlight')created.Name='BlossomHighlight'created.
-FillTransparency=0.5 created.OutlineTransparency=0 created.Parent=game:
+)end end _state.drawings[player]=nil end end local function _clearHighlights()
+for player,highlight in pairs(_state.highlights)do if highlight~=nil then(
+highlight):Destroy()end _state.highlights[player]=nil end end local function
+_clear()_clearDrawings()_clearHighlights()end local function _removePlayer(
+player)local group=_state.drawings[player]if group then for _,drawing in pairs(
+group)do if type(drawing)=='table'then for _,line in pairs(drawing)do line:
+Remove()end else drawing:Remove()end end _state.drawings[player]=nil end local
+highlight=_state.highlights[player]if highlight~=nil then(highlight):Destroy()
+_state.highlights[player]=nil end end local function _ensurePlayerDrawings(
+player)local existing=_state.drawings[player]if existing then return existing
+end local group={name=DRAWING.new('Text'),weapon=DRAWING.new('Text'),distance=
+DRAWING.new('Text'),boxOutline=DRAWING.new('Square'),box=DRAWING.new('Square'),
+healthbarOutline=DRAWING.new('Square'),healthbar=DRAWING.new('Square'),skeleton=
+{},skeletonOutline={}}for _,key in ipairs({'name','weapon','distance'})do group[
+key].Center=true group[key].Outline=true group[key].Visible=false end for _,key
+in ipairs({'box','boxOutline','healthbar','healthbarOutline'})do group[key].
+Visible=false group[key].Filled=false end group.healthbar.Filled=true group.
+healthbarOutline.Filled=true for _=1,16 do local line=DRAWING.new('Line')line.
+Visible=false table.insert(group.skeleton,line)local outline=DRAWING.new('Line')
+outline.Visible=false table.insert(group.skeletonOutline,outline)end _state.
+drawings[player]=group return group end local function _updateHighlight(player,
+character)if not _state.settings.shouldShowHighlight then local highlight=_state
+.highlights[player]if highlight then highlight:Destroy()_state.highlights[player
+]=nil end return end local highlight=_state.highlights[player]if not highlight
+then local created=Instance.new('Highlight')created.Name='BlossomHighlight'
+created.FillTransparency=0.5 created.OutlineTransparency=0 created.Parent=game:
 GetService('CoreGui')_state.highlights[player]=created highlight=created end if
 not highlight then return end local activeHighlight=highlight local adornee=
 character if adornee:IsA('Model')then local rootPart=adornee:FindFirstChild(
@@ -205,7 +205,7 @@ _,line in pairs(group.skeletonOutline)do line.Visible=false end end end end
 local function _connect()_maid:DoCleaning()local removeConn=Players.
 PlayerRemoving:Connect(function(player)_removePlayer(player)end)_maid:GiveTask(
 removeConn)local renderConn=RunService.RenderStepped:Connect(function()_render()
-end)_maid:GiveTask(renderConn)end local function _enable()if not Drawing then
+end)_maid:GiveTask(renderConn)end local function _enable()if not DRAWING then
 _state.logger:warn('Drawing API not available; Visuals disabled.')_state.
 isEnabled=false return end _connect()end local function _disable()_maid:
 DoCleaning()_clear()end function Visuals.init(self,client)_state.client=client
@@ -254,96 +254,97 @@ local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false}local
-_signals={}local function _loadRemote(path,logger)local source=game:HttpGet(
-REPO_URL..path)local chunk,err=loadstring(source)if not chunk then if logger
-then logger:error('UI load failed:',err)end error('UI load failed: '..tostring(
-err))end return chunk()end local function _setNotifyMuted(library,shouldMute)if
-shouldMute then library.Notify=library.Notify or function()end library.
-_blossomNotify=library._blossomNotify or library.Notify library.Notify=function(
-)end return end if library._blossomNotify then library.Notify=library.
-_blossomNotify end end local function _getLibraryVisible(library)if type(library
-.Opened)=='boolean'then return library.Opened end if type(library.Visible)==
-'boolean'then return library.Visible end if type(library.IsOpen)=='boolean'then
-return library.IsOpen end return true end local function _runAutoload(library,
-saveManager,isSilent)local wasVisible=_getLibraryVisible(library)if isSilent
-then _setNotifyMuted(library,true)if wasVisible then pcall(function()library:
-Toggle()end)end end pcall(function()saveManager:LoadAutoloadConfig()end)if
-isSilent then if wasVisible then pcall(function()library:Toggle()end)end
-_setNotifyMuted(library,false)end end local function _connect()_maid:DoCleaning(
-)end local function _mount()if _state.isMounted then return end _state.isMounted
-=true local logger=_state.logger local library=_loadRemote('Library.lua',logger)
-local themeManager=_loadRemote('addons/ThemeManager.lua',logger)local
-saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.library=library
-_state.themeManager=themeManager _state.saveManager=saveManager local window=
-library:CreateWindow({Title='Blossom '.._state.client.Version,Center=true,
-AutoShow=true,TabPadding=8,MenuFadeTime=0.2})local tabs={visuals=window:AddTab(
-'Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}
-local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
-'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
-state)if mod.setEspEnabled then mod:setEspEnabled(state)end end end}):
-AddKeyPicker('EspKey',{Default='Insert',NoUI=true,Text='ESP Key'})espGroup:
-AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(state)local mod
-=_state.client.Modules.Visuals if mod and mod.setShowNames then mod:
-setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1
-,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.Modules
-.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}):
-AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
-espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
-mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
-Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
-value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
-),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
-.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
-value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
-'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setDistanceColor then mod:setDistanceColor(value)end end}):AddColorPicker(
-'ESPDistanceOutlineColor',{Default=Color3.new(0,0,0),Title='Distance Outline',
+_signals={}local function _httpGet(url)return(game):HttpGet(url)end
+local function _loadRemote(path,logger)local source=_httpGet(REPO_URL..path)
+local chunk,err=loadstring(source)if not chunk then if logger then logger:error(
+'UI load failed:',err)end error('UI load failed: '..tostring(err))end return
+chunk()end local function _setNotifyMuted(library,shouldMute)if shouldMute then
+library.Notify=library.Notify or function()end library._blossomNotify=library.
+_blossomNotify or library.Notify library.Notify=function()end return end if
+library._blossomNotify then library.Notify=library._blossomNotify end end
+local function _getLibraryVisible(library)if type(library.Opened)=='boolean'then
+return library.Opened end if type(library.Visible)=='boolean'then return library
+.Visible end if type(library.IsOpen)=='boolean'then return library.IsOpen end
+return true end local function _runAutoload(library,saveManager,isSilent)local
+wasVisible=_getLibraryVisible(library)if isSilent then _setNotifyMuted(library,
+true)if wasVisible then pcall(function()library:Toggle()end)end end pcall(
+function()saveManager:LoadAutoloadConfig()end)if isSilent then if wasVisible
+then pcall(function()library:Toggle()end)end _setNotifyMuted(library,false)end
+end local function _connect()_maid:DoCleaning()end local function _mount()if
+_state.isMounted then return end _state.isMounted=true local logger=_state.
+logger local library=_loadRemote('Library.lua',logger)local themeManager=
+_loadRemote('addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
+'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
+themeManager _state.saveManager=saveManager local window=library:CreateWindow({
+Title='Blossom '.._state.client.Version,Center=true,AutoShow=true,TabPadding=8,
+MenuFadeTime=0.2})local tabs={visuals=window:AddTab('Visuals'),misc=window:
+AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local espGroup=tabs.
+visuals:AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text=
+'Visuals (ESP)',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.toggle then mod:toggle(state)if mod.setEspEnabled
+then mod:setEspEnabled(state)end end end}):AddKeyPicker('EspKey',{Default=
+'Insert',NoUI=true,Text='ESP Key'})espGroup:AddToggle('ESPNames',{Text='Name',
+Default=true,Callback=function(state)local mod=_state.client.Modules.Visuals if
+mod and mod.setShowNames then mod:setShowNames(state)end end}):AddColorPicker(
+'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
+value)local mod=_state.client.Modules.Visuals if mod and mod.setTextColor then
+mod:setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
+Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
+setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'
+,Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals
+if mod and mod.setShowWeapon then mod:setShowWeapon(state)end end}):
+AddColorPicker('ESPWeaponColor',{Default=Color3.new(1,1,1),Title='Weapon Color',
 Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setDistanceOutlineColor then mod:setDistanceOutlineColor(value)end end})espGroup
-:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(state)local mod
-=_state.client.Modules.Visuals if mod and mod.setShowBoxes then mod:
-setShowBoxes(state)end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,
-1,1),Title='Box Color',Callback=function(value)local mod=_state.client.Modules.
-Visuals if mod and mod.setBoxColor then mod:setBoxColor(value)end end}):
-AddColorPicker('ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Box Outline',Callback=function(value)local mod=_state.client.Modules.Visuals if
-mod and mod.setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})
-espGroup:AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowSkeleton then mod:setShowSkeleton(state)end end}):AddColorPicker(
-'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setSkeletonColor then mod:setSkeletonColor(value)end end}):AddColorPicker(
-'ESPSkeletonOutlineColor',{Default=Color3.new(0,0,0),Title='Skeleton Outline',
+setWeaponColor then mod:setWeaponColor(value)end end}):AddColorPicker(
+'ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title='Weapon Outline',
 Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setSkeletonOutlineColor then mod:setSkeletonOutlineColor(value)end end})espGroup
-:AddToggle('ESPHealthbar',{Text='Healthbar',Default=false,Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.setShowHealthbar
-then mod:setShowHealthbar(state)end end}):AddColorPicker('ESPHealthbarColor',{
-Default=Color3.new(0,1,0),Title='Health Color',Callback=function(value)local mod
-=_state.client.Modules.Visuals if mod and mod.setHealthbarColor then mod:
-setHealthbarColor(value)end end}):AddColorPicker('ESPHealthbarOutlineColor',{
-Default=Color3.new(0,0,0),Title='Outline Color',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setHealthbarOutlineColor then
-mod:setHealthbarOutlineColor(value)end end})espGroup:AddToggle('ESPHighlight',{
-Text='Highlight',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.setShowHighlight then mod:setShowHighlight(state)
-end end}):AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title=
-'Fill Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
-mod and mod.setHighlightFill then mod:setHighlightFill(value)end end}):
-AddColorPicker('ESPHighlightOutline',{Default=Color3.new(1,1,1),Title=
+setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end end})espGroup:
+AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.setShowDistance then mod:
+setShowDistance(state)end end}):AddColorPicker('ESPDistanceColor',{Default=
+Color3.new(1,1,1),Title='Distance Color',Callback=function(value)local mod=
+_state.client.Modules.Visuals if mod and mod.setDistanceColor then mod:
+setDistanceColor(value)end end}):AddColorPicker('ESPDistanceOutlineColor',{
+Default=Color3.new(0,0,0),Title='Distance Outline',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setDistanceOutlineColor then
+mod:setDistanceOutlineColor(value)end end})espGroup:AddToggle('ESPBoxes',{Text=
+'Box',Default=true,Callback=function(state)local mod=_state.client.Modules.
+Visuals if mod and mod.setShowBoxes then mod:setShowBoxes(state)end end}):
+AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title='Box Color',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setBoxColor then mod:setBoxColor(value)end end}):AddColorPicker(
+'ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title='Box Outline',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})espGroup:
+AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.setShowSkeleton then mod:
+setShowSkeleton(state)end end}):AddColorPicker('ESPSkeletonColor',{Default=
+Color3.new(1,1,1),Title='Skeleton Color',Callback=function(value)local mod=
+_state.client.Modules.Visuals if mod and mod.setSkeletonColor then mod:
+setSkeletonColor(value)end end}):AddColorPicker('ESPSkeletonOutlineColor',{
+Default=Color3.new(0,0,0),Title='Skeleton Outline',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setSkeletonOutlineColor then
+mod:setSkeletonOutlineColor(value)end end})espGroup:AddToggle('ESPHealthbar',{
+Text='Healthbar',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.setShowHealthbar then mod:setShowHealthbar(state)
+end end}):AddColorPicker('ESPHealthbarColor',{Default=Color3.new(0,1,0),Title=
+'Health Color',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setHealthbarColor then mod:setHealthbarColor(value)end end}):
+AddColorPicker('ESPHealthbarOutlineColor',{Default=Color3.new(0,0,0),Title=
 'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHighlightOutline then mod:setHighlightOutline(value)end end})
-espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
-Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+if mod and mod.setHealthbarOutlineColor then mod:setHealthbarOutlineColor(value)
+end end})espGroup:AddToggle('ESPHighlight',{Text='Highlight',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowHighlight then mod:setShowHighlight(state)end end}):AddColorPicker(
+'ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setHighlightFill then mod:setHighlightFill(value)end end}):AddColorPicker(
+'ESPHighlightOutline',{Default=Color3.new(1,1,1),Title='Outline Color',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
+AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Callback=
+function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',
@@ -387,14 +388,15 @@ _modules={}local function _disableAnalyticsPipeline(logger)local success,err=
 pcall(function()local controller=ReplicatedFirst:FindFirstChild(
 'AnalyticsPipelineController')if not controller then controller=ReplicatedFirst:
 WaitForChild('AnalyticsPipelineController',10)end if controller then(controller)
-.Disabled=true end end)if not success then logger:warn(
-'Failed to disable AnalyticsPipelineController:',err)end end local function
-_getQueueOnTeleport()local env=(getfenv())return env.queue_on_teleport or env.
-queueonteleport or(env.syn and env.syn.queue_on_teleport)end local function
-_connect()_maid:DoCleaning()if not _state.shouldTeleportQueue then return end
-local queueOnTeleport=_getQueueOnTeleport()if not queueOnTeleport then _state.
-logger:warn('queue_on_teleport not available.')return end local player=Players.
-LocalPlayer if not player then _state.logger:warn(
+.Disabled=true logger:info('AnalyticsPipelineController Disabled')end end)if not
+success then logger:warn('Failed to disable AnalyticsPipelineController:',err)
+end end local function _getQueueOnTeleport()local env=(getfenv())return env.
+queue_on_teleport or env.queueonteleport or(env.syn and env.syn.
+queue_on_teleport)end local function _connect()_maid:DoCleaning()if not _state.
+shouldTeleportQueue then return end local queueOnTeleport=_getQueueOnTeleport()
+if not queueOnTeleport then _state.logger:warn(
+'queue_on_teleport not available.')return end local player=Players.LocalPlayer
+if not player then _state.logger:warn(
 'LocalPlayer not available for teleport queue.')return end local conn=player.
 OnTeleport:Connect(function(state)if state==Enum.TeleportState.Started then
 queueOnTeleport(('loadstring(game:HttpGet("%s"))()'):format(BUNDLE_URL))end end)

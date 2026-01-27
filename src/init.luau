@@ -84,6 +84,7 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 		end
 		if controller then
 			(controller :: any).Disabled = true
+			logger:info("AnalyticsPipelineController Disabled")
 		end
 	end)
 
