@@ -292,12 +292,12 @@ local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
 local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
 state)if mod.setEspEnabled then mod:setEspEnabled(state)end end end}):
 AddKeyPicker('EspKey',{Default='Insert',SyncToggleState=true,Mode='Toggle',Text=
-'ESP Key',NoUI=false})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,
-Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowNames then mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor'
-,{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(value)local mod
-=_state.client.Modules.Visuals if mod and mod.setTextColor then mod:
-setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
+'ESP Key (Right Click)',NoUI=false})espGroup:AddToggle('ESPNames',{Text='Name',
+Default=true,Callback=function(state)local mod=_state.client.Modules.Visuals if
+mod and mod.setShowNames then mod:setShowNames(state)end end}):AddColorPicker(
+'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
+value)local mod=_state.client.Modules.Visuals if mod and mod.setTextColor then
+mod:setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
 Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
 client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
 setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'

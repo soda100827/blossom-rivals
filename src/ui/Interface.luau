@@ -144,10 +144,13 @@ local function _mount()
 				end
 			end,
 		})
-		:AddKeyPicker(
-			"EspKey",
-			{ Default = "Insert", SyncToggleState = true, Mode = "Toggle", Text = "ESP Key", NoUI = false }
-		)
+		:AddKeyPicker("EspKey", {
+			Default = "Insert",
+			SyncToggleState = true,
+			Mode = "Toggle",
+			Text = "ESP Key (Right Click)",
+			NoUI = false,
+		})
 
 	espGroup
 		:AddToggle("ESPNames", {
