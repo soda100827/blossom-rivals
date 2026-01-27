@@ -7,10 +7,13 @@ local Workspace = game:GetService("Workspace")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
+-- local VoltTypes = require("src/types/Volt") -- We can accept it exists contextually, or define generic types.
+-- Since the file is merely a type definition returning nil, we use it for type extraction.
+local ExploitTypes = require("../types/ExploitTypes")
 
 --// Constants
 local LOCAL_PLAYER = Players.LocalPlayer
-local DRAWING = rawget(_G, "Drawing") :: any
+local DRAWING = rawget(_G, "Drawing") :: ExploitTypes.DrawingLibrary
 
 local DEFAULT_SETTINGS = {
 	isEspEnabled = false,

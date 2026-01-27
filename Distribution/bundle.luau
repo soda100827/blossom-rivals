@@ -67,59 +67,63 @@ _signal._head=_next end _node._connection=nil self._node=nil end
 ScriptConnection.Destroy=ScriptConnection.Disconnect return ScriptSignal end
 function __DARKLUA_BUNDLE_MODULES.c()local v=__DARKLUA_BUNDLE_MODULES.cache.c if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.c=v end return v.c
-end end do local function __modImpl()local Players=game:GetService('Players')
-local RunService=game:GetService('RunService')local Workspace=game:GetService(
-'Workspace')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local LOCAL_PLAYER=Players.
-LocalPlayer local DRAWING=(rawget(_G,'Drawing'))local DEFAULT_SETTINGS={
-isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false,
-shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
-shouldShowHealthbar=false,shouldShowHighlight=false,shouldCheckTeam=false,
-maxDistance=2000,boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),
-weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),skeletonColor=
-Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.
-new(0,0,0),nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,
-0),distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
-skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
-highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
-12,shouldOutline=true}local R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
-'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
-'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
-'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
-'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
-'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
-}local Visuals={}Visuals.__index=Visuals local _maid=nil local _state={client=
-nil,logger=nil,isEnabled=false,drawings={},highlights={},settings=table.clone(
-DEFAULT_SETTINGS)}local _signals={}local function _getCamera()local camera=
-Workspace.CurrentCamera if not camera then camera=(Workspace:WaitForChild(
-'Camera'))end return camera end local function _clearDrawings()for player,group
-in pairs(_state.drawings)do for _,drawing in pairs(group)do if type(drawing)==
+end end do local function __modImpl()return nil end function
+__DARKLUA_BUNDLE_MODULES.d()local v=__DARKLUA_BUNDLE_MODULES.cache.d if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+RunService=game:GetService('RunService')local Workspace=game:GetService(
+'Workspace')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local ExploitTypes=
+__DARKLUA_BUNDLE_MODULES.d()local LOCAL_PLAYER=Players.LocalPlayer local DRAWING
+=(rawget(_G,'Drawing'))local DEFAULT_SETTINGS={isEspEnabled=false,
+shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
+shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
+shouldShowHighlight=false,shouldCheckTeam=false,maxDistance=2000,boxColor=Color3
+.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),
+distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=
+Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=
+Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=
+Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.
+new(0,0,0),highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),
+boxThickness=1,skeletonThickness=1,textSize=12,shouldOutline=true}local
+R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso',
+'LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{
+'LowerTorso','RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg'
+,'RightFoot'},{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{
+'LeftLowerArm','LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm',
+'RightLowerArm'},{'RightLowerArm','RightHand'}}local Visuals={}Visuals.__index=
+Visuals local _maid=nil local _state={client=nil,logger=nil,isEnabled=false,
+drawings={},highlights={},settings=table.clone(DEFAULT_SETTINGS)}local _signals=
+{}local function _getCamera()local camera=Workspace.CurrentCamera if not camera
+then camera=(Workspace:WaitForChild('Camera'))end return camera end
+local function _clearDrawings()for player,group in pairs(_state.drawings)do for
+_,drawing in pairs(group)do if type(drawing)=='table'then for _,line in pairs(
+drawing)do line:Remove()end else drawing:Remove()end end _state.drawings[player]
+=nil end end local function _clearHighlights()for player,highlight in pairs(
+_state.highlights)do if highlight~=nil then(highlight):Destroy()end _state.
+highlights[player]=nil end end local function _clear()_clearDrawings()
+_clearHighlights()end local function _removePlayer(player)local group=_state.
+drawings[player]if group then for _,drawing in pairs(group)do if type(drawing)==
 'table'then for _,line in pairs(drawing)do line:Remove()end else drawing:Remove(
-)end end _state.drawings[player]=nil end end local function _clearHighlights()
-for player,highlight in pairs(_state.highlights)do if highlight~=nil then(
-highlight):Destroy()end _state.highlights[player]=nil end end local function
-_clear()_clearDrawings()_clearHighlights()end local function _removePlayer(
-player)local group=_state.drawings[player]if group then for _,drawing in pairs(
-group)do if type(drawing)=='table'then for _,line in pairs(drawing)do line:
-Remove()end else drawing:Remove()end end _state.drawings[player]=nil end local
-highlight=_state.highlights[player]if highlight~=nil then(highlight):Destroy()
-_state.highlights[player]=nil end end local function _ensurePlayerDrawings(
-player)local existing=_state.drawings[player]if existing then return existing
-end local group={name=DRAWING.new('Text'),weapon=DRAWING.new('Text'),distance=
-DRAWING.new('Text'),boxOutline=DRAWING.new('Square'),box=DRAWING.new('Square'),
-healthbarOutline=DRAWING.new('Square'),healthbar=DRAWING.new('Square'),skeleton=
-{},skeletonOutline={}}for _,key in ipairs({'name','weapon','distance'})do group[
-key].Center=true group[key].Outline=true group[key].Visible=false end for _,key
-in ipairs({'box','boxOutline','healthbar','healthbarOutline'})do group[key].
-Visible=false group[key].Filled=false end group.healthbar.Filled=true group.
-healthbarOutline.Filled=true for _=1,16 do local line=DRAWING.new('Line')line.
-Visible=false table.insert(group.skeleton,line)local outline=DRAWING.new('Line')
-outline.Visible=false table.insert(group.skeletonOutline,outline)end _state.
-drawings[player]=group return group end local function _updateHighlight(player,
-character)if not _state.settings.shouldShowHighlight then local highlight=_state
-.highlights[player]if highlight then highlight:Destroy()_state.highlights[player
-]=nil end return end local highlight=_state.highlights[player]if not highlight
-then local created=Instance.new('Highlight')created.Name='BlossomHighlight'
-created.FillTransparency=0.5 created.OutlineTransparency=0 created.Parent=game:
+)end end _state.drawings[player]=nil end local highlight=_state.highlights[
+player]if highlight~=nil then(highlight):Destroy()_state.highlights[player]=nil
+end end local function _ensurePlayerDrawings(player)local existing=_state.
+drawings[player]if existing then return existing end local group={name=DRAWING.
+new('Text'),weapon=DRAWING.new('Text'),distance=DRAWING.new('Text'),boxOutline=
+DRAWING.new('Square'),box=DRAWING.new('Square'),healthbarOutline=DRAWING.new(
+'Square'),healthbar=DRAWING.new('Square'),skeleton={},skeletonOutline={}}for _,
+key in ipairs({'name','weapon','distance'})do group[key].Center=true group[key].
+Outline=true group[key].Visible=false end for _,key in ipairs({'box',
+'boxOutline','healthbar','healthbarOutline'})do group[key].Visible=false group[
+key].Filled=false end group.healthbar.Filled=true group.healthbarOutline.Filled=
+true for _=1,16 do local line=DRAWING.new('Line')line.Visible=false table.
+insert(group.skeleton,line)local outline=DRAWING.new('Line')outline.Visible=
+false table.insert(group.skeletonOutline,outline)end _state.drawings[player]=
+group return group end local function _updateHighlight(player,character)if not
+_state.settings.shouldShowHighlight then local highlight=_state.highlights[
+player]if highlight then highlight:Destroy()_state.highlights[player]=nil end
+return end local highlight=_state.highlights[player]if not highlight then local
+created=Instance.new('Highlight')created.Name='BlossomHighlight'created.
+FillTransparency=0.5 created.OutlineTransparency=0 created.Parent=game:
 GetService('CoreGui')_state.highlights[player]=created highlight=created end if
 not highlight then return end local activeHighlight=highlight local adornee=
 character if adornee:IsA('Model')then local rootPart=adornee:FindFirstChild(
@@ -247,8 +251,8 @@ settings.boxThickness=value end function Visuals.setSkeletonThickness(self,value
 )_state.settings.skeletonThickness=value end function Visuals.setTextSize(self,
 value)_state.settings.textSize=value end function Visuals.setOutline(self,
 isEnabled)_state.settings.shouldOutline=isEnabled end return Visuals end
-function __DARKLUA_BUNDLE_MODULES.d()local v=__DARKLUA_BUNDLE_MODULES.cache.d if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
 end end do local function __modImpl()local Maid=(__DARKLUA_BUNDLE_MODULES.b())
 local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
@@ -374,15 +378,14 @@ enabled)end})_runAutoload(library,saveManager,false)logger:info(
 client _state.logger=client.Logger _maid=Maid.new()_connect()_mount()end
 function Interface.cleanup(self)_maid:DoCleaning()if _state.library then _state.
 library:Unload()end _state.isMounted=false end return Interface end function
-__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
-end local Players=game:GetService('Players')local ReplicatedFirst=game:
-GetService('ReplicatedFirst')local Logger=__DARKLUA_BUNDLE_MODULES.a()local Maid
-=__DARKLUA_BUNDLE_MODULES.b()local Signal=__DARKLUA_BUNDLE_MODULES.c()local
-BUNDLE_URL=
+__DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
+end local ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
+__DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
+__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
-local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.d())},{name=
-'Interface',loader=(__DARKLUA_BUNDLE_MODULES.e())}}local Client={}Client.__index
+local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
+'Interface',loader=(__DARKLUA_BUNDLE_MODULES.f())}}local Client={}Client.__index
 =Client local _maid=Maid.new()local _state={isRunning=false,shouldTeleportQueue=
 false,logger=nil}local _signals={started=Signal.new(),stopped=Signal.new()}local
 _modules={}local function _disableAnalyticsPipeline(logger)local success,err=
