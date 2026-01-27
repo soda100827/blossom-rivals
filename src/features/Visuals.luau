@@ -13,7 +13,20 @@ local ExploitTypes = require("../types/ExploitTypes")
 
 --// Constants
 local LOCAL_PLAYER = Players.LocalPlayer
-local DRAWING = rawget(_G, "Drawing") :: ExploitTypes.DrawingLibrary
+
+local function getDrawingLib(): ExploitTypes.DrawingLibrary
+	local g = getfenv(0) :: any
+	local lib = g.Drawing
+	if not lib and g.getgenv then
+		lib = g.getgenv().Drawing
+	end
+	if not lib then
+		lib = rawget(_G, "Drawing")
+	end
+	return lib
+end
+
+local DRAWING = getDrawingLib() :: ExploitTypes.DrawingLibrary
 
 local DEFAULT_SETTINGS = {
 	isEspEnabled = false,
