@@ -144,7 +144,10 @@ local function _mount()
 				end
 			end,
 		})
-		:AddKeyPicker("EspKey", { Default = "Insert", NoUI = true, Text = "ESP Key" })
+		:AddKeyPicker(
+			"EspKey",
+			{ Default = "Insert", SyncToggleState = true, Mode = "Toggle", Text = "ESP Key", NoUI = false }
+		)
 
 	espGroup
 		:AddToggle("ESPNames", {
@@ -439,7 +442,10 @@ local function _mount()
 		Text = "Menu keybind",
 	})
 	-- LinoriaLib exports Options to the global environment
-	local GlobalOptions = (getgenv and getgenv().Options) or _G.Options
+	local getfenvAny = getfenv :: any
+	local env = getfenvAny(0) :: any
+	local getgenvFunc = env.getgenv
+	local GlobalOptions = (getgenvFunc and getgenvFunc().Options) or _G.Options
 	if GlobalOptions and GlobalOptions.MenuKeybind then
 		library.ToggleKeybind = GlobalOptions.MenuKeybind
 	end

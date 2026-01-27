@@ -70,7 +70,8 @@ local _state: {
 	isRunning = false,
 	shouldTeleportQueue = false,
 	isSilent = (function()
-		local g = getfenv(0) :: any
+		local getfenvAny = getfenv :: any
+		local g = getfenvAny(0) :: any
 		return g.BlossomSilent or (g.getgenv and g.getgenv().BlossomSilent) or false
 	end)(),
 	logger = nil :: any,

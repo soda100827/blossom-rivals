@@ -14,7 +14,8 @@ local ExploitTypes = require("../types/ExploitTypes")
 --// Constants
 
 local function getDrawingLib(): ExploitTypes.DrawingLibrary
-	local g = getfenv(0) :: any
+	local getfenvAny = getfenv :: any
+	local g = getfenvAny(0) :: any
 	local lib = g.Drawing
 	if not lib and g.getgenv then
 		lib = g.getgenv().Drawing
