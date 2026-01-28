@@ -13,6 +13,7 @@ local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal
 --// Constants
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
+local CLIENT_MODULE_NAME = "Client"
 local CONTROLLER_NAMES = {
 	"PlayerDataController",
 	"ComplianceController",
@@ -200,25 +201,35 @@ local function _connect()
 	end
 end
 
-local function _waitForControllersLoaded()
+local function _waitForClientLoaded()
 	local localPlayer = Players.LocalPlayer
 	while not localPlayer do
 		RunService.Heartbeat:Wait()
 		localPlayer = Players.LocalPlayer
 	end
 	local playerScripts = localPlayer:WaitForChild("PlayerScripts")
-	local controllers = playerScripts:WaitForChild("Controllers")
-	for _, name in ipairs(CONTROLLER_NAMES) do
-		controllers:WaitForChild(name)
+	local clientModule = playerScripts:WaitForChild(CLIENT_MODULE_NAME)
+	if not clientModule:IsA("ModuleScript") then
+		return
 	end
-	local playerDataController = controllers:FindFirstChild("PlayerDataController")
-	if playerDataController and playerDataController:IsA("ModuleScript") then
-		local ok, result = pcall(function()
-			return require(playerDataController)
-		end)
-		if ok and result and result.WaitUntilLoaded then
-			result:WaitUntilLoaded()
+	local ok, client = pcall(function()
+		return require(clientModule)
+	end)
+	if not ok or type(client) ~= "table" then
+		return
+	end
+	while true do
+		local allLoaded = true
+		for _, name in ipairs(CONTROLLER_NAMES) do
+			if client[name] == nil then
+				allLoaded = false
+				break
+			end
 		end
+		if allLoaded then
+			break
+		end
+		RunService.Heartbeat:Wait()
 	end
 end
 
@@ -287,7 +298,7 @@ function Client.start(self: BlossomClient): ()
 
 	_disableAnalyticsPipeline(_state.logger)
 	_state.logger:info("Client initializing...")
-	_waitForControllersLoaded()
+	_waitForClientLoaded()
 
 	for _, entry in ipairs(MODULES) do
 		self:loadModule(entry.name, entry.loader)

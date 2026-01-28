@@ -426,11 +426,15 @@ local function _aimAt(target: Player, deltaTime: number)
 
 	local targetPosition = (targetPart :: BasePart).Position
 	_setAutoRotateOverride(true)
-	_setMouseSensitivityOverride(true)
-	_applyCameraControllerRotation(targetPosition)
 	_applyCharacterAim(targetPosition)
-	_applyCameraAim(camera, targetPosition, deltaTime)
-	_applyMouseAim(camera, targetPosition)
+	local controller = _getCameraController()
+	if controller then
+		_applyCameraControllerRotation(targetPosition)
+	else
+		_setMouseSensitivityOverride(true)
+		_applyCameraAim(camera, targetPosition, deltaTime)
+		_applyMouseAim(camera, targetPosition)
+	end
 
 	if _state.settings.isDebug and _state.client.Logger then
 		_state.client.Logger:info(

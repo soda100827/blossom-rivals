@@ -513,11 +513,12 @@ character then return end local targetPart=character:FindFirstChild(_state.
 settings.targetPart)if not targetPart or not targetPart:IsA('BasePart')then
 return end local camera=Workspace.CurrentCamera if not camera then return end
 local targetPosition=(targetPart).Position _setAutoRotateOverride(true)
-_setMouseSensitivityOverride(true)_applyCameraControllerRotation(targetPosition)
-_applyCharacterAim(targetPosition)_applyCameraAim(camera,targetPosition,
-deltaTime)_applyMouseAim(camera,targetPosition)if _state.settings.isDebug and
-_state.client.Logger then _state.client.Logger:info('Aiming at:',target.Name,
-'| Dist:',math.floor((targetPosition-camera.CFrame.Position).Magnitude))end end
+_applyCharacterAim(targetPosition)local controller=_getCameraController()if
+controller then _applyCameraControllerRotation(targetPosition)else
+_setMouseSensitivityOverride(true)_applyCameraAim(camera,targetPosition,
+deltaTime)_applyMouseAim(camera,targetPosition)end if _state.settings.isDebug
+and _state.client.Logger then _state.client.Logger:info('Aiming at:',target.Name
+,'| Dist:',math.floor((targetPosition-camera.CFrame.Position).Magnitude))end end
 local function _connect()_maid:DoCleaning()local env=(getfenv())if env.Drawing
 then local circle=env.Drawing.new('Circle')circle.Thickness=1 circle.NumSides=
 FOV_CIRCLE_SIDES circle.Filled=false circle.Transparency=1 _state.fovCircle=
@@ -763,11 +764,11 @@ ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
 __DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
-local CONTROLLER_NAMES={'PlayerDataController','ComplianceController',
-'FunctionsController','MiscController','UserInterfaceController',
-'MonetizationController','EnemyController','CameraController',
-'MechanicsController','FighterController','SpectateController',
-'TightropeController','EntityController','DuelController',
+local CLIENT_MODULE_NAME='Client'local CONTROLLER_NAMES={'PlayerDataController',
+'ComplianceController','FunctionsController','MiscController',
+'UserInterfaceController','MonetizationController','EnemyController',
+'CameraController','MechanicsController','FighterController',
+'SpectateController','TightropeController','EntityController','DuelController',
 'GameComponentsController','ControlsController','LeaderboardController',
 'LobbyController','QueuePadController','LightingController',
 'ShootingRangeController','CoreGuiController','MusicController',
@@ -808,40 +809,39 @@ _getClearTeleportQueue()if clearTeleportQueue then _state.logger:info(
 'Clearing teleport queue...')clearTeleportQueue()else _state.logger:warn(
 'clear_teleport_queue function not found!')end end end local function _connect()
 _maid:DoCleaning()if _state.shouldTeleportQueue then _handleTeleportQueue(true)
-end end local function _waitForControllersLoaded()local localPlayer=Players.
+end end local function _waitForClientLoaded()local localPlayer=Players.
 LocalPlayer while not localPlayer do RunService.Heartbeat:Wait()localPlayer=
 Players.LocalPlayer end local playerScripts=localPlayer:WaitForChild(
-'PlayerScripts')local controllers=playerScripts:WaitForChild('Controllers')for _
-,name in ipairs(CONTROLLER_NAMES)do controllers:WaitForChild(name)end local
-playerDataController=controllers:FindFirstChild('PlayerDataController')if
-playerDataController and playerDataController:IsA('ModuleScript')then local ok,
-result=pcall(function()return require(playerDataController)end)if ok and result
-and result.WaitUntilLoaded then result:WaitUntilLoaded()end end end
-local function _getModuleInit(moduleResult)return moduleResult.init or
-moduleResult.Init end local function _getModuleCleanup(moduleResult)return
-moduleResult.cleanup or moduleResult.Cleanup end function Client.loadModule(self
-,name,moduleOrPath)if _modules[name]then _state.logger:warn(
-'Module already loaded:',name)return end local loader=function()if type(
-moduleOrPath)=='string'then local dynamicRequire=require return dynamicRequire(
-moduleOrPath)end return moduleOrPath end local success,result=pcall(loader)if
-success then local moduleResult=result _modules[name]=moduleResult local initFn=
-(_getModuleInit(moduleResult))if initFn then task.spawn(function()initFn(
-moduleResult,self)end)end _state.logger:info('Loaded module:',name)else _state.
-logger:warn('Failed to load module:',name,result)end end function Client.
-setTeleportQueue(self,shouldEnable)_state.shouldTeleportQueue=shouldEnable if
-_state.isRunning then _handleTeleportQueue(shouldEnable)end end function Client.
-setSilent(self,isSilent)if _state.isSilent==isSilent then return end _state.
-isSilent=isSilent if _state.shouldTeleportQueue and _state.isRunning then
-_handleTeleportQueue(true)end end function Client.start(self)if _state.isRunning
-then return end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)
-_state.logger:info('Client initializing...')_waitForControllersLoaded()for _,
-entry in ipairs(MODULES)do self:loadModule(entry.name,entry.loader)end _connect(
-)_signals.started:Fire()end function Client.destroy(self)if not _state.isRunning
-then return end _state.isRunning=false _signals.stopped:Fire()_maid:DoCleaning()
-for _,moduleResult in pairs(_modules)do local cleanupFn=(_getModuleCleanup(
-moduleResult))if cleanupFn then pcall(cleanupFn,moduleResult)end end _state.
-logger:info('Client stopped.')end local loggerModule=(Logger)local client=((
-setmetatable({},Client)))client.Version='1.0.0'client.Logger=loggerModule.new(
-'Blossom')client.Modules=_modules client.Started=_signals.started client.Stopped
-=_signals.stopped client.IsSilent=_state.isSilent _state.logger=client.Logger
-return client:start()
+'PlayerScripts')local clientModule=playerScripts:WaitForChild(CLIENT_MODULE_NAME
+)if not clientModule:IsA('ModuleScript')then return end local ok,client=pcall(
+function()return require(clientModule)end)if not ok or type(client)~='table'then
+return end while true do local allLoaded=true for _,name in ipairs(
+CONTROLLER_NAMES)do if client[name]==nil then allLoaded=false break end end if
+allLoaded then break end RunService.Heartbeat:Wait()end end local function
+_getModuleInit(moduleResult)return moduleResult.init or moduleResult.Init end
+local function _getModuleCleanup(moduleResult)return moduleResult.cleanup or
+moduleResult.Cleanup end function Client.loadModule(self,name,moduleOrPath)if
+_modules[name]then _state.logger:warn('Module already loaded:',name)return end
+local loader=function()if type(moduleOrPath)=='string'then local dynamicRequire=
+require return dynamicRequire(moduleOrPath)end return moduleOrPath end local
+success,result=pcall(loader)if success then local moduleResult=result _modules[
+name]=moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then
+task.spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
+'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
+result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
+shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(
+shouldEnable)end end function Client.setSilent(self,isSilent)if _state.isSilent
+==isSilent then return end _state.isSilent=isSilent if _state.
+shouldTeleportQueue and _state.isRunning then _handleTeleportQueue(true)end end
+function Client.start(self)if _state.isRunning then return end _state.isRunning=
+true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
+'Client initializing...')_waitForClientLoaded()for _,entry in ipairs(MODULES)do
+self:loadModule(entry.name,entry.loader)end _connect()_signals.started:Fire()end
+function Client.destroy(self)if not _state.isRunning then return end _state.
+isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in
+pairs(_modules)do local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn
+then pcall(cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')
+end local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
+Version='1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules
+client.Started=_signals.started client.Stopped=_signals.stopped client.IsSilent=
+_state.isSilent _state.logger=client.Logger return client:start()
