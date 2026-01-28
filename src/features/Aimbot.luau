@@ -184,6 +184,14 @@ local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 
 	local mouseDivisor = (MAX_SMOOTHNESS - smoothness) / 5 + 1
 
+	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+		local currentCFrame = camera.CFrame
+		local targetCFrame = CFrame.new(currentCFrame.Position, targetPosition)
+		local alpha = 1 / (MAX_SMOOTHNESS - smoothness + 1)
+		camera.CFrame = currentCFrame:Lerp(targetCFrame, alpha)
+		return
+	end
+
 	local env = getfenv() :: any
 	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
 
