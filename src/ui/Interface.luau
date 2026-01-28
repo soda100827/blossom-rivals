@@ -453,6 +453,71 @@ local function _mount()
 	saveManager:BuildConfigSection(tabs.uiSettings)
 	themeManager:ApplyToTab(tabs.uiSettings)
 
+	local playerGroup = tabs.misc:AddLeftGroupbox("Player")
+	playerGroup:AddToggle("PlayerFly", {
+		Text = "Fly",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setFlyEnabled then
+				mod:setFlyEnabled(state)
+			end
+		end,
+	})
+
+	playerGroup:AddSlider("PlayerFlySpeed", {
+		Text = "Fly Speed",
+		Default = 50,
+		Min = 5,
+		Max = 200,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setFlySpeed then
+				mod:setFlySpeed(value)
+			end
+		end,
+	})
+
+	playerGroup:AddToggle("PlayerNoclip", {
+		Text = "Noclip",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setNoclipEnabled then
+				mod:setNoclipEnabled(state)
+			end
+		end,
+	})
+
+	playerGroup:AddSlider("PlayerWalkSpeed", {
+		Text = "Walk Speed",
+		Default = 16,
+		Min = 0,
+		Max = 200,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setWalkSpeed then
+				mod:setWalkSpeed(value)
+			end
+		end,
+	})
+
+	playerGroup:AddSlider("PlayerJumpPower", {
+		Text = "Jump Power",
+		Default = 50,
+		Min = 0,
+		Max = 200,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setJumpPower then
+				mod:setJumpPower(value)
+			end
+		end,
+	})
+
 	local miscGroup = tabs.misc:AddLeftGroupbox("Auto Load")
 	miscGroup:AddToggle("TeleportQueue", {
 		Text = "Auto Load",
