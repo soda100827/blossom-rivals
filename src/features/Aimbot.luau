@@ -11,6 +11,7 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
 local AIMBOT_RENDER_STEP = "BlossomAimbot"
+local AIMBOT_RENDER_PRIORITY = Enum.RenderPriority.Last.Value
 local MAX_SMOOTHNESS = 100
 local MIN_SMOOTHNESS = 1
 local FOV_CIRCLE_SIDES = 100
@@ -52,6 +53,10 @@ local _state = {
 	},
 	target = nil :: Player?,
 	fovCircle = nil :: any,
+	defaultAutoRotate = nil :: boolean?,
+	hasAutoRotateOverride = false,
+	defaultMouseSensitivity = nil :: number?,
+	hasMouseSensitivityOverride = false,
 }
 local _signals = {}
 
@@ -74,6 +79,74 @@ local function _getAimScreenPosition(isAiming: boolean): Vector2
 		return _getScreenCenter()
 	end
 	return _getMouseLocation()
+end
+
+local function _getLocalHumanoid(): Humanoid?
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return nil
+	end
+	local character = localPlayer.Character
+	if not character then
+		return nil
+	end
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid and humanoid:IsA("Humanoid") then
+		return humanoid
+	end
+	return nil
+end
+
+local function _getLocalRootPart(): BasePart?
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return nil
+	end
+	local character = localPlayer.Character
+	if not character then
+		return nil
+	end
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if rootPart and rootPart:IsA("BasePart") then
+		return rootPart
+	end
+	return nil
+end
+
+local function _setAutoRotateOverride(shouldDisable: boolean)
+	local humanoid = _getLocalHumanoid()
+	if not humanoid then
+		return
+	end
+	if shouldDisable then
+		if not _state.hasAutoRotateOverride then
+			_state.defaultAutoRotate = humanoid.AutoRotate
+			_state.hasAutoRotateOverride = true
+		end
+		humanoid.AutoRotate = false
+		return
+	end
+	if _state.hasAutoRotateOverride then
+		humanoid.AutoRotate = _state.defaultAutoRotate == nil and true or _state.defaultAutoRotate
+		_state.hasAutoRotateOverride = false
+	end
+end
+
+local function _setMouseSensitivityOverride(shouldDisable: boolean)
+	if shouldDisable then
+		if not _state.hasMouseSensitivityOverride then
+			_state.defaultMouseSensitivity = UserInputService.MouseDeltaSensitivity
+			_state.hasMouseSensitivityOverride = true
+		end
+		UserInputService.MouseDeltaSensitivity = 0
+		return
+	end
+	if _state.hasMouseSensitivityOverride then
+		if _state.defaultMouseSensitivity ~= nil then
+			UserInputService.MouseDeltaSensitivity = _state.defaultMouseSensitivity
+		end
+		_state.hasMouseSensitivityOverride = false
+	end
 end
 
 local function _isOnScreen(position: Vector3): (boolean, Vector2)
@@ -196,12 +269,16 @@ local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTim
 	camera.CFrame = camera.CFrame:Lerp(targetCFrame, alpha)
 end
 
-local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
-	local mouseBehavior = UserInputService.MouseBehavior
-	if mouseBehavior == Enum.MouseBehavior.LockCenter then
+local function _applyCharacterAim(targetPosition: Vector3)
+	local rootPart = _getLocalRootPart()
+	if not rootPart then
 		return
 	end
+	local flatTarget = Vector3.new(targetPosition.X, rootPart.Position.Y, targetPosition.Z)
+	rootPart.CFrame = CFrame.lookAt(rootPart.Position, flatTarget)
+end
 
+local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
 	local _, screenPos = _isOnScreen(targetPosition)
 	local mousePos = _getMouseLocation()
@@ -234,6 +311,9 @@ local function _aimAt(target: Player, deltaTime: number)
 	end
 
 	local targetPosition = (targetPart :: BasePart).Position
+	_setAutoRotateOverride(true)
+	_setMouseSensitivityOverride(true)
+	_applyCharacterAim(targetPosition)
 	_applyCameraAim(camera, targetPosition, deltaTime)
 	_applyMouseAim(camera, targetPosition)
 
@@ -268,24 +348,31 @@ local function _connect()
 	end
 
 	-- Run after the game's camera controller so we don't get overwritten.
-	RunService:BindToRenderStep(AIMBOT_RENDER_STEP, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
+	RunService:BindToRenderStep(AIMBOT_RENDER_STEP, AIMBOT_RENDER_PRIORITY, function(deltaTime)
 		local isAiming = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
 		local aimScreenPos = _getAimScreenPosition(isAiming)
 
 		_updateFOV(aimScreenPos)
 
 		if not _state.settings.isEnabled then
+			_setAutoRotateOverride(false)
+			_setMouseSensitivityOverride(false)
 			return
 		end
 
 		if not isAiming then
+			_setAutoRotateOverride(false)
+			_setMouseSensitivityOverride(false)
 			return
 		end
 
 		local target = _getBestTarget(aimScreenPos)
-		if target then
-			_aimAt(target, deltaTime)
+		if not target then
+			_setAutoRotateOverride(false)
+			_setMouseSensitivityOverride(false)
+			return
 		end
+		_aimAt(target, deltaTime)
 	end)
 
 	_maid:GiveTask(function()
@@ -301,6 +388,8 @@ function Aimbot.init(self: Aimbot, client: any)
 end
 
 function Aimbot.cleanup(self: Aimbot)
+	_setAutoRotateOverride(false)
+	_setMouseSensitivityOverride(false)
 	_maid:DoCleaning()
 end
 
