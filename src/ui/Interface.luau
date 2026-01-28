@@ -252,7 +252,7 @@ local function _mount()
 		Text = "FOV Radius",
 		Default = 100,
 		Min = 10,
-		Max = 500,
+		Max = 1000,
 		Rounding = 0,
 		Callback = function(value)
 			local mod = _state.client.Modules.Aimbot

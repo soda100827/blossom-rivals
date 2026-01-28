@@ -3,6 +3,7 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
@@ -163,20 +164,33 @@ local function _aimAt(target: Player)
 		return
 	end
 
-	local _, screenPos = _isOnScreen(targetPart.Position)
-	local mousePos = _getMouseLocation()
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
 
-	local delta = screenPos - mousePos
-	-- Higher Smoothness = Faster (Rage). Max 100.
-	local speedFactor = math.clamp(_state.settings.Smoothness, 1, 100)
-	local divisor = 101 - speedFactor
+	-- Smoothness mapping: 100 (Max) -> 0 duration (Instant)
+	-- 1 (Min) -> High duration (Slow)
+	local smoothness = math.clamp(_state.settings.Smoothness, 1, 100)
+	local isInstant = smoothness >= 100
 
-	-- Global mousemoverel
-	local env = getfenv() :: any
-	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
+	-- Sensitivity for Tween (Duration in seconds)
+	-- 100 -> 0s
+	-- 50 -> 0.5s
+	-- 1 -> 0.99s
+	local sensitivity = (100 - smoothness) / 100
 
-	if mousemoverel then
-		mousemoverel(delta.X / divisor, delta.Y / divisor)
+	local targetPosition = (targetPart :: BasePart).Position
+
+	if not isInstant then
+		-- Tweening
+		local tweenInfo = TweenInfo.new(sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+		local goal = { CFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition) }
+		local tween = TweenService:Create(camera, tweenInfo, goal)
+		tween:Play()
+	else
+		-- Instant Lock
+		camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
 	end
 end
 
