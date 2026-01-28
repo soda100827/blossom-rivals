@@ -263,10 +263,10 @@ local function _mount()
 	})
 
 	aimbotGroup:AddSlider("AimbotSmoothness", {
-		Text = "Smoothness",
-		Default = 1,
+		Text = "Smoothness (High = Fast)",
+		Default = 50,
 		Min = 1,
-		Max = 20,
+		Max = 100,
 		Rounding = 1,
 		Callback = function(value)
 			local mod = _state.client.Modules.Aimbot

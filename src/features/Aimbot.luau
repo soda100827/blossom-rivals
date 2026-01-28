@@ -7,7 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 --// Dependencies
-local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid")
+local Maid = require("../../Packages/_Index/soda100827_maid@0.4.0/maid")
 
 --// Types
 export type Aimbot = {
@@ -167,14 +167,16 @@ local function _aimAt(target: Player)
 	local mousePos = _getMouseLocation()
 
 	local delta = screenPos - mousePos
-	local smoothness = math.max(1, _state.settings.Smoothness)
+	-- Higher Smoothness = Faster (Rage). Max 100.
+	local speedFactor = math.clamp(_state.settings.Smoothness, 1, 100)
+	local divisor = 101 - speedFactor
 
 	-- Global mousemoverel
 	local env = getfenv() :: any
 	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
 
 	if mousemoverel then
-		mousemoverel(delta.X / smoothness, delta.Y / smoothness)
+		mousemoverel(delta.X / divisor, delta.Y / divisor)
 	end
 end
 
