@@ -169,28 +169,38 @@ local function _aimAt(target: Player)
 		return
 	end
 
-	-- Smoothness mapping: 100 (Max) -> 0 duration (Instant)
-	-- 1 (Min) -> High duration (Slow)
+	-- Smoothness mapping: 100 (Max) -> Instant
+	-- 1 (Min) -> Slow
 	local smoothness = math.clamp(_state.settings.Smoothness, 1, 100)
 	local isInstant = smoothness >= 100
 
-	-- Sensitivity for Tween (Duration in seconds)
-	-- 100 -> 0s
-	-- 50 -> 0.5s
-	-- 1 -> 0.99s
-	local sensitivity = (100 - smoothness) / 100
-
 	local targetPosition = (targetPart :: BasePart).Position
 
+	-- 1. Camera Tween Logic
+	local tweenDuration = (100 - smoothness) / 100 -- 0.99s to 0s
+
 	if not isInstant then
-		-- Tweening
-		local tweenInfo = TweenInfo.new(sensitivity, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+		local tweenInfo = TweenInfo.new(tweenDuration, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
 		local goal = { CFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition) }
 		local tween = TweenService:Create(camera, tweenInfo, goal)
 		tween:Play()
 	else
-		-- Instant Lock
 		camera.CFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
+	end
+
+	-- 2. Mouse Cursor Logic (mousemoverel)
+	local _, screenPos = _isOnScreen(targetPosition)
+	local mousePos = _getMouseLocation()
+	local delta = screenPos - mousePos
+
+	local divisor = 101 - smoothness -- 1 (Fast) to 100 (Slow)
+
+	-- Global mousemoverel
+	local env = getfenv() :: any
+	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
+
+	if mousemoverel then
+		mousemoverel(delta.X / divisor, delta.Y / divisor)
 	end
 end
 
