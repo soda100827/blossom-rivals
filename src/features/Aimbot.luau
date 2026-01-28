@@ -65,8 +65,8 @@ local function _isOnScreen(position: Vector3): (boolean, Vector2)
 	if not camera then
 		return false, Vector2.zero
 	end
-	local screenPos, onScreen = camera:WorldToViewportPoint(position)
-	return onScreen, Vector2.new(screenPos.X, screenPos.Y)
+	local screenPos = camera:WorldToViewportPoint(position)
+	return screenPos.Z > 0, Vector2.new(screenPos.X, screenPos.Y)
 end
 
 local function _isVisible(targetPart: BasePart, origin: Vector3): boolean
@@ -91,6 +91,55 @@ local function _isVisible(targetPart: BasePart, origin: Vector3): boolean
 	return true
 end
 
+local function _isValidTarget(player: Player?): boolean
+	if not player or not player.Character then
+		return false
+	end
+
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return false
+	end
+
+	if player == localPlayer then
+		return false
+	end
+
+	if _state.settings.shouldTeamCheck and player.Team == localPlayer.Team then
+		return false
+	end
+
+	local humanoid = player.Character:FindFirstChild("Humanoid")
+	if _state.settings.shouldAliveCheck then
+		if not humanoid or not humanoid:IsA("Humanoid") or humanoid.Health <= 0 then
+			return false
+		end
+	end
+
+	local targetPart = player.Character:FindFirstChild(_state.settings.targetPart)
+	if not targetPart or not targetPart:IsA("BasePart") then
+		return false
+	end
+
+	local onScreen, screenPos = _isOnScreen(targetPart.Position)
+	if not onScreen then
+		return false
+	end
+
+	-- Allow continuing to track if slightly outside FOV, but verify wall check
+	if _state.settings.shouldWallCheck then
+		local camera = Workspace.CurrentCamera
+		if camera then
+			local origin = camera.CFrame.Position
+			if not _isVisible(targetPart, origin) then
+				return false
+			end
+		end
+	end
+
+	return true
+end
+
 local function _getBestTarget(): Player?
 	local camera = Workspace.CurrentCamera
 	local localPlayer = Players.LocalPlayer
@@ -104,41 +153,13 @@ local function _getBestTarget(): Player?
 	local closestDistance = _state.settings.fovRadius
 
 	for _, player in ipairs(Players:GetPlayers()) do
-		if player == localPlayer then
-			continue
-		end
-		if _state.settings.shouldTeamCheck and player.Team == localPlayer.Team then
+		if not _isValidTarget(player) then
 			continue
 		end
 
 		local character = player.Character
-		if not character then
-			continue
-		end
-
-		local humanoid = character:FindFirstChild("Humanoid")
-		if _state.settings.shouldAliveCheck then
-			if not humanoid or not humanoid:IsA("Humanoid") or humanoid.Health <= 0 then
-				continue
-			end
-		end
-
-		local targetPart = character:FindFirstChild(_state.settings.targetPart)
-		if not targetPart or not targetPart:IsA("BasePart") then
-			continue
-		end
-
-		local onScreen, screenPos = _isOnScreen(targetPart.Position)
-		if not onScreen then
-			continue
-		end
-
-		if _state.settings.shouldWallCheck then
-			local origin = camera.CFrame.Position
-			if not _isVisible(targetPart, origin) then
-				continue
-			end
-		end
+		local targetPart = character:FindFirstChild(_state.settings.targetPart) :: BasePart
+		local _, screenPos = _isOnScreen(targetPart.Position)
 
 		local distance = (screenPos - mousePos).Magnitude
 		if distance < closestDistance then
@@ -161,36 +182,22 @@ local function _updateFOV()
 	_state.fovCircle.Position = _getMouseLocation()
 end
 
-local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTime: number)
-	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
-	local isInstant = smoothness >= MAX_SMOOTHNESS
-	local targetCFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
-
-	if isInstant then
-		camera.CFrame = targetCFrame
-		return
-	end
-
-	local duration = (MAX_SMOOTHNESS - smoothness) / MAX_SMOOTHNESS
-	if duration <= 0 then
-		camera.CFrame = targetCFrame
-		return
-	end
-
-	local alpha = math.clamp(deltaTime / duration, 0, 1)
-	camera.CFrame = camera.CFrame:Lerp(targetCFrame, alpha)
-end
-
 local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
-	local mouseBehavior = UserInputService.MouseBehavior
-	if mouseBehavior == Enum.MouseBehavior.LockCenter then
+	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
+
+	local onScreen, screenPos = _isOnScreen(targetPosition)
+	if not onScreen then
 		return
 	end
 
-	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
-	local _, screenPos = _isOnScreen(targetPosition)
-	local mousePos = _getMouseLocation()
-	local delta = screenPos - mousePos
+	local delta = Vector2.zero
+	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+		local center = camera.ViewportSize / 2
+		delta = screenPos - center
+	else
+		local mousePos = _getMouseLocation()
+		delta = screenPos - mousePos
+	end
 
 	local mouseDivisor = (MAX_SMOOTHNESS - smoothness) / 5 + 1
 
@@ -219,7 +226,6 @@ local function _aimAt(target: Player, deltaTime: number)
 	end
 
 	local targetPosition = (targetPart :: BasePart).Position
-	_applyCameraAim(camera, targetPosition, deltaTime)
 	_applyMouseAim(camera, targetPosition)
 
 	if _state.settings.isDebug and _state.client.Logger then
@@ -261,12 +267,20 @@ local function _connect()
 		end
 
 		if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+			_state.target = nil
 			return
 		end
 
-		local target = _getBestTarget()
-		if target then
-			_aimAt(target, deltaTime)
+		if _state.target and not _isValidTarget(_state.target) then
+			_state.target = nil
+		end
+
+		if not _state.target then
+			_state.target = _getBestTarget()
+		end
+
+		if _state.target then
+			_aimAt(_state.target, deltaTime)
 		end
 	end)
 
