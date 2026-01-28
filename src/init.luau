@@ -2,6 +2,8 @@
 
 --// Services
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
 local Logger = require("src/utils/Logger")
@@ -11,11 +13,56 @@ local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal
 --// Constants
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
+local CLIENT_MODULE_NAME = "Client"
+local CONTROLLER_NAMES = {
+	"PlayerDataController",
+	"ComplianceController",
+	"FunctionsController",
+	"MiscController",
+	"UserInterfaceController",
+	"MonetizationController",
+	"EnemyController",
+	"CameraController",
+	"MechanicsController",
+	"FighterController",
+	"SpectateController",
+	"TightropeController",
+	"EntityController",
+	"DuelController",
+	"GameComponentsController",
+	"ControlsController",
+	"LeaderboardController",
+	"LobbyController",
+	"QueuePadController",
+	"LightingController",
+	"ShootingRangeController",
+	"CoreGuiController",
+	"MusicController",
+	"MobileController",
+	"ShopController",
+	"ProximityPromptController",
+	"PlayerInteractionController",
+	"DebugController",
+	"MatchmakingController",
+	"ChattingController",
+	"EventController",
+	"PrivateServerController",
+	"TestingController",
+	"ShadyChickenController",
+	"WrapController",
+	"ScavengerHuntController",
+	"SocialController",
+	"FFlagController",
+	"AudioController",
+	"BirthdayController",
+	"ArcadeController",
+	"EmoteController",
+	"SeasonController",
+}
 
 local MODULES: { { name: string, loader: Module } } = {
 	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
 	{ name = "Player", loader = require("src/features/Player") :: Module },
-	{ name = "Aimbot", loader = require("src/features/Aimbot") :: Module },
 	{ name = "Interface", loader = require("src/ui/Interface") :: Module },
 }
 
@@ -153,6 +200,39 @@ local function _connect()
 	end
 end
 
+local function _waitForClientLoaded()
+	local localPlayer = Players.LocalPlayer
+	while not localPlayer do
+		RunService.Heartbeat:Wait()
+		localPlayer = Players.LocalPlayer
+	end
+	local playerScripts = localPlayer:WaitForChild("PlayerScripts")
+	local clientModule = playerScripts:WaitForChild(CLIENT_MODULE_NAME)
+	if not clientModule:IsA("ModuleScript") then
+		return
+	end
+	local ok, client = pcall(function()
+		local requireAny = require :: any
+		return requireAny(clientModule)
+	end)
+	if not ok or type(client) ~= "table" then
+		return
+	end
+	while true do
+		local allLoaded = true
+		for _, name in ipairs(CONTROLLER_NAMES) do
+			if client[name] == nil then
+				allLoaded = false
+				break
+			end
+		end
+		if allLoaded then
+			break
+		end
+		RunService.Heartbeat:Wait()
+	end
+end
+
 local function _getModuleInit(moduleResult: Module)
 	return moduleResult.init or moduleResult.Init
 end
@@ -218,6 +298,7 @@ function Client.start(self: BlossomClient): ()
 
 	_disableAnalyticsPipeline(_state.logger)
 	_state.logger:info("Client initializing...")
+	_waitForClientLoaded()
 
 	for _, entry in ipairs(MODULES) do
 		self:loadModule(entry.name, entry.loader)

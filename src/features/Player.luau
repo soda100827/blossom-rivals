@@ -68,7 +68,7 @@ local _state: {
 	defaultAutoRotate: boolean?,
 	defaultPlatformStand: boolean?,
 	noclipParts: { [BasePart]: boolean },
-	characterMaid: any?,
+	characterMaid: any,
 	input: InputState,
 } =
 	{
@@ -91,7 +91,7 @@ local _state: {
 		defaultAutoRotate = nil,
 		defaultPlatformStand = nil,
 		noclipParts = {},
-		characterMaid = nil,
+		characterMaid = nil :: any,
 		input = {
 			forward = 0,
 			back = 0,

@@ -387,95 +387,8 @@ value)_state.jumpPowerValue=value _applyJumpPower()end function Player.
 setFlySpeed(self,value)_state.flySpeed=value end return Player end function
 __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-RunService=game:GetService('RunService')local UserInputService=game:GetService(
-'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
-__DARKLUA_BUNDLE_MODULES.b())local AIMBOT_RENDER_STEP='BlossomAimbot'local
-MAX_SMOOTHNESS=100 local MIN_SMOOTHNESS=1 local FOV_CIRCLE_SIDES=100 local
-Aimbot={}Aimbot.__index=Aimbot local _maid=nil local _state={client=nil,settings
-={isEnabled=false,shouldTeamCheck=true,shouldAliveCheck=true,shouldWallCheck=
-true,shouldShowFov=false,fovRadius=100,fovColor=Color3.fromRGB(255,255,255),
-smoothness=1,targetPart='Head',isDebug=false},target=nil,fovCircle=nil}local
-_signals={}local function _getMouseLocation()return UserInputService:
-GetMouseLocation()end local function _isOnScreen(position)local camera=Workspace
-.CurrentCamera if not camera then return false,Vector2.zero end local screenPos=
-camera:WorldToViewportPoint(position)return screenPos.Z>0,Vector2.new(screenPos.
-X,screenPos.Y)end local function _isVisible(targetPart,origin)local params=
-RaycastParams.new()if Players.LocalPlayer and Players.LocalPlayer.Character then
-params.FilterDescendantsInstances={Players.LocalPlayer.Character,Workspace.
-CurrentCamera}else params.FilterDescendantsInstances={Workspace.CurrentCamera}
-end params.FilterType=Enum.RaycastFilterType.Exclude params.IgnoreWater=true
-local direction=targetPart.Position-origin local result=Workspace:Raycast(origin
-,direction,params)if result then return result.Instance:IsDescendantOf((
-targetPart.Parent))end return true end local function _isValidTarget(player)if
-not player or not player.Character then return false end local localPlayer=
-Players.LocalPlayer if not localPlayer then return false end if player==
-localPlayer then return false end if _state.settings.shouldTeamCheck and player.
-Team==localPlayer.Team then return false end local humanoid=player.Character:
-FindFirstChild('Humanoid')if _state.settings.shouldAliveCheck then if not
-humanoid or not humanoid:IsA('Humanoid')or humanoid.Health<=0 then return false
-end end local targetPart=player.Character:FindFirstChild(_state.settings.
-targetPart)if not targetPart or not targetPart:IsA('BasePart')then return false
-end local onScreen,screenPos=_isOnScreen(targetPart.Position)if not onScreen
-then return false end if _state.settings.shouldWallCheck then local camera=
-Workspace.CurrentCamera if camera then local origin=camera.CFrame.Position if
-not _isVisible(targetPart,origin)then return false end end end return true end
-local function _getBestTarget()local camera=Workspace.CurrentCamera local
-localPlayer=Players.LocalPlayer local mousePos=_getMouseLocation()if not camera
-or not localPlayer then return nil end local bestTarget=nil local
-closestDistance=_state.settings.fovRadius for _,player in ipairs(Players:
-GetPlayers())do if not _isValidTarget(player)then continue end local character=
-player.Character local targetPart=(character:FindFirstChild(_state.settings.
-targetPart))local _,screenPos=_isOnScreen(targetPart.Position)local distance=(
-screenPos-mousePos).Magnitude if distance<closestDistance then closestDistance=
-distance bestTarget=player end end return bestTarget end local function
-_updateFOV()if not _state.fovCircle then return end _state.fovCircle.Visible=
-_state.settings.shouldShowFov _state.fovCircle.Radius=_state.settings.fovRadius
-_state.fovCircle.Color=_state.settings.fovColor _state.fovCircle.Position=
-_getMouseLocation()end local function _applyMouseAim(camera,targetPosition)local
-smoothness=math.clamp(_state.settings.smoothness,MIN_SMOOTHNESS,MAX_SMOOTHNESS)
-local onScreen,screenPos=_isOnScreen(targetPosition)if not onScreen then return
-end local delta=Vector2.zero if UserInputService.MouseBehavior==Enum.
-MouseBehavior.LockCenter then local center=camera.ViewportSize/2 delta=screenPos
--center else local mousePos=_getMouseLocation()delta=screenPos-mousePos end
-local mouseDivisor=(MAX_SMOOTHNESS-smoothness)/5+1 local env=(getfenv())local
-mousemoverel=env.mousemoverel or(env.input and env.input.mousemoverel)if
-mousemoverel then mousemoverel(delta.X/mouseDivisor,delta.Y/mouseDivisor)end end
-local function _aimAt(target,deltaTime)local character=target.Character if not
-character then return end local targetPart=character:FindFirstChild(_state.
-settings.targetPart)if not targetPart or not targetPart:IsA('BasePart')then
-return end local camera=Workspace.CurrentCamera if not camera then return end
-local targetPosition=(targetPart).Position _applyMouseAim(camera,targetPosition)
-if _state.settings.isDebug and _state.client.Logger then _state.client.Logger:
-info('Aiming at:',target.Name,'| Dist:',math.floor((targetPosition-camera.CFrame
-.Position).Magnitude))end end local function _connect()_maid:DoCleaning()local
-env=(getfenv())if env.Drawing then local circle=env.Drawing.new('Circle')circle.
-Thickness=1 circle.NumSides=FOV_CIRCLE_SIDES circle.Filled=false circle.
-Transparency=1 _state.fovCircle=circle _maid:GiveTask(function()if _state.
-fovCircle then _state.fovCircle:Remove()_state.fovCircle=nil end end)end
-RunService:BindToRenderStep(AIMBOT_RENDER_STEP,Enum.RenderPriority.Camera.Value+
-1,function(deltaTime)_updateFOV()if not _state.settings.isEnabled then return
-end if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2
-)then _state.target=nil return end if _state.target and not _isValidTarget(
-_state.target)then _state.target=nil end if not _state.target then _state.target
-=_getBestTarget()end if _state.target then _aimAt(_state.target,deltaTime)end
-end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(AIMBOT_RENDER_STEP)
-end)end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()
-_connect()end function Aimbot.cleanup(self)_maid:DoCleaning()end function Aimbot
-.toggle(self,state)_state.settings.isEnabled=state end function Aimbot.
-setTeamCheck(self,state)_state.settings.shouldTeamCheck=state end function
-Aimbot.setAliveCheck(self,state)_state.settings.shouldAliveCheck=state end
-function Aimbot.setWallCheck(self,state)_state.settings.shouldWallCheck=state
-end function Aimbot.setShowFOV(self,state)_state.settings.shouldShowFov=state
-end function Aimbot.setFOVRadius(self,radius)_state.settings.fovRadius=radius
-end function Aimbot.setFOVColor(self,color)_state.settings.fovColor=color end
-function Aimbot.setSmoothness(self,value)_state.settings.smoothness=value end
-function Aimbot.setTargetPart(self,partName)_state.settings.targetPart=partName
-end function Aimbot.setDebug(self,state)_state.settings.isDebug=state end return
-Aimbot end function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES
-.cache.g if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end
-return v.c end end do local function __modImpl()local RunService=game:
-GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -520,57 +433,28 @@ themeManager _state.saveManager=saveManager local window=library:CreateWindow({
 Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
 IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={main=window:AddTab('Main'),
 visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:
-AddTab('UI Settings')}local aimbotGroup=tabs.main:AddLeftGroupbox('Aimbot')
-aimbotGroup:AddToggle('AimbotEnabled',{Text='Enabled',Default=false,Callback=
-function(state)local mod=_state.client.Modules.Aimbot if mod and mod.toggle then
-mod:toggle(state)end end})aimbotGroup:AddToggle('AimbotTeamCheck',{Text=
-'Team Check',Default=true,Callback=function(state)local mod=_state.client.
-Modules.Aimbot if mod and mod.setTeamCheck then mod:setTeamCheck(state)end end})
-aimbotGroup:AddToggle('AimbotWallCheck',{Text='Wall Check',Default=true,Callback
-=function(state)local mod=_state.client.Modules.Aimbot if mod and mod.
-setWallCheck then mod:setWallCheck(state)end end})aimbotGroup:AddToggle(
-'AimbotAliveCheck',{Text='Alive Check',Default=true,Callback=function(state)
-local mod=_state.client.Modules.Aimbot if mod and mod.setAliveCheck then mod:
-setAliveCheck(state)end end})aimbotGroup:AddToggle('AimbotShowFOV',{Text=
-'Show FOV',Default=false,Callback=function(state)local mod=_state.client.Modules
-.Aimbot if mod and mod.setShowFOV then mod:setShowFOV(state)end end}):
-AddColorPicker('AimbotFOVColor',{Default=Color3.fromRGB(255,255,255),Title=
-'FOV Color',Callback=function(value)local mod=_state.client.Modules.Aimbot if
-mod and mod.setFOVColor then mod:setFOVColor(value)end end})aimbotGroup:
-AddSlider('AimbotFOVRadius',{Text='FOV Radius',Default=100,Min=10,Max=1000,
-Rounding=0,Callback=function(value)local mod=_state.client.Modules.Aimbot if mod
-and mod.setFOVRadius then mod:setFOVRadius(value)end end})aimbotGroup:AddSlider(
-'AimbotSmoothness',{Text='Smoothness (High = Fast)',Default=50,Min=1,Max=100,
-Rounding=1,Callback=function(value)local mod=_state.client.Modules.Aimbot if mod
-and mod.setSmoothness then mod:setSmoothness(value)end end})aimbotGroup:
-AddDropdown('AimbotTargetPart',{Values={'Head','HumanoidRootPart','UpperTorso'},
-Default=1,Multi=false,Text='Target Part',Callback=function(value)local mod=
-_state.client.Modules.Aimbot if mod and mod.setTargetPart then mod:
-setTargetPart(value)end end})aimbotGroup:AddToggle('AimbotDebug',{Text=
-'Debug Mode',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Aimbot if mod and mod.setDebug then mod:setDebug(state)end end})local
-espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{
-Text='Visuals (ESP)',Default=false,Callback=function(state)local mod=_state.
-client.Modules.Visuals if mod and mod.toggle then mod:toggle(state)end if mod
-and mod.setEspEnabled then mod:setEspEnabled(state)end end})espGroup:AddToggle(
-'ESPNames',{Text='Name',Default=true,Callback=function(state)local mod=_state.
-client.Modules.Visuals if mod and mod.setShowNames then mod:setShowNames(state)
-end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title=
-'Text Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
-mod and mod.setTextColor then mod:setTextColor(value)end end}):AddColorPicker(
-'ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title='Name Outline',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setNameOutlineColor then mod:setNameOutlineColor(value)end end})espGroup:
-AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(state)local
-mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then mod:
-setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=Color3.
-new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.client.
-Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(value)end
-end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Weapon Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end
-end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+AddTab('UI Settings')}local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup
+:AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function
+(state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:
+toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end
+end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then
+mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.
+new(1,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.
+Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}
+):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
+espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
+mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
+Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
+value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
+),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
+value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
 setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
 'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
@@ -682,17 +566,31 @@ _runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
 function Interface.init(self,client)_state.client=client _state.logger=client.
 Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
 _maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
-isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.h()
-local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end end local
-ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
+isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.g()
+local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end end local
+ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
+'Players')local RunService=game:GetService('RunService')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
 __DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
+local CLIENT_MODULE_NAME='Client'local CONTROLLER_NAMES={'PlayerDataController',
+'ComplianceController','FunctionsController','MiscController',
+'UserInterfaceController','MonetizationController','EnemyController',
+'CameraController','MechanicsController','FighterController',
+'SpectateController','TightropeController','EntityController','DuelController',
+'GameComponentsController','ControlsController','LeaderboardController',
+'LobbyController','QueuePadController','LightingController',
+'ShootingRangeController','CoreGuiController','MusicController',
+'MobileController','ShopController','ProximityPromptController',
+'PlayerInteractionController','DebugController','MatchmakingController',
+'ChattingController','EventController','PrivateServerController',
+'TestingController','ShadyChickenController','WrapController',
+'ScavengerHuntController','SocialController','FFlagController','AudioController'
+,'BirthdayController','ArcadeController','EmoteController','SeasonController'}
 local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
-'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Aimbot',loader=(
-__DARKLUA_BUNDLE_MODULES.g())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.h())}}local Client={}Client.__index=Client local _maid=
+'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.g())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=(
 function()local getfenvAny=getfenv local g=(getfenvAny(0))return g.BlossomSilent
 or(g.getgenv and g.getgenv().BlossomSilent)or false end)(),logger=nil}local
@@ -720,7 +618,16 @@ _getClearTeleportQueue()if clearTeleportQueue then _state.logger:info(
 'Clearing teleport queue...')clearTeleportQueue()else _state.logger:warn(
 'clear_teleport_queue function not found!')end end end local function _connect()
 _maid:DoCleaning()if _state.shouldTeleportQueue then _handleTeleportQueue(true)
-end end local function _getModuleInit(moduleResult)return moduleResult.init or
+end end local function _waitForClientLoaded()local localPlayer=Players.
+LocalPlayer while not localPlayer do RunService.Heartbeat:Wait()localPlayer=
+Players.LocalPlayer end local playerScripts=localPlayer:WaitForChild(
+'PlayerScripts')local clientModule=playerScripts:WaitForChild(CLIENT_MODULE_NAME
+)if not clientModule:IsA('ModuleScript')then return end local ok,client=pcall(
+function()local requireAny=require return requireAny(clientModule)end)if not ok
+or type(client)~='table'then return end while true do local allLoaded=true for _
+,name in ipairs(CONTROLLER_NAMES)do if client[name]==nil then allLoaded=false
+break end end if allLoaded then break end RunService.Heartbeat:Wait()end end
+local function _getModuleInit(moduleResult)return moduleResult.init or
 moduleResult.Init end local function _getModuleCleanup(moduleResult)return
 moduleResult.cleanup or moduleResult.Cleanup end function Client.loadModule(self
 ,name,moduleOrPath)if _modules[name]then _state.logger:warn(
@@ -737,13 +644,14 @@ setSilent(self,isSilent)if _state.isSilent==isSilent then return end _state.
 isSilent=isSilent if _state.shouldTeleportQueue and _state.isRunning then
 _handleTeleportQueue(true)end end function Client.start(self)if _state.isRunning
 then return end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)
-_state.logger:info('Client initializing...')for _,entry in ipairs(MODULES)do
-self:loadModule(entry.name,entry.loader)end _connect()_signals.started:Fire()end
-function Client.destroy(self)if not _state.isRunning then return end _state.
-isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in
-pairs(_modules)do local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn
-then pcall(cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')
-end local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
-Version='1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules
-client.Started=_signals.started client.Stopped=_signals.stopped client.IsSilent=
-_state.isSilent _state.logger=client.Logger return client:start()
+_state.logger:info('Client initializing...')_waitForClientLoaded()for _,entry in
+ipairs(MODULES)do self:loadModule(entry.name,entry.loader)end _connect()_signals
+.started:Fire()end function Client.destroy(self)if not _state.isRunning then
+return end _state.isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _
+,moduleResult in pairs(_modules)do local cleanupFn=(_getModuleCleanup(
+moduleResult))if cleanupFn then pcall(cleanupFn,moduleResult)end end _state.
+logger:info('Client stopped.')end local loggerModule=(Logger)local client=((
+setmetatable({},Client)))client.Version='1.0.0'client.Logger=loggerModule.new(
+'Blossom')client.Modules=_modules client.Started=_signals.started client.Stopped
+=_signals.stopped client.IsSilent=_state.isSilent _state.logger=client.Logger
+return client:start()
