@@ -193,14 +193,16 @@ local function _aimAt(target: Player)
 	local mousePos = _getMouseLocation()
 	local delta = screenPos - mousePos
 
-	local divisor = 101 - smoothness -- 1 (Fast) to 100 (Slow)
+	local mouseDivisor = (100 - smoothness) / 5 + 1
+	-- Smoothness 100 -> (0)/5 + 1 = 1 (Instant)
+	-- Smoothness 50 -> (50)/5 + 1 = 11 (Fast)
 
 	-- Global mousemoverel
 	local env = getfenv() :: any
 	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
 
 	if mousemoverel then
-		mousemoverel(delta.X / divisor, delta.Y / divisor)
+		mousemoverel(delta.X / mouseDivisor, delta.Y / mouseDivisor)
 	end
 end
 

@@ -436,24 +436,25 @@ tweenDuration,Enum.EasingStyle.Sine,Enum.EasingDirection.Out)local goal={CFrame=
 CFrame.lookAt(camera.CFrame.Position,targetPosition)}local tween=TweenService:
 Create(camera,tweenInfo,goal)tween:Play()else camera.CFrame=CFrame.lookAt(camera
 .CFrame.Position,targetPosition)end local _,screenPos=_isOnScreen(targetPosition
-)local mousePos=_getMouseLocation()local delta=screenPos-mousePos local divisor=
-101-smoothness local env=(getfenv())local mousemoverel=env.mousemoverel or(env.
-input and env.input.mousemoverel)if mousemoverel then mousemoverel(delta.X/
-divisor,delta.Y/divisor)end end local function _connect()_maid:DoCleaning()local
-env=(getfenv())if env.Drawing then local circle=env.Drawing.new('Circle')circle.
-Thickness=1 circle.NumSides=100 circle.Filled=false circle.Transparency=1 _state
-.fovCircle=circle _maid:GiveTask(function()if _state.fovCircle then _state.
-fovCircle:Remove()_state.fovCircle=nil end end)end _maid:GiveTask(RunService.
-RenderStepped:Connect(function()_updateFOV()if not _state.settings.Enabled then
-return end if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.
-MouseButton2)then return end local target=_getBestTarget()if target then _aimAt(
-target)end end))end function Aimbot.init(self,client)_state.client=client _maid=
-Maid.new()_connect()end function Aimbot.cleanup(self)_maid:DoCleaning()end
-function Aimbot.toggle(self,state)_state.settings.Enabled=state end function
-Aimbot.setTeamCheck(self,state)_state.settings.TeamCheck=state end function
-Aimbot.setAliveCheck(self,state)_state.settings.AliveCheck=state end function
-Aimbot.setWallCheck(self,state)_state.settings.WallCheck=state end function
-Aimbot.setShowFOV(self,state)_state.settings.ShowFOV=state end function Aimbot.
+)local mousePos=_getMouseLocation()local delta=screenPos-mousePos local
+mouseDivisor=(100-smoothness)/5+1 local env=(getfenv())local mousemoverel=env.
+mousemoverel or(env.input and env.input.mousemoverel)if mousemoverel then
+mousemoverel(delta.X/mouseDivisor,delta.Y/mouseDivisor)end end local function
+_connect()_maid:DoCleaning()local env=(getfenv())if env.Drawing then local
+circle=env.Drawing.new('Circle')circle.Thickness=1 circle.NumSides=100 circle.
+Filled=false circle.Transparency=1 _state.fovCircle=circle _maid:GiveTask(
+function()if _state.fovCircle then _state.fovCircle:Remove()_state.fovCircle=nil
+end end)end _maid:GiveTask(RunService.RenderStepped:Connect(function()
+_updateFOV()if not _state.settings.Enabled then return end if not
+UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then
+return end local target=_getBestTarget()if target then _aimAt(target)end end))
+end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()
+_connect()end function Aimbot.cleanup(self)_maid:DoCleaning()end function Aimbot
+.toggle(self,state)_state.settings.Enabled=state end function Aimbot.
+setTeamCheck(self,state)_state.settings.TeamCheck=state end function Aimbot.
+setAliveCheck(self,state)_state.settings.AliveCheck=state end function Aimbot.
+setWallCheck(self,state)_state.settings.WallCheck=state end function Aimbot.
+setShowFOV(self,state)_state.settings.ShowFOV=state end function Aimbot.
 setFOVRadius(self,radius)_state.settings.FOVRadius=radius end function Aimbot.
 setFOVColor(self,color)_state.settings.FOVColor=color end function Aimbot.
 setSmoothness(self,value)_state.settings.Smoothness=value end function Aimbot.
