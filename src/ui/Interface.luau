@@ -454,7 +454,7 @@ local function _mount()
 	themeManager:ApplyToTab(tabs.uiSettings)
 
 	local playerGroup = tabs.misc:AddLeftGroupbox("Player")
-	playerGroup:AddToggle("PlayerFly", {
+	local playerFlyToggle = playerGroup:AddToggle("PlayerFly", {
 		Text = "Fly",
 		Default = false,
 		Callback = function(state)
@@ -463,6 +463,13 @@ local function _mount()
 				mod:setFlyEnabled(state)
 			end
 		end,
+	})
+	playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
+		Default = "F",
+		NoUI = false,
+		Text = "Fly Keybind",
+		Mode = "Toggle",
+		SyncToggleState = true,
 	})
 
 	playerGroup:AddSlider("PlayerFlySpeed", {
@@ -479,7 +486,7 @@ local function _mount()
 		end,
 	})
 
-	playerGroup:AddToggle("PlayerNoclip", {
+	local playerNoclipToggle = playerGroup:AddToggle("PlayerNoclip", {
 		Text = "Noclip",
 		Default = false,
 		Callback = function(state)
@@ -489,8 +496,15 @@ local function _mount()
 			end
 		end,
 	})
+	playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
+		Default = "N",
+		NoUI = false,
+		Text = "Noclip Keybind",
+		Mode = "Toggle",
+		SyncToggleState = true,
+	})
 
-	playerGroup:AddToggle("PlayerWalkSpeedEnabled", {
+	local playerWalkSpeedToggle = playerGroup:AddToggle("PlayerWalkSpeedEnabled", {
 		Text = "Walk Speed",
 		Default = false,
 		Callback = function(state)
@@ -499,6 +513,13 @@ local function _mount()
 				mod:setWalkSpeedEnabled(state)
 			end
 		end,
+	})
+	playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
+		Default = "T",
+		NoUI = false,
+		Text = "Walk Speed Keybind",
+		Mode = "Toggle",
+		SyncToggleState = true,
 	})
 
 	playerGroup:AddSlider("PlayerWalkSpeed", {
@@ -515,7 +536,7 @@ local function _mount()
 		end,
 	})
 
-	playerGroup:AddToggle("PlayerJumpPowerEnabled", {
+	local playerJumpPowerToggle = playerGroup:AddToggle("PlayerJumpPowerEnabled", {
 		Text = "Jump Power",
 		Default = false,
 		Callback = function(state)
@@ -524,6 +545,13 @@ local function _mount()
 				mod:setJumpPowerEnabled(state)
 			end
 		end,
+	})
+	playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
+		Default = "Y",
+		NoUI = false,
+		Text = "Jump Power Keybind",
+		Mode = "Toggle",
+		SyncToggleState = true,
 	})
 
 	playerGroup:AddSlider("PlayerJumpPower", {
@@ -536,55 +564,6 @@ local function _mount()
 			local mod = _state.client.Modules.Player
 			if mod and mod.setJumpPower then
 				mod:setJumpPower(value)
-			end
-		end,
-	})
-
-	local playerKeybinds = tabs.misc:AddLeftGroupbox("Player Keybinds")
-	playerKeybinds:AddLabel("Fly Toggle"):AddKeyPicker("PlayerFlyKeybind", {
-		Default = "F",
-		NoUI = true,
-		Text = "Fly Toggle",
-		Callback = function(value)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setFlyKeybind then
-				mod:setFlyKeybind(value)
-			end
-		end,
-	})
-
-	playerKeybinds:AddLabel("Noclip Toggle"):AddKeyPicker("PlayerNoclipKeybind", {
-		Default = "N",
-		NoUI = true,
-		Text = "Noclip Toggle",
-		Callback = function(value)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setNoclipKeybind then
-				mod:setNoclipKeybind(value)
-			end
-		end,
-	})
-
-	playerKeybinds:AddLabel("Walk Speed Toggle"):AddKeyPicker("PlayerWalkSpeedKeybind", {
-		Default = "T",
-		NoUI = true,
-		Text = "Walk Speed Toggle",
-		Callback = function(value)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setWalkSpeedKeybind then
-				mod:setWalkSpeedKeybind(value)
-			end
-		end,
-	})
-
-	playerKeybinds:AddLabel("Jump Power Toggle"):AddKeyPicker("PlayerJumpPowerKeybind", {
-		Default = "Y",
-		NoUI = true,
-		Text = "Jump Power Toggle",
-		Callback = function(value)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setJumpPowerKeybind then
-				mod:setJumpPowerKeybind(value)
 			end
 		end,
 	})

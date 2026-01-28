@@ -11,10 +11,6 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
 local DEFAULT_FLY_SPEED = 50
-local DEFAULT_FLY_KEY = Enum.KeyCode.F
-local DEFAULT_NOCLIP_KEY = Enum.KeyCode.N
-local DEFAULT_WALK_SPEED_KEY = Enum.KeyCode.T
-local DEFAULT_JUMP_POWER_KEY = Enum.KeyCode.Y
 
 local INPUT_MAP = {
 	[Enum.KeyCode.W] = "forward",
@@ -36,10 +32,6 @@ export type PlayerFeature = {
 	setWalkSpeed: (self: PlayerFeature, value: number) -> (),
 	setJumpPower: (self: PlayerFeature, value: number) -> (),
 	setFlySpeed: (self: PlayerFeature, value: number) -> (),
-	setFlyKeybind: (self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }) -> (),
-	setNoclipKeybind: (self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }) -> (),
-	setWalkSpeedKeybind: (self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }) -> (),
-	setJumpPowerKeybind: (self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }) -> (),
 }
 
 type InputState = {
@@ -75,69 +67,43 @@ local _state: {
 	defaultUseJumpPower: boolean?,
 	defaultAutoRotate: boolean?,
 	defaultPlatformStand: boolean?,
-	flyKeybind: Enum.KeyCode,
-	noclipKeybind: Enum.KeyCode,
-	walkSpeedKeybind: Enum.KeyCode,
-	jumpPowerKeybind: Enum.KeyCode,
 	noclipParts: { [BasePart]: boolean },
 	input: InputState,
-} = {
-	client = nil :: any,
-	logger = nil :: any,
-	character = nil,
-	humanoid = nil,
-	rootPart = nil,
-	isFlyEnabled = false,
-	isNoclipEnabled = false,
-	isWalkSpeedEnabled = false,
-	isJumpPowerEnabled = false,
-	walkSpeedValue = 16,
-	jumpPowerValue = 50,
-	flySpeed = DEFAULT_FLY_SPEED,
-	defaultWalkSpeed = nil,
-	defaultJumpPower = nil,
-	defaultJumpHeight = nil,
-	defaultUseJumpPower = nil,
-	defaultAutoRotate = nil,
-	defaultPlatformStand = nil,
-	flyKeybind = DEFAULT_FLY_KEY,
-	noclipKeybind = DEFAULT_NOCLIP_KEY,
-	walkSpeedKeybind = DEFAULT_WALK_SPEED_KEY,
-	jumpPowerKeybind = DEFAULT_JUMP_POWER_KEY,
-	noclipParts = {},
-	input = {
-		forward = 0,
-		back = 0,
-		left = 0,
-		right = 0,
-		up = 0,
-		down = 0,
-	},
-}
+} =
+	{
+		client = nil :: any,
+		logger = nil :: any,
+		character = nil,
+		humanoid = nil,
+		rootPart = nil,
+		isFlyEnabled = false,
+		isNoclipEnabled = false,
+		isWalkSpeedEnabled = false,
+		isJumpPowerEnabled = false,
+		walkSpeedValue = 16,
+		jumpPowerValue = 50,
+		flySpeed = DEFAULT_FLY_SPEED,
+		defaultWalkSpeed = nil,
+		defaultJumpPower = nil,
+		defaultJumpHeight = nil,
+		defaultUseJumpPower = nil,
+		defaultAutoRotate = nil,
+		defaultPlatformStand = nil,
+		noclipParts = {},
+		input = {
+			forward = 0,
+			back = 0,
+			left = 0,
+			right = 0,
+			up = 0,
+			down = 0,
+		},
+	}
 local _signals = {}
 
 --// Private helpers
 local function _getLocalPlayer(): Player?
 	return Players.LocalPlayer
-end
-
-local function _coerceKeyCode(keybind: Enum.KeyCode | string | { [string]: any }): Enum.KeyCode?
-	if typeof(keybind) == "EnumItem" then
-		if (keybind :: EnumItem).EnumType == Enum.KeyCode then
-			return keybind :: Enum.KeyCode
-		end
-		return nil
-	end
-	if typeof(keybind) == "string" then
-		return Enum.KeyCode[keybind]
-	end
-	if typeof(keybind) == "table" then
-		local keyField = (keybind :: any).KeyCode or (keybind :: any).Key
-		if typeof(keyField) == "EnumItem" and (keyField :: EnumItem).EnumType == Enum.KeyCode then
-			return keyField :: Enum.KeyCode
-		end
-	end
-	return nil
 end
 
 local function _cacheDefaults(humanoid: Humanoid)
@@ -229,7 +195,13 @@ local function _setCharacter(character: Model?)
 		return
 	end
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		humanoid = character:WaitForChild("Humanoid", 5) :: Humanoid?
+	end
 	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then
+		rootPart = character:WaitForChild("HumanoidRootPart", 5)
+	end
 	if humanoid then
 		_state.humanoid = humanoid
 		_cacheDefaults(humanoid)
@@ -271,9 +243,8 @@ local function _applyFlyState()
 		return
 	end
 	if _state.isFlyEnabled then
-		humanoid.PlatformStand = true
-		humanoid.AutoRotate = false
-		humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+		humanoid.PlatformStand = false
+		humanoid.AutoRotate = true
 	else
 		local rootPart = _state.rootPart
 		if rootPart then
@@ -307,6 +278,14 @@ local function _getFlyMoveVector(): Vector3
 end
 
 local function _onCharacterAdded(character: Model)
+	_state.input = {
+		forward = 0,
+		back = 0,
+		left = 0,
+		right = 0,
+		up = 0,
+		down = 0,
+	}
 	_setCharacter(character)
 	if _state.isFlyEnabled then
 		_applyFlyState()
@@ -318,6 +297,14 @@ end
 
 local function _onCharacterRemoving()
 	_restoreNoclip()
+	_state.input = {
+		forward = 0,
+		back = 0,
+		left = 0,
+		right = 0,
+		up = 0,
+		down = 0,
+	}
 	_state.character = nil
 	_state.humanoid = nil
 	_state.rootPart = nil
@@ -331,28 +318,20 @@ local function _onInputChanged(input: InputObject, isPressed: boolean)
 	_state.input[keyName] = isPressed and 1 or 0
 end
 
-local function _toggleFly()
-	_state.isFlyEnabled = not _state.isFlyEnabled
-	_applyFlyState()
-end
+local function _bindPlayer(player: Player)
+	local addedConn = player.CharacterAdded:Connect(function(character)
+		_onCharacterAdded(character)
+	end)
+	_maid:GiveTask(addedConn)
 
-local function _toggleNoclip()
-	_state.isNoclipEnabled = not _state.isNoclipEnabled
-	if _state.isNoclipEnabled then
-		_applyNoclip()
-	else
-		_restoreNoclip()
+	local removingConn = player.CharacterRemoving:Connect(function()
+		_onCharacterRemoving()
+	end)
+	_maid:GiveTask(removingConn)
+
+	if player.Character then
+		_onCharacterAdded(player.Character)
 	end
-end
-
-local function _toggleWalkSpeed()
-	_state.isWalkSpeedEnabled = not _state.isWalkSpeedEnabled
-	_applyWalkSpeed()
-end
-
-local function _toggleJumpPower()
-	_state.isJumpPowerEnabled = not _state.isJumpPowerEnabled
-	_applyJumpPower()
 end
 
 local function _connect()
@@ -360,39 +339,18 @@ local function _connect()
 
 	local player = _getLocalPlayer()
 	if player then
-		local addedConn = player.CharacterAdded:Connect(function(character)
-			_onCharacterAdded(character)
+		_bindPlayer(player)
+	else
+		local playerAddedConn = Players.PlayerAdded:Connect(function(addedPlayer)
+			if addedPlayer == _getLocalPlayer() then
+				_bindPlayer(addedPlayer)
+			end
 		end)
-		_maid:GiveTask(addedConn)
-
-		local removingConn = player.CharacterRemoving:Connect(function()
-			_onCharacterRemoving()
-		end)
-		_maid:GiveTask(removingConn)
-
-		if player.Character then
-			_onCharacterAdded(player.Character)
-		end
+		_maid:GiveTask(playerAddedConn)
 	end
 
 	local inputBeganConn = UserInputService.InputBegan:Connect(function(input, processed)
 		if processed then
-			return
-		end
-		if input.KeyCode == _state.flyKeybind then
-			_toggleFly()
-			return
-		end
-		if input.KeyCode == _state.noclipKeybind then
-			_toggleNoclip()
-			return
-		end
-		if input.KeyCode == _state.walkSpeedKeybind then
-			_toggleWalkSpeed()
-			return
-		end
-		if input.KeyCode == _state.jumpPowerKeybind then
-			_toggleJumpPower()
 			return
 		end
 		_onInputChanged(input, true)
@@ -418,6 +376,13 @@ local function _connect()
 		local move = _getFlyMoveVector()
 		rootPart.AssemblyLinearVelocity = move * _state.flySpeed
 		rootPart.AssemblyAngularVelocity = Vector3.zero
+		local camera = Workspace.CurrentCamera
+		if camera then
+			local look = Vector3.new(camera.CFrame.LookVector.X, 0, camera.CFrame.LookVector.Z)
+			if look.Magnitude > 0.001 then
+				rootPart.CFrame = CFrame.new(rootPart.Position, rootPart.Position + look)
+			end
+		end
 	end)
 	_maid:GiveTask(renderConn)
 
@@ -497,34 +462,6 @@ end
 
 function Player.setFlySpeed(self: PlayerFeature, value: number): ()
 	_state.flySpeed = value
-end
-
-function Player.setFlyKeybind(self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }): ()
-	local resolved = _coerceKeyCode(keybind)
-	if resolved then
-		_state.flyKeybind = resolved
-	end
-end
-
-function Player.setNoclipKeybind(self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }): ()
-	local resolved = _coerceKeyCode(keybind)
-	if resolved then
-		_state.noclipKeybind = resolved
-	end
-end
-
-function Player.setWalkSpeedKeybind(self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }): ()
-	local resolved = _coerceKeyCode(keybind)
-	if resolved then
-		_state.walkSpeedKeybind = resolved
-	end
-end
-
-function Player.setJumpPowerKeybind(self: PlayerFeature, keybind: Enum.KeyCode | string | { [string]: any }): ()
-	local resolved = _coerceKeyCode(keybind)
-	if resolved then
-		_state.jumpPowerKeybind = resolved
-	end
 end
 
 return Player
