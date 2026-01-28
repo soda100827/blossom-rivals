@@ -332,10 +332,16 @@ local function _applyCameraControllerRotation(targetPosition: Vector3)
 	end
 	local targetCFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
 	local pitch, yaw, _ = targetCFrame:ToOrientation()
-	if controller.SetRotation then
-		controller:SetRotation(Vector2.new(pitch, yaw))
+	local targetRotation = Vector2.new(pitch, yaw)
+	if controller.ApplyRotationDelta and controller.Rotation ~= nil then
+		local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
+		local alpha = smoothness / MAX_SMOOTHNESS
+		local delta = (targetRotation - controller.Rotation) * alpha
+		controller:ApplyRotationDelta(delta)
+	elseif controller.SetRotation then
+		controller:SetRotation(targetRotation)
 	elseif controller.Rotation ~= nil then
-		controller.Rotation = Vector2.new(pitch, yaw)
+		controller.Rotation = targetRotation
 	end
 end
 

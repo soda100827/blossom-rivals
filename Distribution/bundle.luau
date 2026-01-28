@@ -481,9 +481,13 @@ Position=aimScreenPos end local function _applyCameraControllerRotation(
 targetPosition)local camera=Workspace.CurrentCamera if not camera then return
 end local controller=_getCameraController()if not controller then return end
 local targetCFrame=CFrame.lookAt(camera.CFrame.Position,targetPosition)local
-pitch,yaw,_=targetCFrame:ToOrientation()if controller.SetRotation then
-controller:SetRotation(Vector2.new(pitch,yaw))elseif controller.Rotation~=nil
-then controller.Rotation=Vector2.new(pitch,yaw)end end local function
+pitch,yaw,_=targetCFrame:ToOrientation()local targetRotation=Vector2.new(pitch,
+yaw)if controller.ApplyRotationDelta and controller.Rotation~=nil then local
+smoothness=math.clamp(_state.settings.smoothness,MIN_SMOOTHNESS,MAX_SMOOTHNESS)
+local alpha=smoothness/MAX_SMOOTHNESS local delta=(targetRotation-controller.
+Rotation)*alpha controller:ApplyRotationDelta(delta)elseif controller.
+SetRotation then controller:SetRotation(targetRotation)elseif controller.
+Rotation~=nil then controller.Rotation=targetRotation end end local function
 _syncCameraControllerRotation()local camera=Workspace.CurrentCamera if not
 camera then return end local controller=_getCameraController()if not controller
 then return end local pitch,yaw,_=camera.CFrame:ToOrientation()if controller.
