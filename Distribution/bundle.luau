@@ -392,19 +392,28 @@ Players=game:GetService('Players')local RunService=game:GetService('RunService')
 local UserInputService=game:GetService('UserInputService')local Workspace=game:
 GetService('Workspace')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local
 AIMBOT_RENDER_STEP='BlossomAimbot'local MAX_SMOOTHNESS=100 local MIN_SMOOTHNESS=
-1 local FOV_CIRCLE_SIDES=100 local Aimbot={}Aimbot.__index=Aimbot local _maid=
-nil local _state={client=nil,settings={isEnabled=false,shouldTeamCheck=true,
+1 local FOV_CIRCLE_SIDES=100 local AIM_ROTATION_SCALE=Vector2.new(0.77,1)*
+0.008726646259971648 local Aimbot={}Aimbot.__index=Aimbot local _maid=nil local
+_state={client=nil,settings={isEnabled=false,shouldTeamCheck=true,
 shouldAliveCheck=true,shouldWallCheck=true,shouldShowFov=false,fovRadius=100,
 fovColor=Color3.fromRGB(255,255,255),smoothness=1,targetPart='Head',isDebug=
-false},target=nil,fovCircle=nil}local _signals={}local function
-_getMouseLocation()local mousePos=UserInputService:GetMouseLocation()local inset
-=GuiService:GetGuiInset()return mousePos-Vector2.new(inset.X,inset.Y)end
-local function _getAimPosition(camera)if UserInputService.MouseBehavior==Enum.
-MouseBehavior.LockCenter then return camera.ViewportSize/2 end return
-_getMouseLocation()end local function _isOnScreen(position)local camera=
-Workspace.CurrentCamera if not camera then return false,Vector2.zero end local
-screenPos,onScreen=camera:WorldToViewportPoint(position)return onScreen,Vector2.
-new(screenPos.X,screenPos.Y)end local function _isVisible(targetPart,origin)
+false},target=nil,fovCircle=nil,cameraController=nil}local _signals={}
+local function _getMouseLocation()local mousePos=UserInputService:
+GetMouseLocation()local inset=GuiService:GetGuiInset()return mousePos-Vector2.
+new(inset.X,inset.Y)end local function _getAimPosition(camera)if
+UserInputService.MouseBehavior==Enum.MouseBehavior.LockCenter then return camera
+.ViewportSize/2 end return _getMouseLocation()end local function _isOnScreen(
+position)local camera=Workspace.CurrentCamera if not camera then return false,
+Vector2.zero end local screenPos,onScreen=camera:WorldToViewportPoint(position)
+return onScreen,Vector2.new(screenPos.X,screenPos.Y)end local function
+_resolveCameraController()local localPlayer=Players.LocalPlayer if not
+localPlayer then return nil end local playerScripts=localPlayer:FindFirstChild(
+'PlayerScripts')if not playerScripts then return nil end local controllers=
+playerScripts:FindFirstChild('Controllers')if not controllers then return nil
+end local cameraController=controllers:FindFirstChild('CameraController')if not
+cameraController or not cameraController:IsA('ModuleScript')then return nil end
+local ok,result=pcall(function()return require(cameraController)end)if ok then
+return result end return nil end local function _isVisible(targetPart,origin)
 local params=RaycastParams.new()if Players.LocalPlayer and Players.LocalPlayer.
 Character then params.FilterDescendantsInstances={Players.LocalPlayer.Character,
 Workspace.CurrentCamera}else params.FilterDescendantsInstances={Workspace.
@@ -436,44 +445,52 @@ local function _applyMouseAim(camera,targetPosition)local smoothness=math.clamp(
 _state.settings.smoothness,MIN_SMOOTHNESS,MAX_SMOOTHNESS)local _,screenPos=
 _isOnScreen(targetPosition)local mousePos=_getAimPosition(camera)local delta=
 screenPos-mousePos local mouseDivisor=(MAX_SMOOTHNESS-smoothness)/5+1 if
-UserInputService.MouseBehavior==Enum.MouseBehavior.LockCenter then local
-currentCFrame=camera.CFrame local targetCFrame=CFrame.new(currentCFrame.Position
-,targetPosition)camera.CFrame=targetCFrame return end local env=(getfenv())local
-mousemoverel=env.mousemoverel or(env.input and env.input.mousemoverel)if
-mousemoverel then mousemoverel(delta.X/mouseDivisor,delta.Y/mouseDivisor)end end
-local function _aimAt(target)local character=target.Character if not character
-then return end local targetPart=character:FindFirstChild(_state.settings.
-targetPart)if not targetPart or not targetPart:IsA('BasePart')then return end
-local camera=Workspace.CurrentCamera if not camera then return end local
-targetPosition=(targetPart).Position _applyMouseAim(camera,targetPosition)if
-_state.settings.isDebug and _state.client.Logger then _state.client.Logger:info(
-'Aiming at:',target.Name,'| Dist:',math.floor((targetPosition-camera.CFrame.
-Position).Magnitude))end end local function _connect()_maid:DoCleaning()local
-env=(getfenv())if env.Drawing then local circle=env.Drawing.new('Circle')circle.
-Thickness=1 circle.NumSides=FOV_CIRCLE_SIDES circle.Filled=false circle.
-Transparency=1 _state.fovCircle=circle _maid:GiveTask(function()if _state.
-fovCircle then _state.fovCircle:Remove()_state.fovCircle=nil end end)end
-RunService:BindToRenderStep(AIMBOT_RENDER_STEP,Enum.RenderPriority.Camera.Value+
-1,function(deltaTime)_updateFOV()if not _state.settings.isEnabled then return
-end if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2
-)then return end local target=_getBestTarget()if target then _aimAt(target)end
-end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(AIMBOT_RENDER_STEP)
-end)end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()
-_connect()end function Aimbot.cleanup(self)_maid:DoCleaning()end function Aimbot
-.toggle(self,state)_state.settings.isEnabled=state end function Aimbot.
-setTeamCheck(self,state)_state.settings.shouldTeamCheck=state end function
-Aimbot.setAliveCheck(self,state)_state.settings.shouldAliveCheck=state end
-function Aimbot.setWallCheck(self,state)_state.settings.shouldWallCheck=state
-end function Aimbot.setShowFOV(self,state)_state.settings.shouldShowFov=state
-end function Aimbot.setFOVRadius(self,radius)_state.settings.fovRadius=radius
-end function Aimbot.setFOVColor(self,color)_state.settings.fovColor=color end
-function Aimbot.setSmoothness(self,value)_state.settings.smoothness=value end
-function Aimbot.setTargetPart(self,partName)_state.settings.targetPart=partName
-end function Aimbot.setDebug(self,state)_state.settings.isDebug=state end return
-Aimbot end function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES
-.cache.g if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end
-return v.c end end do local function __modImpl()local RunService=game:
-GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+UserInputService.MouseBehavior==Enum.MouseBehavior.LockCenter then if not _state
+.cameraController then _state.cameraController=_resolveCameraController()end
+local cameraController=_state.cameraController if cameraController and
+cameraController.ApplyRotationDelta then local rotationDelta=Vector2.new(delta.Y
+,delta.X)*AIM_ROTATION_SCALE*-1 cameraController:ApplyRotationDelta(
+rotationDelta)return end local currentCFrame=camera.CFrame local targetCFrame=
+CFrame.new(currentCFrame.Position,targetPosition)camera.CFrame=targetCFrame
+local env=(getfenv())local mousemoverel=env.mousemoverel or(env.input and env.
+input.mousemoverel)if mousemoverel then mousemoverel(delta.X,delta.Y)end return
+end local env=(getfenv())local mousemoverel=env.mousemoverel or(env.input and
+env.input.mousemoverel)if mousemoverel then mousemoverel(delta.X/mouseDivisor,
+delta.Y/mouseDivisor)end end local function _aimAt(target)local character=target
+.Character if not character then return end local targetPart=character:
+FindFirstChild(_state.settings.targetPart)if not targetPart or not targetPart:
+IsA('BasePart')then return end local camera=Workspace.CurrentCamera if not
+camera then return end local targetPosition=(targetPart).Position
+_applyMouseAim(camera,targetPosition)if _state.settings.isDebug and _state.
+client.Logger then _state.client.Logger:info('Aiming at:',target.Name,'| Dist:',
+math.floor((targetPosition-camera.CFrame.Position).Magnitude))end end
+local function _connect()_maid:DoCleaning()local env=(getfenv())if env.Drawing
+then local circle=env.Drawing.new('Circle')circle.Thickness=1 circle.NumSides=
+FOV_CIRCLE_SIDES circle.Filled=false circle.Transparency=1 _state.fovCircle=
+circle _maid:GiveTask(function()if _state.fovCircle then _state.fovCircle:
+Remove()_state.fovCircle=nil end end)end RunService:BindToRenderStep(
+AIMBOT_RENDER_STEP,Enum.RenderPriority.Camera.Value+1,function(deltaTime)
+_updateFOV()if not _state.settings.isEnabled then return end if not
+UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then
+return end local target=_getBestTarget()if target then _aimAt(target)end end)
+_maid:GiveTask(function()RunService:UnbindFromRenderStep(AIMBOT_RENDER_STEP)end)
+end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()_state
+.cameraController=_resolveCameraController()_connect()end function Aimbot.
+cleanup(self)_maid:DoCleaning()end function Aimbot.toggle(self,state)_state.
+settings.isEnabled=state end function Aimbot.setTeamCheck(self,state)_state.
+settings.shouldTeamCheck=state end function Aimbot.setAliveCheck(self,state)
+_state.settings.shouldAliveCheck=state end function Aimbot.setWallCheck(self,
+state)_state.settings.shouldWallCheck=state end function Aimbot.setShowFOV(self,
+state)_state.settings.shouldShowFov=state end function Aimbot.setFOVRadius(self,
+radius)_state.settings.fovRadius=radius end function Aimbot.setFOVColor(self,
+color)_state.settings.fovColor=color end function Aimbot.setSmoothness(self,
+value)_state.settings.smoothness=value end function Aimbot.setTargetPart(self,
+partName)_state.settings.targetPart=partName end function Aimbot.setDebug(self,
+state)_state.settings.isDebug=state end return Aimbot end function
+__DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,

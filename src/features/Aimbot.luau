@@ -15,6 +15,7 @@ local AIMBOT_RENDER_STEP = "BlossomAimbot"
 local MAX_SMOOTHNESS = 100
 local MIN_SMOOTHNESS = 1
 local FOV_CIRCLE_SIDES = 100
+local AIM_ROTATION_SCALE = Vector2.new(0.77, 1) * 0.008726646259971648
 
 --// Types
 export type Aimbot = {
@@ -53,6 +54,7 @@ local _state = {
 	},
 	target = nil :: Player?,
 	fovCircle = nil :: any,
+	cameraController = nil :: any,
 }
 local _signals = {}
 
@@ -77,6 +79,37 @@ local function _isOnScreen(position: Vector3): (boolean, Vector2)
 	end
 	local screenPos, onScreen = camera:WorldToViewportPoint(position)
 	return onScreen, Vector2.new(screenPos.X, screenPos.Y)
+end
+
+local function _resolveCameraController(): any?
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return nil
+	end
+
+	local playerScripts = localPlayer:FindFirstChild("PlayerScripts")
+	if not playerScripts then
+		return nil
+	end
+
+	local controllers = playerScripts:FindFirstChild("Controllers")
+	if not controllers then
+		return nil
+	end
+
+	local cameraController = controllers:FindFirstChild("CameraController")
+	if not cameraController or not cameraController:IsA("ModuleScript") then
+		return nil
+	end
+
+	local ok, result = pcall(function()
+		return require(cameraController)
+	end)
+	if ok then
+		return result
+	end
+
+	return nil
 end
 
 local function _isVisible(targetPart: BasePart, origin: Vector3): boolean
@@ -185,9 +218,25 @@ local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 	local mouseDivisor = (MAX_SMOOTHNESS - smoothness) / 5 + 1
 
 	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+		if not _state.cameraController then
+			_state.cameraController = _resolveCameraController()
+		end
+
+		local cameraController = _state.cameraController
+		if cameraController and cameraController.ApplyRotationDelta then
+			local rotationDelta = Vector2.new(delta.Y, delta.X) * AIM_ROTATION_SCALE * -1
+			cameraController:ApplyRotationDelta(rotationDelta)
+			return
+		end
+
 		local currentCFrame = camera.CFrame
 		local targetCFrame = CFrame.new(currentCFrame.Position, targetPosition)
 		camera.CFrame = targetCFrame
+		local env = getfenv() :: any
+		local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
+		if mousemoverel then
+			mousemoverel(delta.X, delta.Y)
+		end
 		return
 	end
 
@@ -275,6 +324,7 @@ end
 function Aimbot.init(self: Aimbot, client: any)
 	_state.client = client
 	_maid = Maid.new()
+	_state.cameraController = _resolveCameraController()
 	_connect()
 end
 
