@@ -218,6 +218,7 @@ local function _waitForClientLoaded()
 	if not ok or type(client) ~= "table" then
 		return
 	end
+	_state.logger:info("Waiting for Client controllers to load...")
 	while true do
 		local allLoaded = true
 		for _, name in ipairs(CONTROLLER_NAMES) do
@@ -231,6 +232,7 @@ local function _waitForClientLoaded()
 		end
 		RunService.Heartbeat:Wait()
 	end
+	_state.logger:info("Client controllers loaded.")
 end
 
 local function _getModuleInit(moduleResult: Module)

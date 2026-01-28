@@ -624,34 +624,35 @@ Players.LocalPlayer end local playerScripts=localPlayer:WaitForChild(
 'PlayerScripts')local clientModule=playerScripts:WaitForChild(CLIENT_MODULE_NAME
 )if not clientModule:IsA('ModuleScript')then return end local ok,client=pcall(
 function()local requireAny=require return requireAny(clientModule)end)if not ok
-or type(client)~='table'then return end while true do local allLoaded=true for _
-,name in ipairs(CONTROLLER_NAMES)do if client[name]==nil then allLoaded=false
-break end end if allLoaded then break end RunService.Heartbeat:Wait()end end
-local function _getModuleInit(moduleResult)return moduleResult.init or
-moduleResult.Init end local function _getModuleCleanup(moduleResult)return
-moduleResult.cleanup or moduleResult.Cleanup end function Client.loadModule(self
-,name,moduleOrPath)if _modules[name]then _state.logger:warn(
-'Module already loaded:',name)return end local loader=function()if type(
-moduleOrPath)=='string'then local dynamicRequire=require return dynamicRequire(
-moduleOrPath)end return moduleOrPath end local success,result=pcall(loader)if
-success then local moduleResult=result _modules[name]=moduleResult local initFn=
-(_getModuleInit(moduleResult))if initFn then task.spawn(function()initFn(
-moduleResult,self)end)end _state.logger:info('Loaded module:',name)else _state.
-logger:warn('Failed to load module:',name,result)end end function Client.
-setTeleportQueue(self,shouldEnable)_state.shouldTeleportQueue=shouldEnable if
-_state.isRunning then _handleTeleportQueue(shouldEnable)end end function Client.
-setSilent(self,isSilent)if _state.isSilent==isSilent then return end _state.
-isSilent=isSilent if _state.shouldTeleportQueue and _state.isRunning then
-_handleTeleportQueue(true)end end function Client.start(self)if _state.isRunning
-then return end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)
-_state.logger:info('Client initializing...')_waitForClientLoaded()for _,entry in
-ipairs(MODULES)do self:loadModule(entry.name,entry.loader)end _connect()_signals
-.started:Fire()end function Client.destroy(self)if not _state.isRunning then
-return end _state.isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _
-,moduleResult in pairs(_modules)do local cleanupFn=(_getModuleCleanup(
-moduleResult))if cleanupFn then pcall(cleanupFn,moduleResult)end end _state.
-logger:info('Client stopped.')end local loggerModule=(Logger)local client=((
-setmetatable({},Client)))client.Version='1.0.0'client.Logger=loggerModule.new(
-'Blossom')client.Modules=_modules client.Started=_signals.started client.Stopped
-=_signals.stopped client.IsSilent=_state.isSilent _state.logger=client.Logger
-return client:start()
+or type(client)~='table'then return end _state.logger:info(
+'Waiting for Client controllers to load...')while true do local allLoaded=true
+for _,name in ipairs(CONTROLLER_NAMES)do if client[name]==nil then allLoaded=
+false break end end if allLoaded then break end RunService.Heartbeat:Wait()end
+_state.logger:info('Client controllers loaded.')end local function
+_getModuleInit(moduleResult)return moduleResult.init or moduleResult.Init end
+local function _getModuleCleanup(moduleResult)return moduleResult.cleanup or
+moduleResult.Cleanup end function Client.loadModule(self,name,moduleOrPath)if
+_modules[name]then _state.logger:warn('Module already loaded:',name)return end
+local loader=function()if type(moduleOrPath)=='string'then local dynamicRequire=
+require return dynamicRequire(moduleOrPath)end return moduleOrPath end local
+success,result=pcall(loader)if success then local moduleResult=result _modules[
+name]=moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then
+task.spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
+'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
+result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
+shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(
+shouldEnable)end end function Client.setSilent(self,isSilent)if _state.isSilent
+==isSilent then return end _state.isSilent=isSilent if _state.
+shouldTeleportQueue and _state.isRunning then _handleTeleportQueue(true)end end
+function Client.start(self)if _state.isRunning then return end _state.isRunning=
+true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
+'Client initializing...')_waitForClientLoaded()for _,entry in ipairs(MODULES)do
+self:loadModule(entry.name,entry.loader)end _connect()_signals.started:Fire()end
+function Client.destroy(self)if not _state.isRunning then return end _state.
+isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in
+pairs(_modules)do local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn
+then pcall(cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')
+end local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
+Version='1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules
+client.Started=_signals.started client.Stopped=_signals.stopped client.IsSilent=
+_state.isSilent _state.logger=client.Logger return client:start()
