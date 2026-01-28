@@ -125,9 +125,7 @@ local function _applyWalkSpeed()
 	if not humanoid then
 		return
 	end
-	if _state.isWalkSpeedEnabled then
-		humanoid.WalkSpeed = _state.walkSpeedValue
-	elseif _state.defaultWalkSpeed ~= nil then
+	if _state.defaultWalkSpeed ~= nil then
 		humanoid.WalkSpeed = _state.defaultWalkSpeed
 	end
 end
@@ -367,6 +365,17 @@ local function _connect()
 
 	local renderConn = RunService.RenderStepped:Connect(function()
 		if not _state.isFlyEnabled then
+			local rootPart = _state.rootPart
+			local humanoid = _state.humanoid
+			if rootPart and humanoid and _state.isWalkSpeedEnabled then
+				local moveDir = humanoid.MoveDirection
+				local horizontal = Vector3.new(moveDir.X, 0, moveDir.Z)
+				if horizontal.Magnitude > 0 then
+					horizontal = horizontal.Unit * _state.walkSpeedValue
+				end
+				local current = rootPart.AssemblyLinearVelocity
+				rootPart.AssemblyLinearVelocity = Vector3.new(horizontal.X, current.Y, horizontal.Z)
+			end
 			return
 		end
 		local rootPart = _state.rootPart
