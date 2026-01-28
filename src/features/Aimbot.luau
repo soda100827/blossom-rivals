@@ -187,8 +187,7 @@ local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
 		local currentCFrame = camera.CFrame
 		local targetCFrame = CFrame.new(currentCFrame.Position, targetPosition)
-		local alpha = 1 / (MAX_SMOOTHNESS - smoothness + 1)
-		camera.CFrame = currentCFrame:Lerp(targetCFrame, alpha)
+		camera.CFrame = targetCFrame
 		return
 	end
 

@@ -438,8 +438,7 @@ _isOnScreen(targetPosition)local mousePos=_getAimPosition(camera)local delta=
 screenPos-mousePos local mouseDivisor=(MAX_SMOOTHNESS-smoothness)/5+1 if
 UserInputService.MouseBehavior==Enum.MouseBehavior.LockCenter then local
 currentCFrame=camera.CFrame local targetCFrame=CFrame.new(currentCFrame.Position
-,targetPosition)local alpha=1/(MAX_SMOOTHNESS-smoothness+1)camera.CFrame=
-currentCFrame:Lerp(targetCFrame,alpha)return end local env=(getfenv())local
+,targetPosition)camera.CFrame=targetCFrame return end local env=(getfenv())local
 mousemoverel=env.mousemoverel or(env.input and env.input.mousemoverel)if
 mousemoverel then mousemoverel(delta.X/mouseDivisor,delta.Y/mouseDivisor)end end
 local function _aimAt(target)local character=target.Character if not character
