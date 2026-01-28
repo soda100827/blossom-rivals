@@ -1,6 +1,7 @@
 --!strict
 
 --// Services
+local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
@@ -26,10 +27,41 @@ local _state = {
 	themeManager = nil :: any,
 	saveManager = nil :: any,
 	isMounted = false,
+	playerControls = nil :: any,
 }
 local _signals = {}
 
 --// Private helpers
+local function _getKeybindState(keybind: any): boolean
+	if not keybind then
+		return false
+	end
+	if keybind.GetState then
+		return keybind:GetState()
+	end
+	return keybind.Value == true
+end
+
+local function _updatePlayerControls()
+	if not _state.playerControls then
+		return
+	end
+	for _, control in ipairs(_state.playerControls) do
+		local gate = control.toggle and control.toggle.Value == true
+		local active = false
+		if gate then
+			if control.keybind then
+				active = _getKeybindState(control.keybind)
+			else
+				active = true
+			end
+		end
+		if control.last ~= active then
+			control.last = active
+			control.setter(active)
+		end
+	end
+end
 local function _httpGet(url: string): string
 	return (game :: any):HttpGet(url)
 end
@@ -98,6 +130,11 @@ end
 
 local function _connect()
 	_maid:DoCleaning()
+
+	local updateConn = RunService.RenderStepped:Connect(function()
+		_updatePlayerControls()
+	end)
+	_maid:GiveTask(updateConn)
 end
 
 local function _mount()
@@ -458,17 +495,17 @@ local function _mount()
 		Text = "Fly",
 		Default = false,
 		Callback = function(state)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setFlyEnabled then
-				mod:setFlyEnabled(state)
-			end
+			_updatePlayerControls()
 		end,
 	})
-	playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
+	local playerFlyKeybind = playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
 		Default = "F",
 		NoUI = false,
 		Text = "Fly Keybind",
 		SyncToggleState = true,
+		Callback = function()
+			_updatePlayerControls()
+		end,
 	})
 
 	playerGroup:AddSlider("PlayerFlySpeed", {
@@ -489,34 +526,34 @@ local function _mount()
 		Text = "Noclip",
 		Default = false,
 		Callback = function(state)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setNoclipEnabled then
-				mod:setNoclipEnabled(state)
-			end
+			_updatePlayerControls()
 		end,
 	})
-	playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
+	local playerNoclipKeybind = playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
 		Default = "N",
 		NoUI = false,
 		Text = "Noclip Keybind",
 		SyncToggleState = true,
+		Callback = function()
+			_updatePlayerControls()
+		end,
 	})
 
 	local playerWalkSpeedToggle = playerGroup:AddToggle("PlayerWalkSpeedEnabled", {
 		Text = "Walk Speed",
 		Default = false,
 		Callback = function(state)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setWalkSpeedEnabled then
-				mod:setWalkSpeedEnabled(state)
-			end
+			_updatePlayerControls()
 		end,
 	})
-	playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
+	local playerWalkSpeedKeybind = playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
 		Default = "T",
 		NoUI = false,
 		Text = "Walk Speed Keybind",
 		SyncToggleState = true,
+		Callback = function()
+			_updatePlayerControls()
+		end,
 	})
 
 	playerGroup:AddSlider("PlayerWalkSpeed", {
@@ -537,17 +574,17 @@ local function _mount()
 		Text = "Jump Power",
 		Default = false,
 		Callback = function(state)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setJumpPowerEnabled then
-				mod:setJumpPowerEnabled(state)
-			end
+			_updatePlayerControls()
 		end,
 	})
-	playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
+	local playerJumpPowerKeybind = playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
 		Default = "Y",
 		NoUI = false,
 		Text = "Jump Power Keybind",
 		SyncToggleState = true,
+		Callback = function()
+			_updatePlayerControls()
+		end,
 	})
 
 	playerGroup:AddSlider("PlayerJumpPower", {
@@ -563,6 +600,54 @@ local function _mount()
 			end
 		end,
 	})
+
+	_state.playerControls = {
+		{
+			toggle = playerFlyToggle,
+			keybind = playerFlyKeybind,
+			last = nil,
+			setter = function(active)
+				local mod = _state.client.Modules.Player
+				if mod and mod.setFlyEnabled then
+					mod:setFlyEnabled(active)
+				end
+			end,
+		},
+		{
+			toggle = playerNoclipToggle,
+			keybind = playerNoclipKeybind,
+			last = nil,
+			setter = function(active)
+				local mod = _state.client.Modules.Player
+				if mod and mod.setNoclipEnabled then
+					mod:setNoclipEnabled(active)
+				end
+			end,
+		},
+		{
+			toggle = playerWalkSpeedToggle,
+			keybind = playerWalkSpeedKeybind,
+			last = nil,
+			setter = function(active)
+				local mod = _state.client.Modules.Player
+				if mod and mod.setWalkSpeedEnabled then
+					mod:setWalkSpeedEnabled(active)
+				end
+			end,
+		},
+		{
+			toggle = playerJumpPowerToggle,
+			keybind = playerJumpPowerKeybind,
+			last = nil,
+			setter = function(active)
+				local mod = _state.client.Modules.Player
+				if mod and mod.setJumpPowerEnabled then
+					mod:setJumpPowerEnabled(active)
+				end
+			end,
+		},
+	}
+	_updatePlayerControls()
 
 	local miscGroup = tabs.misc:AddLeftGroupbox("Auto Load")
 	miscGroup:AddToggle("TeleportQueue", {
