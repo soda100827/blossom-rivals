@@ -1,66 +1,41 @@
 --!strict
 
 --// Services
-
 local Players = game:GetService("Players")
-
 local RunService = game:GetService("RunService")
-
 local UserInputService = game:GetService("UserInputService")
-
 local Workspace = game:GetService("Workspace")
 
 --// Dependencies (require)
-
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
-
 local AIMBOT_RENDER_STEP = "BlossomAimbot"
-
 local MAX_SMOOTHNESS = 100
-
 local MIN_SMOOTHNESS = 1
-
 local FOV_CIRCLE_SIDES = 100
 
 --// Types
-
 export type Aimbot = {
-
 	init: (self: Aimbot, client: any) -> (),
-
 	cleanup: (self: Aimbot) -> (),
-
 	toggle: (self: Aimbot, state: boolean) -> (),
-
 	setTeamCheck: (self: Aimbot, state: boolean) -> (),
-
 	setAliveCheck: (self: Aimbot, state: boolean) -> (),
-
 	setWallCheck: (self: Aimbot, state: boolean) -> (),
-
 	setShowFOV: (self: Aimbot, state: boolean) -> (),
-
 	setFOVRadius: (self: Aimbot, radius: number) -> (),
-
 	setFOVColor: (self: Aimbot, color: Color3) -> (),
-
 	setSmoothness: (self: Aimbot, value: number) -> (),
-
 	setTargetPart: (self: Aimbot, partName: string) -> (),
-
 	setDebug: (self: Aimbot, state: boolean) -> (),
 }
 
 --// Private state
-
 local Aimbot = {}
-
 Aimbot.__index = Aimbot
 
 local _maid = nil :: any
-
 local _state = {
 	client = nil :: any,
 	settings = {
@@ -73,7 +48,6 @@ local _state = {
 		fovColor = Color3.fromRGB(255, 255, 255),
 		smoothness = 1,
 		targetPart = "Head",
-		prediction = 0.135, -- [추가됨] 적의 움직임을 얼마나 앞서서 쏠지 (보통 0.1 ~ 0.15 사이)
 		isDebug = false,
 	},
 	target = nil :: Player?,
@@ -82,57 +56,44 @@ local _state = {
 local _signals = {}
 
 --// Private helpers
-
 local function _getMouseLocation(): Vector2
 	return UserInputService:GetMouseLocation()
 end
 
 local function _isOnScreen(position: Vector3): (boolean, Vector2)
 	local camera = Workspace.CurrentCamera
-
 	if not camera then
 		return false, Vector2.zero
 	end
-
 	local screenPos, onScreen = camera:WorldToViewportPoint(position)
-
 	return onScreen, Vector2.new(screenPos.X, screenPos.Y)
 end
 
 local function _isVisible(targetPart: BasePart, origin: Vector3): boolean
 	local params = RaycastParams.new()
-
 	if Players.LocalPlayer and Players.LocalPlayer.Character then
 		params.FilterDescendantsInstances = {
-
 			Players.LocalPlayer.Character,
-
 			Workspace.CurrentCamera,
 		}
 	else
 		params.FilterDescendantsInstances = { Workspace.CurrentCamera }
 	end
-
 	params.FilterType = Enum.RaycastFilterType.Exclude
-
 	params.IgnoreWater = true
 
 	local direction = targetPart.Position - origin
-
 	local result = Workspace:Raycast(origin, direction, params)
 
 	if result then
 		return result.Instance:IsDescendantOf(targetPart.Parent :: Instance)
 	end
-
 	return true
 end
 
 local function _getBestTarget(): Player?
 	local camera = Workspace.CurrentCamera
-
 	local localPlayer = Players.LocalPlayer
-
 	local mousePos = _getMouseLocation()
 
 	if not camera or not localPlayer then
@@ -140,26 +101,22 @@ local function _getBestTarget(): Player?
 	end
 
 	local bestTarget = nil
-
 	local closestDistance = _state.settings.fovRadius
 
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player == localPlayer then
 			continue
 		end
-
 		if _state.settings.shouldTeamCheck and player.Team == localPlayer.Team then
 			continue
 		end
 
 		local character = player.Character
-
 		if not character then
 			continue
 		end
 
 		local humanoid = character:FindFirstChild("Humanoid")
-
 		if _state.settings.shouldAliveCheck then
 			if not humanoid or not humanoid:IsA("Humanoid") or humanoid.Health <= 0 then
 				continue
@@ -167,30 +124,25 @@ local function _getBestTarget(): Player?
 		end
 
 		local targetPart = character:FindFirstChild(_state.settings.targetPart)
-
 		if not targetPart or not targetPart:IsA("BasePart") then
 			continue
 		end
 
 		local onScreen, screenPos = _isOnScreen(targetPart.Position)
-
 		if not onScreen then
 			continue
 		end
 
 		if _state.settings.shouldWallCheck then
 			local origin = camera.CFrame.Position
-
 			if not _isVisible(targetPart, origin) then
 				continue
 			end
 		end
 
 		local distance = (screenPos - mousePos).Magnitude
-
 		if distance < closestDistance then
 			closestDistance = distance
-
 			bestTarget = player
 		end
 	end
@@ -204,85 +156,49 @@ local function _updateFOV()
 	end
 
 	_state.fovCircle.Visible = _state.settings.shouldShowFov
-
 	_state.fovCircle.Radius = _state.settings.fovRadius
-
 	_state.fovCircle.Color = _state.settings.fovColor
-
 	_state.fovCircle.Position = _getMouseLocation()
 end
 
 local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTime: number)
 	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
-
 	local isInstant = smoothness >= MAX_SMOOTHNESS
-
 	local targetCFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
 
 	if isInstant then
 		camera.CFrame = targetCFrame
-
 		return
 	end
 
 	local duration = (MAX_SMOOTHNESS - smoothness) / MAX_SMOOTHNESS
-
 	if duration <= 0 then
 		camera.CFrame = targetCFrame
-
 		return
 	end
 
 	local alpha = math.clamp(deltaTime / duration, 0, 1)
-
 	camera.CFrame = camera.CFrame:Lerp(targetCFrame, alpha)
 end
 
 local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
+	local mouseBehavior = UserInputService.MouseBehavior
+	if mouseBehavior == Enum.MouseBehavior.LockCenter then
+		return
+	end
+
+	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
+	local _, screenPos = _isOnScreen(targetPosition)
+	local mousePos = _getMouseLocation()
+	local delta = screenPos - mousePos
+
+	local mouseDivisor = (MAX_SMOOTHNESS - smoothness) / 5 + 1
+
 	local env = getfenv() :: any
 	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
 
-	if not mousemoverel then
-		return
-	end
-
-	local onScreen, screenPos = _isOnScreen(targetPosition)
-	if not onScreen then
-		return
-	end
-
-	local mousePos = _getMouseLocation()
-
-	-- 목표 지점까지의 거리
-	local deltaX = screenPos.X - mousePos.X
-	local deltaY = screenPos.Y - mousePos.Y
-
-	-- [핵심 1] 감도 보정 (Sensitivity Compensation)
-	-- UserGameSettings에서 현재 마우스 감도를 가져옵니다.
-	-- 감도가 낮으면 마우스를 더 많이 움직여야 하므로 값을 키워줍니다.
-	local userSettings = UserSettings():GetService("UserGameSettings")
-	local sensitivity = userSettings.MouseSensitivity
-
-	-- 감도가 0일 경우를 대비 (보통 0은 아니지만 안전장치)
-	if sensitivity == 0 then
-		sensitivity = 1
-	end
-
-	-- [핵심 2] 스무딩 로직 완전 분리
-	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
-
-	-- "빡고" 모드 (Smoothness가 1일 때)
-	if smoothness <= 1 then
-		-- 감도에 따른 역보정: 감도가 낮을수록(ex: 0.5) 2배로 움직여야 함
-		-- 0.8은 임의의 상수입니다. 본인 감도에 맞춰 조절 가능하지만 보통 이 공식이면 잘 맞습니다.
-		local sensitivityFactor = 1 / sensitivity
-
-		-- 즉시 이동 (divisior 없음)
-		mousemoverel(deltaX * sensitivityFactor, deltaY * sensitivityFactor)
-	else
-		-- 일반(Legit) 모드
-		local divisor = (smoothness / 5) + 1
-		mousemoverel(deltaX / divisor, deltaY / divisor)
+	if mousemoverel then
+		mousemoverel(delta.X / mouseDivisor, delta.Y / mouseDivisor)
 	end
 end
 
@@ -302,47 +218,41 @@ local function _aimAt(target: Player, deltaTime: number)
 		return
 	end
 
-	-- [핵심 3] Velocity Prediction (예측) 적용
-	-- 현재 위치 + (적이 움직이는 방향 * 예측 계수)
-	local currentPosition = (targetPart :: BasePart).Position
-	local velocity = (targetPart :: BasePart).Velocity
+	local targetPosition = (targetPart :: BasePart).Position
+	_applyCameraAim(camera, targetPosition, deltaTime)
+	_applyMouseAim(camera, targetPosition)
 
-	-- 예측 지점 계산
-	local predictedPosition = currentPosition + (velocity * _state.settings.prediction)
-
-	-- 카메라 CFrame 조작(_applyCameraAim)은 제거하고 마우스만 사용
-	_applyMouseAim(camera, predictedPosition)
+	if _state.settings.isDebug and _state.client.Logger then
+		_state.client.Logger:info(
+			"Aiming at:",
+			target.Name,
+			"| Dist:",
+			math.floor((targetPosition - camera.CFrame.Position).Magnitude)
+		)
+	end
 end
 
 local function _connect()
 	_maid:DoCleaning()
 
 	local env = getfenv() :: any
-
 	if env.Drawing then
 		local circle = env.Drawing.new("Circle")
-
 		circle.Thickness = 1
-
 		circle.NumSides = FOV_CIRCLE_SIDES
-
 		circle.Filled = false
-
 		circle.Transparency = 1
-
 		_state.fovCircle = circle
 
 		_maid:GiveTask(function()
 			if _state.fovCircle then
 				_state.fovCircle:Remove()
-
 				_state.fovCircle = nil
 			end
 		end)
 	end
 
 	-- Run after the game's camera controller so we don't get overwritten.
-
 	RunService:BindToRenderStep(AIMBOT_RENDER_STEP, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 		_updateFOV()
 
@@ -355,7 +265,6 @@ local function _connect()
 		end
 
 		local target = _getBestTarget()
-
 		if target then
 			_aimAt(target, deltaTime)
 		end
@@ -367,12 +276,9 @@ local function _connect()
 end
 
 --// Public API
-
 function Aimbot.init(self: Aimbot, client: any)
 	_state.client = client
-
 	_maid = Maid.new()
-
 	_connect()
 end
 
