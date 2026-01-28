@@ -58,6 +58,7 @@ local _state = {
 	hasAutoRotateOverride = false,
 	defaultMouseSensitivity = nil :: number?,
 	hasMouseSensitivityOverride = false,
+	cameraController = nil :: any,
 }
 local _signals = {}
 
@@ -112,6 +113,36 @@ local function _getLocalRootPart(): BasePart?
 		return rootPart
 	end
 	return nil
+end
+
+local function _getCameraController(): any
+	if _state.cameraController then
+		return _state.cameraController
+	end
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		return nil
+	end
+	local playerScripts = localPlayer:FindFirstChild("PlayerScripts")
+	if not playerScripts then
+		return nil
+	end
+	local controllers = playerScripts:FindFirstChild("Controllers")
+	if not controllers then
+		return nil
+	end
+	local cameraModule = controllers:FindFirstChild("CameraController")
+	if not cameraModule or not cameraModule:IsA("ModuleScript") then
+		return nil
+	end
+	local success, result = pcall(function()
+		return require(cameraModule)
+	end)
+	if not success then
+		return nil
+	end
+	_state.cameraController = result
+	return result
 end
 
 local function _setAutoRotateOverride(shouldDisable: boolean)
@@ -239,7 +270,7 @@ local function _getBestTarget(aimScreenPos: Vector2): Player?
 	return bestTarget
 end
 
-local function _isTargetValid(target: Player): boolean
+local function _isTargetValid(target: Player, isAiming: boolean): boolean
 	local camera = Workspace.CurrentCamera
 	local localPlayer = Players.LocalPlayer
 	if not camera or not localPlayer then
@@ -265,9 +296,11 @@ local function _isTargetValid(target: Player): boolean
 	if not targetPart or not targetPart:IsA("BasePart") then
 		return false
 	end
-	local onScreen = _isOnScreen(targetPart.Position)
-	if not onScreen then
-		return false
+	if not isAiming then
+		local onScreen = _isOnScreen(targetPart.Position)
+		if not onScreen then
+			return false
+		end
 	end
 	if _state.settings.shouldWallCheck then
 		local origin = camera.CFrame.Position
@@ -287,6 +320,24 @@ local function _updateFOV(aimScreenPos: Vector2)
 	_state.fovCircle.Radius = _state.settings.fovRadius
 	_state.fovCircle.Color = _state.settings.fovColor
 	_state.fovCircle.Position = aimScreenPos
+end
+
+local function _applyCameraControllerRotation(targetPosition: Vector3)
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	local controller = _getCameraController()
+	if not controller then
+		return
+	end
+	local targetCFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
+	local pitch, yaw, _ = targetCFrame:ToOrientation()
+	if controller.SetRotation then
+		controller:SetRotation(Vector2.new(pitch, yaw))
+	elseif controller.Rotation ~= nil then
+		controller.Rotation = Vector2.new(pitch, yaw)
+	end
 end
 
 local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTime: number)
@@ -353,6 +404,7 @@ local function _aimAt(target: Player, deltaTime: number)
 	local targetPosition = (targetPart :: BasePart).Position
 	_setAutoRotateOverride(true)
 	_setMouseSensitivityOverride(true)
+	_applyCameraControllerRotation(targetPosition)
 	_applyCharacterAim(targetPosition)
 	_applyCameraAim(camera, targetPosition, deltaTime)
 	_applyMouseAim(camera, targetPosition)
@@ -408,7 +460,7 @@ local function _connect()
 		end
 
 		local target = _state.lockedTarget
-		if target and not _isTargetValid(target) then
+		if target and not _isTargetValid(target, isAiming) then
 			target = nil
 		end
 		if not target then
