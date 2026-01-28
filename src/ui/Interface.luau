@@ -502,7 +502,7 @@ local function _mount()
 		Default = "F",
 		NoUI = false,
 		Text = "Fly Keybind",
-		SyncToggleState = true,
+		SyncToggleState = false,
 		Callback = function()
 			_updatePlayerControls()
 		end,
@@ -533,7 +533,7 @@ local function _mount()
 		Default = "N",
 		NoUI = false,
 		Text = "Noclip Keybind",
-		SyncToggleState = true,
+		SyncToggleState = false,
 		Callback = function()
 			_updatePlayerControls()
 		end,
@@ -550,7 +550,7 @@ local function _mount()
 		Default = "T",
 		NoUI = false,
 		Text = "Walk Speed Keybind",
-		SyncToggleState = true,
+		SyncToggleState = false,
 		Callback = function()
 			_updatePlayerControls()
 		end,
@@ -581,7 +581,7 @@ local function _mount()
 		Default = "Y",
 		NoUI = false,
 		Text = "Jump Power Keybind",
-		SyncToggleState = true,
+		SyncToggleState = false,
 		Callback = function()
 			_updatePlayerControls()
 		end,
