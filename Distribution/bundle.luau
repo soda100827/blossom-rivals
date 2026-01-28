@@ -387,8 +387,78 @@ value)_state.jumpPowerValue=value _applyJumpPower()end function Player.
 setFlySpeed(self,value)_state.flySpeed=value end return Player end function
 __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+do local function __modImpl()local Players=game:GetService('Players')local
+Workspace=game:GetService('Workspace')local RunService=game:GetService(
+'RunService')local UserInputService=game:GetService('UserInputService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local CONSTANTS={FOV_CIRCLE_COLOR=Color3.
+fromRGB(255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64}local Combat
+={}Combat.__index=Combat local _maid=nil local _state={client=nil,logger=nil,
+isSilentAimEnabled=false,isFovEnabled=false,fovRadius=100,isTeamCheckEnabled=
+false,headshotChance=100,target=nil,fovCircle=nil}local function _getCamera()
+local camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
+WaitForChild('Camera'))end return camera end local function _getLocalPlayer()
+return Players.LocalPlayer end local function _getDrawingLib()local getfenvAny=
+getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib and g.getgenv then
+lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,'Drawing')end return
+lib end local function _updateFovCircle()local lib=_getDrawingLib()if not lib
+then return end local circle=_state.fovCircle if _state.isFovEnabled and _state.
+isSilentAimEnabled then if not circle then circle=lib.new('Circle')_state.
+fovCircle=circle end local c=circle c.Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c
+.NumSides=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=CONSTANTS.
+FOV_CIRCLE_COLOR local mouseLocation=UserInputService:GetMouseLocation()c.
+Position=mouseLocation c.Radius=_state.fovRadius c.Visible=true else local c=
+circle if c then c.Visible=false end end end local function _getBestTarget()
+local camera=_getCamera()local localPlayer=_getLocalPlayer()local mouseLocation=
+UserInputService:GetMouseLocation()local bestTarget=nil local shortestDistance=
+_state.fovRadius for _,player in ipairs(Players:GetPlayers())do if player==
+localPlayer then continue end if _state.isTeamCheckEnabled and player.Team==
+localPlayer.Team then continue end local character=player.Character if not
+character then continue end local humanoid=character:FindFirstChildOfClass(
+'Humanoid')if not humanoid or humanoid.Health<=0 then continue end local head=
+character:FindFirstChild('Head')if not head then continue end if not head:IsA(
+'BasePart')then continue end local headPart=head local screenPos,onScreen=camera
+:WorldToViewportPoint(headPart.Position)if not onScreen then continue end local
+distance=(Vector2.new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if
+distance<shortestDistance then shortestDistance=distance bestTarget=player end
+end return bestTarget end local function _setupHooks()local g=(getfenv(0))if not
+g.hookmetamethod then if _state.logger then _state.logger:warn(
+'hookmetamethod not found, silent aim will not work.')end return end local
+hookmetamethod=g.hookmetamethod local getnamecallmethod=g.getnamecallmethod
+local checkcaller=g.checkcaller local newcclosure=g.newcclosure local
+oldNamecall oldNamecall=hookmetamethod(game,'__namecall',newcclosure(function(
+self,...)local method=getnamecallmethod()if _state.isSilentAimEnabled and not
+checkcaller()then local chance=math.random(1,100)if chance<=_state.
+headshotChance then if method=='Raycast'and(self==Workspace or tostring(self)==
+'Workspace')then local args={...}if _state.target and _state.target.Character
+then local head=_state.target.Character:FindFirstChild('Head')if head and head:
+IsA('BasePart')then local origin=args[1]local direction=(head.Position-origin).
+Unit*args[2].Magnitude args[2]=direction return oldNamecall(self,table.unpack(
+args))end end elseif method=='FindPartOnRay'and(self==Workspace or tostring(self
+)=='Workspace')then local args={...}if _state.target and _state.target.Character
+then local head=_state.target.Character:FindFirstChild('Head')if head and head:
+IsA('BasePart')then local ray=args[1]if typeof(ray)=='Ray'then local newRay=Ray.
+new(ray.Origin,(head.Position-ray.Origin).Unit*ray.Direction.Magnitude)args[1]=
+newRay return oldNamecall(self,table.unpack(args))end end end end end end return
+oldNamecall(self,...)end))end local function _connect()_maid:DoCleaning()local
+runConn=RunService.RenderStepped:Connect(function()if _state.isSilentAimEnabled
+then _updateFovCircle()_state.target=_getBestTarget()else if _state.fovCircle
+then _updateFovCircle()end _state.target=nil end end)_maid:GiveTask(runConn)
+_setupHooks()end local function _disconnect()if _state.fovCircle then pcall(
+function()((_state.fovCircle)):Remove()end)_state.fovCircle=nil end _maid:
+DoCleaning()end function Combat.init(self,client)_state.client=client _state.
+logger=client.Logger _maid=Maid.new()_connect()_state.logger:info(
+'Combat module initialized')end function Combat.cleanup(self)_state.
+isSilentAimEnabled=false _disconnect()end function Combat.setSilentAimEnabled(
+self,isEnabled)_state.isSilentAimEnabled=isEnabled end function Combat.
+setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end function Combat.
+setFovRadius(self,radius)_state.fovRadius=radius end function Combat.
+setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled end
+function Combat.setHeadshotChance(self,chance)_state.headshotChance=chance end
+return Combat end function __DARKLUA_BUNDLE_MODULES.g()local v=
+__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
+__modImpl()local RunService=game:GetService('RunService')local Maid=(
+__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -432,72 +502,88 @@ _loadRemote('addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
 themeManager _state.saveManager=saveManager local window=library:CreateWindow({
 Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
 IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={main=window:AddTab('Main'),
-visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:
-AddTab('UI Settings')}local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup
-:AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function
-(state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:
-toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end
-end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then
-mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.
-new(1,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.
-Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}
-):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
-espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
-mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
-Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
-value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
-),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
-.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
-value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
-'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setDistanceColor then mod:setDistanceColor(value)end end}):AddColorPicker(
-'ESPDistanceOutlineColor',{Default=Color3.new(0,0,0),Title='Distance Outline',
+combat=window:AddTab('Combat'),visuals=window:AddTab('Visuals'),misc=window:
+AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local combatGroup=tabs.
+combat:AddLeftGroupbox('Silent Aimbot')combatGroup:AddToggle('CombatSilentAim',{
+Text='Silent Aim',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Combat if mod and mod.setSilentAimEnabled then mod:setSilentAimEnabled(
+state)end end})combatGroup:AddToggle('CombatShowFov',{Text='Show FOV',Default=
+false,Callback=function(state)local mod=_state.client.Modules.Combat if mod and
+mod.setFovEnabled then mod:setFovEnabled(state)end end})combatGroup:AddSlider(
+'CombatFovRadius',{Text='FOV Radius',Default=100,Min=10,Max=800,Rounding=0,
+Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
+setFovRadius then mod:setFovRadius(value)end end})combatGroup:AddToggle(
+'CombatTeamCheck',{Text='Team Check',Default=false,Callback=function(state)local
+mod=_state.client.Modules.Combat if mod and mod.setTeamCheckEnabled then mod:
+setTeamCheckEnabled(state)end end})combatGroup:AddSlider('CombatHeadshotChance',
+{Text='Headshot Chance',Default=100,Min=0,Max=100,Rounding=0,Callback=function(
+value)local mod=_state.client.Modules.Combat if mod and mod.setHeadshotChance
+then mod:setHeadshotChance(value)end end})local espGroup=tabs.visuals:
+AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',
+Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals if
+mod and mod.toggle then mod:toggle(state)end if mod and mod.setEspEnabled then
+mod:setEspEnabled(state)end end})espGroup:AddToggle('ESPNames',{Text='Name',
+Default=true,Callback=function(state)local mod=_state.client.Modules.Visuals if
+mod and mod.setShowNames then mod:setShowNames(state)end end}):AddColorPicker(
+'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
+value)local mod=_state.client.Modules.Visuals if mod and mod.setTextColor then
+mod:setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
+Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
+setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'
+,Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals
+if mod and mod.setShowWeapon then mod:setShowWeapon(state)end end}):
+AddColorPicker('ESPWeaponColor',{Default=Color3.new(1,1,1),Title='Weapon Color',
 Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setDistanceOutlineColor then mod:setDistanceOutlineColor(value)end end})espGroup
-:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(state)local mod
-=_state.client.Modules.Visuals if mod and mod.setShowBoxes then mod:
-setShowBoxes(state)end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,
-1,1),Title='Box Color',Callback=function(value)local mod=_state.client.Modules.
-Visuals if mod and mod.setBoxColor then mod:setBoxColor(value)end end}):
-AddColorPicker('ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Box Outline',Callback=function(value)local mod=_state.client.Modules.Visuals if
-mod and mod.setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})
-espGroup:AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowSkeleton then mod:setShowSkeleton(state)end end}):AddColorPicker(
-'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setSkeletonColor then mod:setSkeletonColor(value)end end}):AddColorPicker(
-'ESPSkeletonOutlineColor',{Default=Color3.new(0,0,0),Title='Skeleton Outline',
+setWeaponColor then mod:setWeaponColor(value)end end}):AddColorPicker(
+'ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title='Weapon Outline',
 Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setSkeletonOutlineColor then mod:setSkeletonOutlineColor(value)end end})espGroup
-:AddToggle('ESPHealthbar',{Text='Healthbar',Default=false,Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.setShowHealthbar
-then mod:setShowHealthbar(state)end end}):AddColorPicker('ESPHealthbarColor',{
-Default=Color3.new(0,1,0),Title='Health Color',Callback=function(value)local mod
-=_state.client.Modules.Visuals if mod and mod.setHealthbarColor then mod:
-setHealthbarColor(value)end end}):AddColorPicker('ESPHealthbarOutlineColor',{
-Default=Color3.new(0,0,0),Title='Outline Color',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setHealthbarOutlineColor then
-mod:setHealthbarOutlineColor(value)end end})espGroup:AddToggle('ESPHighlight',{
-Text='Highlight',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.setShowHighlight then mod:setShowHighlight(state)
-end end}):AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title=
-'Fill Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
-mod and mod.setHighlightFill then mod:setHighlightFill(value)end end}):
-AddColorPicker('ESPHighlightOutline',{Default=Color3.new(1,1,1),Title=
+setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end end})espGroup:
+AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.setShowDistance then mod:
+setShowDistance(state)end end}):AddColorPicker('ESPDistanceColor',{Default=
+Color3.new(1,1,1),Title='Distance Color',Callback=function(value)local mod=
+_state.client.Modules.Visuals if mod and mod.setDistanceColor then mod:
+setDistanceColor(value)end end}):AddColorPicker('ESPDistanceOutlineColor',{
+Default=Color3.new(0,0,0),Title='Distance Outline',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setDistanceOutlineColor then
+mod:setDistanceOutlineColor(value)end end})espGroup:AddToggle('ESPBoxes',{Text=
+'Box',Default=true,Callback=function(state)local mod=_state.client.Modules.
+Visuals if mod and mod.setShowBoxes then mod:setShowBoxes(state)end end}):
+AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title='Box Color',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setBoxColor then mod:setBoxColor(value)end end}):AddColorPicker(
+'ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title='Box Outline',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})espGroup:
+AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.setShowSkeleton then mod:
+setShowSkeleton(state)end end}):AddColorPicker('ESPSkeletonColor',{Default=
+Color3.new(1,1,1),Title='Skeleton Color',Callback=function(value)local mod=
+_state.client.Modules.Visuals if mod and mod.setSkeletonColor then mod:
+setSkeletonColor(value)end end}):AddColorPicker('ESPSkeletonOutlineColor',{
+Default=Color3.new(0,0,0),Title='Skeleton Outline',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setSkeletonOutlineColor then
+mod:setSkeletonOutlineColor(value)end end})espGroup:AddToggle('ESPHealthbar',{
+Text='Healthbar',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.setShowHealthbar then mod:setShowHealthbar(state)
+end end}):AddColorPicker('ESPHealthbarColor',{Default=Color3.new(0,1,0),Title=
+'Health Color',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setHealthbarColor then mod:setHealthbarColor(value)end end}):
+AddColorPicker('ESPHealthbarOutlineColor',{Default=Color3.new(0,0,0),Title=
 'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHighlightOutline then mod:setHighlightOutline(value)end end})
-espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
-Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+if mod and mod.setHealthbarOutlineColor then mod:setHealthbarOutlineColor(value)
+end end})espGroup:AddToggle('ESPHighlight',{Text='Highlight',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowHighlight then mod:setShowHighlight(state)end end}):AddColorPicker(
+'ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setHighlightFill then mod:setHighlightFill(value)end end}):AddColorPicker(
+'ESPHighlightOutline',{Default=Color3.new(1,1,1),Title='Outline Color',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
+AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Callback=
+function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',
@@ -566,9 +652,9 @@ _runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
 function Interface.init(self,client)_state.client=client _state.logger=client.
 Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
 _maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
-isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.g()
-local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end end local
+isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.h()
+local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end end local
 ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
 'Players')local RunService=game:GetService('RunService')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
@@ -589,8 +675,9 @@ local CLIENT_MODULE_NAME='Client'local CONTROLLER_NAMES={'PlayerDataController',
 'ScavengerHuntController','SocialController','FFlagController','AudioController'
 ,'BirthdayController','ArcadeController','EmoteController','SeasonController'}
 local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
-'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.g())}}local Client={}Client.__index=Client local _maid=
+'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Combat',loader=(
+__DARKLUA_BUNDLE_MODULES.g())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.h())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=(
 function()local getfenvAny=getfenv local g=(getfenvAny(0))return g.BlossomSilent
 or(g.getgenv and g.getgenv().BlossomSilent)or false end)(),logger=nil}local

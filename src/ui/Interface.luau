@@ -176,10 +176,69 @@ local function _mount()
 
 	local tabs = {
 		main = window:AddTab("Main"),
+		combat = window:AddTab("Combat"),
 		visuals = window:AddTab("Visuals"),
 		misc = window:AddTab("Misc"),
 		uiSettings = window:AddTab("UI Settings"),
 	}
+
+	local combatGroup = tabs.combat:AddLeftGroupbox("Silent Aimbot")
+	combatGroup:AddToggle("CombatSilentAim", {
+		Text = "Silent Aim",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setSilentAimEnabled then
+				mod:setSilentAimEnabled(state)
+			end
+		end,
+	})
+	combatGroup:AddToggle("CombatShowFov", {
+		Text = "Show FOV",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setFovEnabled then
+				mod:setFovEnabled(state)
+			end
+		end,
+	})
+	combatGroup:AddSlider("CombatFovRadius", {
+		Text = "FOV Radius",
+		Default = 100,
+		Min = 10,
+		Max = 800,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setFovRadius then
+				mod:setFovRadius(value)
+			end
+		end,
+	})
+	combatGroup:AddToggle("CombatTeamCheck", {
+		Text = "Team Check",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setTeamCheckEnabled then
+				mod:setTeamCheckEnabled(state)
+			end
+		end,
+	})
+	combatGroup:AddSlider("CombatHeadshotChance", {
+		Text = "Headshot Chance",
+		Default = 100,
+		Min = 0,
+		Max = 100,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setHeadshotChance then
+				mod:setHeadshotChance(value)
+			end
+		end,
+	})
 
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
