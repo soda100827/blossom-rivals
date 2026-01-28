@@ -758,10 +758,25 @@ _maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
 isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.h()
 local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end end local
-ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
+ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
+'Players')local RunService=game:GetService('RunService')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
 __DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
+local CONTROLLER_NAMES={'PlayerDataController','ComplianceController',
+'FunctionsController','MiscController','UserInterfaceController',
+'MonetizationController','EnemyController','CameraController',
+'MechanicsController','FighterController','SpectateController',
+'TightropeController','EntityController','DuelController',
+'GameComponentsController','ControlsController','LeaderboardController',
+'LobbyController','QueuePadController','LightingController',
+'ShootingRangeController','CoreGuiController','MusicController',
+'MobileController','ShopController','ProximityPromptController',
+'PlayerInteractionController','DebugController','MatchmakingController',
+'ChattingController','EventController','PrivateServerController',
+'TestingController','ShadyChickenController','WrapController',
+'ScavengerHuntController','SocialController','FFlagController','AudioController'
+,'BirthdayController','ArcadeController','EmoteController','SeasonController'}
 local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
 'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Aimbot',loader=(
 __DARKLUA_BUNDLE_MODULES.g())},{name='Interface',loader=(
@@ -793,7 +808,16 @@ _getClearTeleportQueue()if clearTeleportQueue then _state.logger:info(
 'Clearing teleport queue...')clearTeleportQueue()else _state.logger:warn(
 'clear_teleport_queue function not found!')end end end local function _connect()
 _maid:DoCleaning()if _state.shouldTeleportQueue then _handleTeleportQueue(true)
-end end local function _getModuleInit(moduleResult)return moduleResult.init or
+end end local function _waitForControllersLoaded()local localPlayer=Players.
+LocalPlayer while not localPlayer do RunService.Heartbeat:Wait()localPlayer=
+Players.LocalPlayer end local playerScripts=localPlayer:WaitForChild(
+'PlayerScripts')local controllers=playerScripts:WaitForChild('Controllers')for _
+,name in ipairs(CONTROLLER_NAMES)do controllers:WaitForChild(name)end local
+playerDataController=controllers:FindFirstChild('PlayerDataController')if
+playerDataController and playerDataController:IsA('ModuleScript')then local ok,
+result=pcall(function()return require(playerDataController)end)if ok and result
+and result.WaitUntilLoaded then result:WaitUntilLoaded()end end end
+local function _getModuleInit(moduleResult)return moduleResult.init or
 moduleResult.Init end local function _getModuleCleanup(moduleResult)return
 moduleResult.cleanup or moduleResult.Cleanup end function Client.loadModule(self
 ,name,moduleOrPath)if _modules[name]then _state.logger:warn(
@@ -810,13 +834,14 @@ setSilent(self,isSilent)if _state.isSilent==isSilent then return end _state.
 isSilent=isSilent if _state.shouldTeleportQueue and _state.isRunning then
 _handleTeleportQueue(true)end end function Client.start(self)if _state.isRunning
 then return end _state.isRunning=true _disableAnalyticsPipeline(_state.logger)
-_state.logger:info('Client initializing...')for _,entry in ipairs(MODULES)do
-self:loadModule(entry.name,entry.loader)end _connect()_signals.started:Fire()end
-function Client.destroy(self)if not _state.isRunning then return end _state.
-isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in
-pairs(_modules)do local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn
-then pcall(cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')
-end local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
-Version='1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules
-client.Started=_signals.started client.Stopped=_signals.stopped client.IsSilent=
-_state.isSilent _state.logger=client.Logger return client:start()
+_state.logger:info('Client initializing...')_waitForControllersLoaded()for _,
+entry in ipairs(MODULES)do self:loadModule(entry.name,entry.loader)end _connect(
+)_signals.started:Fire()end function Client.destroy(self)if not _state.isRunning
+then return end _state.isRunning=false _signals.stopped:Fire()_maid:DoCleaning()
+for _,moduleResult in pairs(_modules)do local cleanupFn=(_getModuleCleanup(
+moduleResult))if cleanupFn then pcall(cleanupFn,moduleResult)end end _state.
+logger:info('Client stopped.')end local loggerModule=(Logger)local client=((
+setmetatable({},Client)))client.Version='1.0.0'client.Logger=loggerModule.new(
+'Blossom')client.Modules=_modules client.Started=_signals.started client.Stopped
+=_signals.stopped client.IsSilent=_state.isSilent _state.logger=client.Logger
+return client:start()

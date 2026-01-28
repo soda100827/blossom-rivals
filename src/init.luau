@@ -2,6 +2,8 @@
 
 --// Services
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
 local Logger = require("src/utils/Logger")
@@ -11,6 +13,51 @@ local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal
 --// Constants
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
+local CONTROLLER_NAMES = {
+	"PlayerDataController",
+	"ComplianceController",
+	"FunctionsController",
+	"MiscController",
+	"UserInterfaceController",
+	"MonetizationController",
+	"EnemyController",
+	"CameraController",
+	"MechanicsController",
+	"FighterController",
+	"SpectateController",
+	"TightropeController",
+	"EntityController",
+	"DuelController",
+	"GameComponentsController",
+	"ControlsController",
+	"LeaderboardController",
+	"LobbyController",
+	"QueuePadController",
+	"LightingController",
+	"ShootingRangeController",
+	"CoreGuiController",
+	"MusicController",
+	"MobileController",
+	"ShopController",
+	"ProximityPromptController",
+	"PlayerInteractionController",
+	"DebugController",
+	"MatchmakingController",
+	"ChattingController",
+	"EventController",
+	"PrivateServerController",
+	"TestingController",
+	"ShadyChickenController",
+	"WrapController",
+	"ScavengerHuntController",
+	"SocialController",
+	"FFlagController",
+	"AudioController",
+	"BirthdayController",
+	"ArcadeController",
+	"EmoteController",
+	"SeasonController",
+}
 
 local MODULES: { { name: string, loader: Module } } = {
 	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
@@ -153,6 +200,28 @@ local function _connect()
 	end
 end
 
+local function _waitForControllersLoaded()
+	local localPlayer = Players.LocalPlayer
+	while not localPlayer do
+		RunService.Heartbeat:Wait()
+		localPlayer = Players.LocalPlayer
+	end
+	local playerScripts = localPlayer:WaitForChild("PlayerScripts")
+	local controllers = playerScripts:WaitForChild("Controllers")
+	for _, name in ipairs(CONTROLLER_NAMES) do
+		controllers:WaitForChild(name)
+	end
+	local playerDataController = controllers:FindFirstChild("PlayerDataController")
+	if playerDataController and playerDataController:IsA("ModuleScript") then
+		local ok, result = pcall(function()
+			return require(playerDataController)
+		end)
+		if ok and result and result.WaitUntilLoaded then
+			result:WaitUntilLoaded()
+		end
+	end
+end
+
 local function _getModuleInit(moduleResult: Module)
 	return moduleResult.init or moduleResult.Init
 end
@@ -218,6 +287,7 @@ function Client.start(self: BlossomClient): ()
 
 	_disableAnalyticsPipeline(_state.logger)
 	_state.logger:info("Client initializing...")
+	_waitForControllersLoaded()
 
 	for _, entry in ipairs(MODULES) do
 		self:loadModule(entry.name, entry.loader)

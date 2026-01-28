@@ -15,7 +15,6 @@ local AIMBOT_RENDER_PRIORITY = Enum.RenderPriority.Last.Value
 local MAX_SMOOTHNESS = 100
 local MIN_SMOOTHNESS = 1
 local FOV_CIRCLE_SIDES = 100
-
 --// Types
 export type Aimbot = {
 	init: (self: Aimbot, client: any) -> (),
