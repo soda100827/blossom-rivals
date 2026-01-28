@@ -289,6 +289,17 @@ local function _mount()
 		end,
 	})
 
+	aimbotGroup:AddToggle("AimbotDebug", {
+		Text = "Debug Mode",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setDebug then
+				mod:setDebug(state)
+			end
+		end,
+	})
+
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",

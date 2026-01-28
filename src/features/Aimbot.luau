@@ -23,6 +23,7 @@ export type Aimbot = {
 	setFOVColor: (self: Aimbot, color: Color3) -> (),
 	setSmoothness: (self: Aimbot, value: number) -> (),
 	setTargetPart: (self: Aimbot, partName: string) -> (),
+	setDebug: (self: Aimbot, state: boolean) -> (),
 }
 
 --// Private state
@@ -42,6 +43,7 @@ local _state = {
 		FOVColor = Color3.fromRGB(255, 255, 255),
 		Smoothness = 1,
 		TargetPart = "Head",
+		Debug = false,
 	},
 	target = nil :: Player?,
 	fovCircle = nil :: any,
@@ -204,6 +206,15 @@ local function _aimAt(target: Player)
 	if mousemoverel then
 		mousemoverel(delta.X / mouseDivisor, delta.Y / mouseDivisor)
 	end
+
+	if _state.settings.Debug and _state.client.Logger then
+		_state.client.Logger:info(
+			"Aiming at:",
+			target.Name,
+			"| Dist:",
+			math.floor((targetPosition - camera.CFrame.Position).Magnitude)
+		)
+	end
 end
 
 local function _connect()
@@ -291,6 +302,10 @@ end
 
 function Aimbot.setTargetPart(self: Aimbot, partName: string)
 	_state.settings.TargetPart = partName
+end
+
+function Aimbot.setDebug(self: Aimbot, state: boolean)
+	_state.settings.Debug = state
 end
 
 return Aimbot

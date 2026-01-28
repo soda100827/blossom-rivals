@@ -394,75 +394,78 @@ Workspace=game:GetService('Workspace')local Maid=__DARKLUA_BUNDLE_MODULES.b()
 local Aimbot={}Aimbot.__index=Aimbot local _maid=nil local _state={client=nil,
 settings={Enabled=false,TeamCheck=true,AliveCheck=true,WallCheck=true,ShowFOV=
 false,FOVRadius=100,FOVColor=Color3.fromRGB(255,255,255),Smoothness=1,TargetPart
-='Head'},target=nil,fovCircle=nil}local function _getMouseLocation()return
-UserInputService:GetMouseLocation()end local function _isOnScreen(position)local
-camera=Workspace.CurrentCamera if not camera then return false,Vector2.zero end
-local screenPos,onScreen=camera:WorldToViewportPoint(position)return onScreen,
-Vector2.new(screenPos.X,screenPos.Y)end local function _isVisible(targetPart,
-origin)local params=RaycastParams.new()if Players.LocalPlayer and Players.
-LocalPlayer.Character then params.FilterDescendantsInstances={Players.
-LocalPlayer.Character,Workspace.CurrentCamera}else params.
-FilterDescendantsInstances={Workspace.CurrentCamera}end params.FilterType=Enum.
-RaycastFilterType.Exclude params.IgnoreWater=true local direction=targetPart.
-Position-origin local result=Workspace:Raycast(origin,direction,params)if result
-then return result.Instance:IsDescendantOf((targetPart.Parent))end return true
-end local function _getBestTarget()local camera=Workspace.CurrentCamera local
-localPlayer=Players.LocalPlayer local mousePos=_getMouseLocation()if not camera
-or not localPlayer then return nil end local bestTarget=nil local
-closestDistance=_state.settings.FOVRadius for _,player in ipairs(Players:
-GetPlayers())do if player==localPlayer then continue end if _state.settings.
-TeamCheck and player.Team==localPlayer.Team then continue end local character=
-player.Character if not character then continue end local humanoid=character:
-FindFirstChild('Humanoid')if _state.settings.AliveCheck then if not humanoid or
-not humanoid:IsA('Humanoid')or humanoid.Health<=0 then continue end end local
-targetPart=character:FindFirstChild(_state.settings.TargetPart)if not targetPart
-or not targetPart:IsA('BasePart')then continue end local onScreen,screenPos=
-_isOnScreen(targetPart.Position)if not onScreen then continue end if _state.
-settings.WallCheck then local origin=camera.CFrame.Position if not _isVisible(
-targetPart,origin)then continue end end local distance=(screenPos-mousePos).
-Magnitude if distance<closestDistance then closestDistance=distance bestTarget=
-player end end return bestTarget end local function _updateFOV()if not _state.
-fovCircle then return end _state.fovCircle.Visible=_state.settings.ShowFOV
-_state.fovCircle.Radius=_state.settings.FOVRadius _state.fovCircle.Color=_state.
-settings.FOVColor _state.fovCircle.Position=_getMouseLocation()end
-local function _aimAt(target)local character=target.Character if not character
-then return end local targetPart=character:FindFirstChild(_state.settings.
-TargetPart)if not targetPart or not targetPart:IsA('BasePart')then return end
-local camera=Workspace.CurrentCamera if not camera then return end local
-smoothness=math.clamp(_state.settings.Smoothness,1,100)local isInstant=
-smoothness>=100 local targetPosition=(targetPart).Position local tweenDuration=(
-100-smoothness)/100 if not isInstant then local tweenInfo=TweenInfo.new(
-tweenDuration,Enum.EasingStyle.Sine,Enum.EasingDirection.Out)local goal={CFrame=
-CFrame.lookAt(camera.CFrame.Position,targetPosition)}local tween=TweenService:
-Create(camera,tweenInfo,goal)tween:Play()else camera.CFrame=CFrame.lookAt(camera
-.CFrame.Position,targetPosition)end local _,screenPos=_isOnScreen(targetPosition
-)local mousePos=_getMouseLocation()local delta=screenPos-mousePos local
-mouseDivisor=(100-smoothness)/5+1 local env=(getfenv())local mousemoverel=env.
-mousemoverel or(env.input and env.input.mousemoverel)if mousemoverel then
-mousemoverel(delta.X/mouseDivisor,delta.Y/mouseDivisor)end end local function
-_connect()_maid:DoCleaning()local env=(getfenv())if env.Drawing then local
-circle=env.Drawing.new('Circle')circle.Thickness=1 circle.NumSides=100 circle.
-Filled=false circle.Transparency=1 _state.fovCircle=circle _maid:GiveTask(
-function()if _state.fovCircle then _state.fovCircle:Remove()_state.fovCircle=nil
-end end)end _maid:GiveTask(RunService.RenderStepped:Connect(function()
-_updateFOV()if not _state.settings.Enabled then return end if not
-UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then
-return end local target=_getBestTarget()if target then _aimAt(target)end end))
-end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()
-_connect()end function Aimbot.cleanup(self)_maid:DoCleaning()end function Aimbot
-.toggle(self,state)_state.settings.Enabled=state end function Aimbot.
-setTeamCheck(self,state)_state.settings.TeamCheck=state end function Aimbot.
-setAliveCheck(self,state)_state.settings.AliveCheck=state end function Aimbot.
-setWallCheck(self,state)_state.settings.WallCheck=state end function Aimbot.
-setShowFOV(self,state)_state.settings.ShowFOV=state end function Aimbot.
-setFOVRadius(self,radius)_state.settings.FOVRadius=radius end function Aimbot.
-setFOVColor(self,color)_state.settings.FOVColor=color end function Aimbot.
-setSmoothness(self,value)_state.settings.Smoothness=value end function Aimbot.
-setTargetPart(self,partName)_state.settings.TargetPart=partName end return
-Aimbot end function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES
-.cache.g if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end
-return v.c end end do local function __modImpl()local RunService=game:
-GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+='Head',Debug=false},target=nil,fovCircle=nil}local function _getMouseLocation()
+return UserInputService:GetMouseLocation()end local function _isOnScreen(
+position)local camera=Workspace.CurrentCamera if not camera then return false,
+Vector2.zero end local screenPos,onScreen=camera:WorldToViewportPoint(position)
+return onScreen,Vector2.new(screenPos.X,screenPos.Y)end local function
+_isVisible(targetPart,origin)local params=RaycastParams.new()if Players.
+LocalPlayer and Players.LocalPlayer.Character then params.
+FilterDescendantsInstances={Players.LocalPlayer.Character,Workspace.
+CurrentCamera}else params.FilterDescendantsInstances={Workspace.CurrentCamera}
+end params.FilterType=Enum.RaycastFilterType.Exclude params.IgnoreWater=true
+local direction=targetPart.Position-origin local result=Workspace:Raycast(origin
+,direction,params)if result then return result.Instance:IsDescendantOf((
+targetPart.Parent))end return true end local function _getBestTarget()local
+camera=Workspace.CurrentCamera local localPlayer=Players.LocalPlayer local
+mousePos=_getMouseLocation()if not camera or not localPlayer then return nil end
+local bestTarget=nil local closestDistance=_state.settings.FOVRadius for _,
+player in ipairs(Players:GetPlayers())do if player==localPlayer then continue
+end if _state.settings.TeamCheck and player.Team==localPlayer.Team then continue
+end local character=player.Character if not character then continue end local
+humanoid=character:FindFirstChild('Humanoid')if _state.settings.AliveCheck then
+if not humanoid or not humanoid:IsA('Humanoid')or humanoid.Health<=0 then
+continue end end local targetPart=character:FindFirstChild(_state.settings.
+TargetPart)if not targetPart or not targetPart:IsA('BasePart')then continue end
+local onScreen,screenPos=_isOnScreen(targetPart.Position)if not onScreen then
+continue end if _state.settings.WallCheck then local origin=camera.CFrame.
+Position if not _isVisible(targetPart,origin)then continue end end local
+distance=(screenPos-mousePos).Magnitude if distance<closestDistance then
+closestDistance=distance bestTarget=player end end return bestTarget end
+local function _updateFOV()if not _state.fovCircle then return end _state.
+fovCircle.Visible=_state.settings.ShowFOV _state.fovCircle.Radius=_state.
+settings.FOVRadius _state.fovCircle.Color=_state.settings.FOVColor _state.
+fovCircle.Position=_getMouseLocation()end local function _aimAt(target)local
+character=target.Character if not character then return end local targetPart=
+character:FindFirstChild(_state.settings.TargetPart)if not targetPart or not
+targetPart:IsA('BasePart')then return end local camera=Workspace.CurrentCamera
+if not camera then return end local smoothness=math.clamp(_state.settings.
+Smoothness,1,100)local isInstant=smoothness>=100 local targetPosition=(
+targetPart).Position local tweenDuration=(100-smoothness)/100 if not isInstant
+then local tweenInfo=TweenInfo.new(tweenDuration,Enum.EasingStyle.Sine,Enum.
+EasingDirection.Out)local goal={CFrame=CFrame.lookAt(camera.CFrame.Position,
+targetPosition)}local tween=TweenService:Create(camera,tweenInfo,goal)tween:
+Play()else camera.CFrame=CFrame.lookAt(camera.CFrame.Position,targetPosition)end
+local _,screenPos=_isOnScreen(targetPosition)local mousePos=_getMouseLocation()
+local delta=screenPos-mousePos local mouseDivisor=(100-smoothness)/5+1 local env
+=(getfenv())local mousemoverel=env.mousemoverel or(env.input and env.input.
+mousemoverel)if mousemoverel then mousemoverel(delta.X/mouseDivisor,delta.Y/
+mouseDivisor)end if _state.settings.Debug and _state.client.Logger then _state.
+client.Logger:info('Aiming at:',target.Name,'| Dist:',math.floor((targetPosition
+-camera.CFrame.Position).Magnitude))end end local function _connect()_maid:
+DoCleaning()local env=(getfenv())if env.Drawing then local circle=env.Drawing.
+new('Circle')circle.Thickness=1 circle.NumSides=100 circle.Filled=false circle.
+Transparency=1 _state.fovCircle=circle _maid:GiveTask(function()if _state.
+fovCircle then _state.fovCircle:Remove()_state.fovCircle=nil end end)end _maid:
+GiveTask(RunService.RenderStepped:Connect(function()_updateFOV()if not _state.
+settings.Enabled then return end if not UserInputService:IsMouseButtonPressed(
+Enum.UserInputType.MouseButton2)then return end local target=_getBestTarget()if
+target then _aimAt(target)end end))end function Aimbot.init(self,client)_state.
+client=client _maid=Maid.new()_connect()end function Aimbot.cleanup(self)_maid:
+DoCleaning()end function Aimbot.toggle(self,state)_state.settings.Enabled=state
+end function Aimbot.setTeamCheck(self,state)_state.settings.TeamCheck=state end
+function Aimbot.setAliveCheck(self,state)_state.settings.AliveCheck=state end
+function Aimbot.setWallCheck(self,state)_state.settings.WallCheck=state end
+function Aimbot.setShowFOV(self,state)_state.settings.ShowFOV=state end function
+Aimbot.setFOVRadius(self,radius)_state.settings.FOVRadius=radius end function
+Aimbot.setFOVColor(self,color)_state.settings.FOVColor=color end function Aimbot
+.setSmoothness(self,value)_state.settings.Smoothness=value end function Aimbot.
+setTargetPart(self,partName)_state.settings.TargetPart=partName end function
+Aimbot.setDebug(self,state)_state.settings.Debug=state end return Aimbot end
+function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c
+end end do local function __modImpl()local RunService=game:GetService(
+'RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -533,72 +536,74 @@ and mod.setSmoothness then mod:setSmoothness(value)end end})aimbotGroup:
 AddDropdown('AimbotTargetPart',{Values={'Head','HumanoidRootPart','UpperTorso'},
 Default=1,Multi=false,Text='Target Part',Callback=function(value)local mod=
 _state.client.Modules.Aimbot if mod and mod.setTargetPart then mod:
-setTargetPart(value)end end})local espGroup=tabs.visuals:AddLeftGroupbox('ESP')
-espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.toggle
-then mod:toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(
-state)end end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=
+setTargetPart(value)end end})aimbotGroup:AddToggle('AimbotDebug',{Text=
+'Debug Mode',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Aimbot if mod and mod.setDebug then mod:setDebug(state)end end})local
+espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{
+Text='Visuals (ESP)',Default=false,Callback=function(state)local mod=_state.
+client.Modules.Visuals if mod and mod.toggle then mod:toggle(state)end if mod
+and mod.setEspEnabled then mod:setEspEnabled(state)end end})espGroup:AddToggle(
+'ESPNames',{Text='Name',Default=true,Callback=function(state)local mod=_state.
+client.Modules.Visuals if mod and mod.setShowNames then mod:setShowNames(state)
+end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title=
+'Text Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setTextColor then mod:setTextColor(value)end end}):AddColorPicker(
+'ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title='Name Outline',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setNameOutlineColor then mod:setNameOutlineColor(value)end end})espGroup:
+AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(state)local
+mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then mod:
+setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=Color3.
+new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.client.
+Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(value)end
+end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Weapon Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end
+end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=
 function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowNames then mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor'
-,{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(value)local mod
-=_state.client.Modules.Visuals if mod and mod.setTextColor then mod:
-setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
-Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
-setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'
-,Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals
-if mod and mod.setShowWeapon then mod:setShowWeapon(state)end end}):
-AddColorPicker('ESPWeaponColor',{Default=Color3.new(1,1,1),Title='Weapon Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponColor then mod:setWeaponColor(value)end end}):AddColorPicker(
-'ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title='Weapon Outline',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end end})espGroup:
-AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowDistance then mod:
-setShowDistance(state)end end}):AddColorPicker('ESPDistanceColor',{Default=
-Color3.new(1,1,1),Title='Distance Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setDistanceColor then mod:
-setDistanceColor(value)end end}):AddColorPicker('ESPDistanceOutlineColor',{
-Default=Color3.new(0,0,0),Title='Distance Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setDistanceOutlineColor then
-mod:setDistanceOutlineColor(value)end end})espGroup:AddToggle('ESPBoxes',{Text=
-'Box',Default=true,Callback=function(state)local mod=_state.client.Modules.
-Visuals if mod and mod.setShowBoxes then mod:setShowBoxes(state)end end}):
-AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title='Box Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxColor then mod:setBoxColor(value)end end}):AddColorPicker(
-'ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title='Box Outline',Callback=
+setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
+'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})espGroup:
-AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowSkeleton then mod:
-setShowSkeleton(state)end end}):AddColorPicker('ESPSkeletonColor',{Default=
-Color3.new(1,1,1),Title='Skeleton Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setSkeletonColor then mod:
-setSkeletonColor(value)end end}):AddColorPicker('ESPSkeletonOutlineColor',{
-Default=Color3.new(0,0,0),Title='Skeleton Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setSkeletonOutlineColor then
-mod:setSkeletonOutlineColor(value)end end})espGroup:AddToggle('ESPHealthbar',{
-Text='Healthbar',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.setShowHealthbar then mod:setShowHealthbar(state)
-end end}):AddColorPicker('ESPHealthbarColor',{Default=Color3.new(0,1,0),Title=
-'Health Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarColor then mod:setHealthbarColor(value)end end}):
-AddColorPicker('ESPHealthbarOutlineColor',{Default=Color3.new(0,0,0),Title=
+setDistanceColor then mod:setDistanceColor(value)end end}):AddColorPicker(
+'ESPDistanceOutlineColor',{Default=Color3.new(0,0,0),Title='Distance Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setDistanceOutlineColor then mod:setDistanceOutlineColor(value)end end})espGroup
+:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(state)local mod
+=_state.client.Modules.Visuals if mod and mod.setShowBoxes then mod:
+setShowBoxes(state)end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,
+1,1),Title='Box Color',Callback=function(value)local mod=_state.client.Modules.
+Visuals if mod and mod.setBoxColor then mod:setBoxColor(value)end end}):
+AddColorPicker('ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Box Outline',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})
+espGroup:AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowSkeleton then mod:setShowSkeleton(state)end end}):AddColorPicker(
+'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setSkeletonColor then mod:setSkeletonColor(value)end end}):AddColorPicker(
+'ESPSkeletonOutlineColor',{Default=Color3.new(0,0,0),Title='Skeleton Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setSkeletonOutlineColor then mod:setSkeletonOutlineColor(value)end end})espGroup
+:AddToggle('ESPHealthbar',{Text='Healthbar',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowHealthbar
+then mod:setShowHealthbar(state)end end}):AddColorPicker('ESPHealthbarColor',{
+Default=Color3.new(0,1,0),Title='Health Color',Callback=function(value)local mod
+=_state.client.Modules.Visuals if mod and mod.setHealthbarColor then mod:
+setHealthbarColor(value)end end}):AddColorPicker('ESPHealthbarOutlineColor',{
+Default=Color3.new(0,0,0),Title='Outline Color',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setHealthbarOutlineColor then
+mod:setHealthbarOutlineColor(value)end end})espGroup:AddToggle('ESPHighlight',{
+Text='Highlight',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.setShowHighlight then mod:setShowHighlight(state)
+end end}):AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title=
+'Fill Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setHighlightFill then mod:setHighlightFill(value)end end}):
+AddColorPicker('ESPHighlightOutline',{Default=Color3.new(1,1,1),Title=
 'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarOutlineColor then mod:setHealthbarOutlineColor(value)
-end end})espGroup:AddToggle('ESPHighlight',{Text='Highlight',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowHighlight then mod:setShowHighlight(state)end end}):AddColorPicker(
-'ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightFill then mod:setHighlightFill(value)end end}):AddColorPicker(
-'ESPHighlightOutline',{Default=Color3.new(1,1,1),Title='Outline Color',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
-AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Callback=
-function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+if mod and mod.setHighlightOutline then mod:setHighlightOutline(value)end end})
+espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
+Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',
