@@ -618,16 +618,29 @@ _getClearTeleportQueue()if clearTeleportQueue then _state.logger:info(
 'Clearing teleport queue...')clearTeleportQueue()else _state.logger:warn(
 'clear_teleport_queue function not found!')end end end local function _connect()
 _maid:DoCleaning()if _state.shouldTeleportQueue then _handleTeleportQueue(true)
-end end local function _waitForClientLoaded()local localPlayer=Players.
-LocalPlayer while not localPlayer do RunService.Heartbeat:Wait()localPlayer=
-Players.LocalPlayer end local playerScripts=localPlayer:WaitForChild(
-'PlayerScripts')local clientModule=playerScripts:WaitForChild(CLIENT_MODULE_NAME
-)if not clientModule:IsA('ModuleScript')then return end local ok,client=pcall(
-function()local requireAny=require return requireAny(clientModule)end)if not ok
-or type(client)~='table'then return end _state.logger:info(
-'Waiting for Client controllers to load...')while true do local allLoaded=true
-for _,name in ipairs(CONTROLLER_NAMES)do if client[name]==nil then allLoaded=
-false break end end if allLoaded then break end RunService.Heartbeat:Wait()end
+end end local function _waitForClientLoaded()_state.logger:info(
+'Debug: _waitForClientLoaded started')local localPlayer=Players.LocalPlayer
+while not localPlayer do _state.logger:info('Debug: Waiting for LocalPlayer...')
+RunService.Heartbeat:Wait()localPlayer=Players.LocalPlayer end _state.logger:
+info('Debug: LocalPlayer found')local playerScripts=localPlayer:WaitForChild(
+'PlayerScripts')_state.logger:info('Debug: PlayerScripts found')local
+clientModule while true do clientModule=playerScripts:FindFirstChild(
+CLIENT_MODULE_NAME)if clientModule and clientModule:IsA('ModuleScript')then
+break end _state.logger:info('Debug: Waiting for Client module script...')task.
+wait(1)end _state.logger:info('Debug: Client module found')local client while
+true do local ok,result=pcall(function()local requireAny=require return
+requireAny(clientModule)end)if ok and type(result)=='table'then client=result
+break else _state.logger:warn(
+[[Debug: Failed to require Client module or invalid result. Retrying...]],result
+)task.wait(1)end end _state.logger:info(
+'Debug: Client module required successfully')_state.logger:info(
+'Debug: Waiting for Client controllers to populate...')local lastLogTime=0 while
+true do local allLoaded=true local missingCount=0 local firstMissing=nil for _,
+name in ipairs(CONTROLLER_NAMES)do if client[name]==nil then allLoaded=false
+missingCount+=1 if not firstMissing then firstMissing=name end end end if
+allLoaded then break end if tick()-lastLogTime>2 then _state.logger:info(string.
+format('Debug: Still waiting... Missing %d controllers (e.g., %s)',missingCount,
+tostring(firstMissing)))lastLogTime=tick()end RunService.Heartbeat:Wait()end
 _state.logger:info('Client controllers loaded.')end local function
 _getModuleInit(moduleResult)return moduleResult.init or moduleResult.Init end
 local function _getModuleCleanup(moduleResult)return moduleResult.cleanup or
