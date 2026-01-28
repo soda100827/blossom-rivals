@@ -626,31 +626,42 @@ info('Debug: LocalPlayer found')local playerScripts=localPlayer:WaitForChild(
 'PlayerScripts')_state.logger:info('Debug: PlayerScripts found')local
 clientModule while true do clientModule=playerScripts:FindFirstChild(
 CLIENT_MODULE_NAME)if clientModule and clientModule:IsA('ModuleScript')then
-break end _state.logger:info('Debug: Waiting for Client module script...')task.
-wait(1)end _state.logger:info('Debug: Client module found')local client while
-true do local ok,result=pcall(function()local requireAny=require return
-requireAny(clientModule)end)if ok and type(result)=='table'then client=result
-break else _state.logger:warn(
-[[Debug: Failed to require Client module or invalid result. Retrying...]],result
-)task.wait(1)end end _state.logger:info(
-'Debug: Client module required successfully')_state.logger:info(
-'Debug: Waiting for Client controllers to populate...')local lastLogTime=0 while
-true do local allLoaded=true local missingCount=0 local firstMissing=nil for _,
-name in ipairs(CONTROLLER_NAMES)do if client[name]==nil then allLoaded=false
-missingCount+=1 if not firstMissing then firstMissing=name end end end if
-allLoaded then break end if tick()-lastLogTime>2 then _state.logger:info(string.
-format('Debug: Still waiting... Missing %d controllers (e.g., %s)',missingCount,
-tostring(firstMissing)))lastLogTime=tick()end RunService.Heartbeat:Wait()end
-_state.logger:info('Client controllers loaded.')end local function
-_getModuleInit(moduleResult)return moduleResult.init or moduleResult.Init end
-local function _getModuleCleanup(moduleResult)return moduleResult.cleanup or
-moduleResult.Cleanup end function Client.loadModule(self,name,moduleOrPath)if
-_modules[name]then _state.logger:warn('Module already loaded:',name)return end
-local loader=function()if type(moduleOrPath)=='string'then local dynamicRequire=
-require return dynamicRequire(moduleOrPath)end return moduleOrPath end local
-success,result=pcall(loader)if success then local moduleResult=result _modules[
-name]=moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then
-task.spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
+break end _state.logger:info(
+'Debug: Waiting for Client module script to exist...')task.wait(1)end _state.
+logger:info('Debug: Client module script found')local controllersFolder while
+true do controllersFolder=playerScripts:FindFirstChild('Controllers')if
+controllersFolder then break end _state.logger:info(
+'Debug: Waiting for Controllers folder...')task.wait(1)end local
+getLoadedModules=((getfenv(0))).getloadedmodules or function()return nil end
+local function isModuleLoaded(mod)local loaded=getLoadedModules()if not loaded
+then return true end for _,v in ipairs(loaded)do if v==mod then return true end
+end return false end _state.logger:info(
+'Debug: Waiting for Client to require all controllers...')local lastLogTime=0
+while true do local allLoaded=true local missingCount=0 local firstMissing=nil
+local waitingForLoad=false if getLoadedModules()and not isModuleLoaded(
+clientModule)then allLoaded=false waitingForLoad=true if tick()-lastLogTime>2
+then _state.logger:info(
+'Debug: Waiting for game to require the Client module...')lastLogTime=tick()end
+else for _,name in ipairs(CONTROLLER_NAMES)do local controllerMod=
+controllersFolder:FindFirstChild(name)if not controllerMod then allLoaded=false
+missingCount+=1 if not firstMissing then firstMissing=name..' (Not Found)'end
+elseif getLoadedModules()and not isModuleLoaded(controllerMod)then allLoaded=
+false waitingForLoad=true if not firstMissing then firstMissing=name..
+' (Not Loaded)'end end end end if allLoaded then break end if tick()-lastLogTime
+>2 then local status=waitingForLoad and'Waiting for require...'or
+'Waiting for instance...'_state.logger:info(string.format(
+'Debug: Still waiting... Missing/Unloaded: %s [%s]',tostring(firstMissing),
+status))lastLogTime=tick()end task.wait(0.5)end _state.logger:info(
+'Client controllers confirmed loaded by game.')end local function _getModuleInit
+(moduleResult)return moduleResult.init or moduleResult.Init end local function
+_getModuleCleanup(moduleResult)return moduleResult.cleanup or moduleResult.
+Cleanup end function Client.loadModule(self,name,moduleOrPath)if _modules[name]
+then _state.logger:warn('Module already loaded:',name)return end local loader=
+function()if type(moduleOrPath)=='string'then local dynamicRequire=require
+return dynamicRequire(moduleOrPath)end return moduleOrPath end local success,
+result=pcall(loader)if success then local moduleResult=result _modules[name]=
+moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then task.
+spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
 'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
 result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
 shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(

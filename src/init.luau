@@ -214,47 +214,80 @@ local function _waitForClientLoaded()
 	local playerScripts = localPlayer:WaitForChild("PlayerScripts")
 	_state.logger:info("Debug: PlayerScripts found")
 
+	-- Wait for Client Module
 	local clientModule
 	while true do
 		clientModule = playerScripts:FindFirstChild(CLIENT_MODULE_NAME)
 		if clientModule and clientModule:IsA("ModuleScript") then
 			break
 		end
-		_state.logger:info("Debug: Waiting for Client module script...")
+		_state.logger:info("Debug: Waiting for Client module script to exist...")
 		task.wait(1)
 	end
-	_state.logger:info("Debug: Client module found")
+	_state.logger:info("Debug: Client module script found")
 
-	local client
+	-- Wait for Controllers folder
+	local controllersFolder
 	while true do
-		local ok, result = pcall(function()
-			local requireAny = require :: any
-			return requireAny(clientModule)
-		end)
-
-		if ok and type(result) == "table" then
-			client = result
+		controllersFolder = playerScripts:FindFirstChild("Controllers")
+		if controllersFolder then
 			break
-		else
-			_state.logger:warn("Debug: Failed to require Client module or invalid result. Retrying...", result)
-			task.wait(1)
 		end
+		_state.logger:info("Debug: Waiting for Controllers folder...")
+		task.wait(1)
 	end
-	_state.logger:info("Debug: Client module required successfully")
 
-	_state.logger:info("Debug: Waiting for Client controllers to populate...")
+	-- Function to check if a module is loaded via getloadedmodules if available
+	local getLoadedModules = (getfenv(0) :: any).getloadedmodules or function()
+		return nil
+	end
+	local function isModuleLoaded(mod: ModuleScript): boolean
+		local loaded = getLoadedModules()
+		if not loaded then
+			return true
+		end -- Fallback: if not supported, assume loaded if exists (or we can't check)
+
+		for _, v in ipairs(loaded) do
+			if v == mod then
+				return true
+			end
+		end
+		return false
+	end
+
+	_state.logger:info("Debug: Waiting for Client to require all controllers...")
 	local lastLogTime = 0
+
 	while true do
 		local allLoaded = true
 		local missingCount = 0
 		local firstMissing = nil
+		local waitingForLoad = false
 
-		for _, name in ipairs(CONTROLLER_NAMES) do
-			if client[name] == nil then
-				allLoaded = false
-				missingCount += 1
-				if not firstMissing then
-					firstMissing = name
+		-- First, check if Client module itself is loaded (required by game)
+		if getLoadedModules() and not isModuleLoaded(clientModule) then
+			allLoaded = false
+			waitingForLoad = true
+			if tick() - lastLogTime > 2 then
+				_state.logger:info("Debug: Waiting for game to require the Client module...")
+				lastLogTime = tick()
+			end
+		else
+			-- Check controllers
+			for _, name in ipairs(CONTROLLER_NAMES) do
+				local controllerMod = controllersFolder:FindFirstChild(name)
+				if not controllerMod then
+					allLoaded = false
+					missingCount += 1
+					if not firstMissing then
+						firstMissing = name .. " (Not Found)"
+					end
+				elseif getLoadedModules() and not isModuleLoaded(controllerMod :: ModuleScript) then
+					allLoaded = false
+					waitingForLoad = true
+					if not firstMissing then
+						firstMissing = name .. " (Not Loaded)"
+					end
 				end
 			end
 		end
@@ -264,19 +297,16 @@ local function _waitForClientLoaded()
 		end
 
 		if tick() - lastLogTime > 2 then
+			local status = waitingForLoad and "Waiting for require..." or "Waiting for instance..."
 			_state.logger:info(
-				string.format(
-					"Debug: Still waiting... Missing %d controllers (e.g., %s)",
-					missingCount,
-					tostring(firstMissing)
-				)
+				string.format("Debug: Still waiting... Missing/Unloaded: %s [%s]", tostring(firstMissing), status)
 			)
 			lastLogTime = tick()
 		end
 
-		RunService.Heartbeat:Wait()
+		task.wait(0.5)
 	end
-	_state.logger:info("Client controllers loaded.")
+	_state.logger:info("Client controllers confirmed loaded by game.")
 end
 
 local function _getModuleInit(moduleResult: Module)
