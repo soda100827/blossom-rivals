@@ -512,9 +512,10 @@ local function _aimAt(target,deltaTime)local character=target.Character if not
 character then return end local targetPart=character:FindFirstChild(_state.
 settings.targetPart)if not targetPart or not targetPart:IsA('BasePart')then
 return end local camera=Workspace.CurrentCamera if not camera then return end
-local targetPosition=(targetPart).Position _setAutoRotateOverride(true)
-_applyCharacterAim(targetPosition)local controller=_getCameraController()if
-controller then _applyCameraControllerRotation(targetPosition)else
+local targetPosition=(targetPart).Position local controller=
+_getCameraController()if controller then _setAutoRotateOverride(false)
+_setMouseSensitivityOverride(false)_applyCameraControllerRotation(targetPosition
+)return else _setAutoRotateOverride(true)_applyCharacterAim(targetPosition)
 _setMouseSensitivityOverride(true)_applyCameraAim(camera,targetPosition,
 deltaTime)_applyMouseAim(camera,targetPosition)end if _state.settings.isDebug
 and _state.client.Logger then _state.client.Logger:info('Aiming at:',target.Name
