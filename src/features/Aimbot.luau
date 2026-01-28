@@ -1,6 +1,7 @@
 --!strict
 
 --// Services
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -57,7 +58,16 @@ local _signals = {}
 
 --// Private helpers
 local function _getMouseLocation(): Vector2
-	return UserInputService:GetMouseLocation()
+	local mousePos = UserInputService:GetMouseLocation()
+	local inset = GuiService:GetGuiInset()
+	return mousePos - Vector2.new(inset.X, inset.Y)
+end
+
+local function _getAimPosition(camera: Camera): Vector2
+	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
+		return camera.ViewportSize / 2
+	end
+	return _getMouseLocation()
 end
 
 local function _isOnScreen(position: Vector3): (boolean, Vector2)
@@ -94,7 +104,7 @@ end
 local function _getBestTarget(): Player?
 	local camera = Workspace.CurrentCamera
 	local localPlayer = Players.LocalPlayer
-	local mousePos = _getMouseLocation()
+	local mousePos = camera and _getAimPosition(camera) or Vector2.zero
 
 	if not camera or not localPlayer then
 		return nil
@@ -155,41 +165,21 @@ local function _updateFOV()
 		return
 	end
 
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return
+	end
+
 	_state.fovCircle.Visible = _state.settings.shouldShowFov
 	_state.fovCircle.Radius = _state.settings.fovRadius
 	_state.fovCircle.Color = _state.settings.fovColor
-	_state.fovCircle.Position = _getMouseLocation()
-end
-
-local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTime: number)
-	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
-	local isInstant = smoothness >= MAX_SMOOTHNESS
-	local targetCFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
-
-	if isInstant then
-		camera.CFrame = targetCFrame
-		return
-	end
-
-	local duration = (MAX_SMOOTHNESS - smoothness) / MAX_SMOOTHNESS
-	if duration <= 0 then
-		camera.CFrame = targetCFrame
-		return
-	end
-
-	local alpha = math.clamp(deltaTime / duration, 0, 1)
-	camera.CFrame = camera.CFrame:Lerp(targetCFrame, alpha)
+	_state.fovCircle.Position = _getAimPosition(camera)
 end
 
 local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
-	local mouseBehavior = UserInputService.MouseBehavior
-	if mouseBehavior == Enum.MouseBehavior.LockCenter then
-		return
-	end
-
 	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
 	local _, screenPos = _isOnScreen(targetPosition)
-	local mousePos = _getMouseLocation()
+	local mousePos = _getAimPosition(camera)
 	local delta = screenPos - mousePos
 
 	local mouseDivisor = (MAX_SMOOTHNESS - smoothness) / 5 + 1
@@ -202,7 +192,7 @@ local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 	end
 end
 
-local function _aimAt(target: Player, deltaTime: number)
+local function _aimAt(target: Player)
 	local character = target.Character
 	if not character then
 		return
@@ -219,7 +209,6 @@ local function _aimAt(target: Player, deltaTime: number)
 	end
 
 	local targetPosition = (targetPart :: BasePart).Position
-	_applyCameraAim(camera, targetPosition, deltaTime)
 	_applyMouseAim(camera, targetPosition)
 
 	if _state.settings.isDebug and _state.client.Logger then
@@ -266,7 +255,7 @@ local function _connect()
 
 		local target = _getBestTarget()
 		if target then
-			_aimAt(target, deltaTime)
+			_aimAt(target)
 		end
 	end)
 
