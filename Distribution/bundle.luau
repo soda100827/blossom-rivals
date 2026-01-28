@@ -392,17 +392,18 @@ Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
-playerControls=nil}local _signals={}local function _getKeybindState(keybind)if
-not keybind then return false end if keybind.GetState then return keybind:
-GetState()end return keybind.Value==true end local function
-_updatePlayerControls()if not _state.playerControls then return end for _,
-control in ipairs(_state.playerControls)do local gate=control.toggle and control
-.toggle.Value==true local active=false if gate then if control.keybind then
-active=_getKeybindState(control.keybind)else active=true end end if control.last
-~=active then control.last=active control.setter(active)end end end
-local function _httpGet(url)return(game):HttpGet(url)end local function
-_loadRemote(path,logger)local source=_httpGet(REPO_URL..path)local chunk,err=
-loadstring(source)if not chunk then if logger then logger:error(
+playerControls=nil}local _signals={}local function _updatePlayerControls()if not
+_state.playerControls then return end local getfenvAny=getfenv local env=(
+getfenvAny(0))local getgenvFunc=env.getgenv local toggles=(getgenvFunc and
+getgenvFunc().Toggles)or _G.Toggles local options=(getgenvFunc and getgenvFunc()
+.Options)or _G.Options for _,control in ipairs(_state.playerControls)do local
+toggle=toggles and toggles[control.toggleId]local gate=toggle and toggle.Value==
+true local active=false if gate then local keybind=options and options[control.
+keybindId]if keybind and keybind.GetState then active=keybind:GetState()else
+active=false end end if control.last~=active then control.last=active control.
+setter(active)end end end local function _httpGet(url)return(game):HttpGet(url)
+end local function _loadRemote(path,logger)local source=_httpGet(REPO_URL..path)
+local chunk,err=loadstring(source)if not chunk then if logger then logger:error(
 'UI load failed:',err)end error('UI load failed: '..tostring(err))end return
 chunk()end local function _setNotifyMuted(library,shouldMute)if shouldMute then
 library.Notify=library.Notify or function()end library._blossomNotify=library.
@@ -515,54 +516,53 @@ themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
 BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local
 playerGroup=tabs.misc:AddLeftGroupbox('Player')local playerFlyToggle=playerGroup
 :AddToggle('PlayerFly',{Text='Fly',Default=false,Callback=function(state)
-_updatePlayerControls()end})local playerFlyKeybind=playerFlyToggle:AddKeyPicker(
-'PlayerFlyKeybind',{Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=
-false,Callback=function()_updatePlayerControls()end})playerGroup:AddSlider(
-'PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Callback=
-function(value)local mod=_state.client.Modules.Player if mod and mod.setFlySpeed
-then mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:
-AddToggle('PlayerNoclip',{Text='Noclip',Default=false,Callback=function(state)
-_updatePlayerControls()end})local playerNoclipKeybind=playerNoclipToggle:
-AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind'
-,SyncToggleState=false,Callback=function()_updatePlayerControls()end})local
+_updatePlayerControls()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
+Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=false,Callback=
+function()_updatePlayerControls()end})playerGroup:AddSlider('PlayerFlySpeed',{
+Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Callback=function(value)
+local mod=_state.client.Modules.Player if mod and mod.setFlySpeed then mod:
+setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:AddToggle(
+'PlayerNoclip',{Text='Noclip',Default=false,Callback=function(state)
+_updatePlayerControls()end})playerNoclipToggle:AddKeyPicker(
+'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',
+SyncToggleState=false,Callback=function()_updatePlayerControls()end})local
 playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
 'Walk Speed',Default=false,Callback=function(state)_updatePlayerControls()end})
-local playerWalkSpeedKeybind=playerWalkSpeedToggle:AddKeyPicker(
-'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed Keybind',
-SyncToggleState=false,Callback=function()_updatePlayerControls()end})playerGroup
-:AddSlider('PlayerWalkSpeed',{Text='Walk Speed',Default=16,Min=0,Max=200,
-Rounding=0,Callback=function(value)local mod=_state.client.Modules.Player if mod
-and mod.setWalkSpeed then mod:setWalkSpeed(value)end end})local
-playerJumpPowerToggle=playerGroup:AddToggle('PlayerJumpPowerEnabled',{Text=
-'Jump Power',Default=false,Callback=function(state)_updatePlayerControls()end})
-local playerJumpPowerKeybind=playerJumpPowerToggle:AddKeyPicker(
+playerWalkSpeedToggle:AddKeyPicker('PlayerWalkSpeedKeybind',{Default='T',NoUI=
+false,Text='Walk Speed Keybind',SyncToggleState=false,Callback=function()
+_updatePlayerControls()end})playerGroup:AddSlider('PlayerWalkSpeed',{Text=
+'Walk Speed',Default=16,Min=0,Max=200,Rounding=0,Callback=function(value)local
+mod=_state.client.Modules.Player if mod and mod.setWalkSpeed then mod:
+setWalkSpeed(value)end end})local playerJumpPowerToggle=playerGroup:AddToggle(
+'PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,Callback=function(
+state)_updatePlayerControls()end})playerJumpPowerToggle:AddKeyPicker(
 'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',
 SyncToggleState=false,Callback=function()_updatePlayerControls()end})playerGroup
 :AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=200,
 Rounding=0,Callback=function(value)local mod=_state.client.Modules.Player if mod
 and mod.setJumpPower then mod:setJumpPower(value)end end})_state.playerControls=
-{{toggle=playerFlyToggle,keybind=playerFlyKeybind,last=nil,setter=function(
+{{toggleId='PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(
 active)local mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then
-mod:setFlyEnabled(active)end end},{toggle=playerNoclipToggle,keybind=
-playerNoclipKeybind,last=nil,setter=function(active)local mod=_state.client.
+mod:setFlyEnabled(active)end end},{toggleId='PlayerNoclip',keybindId=
+'PlayerNoclipKeybind',last=nil,setter=function(active)local mod=_state.client.
 Modules.Player if mod and mod.setNoclipEnabled then mod:setNoclipEnabled(active)
-end end},{toggle=playerWalkSpeedToggle,keybind=playerWalkSpeedKeybind,last=nil,
+end end},{toggleId='PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',
+last=nil,setter=function(active)local mod=_state.client.Modules.Player if mod
+and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{
+toggleId='PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,
 setter=function(active)local mod=_state.client.Modules.Player if mod and mod.
-setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{toggle=
-playerJumpPowerToggle,keybind=playerJumpPowerKeybind,last=nil,setter=function(
-active)local mod=_state.client.Modules.Player if mod and mod.setJumpPowerEnabled
-then mod:setJumpPowerEnabled(active)end end}}_updatePlayerControls()local
-miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:AddToggle(
-'TeleportQueue',{Text='Auto Load',Default=false,Callback=function(enabled)_state
-.client:setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
-'Silent Mode',Default=false,Callback=function(enabled)_setNotifyMuted(library,
-enabled)_state.client:setSilent(enabled)end})_runAutoload(library,saveManager,
-false)logger:info('UI mounted successfully')end function Interface.init(self,
-client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
-_connect()_mount()end function Interface.cleanup(self)_maid:DoCleaning()if
-_state.library then _state.library:Unload()end _state.isMounted=false end return
-Interface end function __DARKLUA_BUNDLE_MODULES.g()local v=
-__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end}}
+_updatePlayerControls()local miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')
+miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=
+function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
+AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
+enabled)_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
+_runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
+function Interface.init(self,client)_state.client=client _state.logger=client.
+Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
+_maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
+isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.g()
+local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end end local
 ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=

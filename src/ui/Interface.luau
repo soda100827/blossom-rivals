@@ -32,28 +32,25 @@ local _state = {
 local _signals = {}
 
 --// Private helpers
-local function _getKeybindState(keybind: any): boolean
-	if not keybind then
-		return false
-	end
-	if keybind.GetState then
-		return keybind:GetState()
-	end
-	return keybind.Value == true
-end
-
 local function _updatePlayerControls()
 	if not _state.playerControls then
 		return
 	end
+	local getfenvAny = getfenv :: any
+	local env = getfenvAny(0) :: any
+	local getgenvFunc = env.getgenv
+	local toggles = (getgenvFunc and getgenvFunc().Toggles) or _G.Toggles
+	local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
 	for _, control in ipairs(_state.playerControls) do
-		local gate = control.toggle and control.toggle.Value == true
+		local toggle = toggles and toggles[control.toggleId]
+		local gate = toggle and toggle.Value == true
 		local active = false
 		if gate then
-			if control.keybind then
-				active = _getKeybindState(control.keybind)
+			local keybind = options and options[control.keybindId]
+			if keybind and keybind.GetState then
+				active = keybind:GetState()
 			else
-				active = true
+				active = false
 			end
 		end
 		if control.last ~= active then
@@ -498,7 +495,7 @@ local function _mount()
 			_updatePlayerControls()
 		end,
 	})
-	local playerFlyKeybind = playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
+	playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
 		Default = "F",
 		NoUI = false,
 		Text = "Fly Keybind",
@@ -529,7 +526,7 @@ local function _mount()
 			_updatePlayerControls()
 		end,
 	})
-	local playerNoclipKeybind = playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
+	playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
 		Default = "N",
 		NoUI = false,
 		Text = "Noclip Keybind",
@@ -546,7 +543,7 @@ local function _mount()
 			_updatePlayerControls()
 		end,
 	})
-	local playerWalkSpeedKeybind = playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
+	playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
 		Default = "T",
 		NoUI = false,
 		Text = "Walk Speed Keybind",
@@ -577,7 +574,7 @@ local function _mount()
 			_updatePlayerControls()
 		end,
 	})
-	local playerJumpPowerKeybind = playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
+	playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
 		Default = "Y",
 		NoUI = false,
 		Text = "Jump Power Keybind",
@@ -603,8 +600,8 @@ local function _mount()
 
 	_state.playerControls = {
 		{
-			toggle = playerFlyToggle,
-			keybind = playerFlyKeybind,
+			toggleId = "PlayerFly",
+			keybindId = "PlayerFlyKeybind",
 			last = nil,
 			setter = function(active)
 				local mod = _state.client.Modules.Player
@@ -614,8 +611,8 @@ local function _mount()
 			end,
 		},
 		{
-			toggle = playerNoclipToggle,
-			keybind = playerNoclipKeybind,
+			toggleId = "PlayerNoclip",
+			keybindId = "PlayerNoclipKeybind",
 			last = nil,
 			setter = function(active)
 				local mod = _state.client.Modules.Player
@@ -625,8 +622,8 @@ local function _mount()
 			end,
 		},
 		{
-			toggle = playerWalkSpeedToggle,
-			keybind = playerWalkSpeedKeybind,
+			toggleId = "PlayerWalkSpeedEnabled",
+			keybindId = "PlayerWalkSpeedKeybind",
 			last = nil,
 			setter = function(active)
 				local mod = _state.client.Modules.Player
@@ -636,8 +633,8 @@ local function _mount()
 			end,
 		},
 		{
-			toggle = playerJumpPowerToggle,
-			keybind = playerJumpPowerKeybind,
+			toggleId = "PlayerJumpPowerEnabled",
+			keybindId = "PlayerJumpPowerKeybind",
 			last = nil,
 			setter = function(active)
 				local mod = _state.client.Modules.Player
