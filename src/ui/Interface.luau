@@ -468,25 +468,7 @@ local function _mount()
 		Default = "F",
 		NoUI = false,
 		Text = "Fly Keybind",
-		Mode = "Toggle",
-		Callback = function(state)
-			local getfenvAny = getfenv :: any
-			local env = getfenvAny(0) :: any
-			local getgenvFunc = env.getgenv
-			local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
-			local toggle = options and options.PlayerFly
-			if not toggle then
-				return
-			end
-			if not toggle.Value and state then
-				return
-			end
-			if toggle.SetValue then
-				toggle:SetValue(state)
-			else
-				toggle.Value = state
-			end
-		end,
+		SyncToggleState = true,
 	})
 
 	playerGroup:AddSlider("PlayerFlySpeed", {
@@ -517,25 +499,7 @@ local function _mount()
 		Default = "N",
 		NoUI = false,
 		Text = "Noclip Keybind",
-		Mode = "Toggle",
-		Callback = function(state)
-			local getfenvAny = getfenv :: any
-			local env = getfenvAny(0) :: any
-			local getgenvFunc = env.getgenv
-			local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
-			local toggle = options and options.PlayerNoclip
-			if not toggle then
-				return
-			end
-			if not toggle.Value and state then
-				return
-			end
-			if toggle.SetValue then
-				toggle:SetValue(state)
-			else
-				toggle.Value = state
-			end
-		end,
+		SyncToggleState = true,
 	})
 
 	local playerWalkSpeedToggle = playerGroup:AddToggle("PlayerWalkSpeedEnabled", {
@@ -552,25 +516,7 @@ local function _mount()
 		Default = "T",
 		NoUI = false,
 		Text = "Walk Speed Keybind",
-		Mode = "Toggle",
-		Callback = function(state)
-			local getfenvAny = getfenv :: any
-			local env = getfenvAny(0) :: any
-			local getgenvFunc = env.getgenv
-			local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
-			local toggle = options and options.PlayerWalkSpeedEnabled
-			if not toggle then
-				return
-			end
-			if not toggle.Value and state then
-				return
-			end
-			if toggle.SetValue then
-				toggle:SetValue(state)
-			else
-				toggle.Value = state
-			end
-		end,
+		SyncToggleState = true,
 	})
 
 	playerGroup:AddSlider("PlayerWalkSpeed", {
@@ -601,25 +547,7 @@ local function _mount()
 		Default = "Y",
 		NoUI = false,
 		Text = "Jump Power Keybind",
-		Mode = "Toggle",
-		Callback = function(state)
-			local getfenvAny = getfenv :: any
-			local env = getfenvAny(0) :: any
-			local getgenvFunc = env.getgenv
-			local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
-			local toggle = options and options.PlayerJumpPowerEnabled
-			if not toggle then
-				return
-			end
-			if not toggle.Value and state then
-				return
-			end
-			if toggle.SetValue then
-				toggle:SetValue(state)
-			else
-				toggle.Value = state
-			end
-		end,
+		SyncToggleState = true,
 	})
 
 	playerGroup:AddSlider("PlayerJumpPower", {

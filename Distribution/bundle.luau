@@ -506,54 +506,35 @@ playerGroup=tabs.misc:AddLeftGroupbox('Player')local playerFlyToggle=playerGroup
 :AddToggle('PlayerFly',{Text='Fly',Default=false,Callback=function(state)local
 mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then mod:
 setFlyEnabled(state)end end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
-Default='F',NoUI=false,Text='Fly Keybind',Mode='Toggle',Callback=function(state)
-local getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv
-local options=(getgenvFunc and getgenvFunc().Options)or _G.Options local toggle=
-options and options.PlayerFly if not toggle then return end if not toggle.Value
-and state then return end if toggle.SetValue then toggle:SetValue(state)else
-toggle.Value=state end end})playerGroup:AddSlider('PlayerFlySpeed',{Text=
-'Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Callback=function(value)local
-mod=_state.client.Modules.Player if mod and mod.setFlySpeed then mod:
-setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:AddToggle(
-'PlayerNoclip',{Text='Noclip',Default=false,Callback=function(state)local mod=
-_state.client.Modules.Player if mod and mod.setNoclipEnabled then mod:
-setNoclipEnabled(state)end end})playerNoclipToggle:AddKeyPicker(
-'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',Mode=
-'Toggle',Callback=function(state)local getfenvAny=getfenv local env=(getfenvAny(
-0))local getgenvFunc=env.getgenv local options=(getgenvFunc and getgenvFunc().
-Options)or _G.Options local toggle=options and options.PlayerNoclip if not
-toggle then return end if not toggle.Value and state then return end if toggle.
-SetValue then toggle:SetValue(state)else toggle.Value=state end end})local
-playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
-'Walk Speed',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Player if mod and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(
-state)end end})playerWalkSpeedToggle:AddKeyPicker('PlayerWalkSpeedKeybind',{
-Default='T',NoUI=false,Text='Walk Speed Keybind',Mode='Toggle',Callback=function
-(state)local getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.
-getgenv local options=(getgenvFunc and getgenvFunc().Options)or _G.Options local
-toggle=options and options.PlayerWalkSpeedEnabled if not toggle then return end
-if not toggle.Value and state then return end if toggle.SetValue then toggle:
-SetValue(state)else toggle.Value=state end end})playerGroup:AddSlider(
-'PlayerWalkSpeed',{Text='Walk Speed',Default=16,Min=0,Max=200,Rounding=0,
-Callback=function(value)local mod=_state.client.Modules.Player if mod and mod.
-setWalkSpeed then mod:setWalkSpeed(value)end end})local playerJumpPowerToggle=
-playerGroup:AddToggle('PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Player if mod and mod.
-setJumpPowerEnabled then mod:setJumpPowerEnabled(state)end end})
-playerJumpPowerToggle:AddKeyPicker('PlayerJumpPowerKeybind',{Default='Y',NoUI=
-false,Text='Jump Power Keybind',Mode='Toggle',Callback=function(state)local
-getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
-options=(getgenvFunc and getgenvFunc().Options)or _G.Options local toggle=
-options and options.PlayerJumpPowerEnabled if not toggle then return end if not
-toggle.Value and state then return end if toggle.SetValue then toggle:SetValue(
-state)else toggle.Value=state end end})playerGroup:AddSlider('PlayerJumpPower',{
-Text='Jump Power',Default=50,Min=0,Max=200,Rounding=0,Callback=function(value)
-local mod=_state.client.Modules.Player if mod and mod.setJumpPower then mod:
-setJumpPower(value)end end})local miscGroup=tabs.misc:AddLeftGroupbox(
-'Auto Load')miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,
-Callback=function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
-AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
-enabled)_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
+Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=true})playerGroup:
+AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0
+,Callback=function(value)local mod=_state.client.Modules.Player if mod and mod.
+setFlySpeed then mod:setFlySpeed(value)end end})local playerNoclipToggle=
+playerGroup:AddToggle('PlayerNoclip',{Text='Noclip',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Player if mod and mod.
+setNoclipEnabled then mod:setNoclipEnabled(state)end end})playerNoclipToggle:
+AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind'
+,SyncToggleState=true})local playerWalkSpeedToggle=playerGroup:AddToggle(
+'PlayerWalkSpeedEnabled',{Text='Walk Speed',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Player if mod and mod.setWalkSpeedEnabled
+then mod:setWalkSpeedEnabled(state)end end})playerWalkSpeedToggle:AddKeyPicker(
+'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed Keybind',
+SyncToggleState=true})playerGroup:AddSlider('PlayerWalkSpeed',{Text='Walk Speed'
+,Default=16,Min=0,Max=200,Rounding=0,Callback=function(value)local mod=_state.
+client.Modules.Player if mod and mod.setWalkSpeed then mod:setWalkSpeed(value)
+end end})local playerJumpPowerToggle=playerGroup:AddToggle(
+'PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Player if mod and mod.setJumpPowerEnabled
+then mod:setJumpPowerEnabled(state)end end})playerJumpPowerToggle:AddKeyPicker(
+'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',
+SyncToggleState=true})playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power'
+,Default=50,Min=0,Max=200,Rounding=0,Callback=function(value)local mod=_state.
+client.Modules.Player if mod and mod.setJumpPower then mod:setJumpPower(value)
+end end})local miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:
+AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=function(
+enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:AddToggle(
+'SilentMode',{Text='Silent Mode',Default=false,Callback=function(enabled)
+_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
 _runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
 function Interface.init(self,client)_state.client=client _state.logger=client.
 Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
