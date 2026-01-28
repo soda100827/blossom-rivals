@@ -392,107 +392,112 @@ Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
-playerControls=nil}local _signals={}local function _updatePlayerControls()if not
-_state.playerControls then return end local getfenvAny=getfenv local env=(
-getfenvAny(0))local getgenvFunc=env.getgenv local toggles=(getgenvFunc and
-getgenvFunc().Toggles)or _G.Toggles local options=(getgenvFunc and getgenvFunc()
-.Options)or _G.Options for _,control in ipairs(_state.playerControls)do local
+playerControls=nil,debugEnabled=true}local _signals={}local function _debugLog(
+...)if not _state.debugEnabled then return end local logger=_state.logger if
+logger and logger.info then logger:info(...)else print(...)end end
+local function _updatePlayerControls()if not _state.playerControls then return
+end local getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.
+getgenv local toggles=(getgenvFunc and getgenvFunc().Toggles)or _G.Toggles local
+options=(getgenvFunc and getgenvFunc().Options)or _G.Options if not toggles or
+not options then _debugLog('PlayerControls: Toggles/Options missing',toggles~=
+nil,options~=nil)end for _,control in ipairs(_state.playerControls)do local
 toggle=toggles and toggles[control.toggleId]local gate=toggle and toggle.Value==
 true local active=false if gate then local keybind=options and options[control.
 keybindId]if keybind and keybind.GetState then active=keybind:GetState()else
 active=false end end if control.last~=active then control.last=active control.
-setter(active)end end end local function _httpGet(url)return(game):HttpGet(url)
-end local function _loadRemote(path,logger)local source=_httpGet(REPO_URL..path)
-local chunk,err=loadstring(source)if not chunk then if logger then logger:error(
-'UI load failed:',err)end error('UI load failed: '..tostring(err))end return
-chunk()end local function _setNotifyMuted(library,shouldMute)if shouldMute then
-library.Notify=library.Notify or function()end library._blossomNotify=library.
-_blossomNotify or library.Notify library.Notify=function()end return end if
-library._blossomNotify then library.Notify=library._blossomNotify end end
-local function _getLibraryVisible(library)if type(library.Opened)=='boolean'then
-return library.Opened end if type(library.Visible)=='boolean'then return library
-.Visible end if type(library.IsOpen)=='boolean'then return library.IsOpen end
-return true end local function _runAutoload(library,saveManager,isSilent)local
-wasVisible=_getLibraryVisible(library)if isSilent then _setNotifyMuted(library,
-true)if wasVisible then pcall(function()library:Toggle()end)end end pcall(
-function()saveManager:LoadAutoloadConfig()end)if isSilent then if wasVisible
-then pcall(function()library:Toggle()end)end _setNotifyMuted(library,false)end
-end local function _connect()_maid:DoCleaning()local updateConn=RunService.
-RenderStepped:Connect(function()_updatePlayerControls()end)_maid:GiveTask(
-updateConn)end local function _mount()if _state.isMounted then return end _state
-.isMounted=true local logger=_state.logger local library=_loadRemote(
-'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
-logger)local saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.
-library=library _state.themeManager=themeManager _state.saveManager=saveManager
-local window=library:CreateWindow({Title='Blossom '.._state.client.Version,
-Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})
-local tabs={visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),
-uiSettings=window:AddTab('UI Settings')}local espGroup=tabs.visuals:
-AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',
-Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals if
-mod and mod.toggle then mod:toggle(state)end if mod and mod.setEspEnabled then
-mod:setEspEnabled(state)end end})espGroup:AddToggle('ESPNames',{Text='Name',
-Default=true,Callback=function(state)local mod=_state.client.Modules.Visuals if
-mod and mod.setShowNames then mod:setShowNames(state)end end}):AddColorPicker(
-'ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',Callback=function(
-value)local mod=_state.client.Modules.Visuals if mod and mod.setTextColor then
-mod:setTextColor(value)end end}):AddColorPicker('ESPNameOutlineColor',{Default=
-Color3.new(0,0,0),Title='Name Outline',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setNameOutlineColor then mod:
-setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text='Weapon'
-,Default=false,Callback=function(state)local mod=_state.client.Modules.Visuals
-if mod and mod.setShowWeapon then mod:setShowWeapon(state)end end}):
-AddColorPicker('ESPWeaponColor',{Default=Color3.new(1,1,1),Title='Weapon Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponColor then mod:setWeaponColor(value)end end}):AddColorPicker(
-'ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title='Weapon Outline',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end end})espGroup:
-AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowDistance then mod:
-setShowDistance(state)end end}):AddColorPicker('ESPDistanceColor',{Default=
-Color3.new(1,1,1),Title='Distance Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setDistanceColor then mod:
-setDistanceColor(value)end end}):AddColorPicker('ESPDistanceOutlineColor',{
-Default=Color3.new(0,0,0),Title='Distance Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setDistanceOutlineColor then
-mod:setDistanceOutlineColor(value)end end})espGroup:AddToggle('ESPBoxes',{Text=
-'Box',Default=true,Callback=function(state)local mod=_state.client.Modules.
-Visuals if mod and mod.setShowBoxes then mod:setShowBoxes(state)end end}):
-AddColorPicker('ESPBoxColor',{Default=Color3.new(1,1,1),Title='Box Color',
-Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxColor then mod:setBoxColor(value)end end}):AddColorPicker(
-'ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title='Box Outline',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})espGroup:
-AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowSkeleton then mod:
-setShowSkeleton(state)end end}):AddColorPicker('ESPSkeletonColor',{Default=
-Color3.new(1,1,1),Title='Skeleton Color',Callback=function(value)local mod=
-_state.client.Modules.Visuals if mod and mod.setSkeletonColor then mod:
-setSkeletonColor(value)end end}):AddColorPicker('ESPSkeletonOutlineColor',{
-Default=Color3.new(0,0,0),Title='Skeleton Outline',Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setSkeletonOutlineColor then
-mod:setSkeletonOutlineColor(value)end end})espGroup:AddToggle('ESPHealthbar',{
-Text='Healthbar',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.setShowHealthbar then mod:setShowHealthbar(state)
-end end}):AddColorPicker('ESPHealthbarColor',{Default=Color3.new(0,1,0),Title=
-'Health Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarColor then mod:setHealthbarColor(value)end end}):
-AddColorPicker('ESPHealthbarOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setHealthbarOutlineColor then mod:setHealthbarOutlineColor(value)
-end end})espGroup:AddToggle('ESPHighlight',{Text='Highlight',Default=false,
+setter(active)_debugLog('PlayerControls',control.toggleId,'gate',gate,'active',
+active,'keybind',control.keybindId)end end end local function _httpGet(url)
+return(game):HttpGet(url)end local function _loadRemote(path,logger)local source
+=_httpGet(REPO_URL..path)local chunk,err=loadstring(source)if not chunk then if
+logger then logger:error('UI load failed:',err)end error('UI load failed: '..
+tostring(err))end return chunk()end local function _setNotifyMuted(library,
+shouldMute)if shouldMute then library.Notify=library.Notify or function()end
+library._blossomNotify=library._blossomNotify or library.Notify library.Notify=
+function()end return end if library._blossomNotify then library.Notify=library.
+_blossomNotify end end local function _getLibraryVisible(library)if type(library
+.Opened)=='boolean'then return library.Opened end if type(library.Visible)==
+'boolean'then return library.Visible end if type(library.IsOpen)=='boolean'then
+return library.IsOpen end return true end local function _runAutoload(library,
+saveManager,isSilent)local wasVisible=_getLibraryVisible(library)if isSilent
+then _setNotifyMuted(library,true)if wasVisible then pcall(function()library:
+Toggle()end)end end pcall(function()saveManager:LoadAutoloadConfig()end)if
+isSilent then if wasVisible then pcall(function()library:Toggle()end)end
+_setNotifyMuted(library,false)end end local function _connect()_maid:DoCleaning(
+)local updateConn=RunService.RenderStepped:Connect(function()
+_updatePlayerControls()end)_maid:GiveTask(updateConn)end local function _mount()
+if _state.isMounted then return end _state.isMounted=true local logger=_state.
+logger local library=_loadRemote('Library.lua',logger)local themeManager=
+_loadRemote('addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
+'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
+themeManager _state.saveManager=saveManager local window=library:CreateWindow({
+Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
+IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={visuals=window:AddTab(
+'Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}
+local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
+'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
+state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end end})
+espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(state)
+local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then mod:
+setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1
+,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}):
+AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
+espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
+mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
+Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
+value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
+),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
+value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
 Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowHighlight then mod:setShowHighlight(state)end end}):AddColorPicker(
-'ESPHighlightFill',{Default=Color3.new(1,0,0),Title='Fill Color',Callback=
+setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
+'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightFill then mod:setHighlightFill(value)end end}):AddColorPicker(
-'ESPHighlightOutline',{Default=Color3.new(1,1,1),Title='Outline Color',Callback=
+setDistanceColor then mod:setDistanceColor(value)end end}):AddColorPicker(
+'ESPDistanceOutlineColor',{Default=Color3.new(0,0,0),Title='Distance Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setDistanceOutlineColor then mod:setDistanceOutlineColor(value)end end})espGroup
+:AddToggle('ESPBoxes',{Text='Box',Default=true,Callback=function(state)local mod
+=_state.client.Modules.Visuals if mod and mod.setShowBoxes then mod:
+setShowBoxes(state)end end}):AddColorPicker('ESPBoxColor',{Default=Color3.new(1,
+1,1),Title='Box Color',Callback=function(value)local mod=_state.client.Modules.
+Visuals if mod and mod.setBoxColor then mod:setBoxColor(value)end end}):
+AddColorPicker('ESPBoxOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Box Outline',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setBoxOutlineColor then mod:setBoxOutlineColor(value)end end})
+espGroup:AddToggle('ESPSkeleton',{Text='Skeleton',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowSkeleton then mod:setShowSkeleton(state)end end}):AddColorPicker(
+'ESPSkeletonColor',{Default=Color3.new(1,1,1),Title='Skeleton Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
-AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Callback=
-function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
+setSkeletonColor then mod:setSkeletonColor(value)end end}):AddColorPicker(
+'ESPSkeletonOutlineColor',{Default=Color3.new(0,0,0),Title='Skeleton Outline',
+Callback=function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setSkeletonOutlineColor then mod:setSkeletonOutlineColor(value)end end})espGroup
+:AddToggle('ESPHealthbar',{Text='Healthbar',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowHealthbar
+then mod:setShowHealthbar(state)end end}):AddColorPicker('ESPHealthbarColor',{
+Default=Color3.new(0,1,0),Title='Health Color',Callback=function(value)local mod
+=_state.client.Modules.Visuals if mod and mod.setHealthbarColor then mod:
+setHealthbarColor(value)end end}):AddColorPicker('ESPHealthbarOutlineColor',{
+Default=Color3.new(0,0,0),Title='Outline Color',Callback=function(value)local
+mod=_state.client.Modules.Visuals if mod and mod.setHealthbarOutlineColor then
+mod:setHealthbarOutlineColor(value)end end})espGroup:AddToggle('ESPHighlight',{
+Text='Highlight',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.setShowHighlight then mod:setShowHighlight(state)
+end end}):AddColorPicker('ESPHighlightFill',{Default=Color3.new(1,0,0),Title=
+'Fill Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setHighlightFill then mod:setHighlightFill(value)end end}):
+AddColorPicker('ESPHighlightOutline',{Default=Color3.new(1,1,1),Title=
+'Outline Color',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setHighlightOutline then mod:setHighlightOutline(value)end end})
+espGroup:AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,
+Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',
