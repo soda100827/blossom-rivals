@@ -270,54 +270,46 @@ logger=nil,character=nil,humanoid=nil,rootPart=nil,isFlyEnabled=false,
 isNoclipEnabled=false,isWalkSpeedEnabled=false,isJumpPowerEnabled=false,
 walkSpeedValue=16,jumpPowerValue=50,flySpeed=DEFAULT_FLY_SPEED,defaultWalkSpeed=
 nil,defaultJumpPower=nil,defaultJumpHeight=nil,defaultUseJumpPower=nil,
-defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},input={forward=0,
-back=0,left=0,right=0,up=0,down=0}}local _signals={}local function
-_getLocalPlayer()return Players.LocalPlayer end local function _cacheDefaults(
-humanoid)_state.defaultWalkSpeed=humanoid.WalkSpeed _state.defaultUseJumpPower=
-humanoid.UseJumpPower if humanoid.UseJumpPower then _state.defaultJumpPower=
-humanoid.JumpPower _state.defaultJumpHeight=nil else _state.defaultJumpPower=nil
-_state.defaultJumpHeight=humanoid.JumpHeight end _state.defaultAutoRotate=
-humanoid.AutoRotate _state.defaultPlatformStand=humanoid.PlatformStand end
-local function _applyWalkSpeed()local humanoid=_state.humanoid if not humanoid
-then return end if _state.isWalkSpeedEnabled then humanoid.WalkSpeed=_state.
-walkSpeedValue elseif _state.defaultWalkSpeed~=nil then humanoid.WalkSpeed=
-_state.defaultWalkSpeed end end local function _applyJumpPower()local humanoid=
-_state.humanoid if not humanoid then return end if _state.isJumpPowerEnabled
-then if humanoid.UseJumpPower then humanoid.JumpPower=_state.jumpPowerValue else
-humanoid.JumpHeight=_state.jumpPowerValue end else if _state.defaultUseJumpPower
-~=nil then humanoid.UseJumpPower=_state.defaultUseJumpPower end if _state.
+defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},characterMaid=nil,
+input={forward=0,back=0,left=0,right=0,up=0,down=0}}local _signals={}
+local function _getLocalPlayer()return Players.LocalPlayer end local function
+_cacheDefaults(humanoid)_state.defaultWalkSpeed=humanoid.WalkSpeed _state.
+defaultUseJumpPower=humanoid.UseJumpPower if humanoid.UseJumpPower then _state.
+defaultJumpPower=humanoid.JumpPower _state.defaultJumpHeight=nil else _state.
+defaultJumpPower=nil _state.defaultJumpHeight=humanoid.JumpHeight end _state.
+defaultAutoRotate=humanoid.AutoRotate _state.defaultPlatformStand=humanoid.
+PlatformStand end local function _applyWalkSpeed()local humanoid=_state.humanoid
+if not humanoid then return end if _state.defaultWalkSpeed~=nil then humanoid.
+WalkSpeed=_state.defaultWalkSpeed end end local function _applyJumpPower()return
+end local function _restoreMovementDefaults()local humanoid=_state.humanoid if
+not humanoid then return end if _state.defaultWalkSpeed~=nil then humanoid.
+WalkSpeed=_state.defaultWalkSpeed end if _state.defaultUseJumpPower~=nil then
+humanoid.UseJumpPower=_state.defaultUseJumpPower end if _state.
 defaultUseJumpPower then if _state.defaultJumpPower~=nil then humanoid.JumpPower
 =_state.defaultJumpPower end else if _state.defaultJumpHeight~=nil then humanoid
-.JumpHeight=_state.defaultJumpHeight end end end end local function
-_restoreMovementDefaults()local humanoid=_state.humanoid if not humanoid then
-return end if _state.defaultWalkSpeed~=nil then humanoid.WalkSpeed=_state.
-defaultWalkSpeed end if _state.defaultUseJumpPower~=nil then humanoid.
-UseJumpPower=_state.defaultUseJumpPower end if _state.defaultUseJumpPower then
-if _state.defaultJumpPower~=nil then humanoid.JumpPower=_state.defaultJumpPower
-end else if _state.defaultJumpHeight~=nil then humanoid.JumpHeight=_state.
-defaultJumpHeight end end if _state.defaultAutoRotate~=nil then humanoid.
-AutoRotate=_state.defaultAutoRotate end if _state.defaultPlatformStand~=nil then
-humanoid.PlatformStand=_state.defaultPlatformStand end end local function
-_setCharacter(character)_state.character=character _state.humanoid=nil _state.
-rootPart=nil if not character then return end local humanoid=character:
-FindFirstChildOfClass('Humanoid')if not humanoid then humanoid=(character:
-WaitForChild('Humanoid',5))end local rootPart=character:FindFirstChild(
-'HumanoidRootPart')if not rootPart then rootPart=character:WaitForChild(
-'HumanoidRootPart',5)end if humanoid then _state.humanoid=humanoid
-_cacheDefaults(humanoid)end if rootPart and rootPart:IsA('BasePart')then _state.
-rootPart=rootPart end _applyWalkSpeed()_applyJumpPower()end local function
-_applyNoclip()local character=_state.character if not character then return end
-for _,part in ipairs(character:GetDescendants())do if part:IsA('BasePart')then
-if _state.noclipParts[part]==nil then _state.noclipParts[part]=part.CanCollide
-end part.CanCollide=false end end end local function _restoreNoclip()for part,
-original in pairs(_state.noclipParts)do if part and part.Parent then part.
-CanCollide=original end end _state.noclipParts={}end local function
-_applyFlyState()local humanoid=_state.humanoid if not humanoid then return end
-if _state.isFlyEnabled then humanoid.PlatformStand=false humanoid.AutoRotate=
-true else local rootPart=_state.rootPart if rootPart then rootPart.
-AssemblyLinearVelocity=Vector3.zero rootPart.AssemblyAngularVelocity=Vector3.
-zero end if _state.defaultPlatformStand~=nil then humanoid.PlatformStand=_state.
-defaultPlatformStand end if _state.defaultAutoRotate~=nil then humanoid.
+.JumpHeight=_state.defaultJumpHeight end end if _state.defaultAutoRotate~=nil
+then humanoid.AutoRotate=_state.defaultAutoRotate end if _state.
+defaultPlatformStand~=nil then humanoid.PlatformStand=_state.
+defaultPlatformStand end end local function _setCharacter(character)_state.
+character=character _state.humanoid=nil _state.rootPart=nil if not character
+then return end local humanoid=character:FindFirstChildOfClass('Humanoid')if not
+humanoid then humanoid=(character:WaitForChild('Humanoid',5))end local rootPart=
+character:FindFirstChild('HumanoidRootPart')if not rootPart then rootPart=
+character:WaitForChild('HumanoidRootPart',5)end if humanoid then _state.humanoid
+=humanoid _cacheDefaults(humanoid)end if rootPart and rootPart:IsA('BasePart')
+then _state.rootPart=rootPart end _applyWalkSpeed()_applyJumpPower()end
+local function _applyNoclip()local character=_state.character if not character
+then return end for _,part in ipairs(character:GetDescendants())do if part:IsA(
+'BasePart')then if _state.noclipParts[part]==nil then _state.noclipParts[part]=
+part.CanCollide end part.CanCollide=false end end end local function
+_restoreNoclip()for part,original in pairs(_state.noclipParts)do if part and
+part.Parent then part.CanCollide=original end end _state.noclipParts={}end
+local function _applyFlyState()local humanoid=_state.humanoid if not humanoid
+then return end if _state.isFlyEnabled then humanoid.PlatformStand=false
+humanoid.AutoRotate=true else local rootPart=_state.rootPart if rootPart then
+rootPart.AssemblyLinearVelocity=Vector3.zero rootPart.AssemblyAngularVelocity=
+Vector3.zero end if _state.defaultPlatformStand~=nil then humanoid.PlatformStand
+=_state.defaultPlatformStand end if _state.defaultAutoRotate~=nil then humanoid.
 AutoRotate=_state.defaultAutoRotate end end end local function _getFlyMoveVector
 ()local camera=Workspace.CurrentCamera if not camera then return Vector3.zero
 end local forward=camera.CFrame.LookVector local right=camera.CFrame.RightVector
@@ -327,57 +319,79 @@ _state.input.down)if move.Magnitude>1 then move=move.Unit end return move end
 local function _onCharacterAdded(character)_state.input={forward=0,back=0,left=0
 ,right=0,up=0,down=0}_setCharacter(character)if _state.isFlyEnabled then
 _applyFlyState()end if _state.isNoclipEnabled then _applyNoclip()end end
-local function _onCharacterRemoving()_restoreNoclip()_state.input={forward=0,
-back=0,left=0,right=0,up=0,down=0}_state.character=nil _state.humanoid=nil
-_state.rootPart=nil end local function _onInputChanged(input,isPressed)local
-keyName=INPUT_MAP[input.KeyCode]if not keyName then return end _state.input[
-keyName]=isPressed and 1 or 0 end local function _bindPlayer(player)local
-addedConn=player.CharacterAdded:Connect(function(character)_onCharacterAdded(
-character)end)_maid:GiveTask(addedConn)local removingConn=player.
+local function _onCharacterRemoving()_restoreNoclip()if _state.characterMaid
+then _state.characterMaid:DoCleaning()_state.characterMaid=nil end _state.input=
+{forward=0,back=0,left=0,right=0,up=0,down=0}_state.character=nil _state.
+humanoid=nil _state.rootPart=nil end local function _onInputChanged(input,
+isPressed)local keyName=INPUT_MAP[input.KeyCode]if not keyName then return end
+_state.input[keyName]=isPressed and 1 or 0 end local function _bindPlayer(player
+)local addedConn=player.CharacterAdded:Connect(function(character)
+_onCharacterAdded(character)if _state.characterMaid then _state.characterMaid:
+DoCleaning()end _state.characterMaid=Maid.new()local humanoid=_state.humanoid
+local rootPart=_state.rootPart if humanoid and rootPart then local stateConn=
+humanoid.StateChanged:Connect(function(_,newState)if not _state.
+isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.Jumping
+then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=_state.
+jumpPowerValue if current.Y<jumpVelocity then rootPart.AssemblyLinearVelocity=
+Vector3.new(current.X,jumpVelocity,current.Z)end end end)_state.characterMaid:
+GiveTask(stateConn)end end)_maid:GiveTask(addedConn)local removingConn=player.
 CharacterRemoving:Connect(function()_onCharacterRemoving()end)_maid:GiveTask(
-removingConn)if player.Character then _onCharacterAdded(player.Character)end end
-local function _connect()_maid:DoCleaning()local player=_getLocalPlayer()if
-player then _bindPlayer(player)else local playerAddedConn=Players.PlayerAdded:
-Connect(function(addedPlayer)if addedPlayer==_getLocalPlayer()then _bindPlayer(
-addedPlayer)end end)_maid:GiveTask(playerAddedConn)end local inputBeganConn=
-UserInputService.InputBegan:Connect(function(input,processed)if processed then
-return end _onInputChanged(input,true)end)_maid:GiveTask(inputBeganConn)local
-inputEndedConn=UserInputService.InputEnded:Connect(function(input,processed)if
-processed then return end _onInputChanged(input,false)end)_maid:GiveTask(
-inputEndedConn)local renderConn=RunService.RenderStepped:Connect(function()if
-not _state.isFlyEnabled then return end local rootPart=_state.rootPart if not
-rootPart then return end local move=_getFlyMoveVector()rootPart.
-AssemblyLinearVelocity=move*_state.flySpeed rootPart.AssemblyAngularVelocity=
-Vector3.zero local camera=Workspace.CurrentCamera if camera then local look=
-Vector3.new(camera.CFrame.LookVector.X,0,camera.CFrame.LookVector.Z)if look.
-Magnitude>0.001 then rootPart.CFrame=CFrame.new(rootPart.Position,rootPart.
-Position+look)end end end)_maid:GiveTask(renderConn)local steppedConn=RunService
-.Stepped:Connect(function()if _state.isNoclipEnabled then _applyNoclip()end end)
-_maid:GiveTask(steppedConn)end function Player.init(self,client)_state.client=
-client _state.logger=client.Logger _maid=Maid.new()_connect()end function Player
-.cleanup(self)_state.isFlyEnabled=false _state.isNoclipEnabled=false _state.
-isWalkSpeedEnabled=false _state.isJumpPowerEnabled=false _restoreNoclip()
-_restoreMovementDefaults()if _maid then _maid:DoCleaning()end end function
-Player.setFlyEnabled(self,isEnabled)if _state.isFlyEnabled==isEnabled then
-return end _state.isFlyEnabled=isEnabled _applyFlyState()end function Player.
-setNoclipEnabled(self,isEnabled)if _state.isNoclipEnabled==isEnabled then return
-end _state.isNoclipEnabled=isEnabled if not isEnabled then _restoreNoclip()else
-_applyNoclip()end end function Player.setWalkSpeedEnabled(self,isEnabled)if
-_state.isWalkSpeedEnabled==isEnabled then return end _state.isWalkSpeedEnabled=
-isEnabled _applyWalkSpeed()end function Player.setJumpPowerEnabled(self,
-isEnabled)if _state.isJumpPowerEnabled==isEnabled then return end _state.
-isJumpPowerEnabled=isEnabled _applyJumpPower()end function Player.setWalkSpeed(
-self,value)_state.walkSpeedValue=value _applyWalkSpeed()end function Player.
-setJumpPower(self,value)_state.jumpPowerValue=value _applyJumpPower()end
-function Player.setFlySpeed(self,value)_state.flySpeed=value end return Player
-end function __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.
-f if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v
-.c end end do local function __modImpl()local Maid=(__DARKLUA_BUNDLE_MODULES.b()
-)local REPO_URL=
-[[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
-Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
-,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false}local
-_signals={}local function _httpGet(url)return(game):HttpGet(url)end
+removingConn)if player.Character then _onCharacterAdded(player.Character)if
+_state.characterMaid then _state.characterMaid:DoCleaning()end _state.
+characterMaid=Maid.new()local humanoid=_state.humanoid local rootPart=_state.
+rootPart if humanoid and rootPart then local stateConn=humanoid.StateChanged:
+Connect(function(_,newState)if not _state.isJumpPowerEnabled then return end if
+newState==Enum.HumanoidStateType.Jumping then local current=rootPart.
+AssemblyLinearVelocity local jumpVelocity=_state.jumpPowerValue if current.Y<
+jumpVelocity then rootPart.AssemblyLinearVelocity=Vector3.new(current.X,
+jumpVelocity,current.Z)end end end)_state.characterMaid:GiveTask(stateConn)end
+end end local function _connect()_maid:DoCleaning()local player=_getLocalPlayer(
+)if player then _bindPlayer(player)else local playerAddedConn=Players.
+PlayerAdded:Connect(function(addedPlayer)if addedPlayer==_getLocalPlayer()then
+_bindPlayer(addedPlayer)end end)_maid:GiveTask(playerAddedConn)end local
+inputBeganConn=UserInputService.InputBegan:Connect(function(input,processed)if
+processed then return end _onInputChanged(input,true)end)_maid:GiveTask(
+inputBeganConn)local inputEndedConn=UserInputService.InputEnded:Connect(function
+(input,processed)if processed then return end _onInputChanged(input,false)end)
+_maid:GiveTask(inputEndedConn)local renderConn=RunService.RenderStepped:Connect(
+function()if not _state.isFlyEnabled then local rootPart=_state.rootPart local
+humanoid=_state.humanoid if rootPart and humanoid and _state.isWalkSpeedEnabled
+then local moveDir=humanoid.MoveDirection local horizontal=Vector3.new(moveDir.X
+,0,moveDir.Z)if horizontal.Magnitude>0 then horizontal=horizontal.Unit*_state.
+walkSpeedValue end local current=rootPart.AssemblyLinearVelocity rootPart.
+AssemblyLinearVelocity=Vector3.new(horizontal.X,current.Y,horizontal.Z)end
+return end local rootPart=_state.rootPart if not rootPart then return end local
+move=_getFlyMoveVector()rootPart.AssemblyLinearVelocity=move*_state.flySpeed
+rootPart.AssemblyAngularVelocity=Vector3.zero local camera=Workspace.
+CurrentCamera if camera then local look=Vector3.new(camera.CFrame.LookVector.X,0
+,camera.CFrame.LookVector.Z)if look.Magnitude>0.001 then rootPart.CFrame=CFrame.
+new(rootPart.Position,rootPart.Position+look)end end end)_maid:GiveTask(
+renderConn)local steppedConn=RunService.Stepped:Connect(function()if _state.
+isNoclipEnabled then _applyNoclip()end end)_maid:GiveTask(steppedConn)end
+function Player.init(self,client)_state.client=client _state.logger=client.
+Logger _maid=Maid.new()_connect()end function Player.cleanup(self)_state.
+isFlyEnabled=false _state.isNoclipEnabled=false _state.isWalkSpeedEnabled=false
+_state.isJumpPowerEnabled=false _restoreNoclip()_restoreMovementDefaults()if
+_maid then _maid:DoCleaning()end end function Player.setFlyEnabled(self,
+isEnabled)if _state.isFlyEnabled==isEnabled then return end _state.isFlyEnabled=
+isEnabled _applyFlyState()end function Player.setNoclipEnabled(self,isEnabled)if
+_state.isNoclipEnabled==isEnabled then return end _state.isNoclipEnabled=
+isEnabled if not isEnabled then _restoreNoclip()else _applyNoclip()end end
+function Player.setWalkSpeedEnabled(self,isEnabled)if _state.isWalkSpeedEnabled
+==isEnabled then return end _state.isWalkSpeedEnabled=isEnabled _applyWalkSpeed(
+)end function Player.setJumpPowerEnabled(self,isEnabled)if _state.
+isJumpPowerEnabled==isEnabled then return end _state.isJumpPowerEnabled=
+isEnabled _applyJumpPower()end function Player.setWalkSpeed(self,value)_state.
+walkSpeedValue=value _applyWalkSpeed()end function Player.setJumpPower(self,
+value)_state.jumpPowerValue=value _applyJumpPower()end function Player.
+setFlySpeed(self,value)_state.flySpeed=value end return Player end function
+__DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
+do local function __modImpl()local Maid=(__DARKLUA_BUNDLE_MODULES.b())local
+REPO_URL=[[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
+local Interface={}Interface.__index=Interface local _maid=nil local _state={
+client=nil,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=
+false}local _signals={}local function _httpGet(url)return(game):HttpGet(url)end
 local function _loadRemote(path,logger)local source=_httpGet(REPO_URL..path)
 local chunk,err=loadstring(source)if not chunk then if logger then logger:error(
 'UI load failed:',err)end error('UI load failed: '..tostring(err))end return
@@ -488,46 +502,72 @@ library.ToggleKeybind=GlobalOptions.MenuKeybind end themeManager:SetLibrary(
 library)saveManager:SetLibrary(library)saveManager:IgnoreThemeSettings()
 themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
 BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local
-playerGroup=tabs.misc:AddLeftGroupbox('Player')local playerFlyToggle=playerGroup
-:AddToggle('PlayerFly',{Text='Fly',Default=false,Callback=function(state)local
-mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then mod:
-setFlyEnabled(state)end end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
-Default='F',NoUI=false,Text='Fly Keybind',Mode='Toggle',SyncToggleState=true})
-playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
-200,Rounding=0,Callback=function(value)local mod=_state.client.Modules.Player if
-mod and mod.setFlySpeed then mod:setFlySpeed(value)end end})local
-playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{Text='Noclip',Default=
-false,Callback=function(state)local mod=_state.client.Modules.Player if mod and
-mod.setNoclipEnabled then mod:setNoclipEnabled(state)end end})playerNoclipToggle
-:AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,Text=
-'Noclip Keybind',Mode='Toggle',SyncToggleState=true})local playerWalkSpeedToggle
-=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text='Walk Speed',Default=false
-,Callback=function(state)local mod=_state.client.Modules.Player if mod and mod.
-setWalkSpeedEnabled then mod:setWalkSpeedEnabled(state)end end})
-playerWalkSpeedToggle:AddKeyPicker('PlayerWalkSpeedKeybind',{Default='T',NoUI=
-false,Text='Walk Speed Keybind',Mode='Toggle',SyncToggleState=true})playerGroup:
-AddSlider('PlayerWalkSpeed',{Text='Walk Speed',Default=16,Min=0,Max=200,Rounding
-=0,Callback=function(value)local mod=_state.client.Modules.Player if mod and mod
-.setWalkSpeed then mod:setWalkSpeed(value)end end})local playerJumpPowerToggle=
-playerGroup:AddToggle('PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Player if mod and mod.
-setJumpPowerEnabled then mod:setJumpPowerEnabled(state)end end})
-playerJumpPowerToggle:AddKeyPicker('PlayerJumpPowerKeybind',{Default='Y',NoUI=
-false,Text='Jump Power Keybind',Mode='Toggle',SyncToggleState=true})playerGroup:
-AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=200,Rounding
-=0,Callback=function(value)local mod=_state.client.Modules.Player if mod and mod
-.setJumpPower then mod:setJumpPower(value)end end})local miscGroup=tabs.misc:
-AddLeftGroupbox('Auto Load')miscGroup:AddToggle('TeleportQueue',{Text=
-'Auto Load',Default=false,Callback=function(enabled)_state.client:
-setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
-'Silent Mode',Default=false,Callback=function(enabled)_setNotifyMuted(library,
-enabled)_state.client:setSilent(enabled)end})_runAutoload(library,saveManager,
-false)logger:info('UI mounted successfully')end function Interface.init(self,
-client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
-_connect()_mount()end function Interface.cleanup(self)_maid:DoCleaning()if
-_state.library then _state.library:Unload()end _state.isMounted=false end return
-Interface end function __DARKLUA_BUNDLE_MODULES.g()local v=
-__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+playerGroup=tabs.misc:AddLeftGroupbox('Player')playerGroup:AddToggle(
+'PlayerFlyEnabled',{Text='Fly Enabled',Default=true,Callback=function()end})
+local playerFlyToggle=playerGroup:AddToggle('PlayerFlyActive',{Text='Fly',
+Default=false,Callback=function(state)local mod=_state.client.Modules.Player if
+mod and mod.setFlyEnabled then mod:setFlyEnabled(state)end end})playerFlyToggle:
+AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text='Fly Keybind',Mode=
+'Toggle',Callback=function(state)local getfenvAny=getfenv local env=(getfenvAny(
+0))local getgenvFunc=env.getgenv local options=(getgenvFunc and getgenvFunc().
+Options)or _G.Options local gate=options and options.PlayerFlyEnabled local
+active=options and options.PlayerFlyActive if not gate or not active or not gate
+.Value then return end if active.SetValue then active:SetValue(state)else active
+.Value=state end end})playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',
+Default=50,Min=5,Max=200,Rounding=0,Callback=function(value)local mod=_state.
+client.Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(value)end
+end})playerGroup:AddToggle('PlayerNoclipEnabled',{Text='Noclip Enabled',Default=
+true,Callback=function()end})local playerNoclipToggle=playerGroup:AddToggle(
+'PlayerNoclipActive',{Text='Noclip',Default=false,Callback=function(state)local
+mod=_state.client.Modules.Player if mod and mod.setNoclipEnabled then mod:
+setNoclipEnabled(state)end end})playerNoclipToggle:AddKeyPicker(
+'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',Mode=
+'Toggle',Callback=function(state)local getfenvAny=getfenv local env=(getfenvAny(
+0))local getgenvFunc=env.getgenv local options=(getgenvFunc and getgenvFunc().
+Options)or _G.Options local gate=options and options.PlayerNoclipEnabled local
+active=options and options.PlayerNoclipActive if not gate or not active or not
+gate.Value then return end if active.SetValue then active:SetValue(state)else
+active.Value=state end end})local playerWalkSpeedToggle=playerGroup:AddToggle(
+'PlayerWalkSpeedEnabled',{Text='Walk Speed Enabled',Default=false,Callback=
+function()end})local playerWalkSpeedActiveToggle=playerGroup:AddToggle(
+'PlayerWalkSpeedActive',{Text='Walk Speed',Default=false,Callback=function(state
+)local mod=_state.client.Modules.Player if mod and mod.setWalkSpeedEnabled then
+mod:setWalkSpeedEnabled(state)end end})playerWalkSpeedActiveToggle:AddKeyPicker(
+'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed Keybind',Mode=
+'Toggle',Callback=function(state)local getfenvAny=getfenv local env=(getfenvAny(
+0))local getgenvFunc=env.getgenv local options=(getgenvFunc and getgenvFunc().
+Options)or _G.Options local gate=options and options.PlayerWalkSpeedEnabled
+local active=options and options.PlayerWalkSpeedActive if not gate or not active
+or not gate.Value then return end if active.SetValue then active:SetValue(state)
+else active.Value=state end end})playerGroup:AddSlider('PlayerWalkSpeed',{Text=
+'Walk Speed',Default=16,Min=0,Max=200,Rounding=0,Callback=function(value)local
+mod=_state.client.Modules.Player if mod and mod.setWalkSpeed then mod:
+setWalkSpeed(value)end end})local playerJumpPowerToggle=playerGroup:AddToggle(
+'PlayerJumpPowerEnabled',{Text='Jump Power Enabled',Default=false,Callback=
+function()end})local playerJumpPowerActiveToggle=playerGroup:AddToggle(
+'PlayerJumpPowerActive',{Text='Jump Power',Default=false,Callback=function(state
+)local mod=_state.client.Modules.Player if mod and mod.setJumpPowerEnabled then
+mod:setJumpPowerEnabled(state)end end})playerJumpPowerActiveToggle:AddKeyPicker(
+'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',Mode=
+'Toggle',Callback=function(state)local getfenvAny=getfenv local env=(getfenvAny(
+0))local getgenvFunc=env.getgenv local options=(getgenvFunc and getgenvFunc().
+Options)or _G.Options local gate=options and options.PlayerJumpPowerEnabled
+local active=options and options.PlayerJumpPowerActive if not gate or not active
+or not gate.Value then return end if active.SetValue then active:SetValue(state)
+else active.Value=state end end})playerGroup:AddSlider('PlayerJumpPower',{Text=
+'Jump Power',Default=50,Min=0,Max=200,Rounding=0,Callback=function(value)local
+mod=_state.client.Modules.Player if mod and mod.setJumpPower then mod:
+setJumpPower(value)end end})local miscGroup=tabs.misc:AddLeftGroupbox(
+'Auto Load')miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,
+Callback=function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
+AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
+enabled)_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
+_runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
+function Interface.init(self,client)_state.client=client _state.logger=client.
+Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
+_maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
+isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.g()
+local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end end local
 ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=

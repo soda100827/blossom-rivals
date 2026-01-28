@@ -68,6 +68,7 @@ local _state: {
 	defaultAutoRotate: boolean?,
 	defaultPlatformStand: boolean?,
 	noclipParts: { [BasePart]: boolean },
+	characterMaid: any?,
 	input: InputState,
 } =
 	{
@@ -90,6 +91,7 @@ local _state: {
 		defaultAutoRotate = nil,
 		defaultPlatformStand = nil,
 		noclipParts = {},
+		characterMaid = nil,
 		input = {
 			forward = 0,
 			back = 0,
@@ -131,30 +133,7 @@ local function _applyWalkSpeed()
 end
 
 local function _applyJumpPower()
-	local humanoid = _state.humanoid
-	if not humanoid then
-		return
-	end
-	if _state.isJumpPowerEnabled then
-		if humanoid.UseJumpPower then
-			humanoid.JumpPower = _state.jumpPowerValue
-		else
-			humanoid.JumpHeight = _state.jumpPowerValue
-		end
-	else
-		if _state.defaultUseJumpPower ~= nil then
-			humanoid.UseJumpPower = _state.defaultUseJumpPower
-		end
-		if _state.defaultUseJumpPower then
-			if _state.defaultJumpPower ~= nil then
-				humanoid.JumpPower = _state.defaultJumpPower
-			end
-		else
-			if _state.defaultJumpHeight ~= nil then
-				humanoid.JumpHeight = _state.defaultJumpHeight
-			end
-		end
-	end
+	return
 end
 
 local function _restoreMovementDefaults()
@@ -295,6 +274,10 @@ end
 
 local function _onCharacterRemoving()
 	_restoreNoclip()
+	if _state.characterMaid then
+		_state.characterMaid:DoCleaning()
+		_state.characterMaid = nil
+	end
 	_state.input = {
 		forward = 0,
 		back = 0,
@@ -319,6 +302,27 @@ end
 local function _bindPlayer(player: Player)
 	local addedConn = player.CharacterAdded:Connect(function(character)
 		_onCharacterAdded(character)
+		if _state.characterMaid then
+			_state.characterMaid:DoCleaning()
+		end
+		_state.characterMaid = Maid.new()
+		local humanoid = _state.humanoid
+		local rootPart = _state.rootPart
+		if humanoid and rootPart then
+			local stateConn = humanoid.StateChanged:Connect(function(_, newState)
+				if not _state.isJumpPowerEnabled then
+					return
+				end
+				if newState == Enum.HumanoidStateType.Jumping then
+					local current = rootPart.AssemblyLinearVelocity
+					local jumpVelocity = _state.jumpPowerValue
+					if current.Y < jumpVelocity then
+						rootPart.AssemblyLinearVelocity = Vector3.new(current.X, jumpVelocity, current.Z)
+					end
+				end
+			end)
+			_state.characterMaid:GiveTask(stateConn)
+		end
 	end)
 	_maid:GiveTask(addedConn)
 
@@ -329,6 +333,27 @@ local function _bindPlayer(player: Player)
 
 	if player.Character then
 		_onCharacterAdded(player.Character)
+		if _state.characterMaid then
+			_state.characterMaid:DoCleaning()
+		end
+		_state.characterMaid = Maid.new()
+		local humanoid = _state.humanoid
+		local rootPart = _state.rootPart
+		if humanoid and rootPart then
+			local stateConn = humanoid.StateChanged:Connect(function(_, newState)
+				if not _state.isJumpPowerEnabled then
+					return
+				end
+				if newState == Enum.HumanoidStateType.Jumping then
+					local current = rootPart.AssemblyLinearVelocity
+					local jumpVelocity = _state.jumpPowerValue
+					if current.Y < jumpVelocity then
+						rootPart.AssemblyLinearVelocity = Vector3.new(current.X, jumpVelocity, current.Z)
+					end
+				end
+			end)
+			_state.characterMaid:GiveTask(stateConn)
+		end
 	end
 end
 
