@@ -490,6 +490,17 @@ local function _mount()
 		end,
 	})
 
+	playerGroup:AddToggle("PlayerWalkSpeedEnabled", {
+		Text = "Walk Speed",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setWalkSpeedEnabled then
+				mod:setWalkSpeedEnabled(state)
+			end
+		end,
+	})
+
 	playerGroup:AddSlider("PlayerWalkSpeed", {
 		Text = "Walk Speed",
 		Default = 16,
@@ -504,6 +515,17 @@ local function _mount()
 		end,
 	})
 
+	playerGroup:AddToggle("PlayerJumpPowerEnabled", {
+		Text = "Jump Power",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setJumpPowerEnabled then
+				mod:setJumpPowerEnabled(state)
+			end
+		end,
+	})
+
 	playerGroup:AddSlider("PlayerJumpPower", {
 		Text = "Jump Power",
 		Default = 50,
@@ -514,6 +536,55 @@ local function _mount()
 			local mod = _state.client.Modules.Player
 			if mod and mod.setJumpPower then
 				mod:setJumpPower(value)
+			end
+		end,
+	})
+
+	local playerKeybinds = tabs.misc:AddLeftGroupbox("Player Keybinds")
+	playerKeybinds:AddLabel("Fly Toggle"):AddKeyPicker("PlayerFlyKeybind", {
+		Default = "F",
+		NoUI = true,
+		Text = "Fly Toggle",
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setFlyKeybind then
+				mod:setFlyKeybind(value)
+			end
+		end,
+	})
+
+	playerKeybinds:AddLabel("Noclip Toggle"):AddKeyPicker("PlayerNoclipKeybind", {
+		Default = "N",
+		NoUI = true,
+		Text = "Noclip Toggle",
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setNoclipKeybind then
+				mod:setNoclipKeybind(value)
+			end
+		end,
+	})
+
+	playerKeybinds:AddLabel("Walk Speed Toggle"):AddKeyPicker("PlayerWalkSpeedKeybind", {
+		Default = "T",
+		NoUI = true,
+		Text = "Walk Speed Toggle",
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setWalkSpeedKeybind then
+				mod:setWalkSpeedKeybind(value)
+			end
+		end,
+	})
+
+	playerKeybinds:AddLabel("Jump Power Toggle"):AddKeyPicker("PlayerJumpPowerKeybind", {
+		Default = "Y",
+		NoUI = true,
+		Text = "Jump Power Toggle",
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setJumpPowerKeybind then
+				mod:setJumpPowerKeybind(value)
 			end
 		end,
 	})
