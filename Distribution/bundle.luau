@@ -447,35 +447,36 @@ _isOnScreen(targetPosition)local mousePos=_getAimPosition(camera)local delta=
 screenPos-mousePos local mouseDivisor=(MAX_SMOOTHNESS-smoothness)/5+1 if
 UserInputService.MouseBehavior==Enum.MouseBehavior.LockCenter then if not _state
 .cameraController then _state.cameraController=_resolveCameraController()end
-local cameraController=_state.cameraController if cameraController and
-cameraController.ApplyRotationDelta then local rotationDelta=Vector2.new(delta.Y
-,delta.X)*AIM_ROTATION_SCALE*-1 cameraController:ApplyRotationDelta(
-rotationDelta)return end local currentCFrame=camera.CFrame local targetCFrame=
-CFrame.new(currentCFrame.Position,targetPosition)camera.CFrame=targetCFrame
-local env=(getfenv())local mousemoverel=env.mousemoverel or(env.input and env.
-input.mousemoverel)if mousemoverel then mousemoverel(delta.X,delta.Y)end return
-end local env=(getfenv())local mousemoverel=env.mousemoverel or(env.input and
-env.input.mousemoverel)if mousemoverel then mousemoverel(delta.X/mouseDivisor,
-delta.Y/mouseDivisor)end end local function _aimAt(target)local character=target
-.Character if not character then return end local targetPart=character:
-FindFirstChild(_state.settings.targetPart)if not targetPart or not targetPart:
-IsA('BasePart')then return end local camera=Workspace.CurrentCamera if not
-camera then return end local targetPosition=(targetPart).Position
-_applyMouseAim(camera,targetPosition)if _state.settings.isDebug and _state.
-client.Logger then _state.client.Logger:info('Aiming at:',target.Name,'| Dist:',
-math.floor((targetPosition-camera.CFrame.Position).Magnitude))end end
-local function _connect()_maid:DoCleaning()local env=(getfenv())if env.Drawing
-then local circle=env.Drawing.new('Circle')circle.Thickness=1 circle.NumSides=
-FOV_CIRCLE_SIDES circle.Filled=false circle.Transparency=1 _state.fovCircle=
-circle _maid:GiveTask(function()if _state.fovCircle then _state.fovCircle:
-Remove()_state.fovCircle=nil end end)end RunService:BindToRenderStep(
-AIMBOT_RENDER_STEP,Enum.RenderPriority.Camera.Value+1,function(deltaTime)
-_updateFOV()if not _state.settings.isEnabled then return end if not
-UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)then
-return end local target=_getBestTarget()if target then _aimAt(target)end end)
-_maid:GiveTask(function()RunService:UnbindFromRenderStep(AIMBOT_RENDER_STEP)end)
-end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()_state
-.cameraController=_resolveCameraController()_connect()end function Aimbot.
+local cameraController=_state.cameraController local currentCFrame=camera.CFrame
+local targetCFrame=CFrame.new(currentCFrame.Position,targetPosition)if
+cameraController and cameraController.MimicRotation then cameraController:
+MimicRotation(targetCFrame)return end if cameraController and cameraController.
+ApplyRotationDelta then local rotationDelta=Vector2.new(delta.Y,delta.X)*
+AIM_ROTATION_SCALE*-1 cameraController:ApplyRotationDelta(rotationDelta)return
+end camera.CFrame=targetCFrame local env=(getfenv())local mousemoverel=env.
+mousemoverel or(env.input and env.input.mousemoverel)if mousemoverel then
+mousemoverel(delta.X,delta.Y)end return end local env=(getfenv())local
+mousemoverel=env.mousemoverel or(env.input and env.input.mousemoverel)if
+mousemoverel then mousemoverel(delta.X/mouseDivisor,delta.Y/mouseDivisor)end end
+local function _aimAt(target)local character=target.Character if not character
+then return end local targetPart=character:FindFirstChild(_state.settings.
+targetPart)if not targetPart or not targetPart:IsA('BasePart')then return end
+local camera=Workspace.CurrentCamera if not camera then return end local
+targetPosition=(targetPart).Position _applyMouseAim(camera,targetPosition)if
+_state.settings.isDebug and _state.client.Logger then _state.client.Logger:info(
+'Aiming at:',target.Name,'| Dist:',math.floor((targetPosition-camera.CFrame.
+Position).Magnitude))end end local function _connect()_maid:DoCleaning()local
+env=(getfenv())if env.Drawing then local circle=env.Drawing.new('Circle')circle.
+Thickness=1 circle.NumSides=FOV_CIRCLE_SIDES circle.Filled=false circle.
+Transparency=1 _state.fovCircle=circle _maid:GiveTask(function()if _state.
+fovCircle then _state.fovCircle:Remove()_state.fovCircle=nil end end)end
+RunService:BindToRenderStep(AIMBOT_RENDER_STEP,Enum.RenderPriority.Camera.Value+
+1,function(deltaTime)_updateFOV()if not _state.settings.isEnabled then return
+end if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2
+)then return end local target=_getBestTarget()if target then _aimAt(target)end
+end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(AIMBOT_RENDER_STEP)
+end)end function Aimbot.init(self,client)_state.client=client _maid=Maid.new()
+_state.cameraController=_resolveCameraController()_connect()end function Aimbot.
 cleanup(self)_maid:DoCleaning()end function Aimbot.toggle(self,state)_state.
 settings.isEnabled=state end function Aimbot.setTeamCheck(self,state)_state.
 settings.shouldTeamCheck=state end function Aimbot.setAliveCheck(self,state)

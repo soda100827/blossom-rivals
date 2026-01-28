@@ -223,14 +223,20 @@ local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 		end
 
 		local cameraController = _state.cameraController
+		local currentCFrame = camera.CFrame
+		local targetCFrame = CFrame.new(currentCFrame.Position, targetPosition)
+
+		if cameraController and cameraController.MimicRotation then
+			cameraController:MimicRotation(targetCFrame)
+			return
+		end
+
 		if cameraController and cameraController.ApplyRotationDelta then
 			local rotationDelta = Vector2.new(delta.Y, delta.X) * AIM_ROTATION_SCALE * -1
 			cameraController:ApplyRotationDelta(rotationDelta)
 			return
 		end
 
-		local currentCFrame = camera.CFrame
-		local targetCFrame = CFrame.new(currentCFrame.Position, targetPosition)
 		camera.CFrame = targetCFrame
 		local env = getfenv() :: any
 		local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
