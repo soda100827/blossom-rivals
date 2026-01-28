@@ -1,7 +1,6 @@
 --!strict
 
 --// Services
-local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -15,7 +14,6 @@ local AIMBOT_RENDER_STEP = "BlossomAimbot"
 local MAX_SMOOTHNESS = 100
 local MIN_SMOOTHNESS = 1
 local FOV_CIRCLE_SIDES = 100
-local AIM_ROTATION_SCALE = Vector2.new(0.77, 1) * 0.008726646259971648
 
 --// Types
 export type Aimbot = {
@@ -54,22 +52,12 @@ local _state = {
 	},
 	target = nil :: Player?,
 	fovCircle = nil :: any,
-	cameraController = nil :: any,
 }
 local _signals = {}
 
 --// Private helpers
 local function _getMouseLocation(): Vector2
-	local mousePos = UserInputService:GetMouseLocation()
-	local inset = GuiService:GetGuiInset()
-	return mousePos - Vector2.new(inset.X, inset.Y)
-end
-
-local function _getAimPosition(camera: Camera): Vector2
-	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
-		return camera.ViewportSize / 2
-	end
-	return _getMouseLocation()
+	return UserInputService:GetMouseLocation()
 end
 
 local function _isOnScreen(position: Vector3): (boolean, Vector2)
@@ -79,37 +67,6 @@ local function _isOnScreen(position: Vector3): (boolean, Vector2)
 	end
 	local screenPos, onScreen = camera:WorldToViewportPoint(position)
 	return onScreen, Vector2.new(screenPos.X, screenPos.Y)
-end
-
-local function _resolveCameraController(): any?
-	local localPlayer = Players.LocalPlayer
-	if not localPlayer then
-		return nil
-	end
-
-	local playerScripts = localPlayer:FindFirstChild("PlayerScripts")
-	if not playerScripts then
-		return nil
-	end
-
-	local controllers = playerScripts:FindFirstChild("Controllers")
-	if not controllers then
-		return nil
-	end
-
-	local cameraController = controllers:FindFirstChild("CameraController")
-	if not cameraController or not cameraController:IsA("ModuleScript") then
-		return nil
-	end
-
-	local ok, result = pcall(function()
-		return require(cameraController)
-	end)
-	if ok then
-		return result
-	end
-
-	return nil
 end
 
 local function _isVisible(targetPart: BasePart, origin: Vector3): boolean
@@ -137,7 +94,7 @@ end
 local function _getBestTarget(): Player?
 	local camera = Workspace.CurrentCamera
 	local localPlayer = Players.LocalPlayer
-	local mousePos = camera and _getAimPosition(camera) or Vector2.zero
+	local mousePos = _getMouseLocation()
 
 	if not camera or not localPlayer then
 		return nil
@@ -198,53 +155,44 @@ local function _updateFOV()
 		return
 	end
 
-	local camera = Workspace.CurrentCamera
-	if not camera then
-		return
-	end
-
 	_state.fovCircle.Visible = _state.settings.shouldShowFov
 	_state.fovCircle.Radius = _state.settings.fovRadius
 	_state.fovCircle.Color = _state.settings.fovColor
-	_state.fovCircle.Position = _getAimPosition(camera)
+	_state.fovCircle.Position = _getMouseLocation()
+end
+
+local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTime: number)
+	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
+	local isInstant = smoothness >= MAX_SMOOTHNESS
+	local targetCFrame = CFrame.lookAt(camera.CFrame.Position, targetPosition)
+
+	if isInstant then
+		camera.CFrame = targetCFrame
+		return
+	end
+
+	local duration = (MAX_SMOOTHNESS - smoothness) / MAX_SMOOTHNESS
+	if duration <= 0 then
+		camera.CFrame = targetCFrame
+		return
+	end
+
+	local alpha = math.clamp(deltaTime / duration, 0, 1)
+	camera.CFrame = camera.CFrame:Lerp(targetCFrame, alpha)
 end
 
 local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
+	local mouseBehavior = UserInputService.MouseBehavior
+	if mouseBehavior == Enum.MouseBehavior.LockCenter then
+		return
+	end
+
 	local smoothness = math.clamp(_state.settings.smoothness, MIN_SMOOTHNESS, MAX_SMOOTHNESS)
 	local _, screenPos = _isOnScreen(targetPosition)
-	local mousePos = _getAimPosition(camera)
+	local mousePos = _getMouseLocation()
 	local delta = screenPos - mousePos
 
 	local mouseDivisor = (MAX_SMOOTHNESS - smoothness) / 5 + 1
-
-	if UserInputService.MouseBehavior == Enum.MouseBehavior.LockCenter then
-		if not _state.cameraController then
-			_state.cameraController = _resolveCameraController()
-		end
-
-		local cameraController = _state.cameraController
-		local currentCFrame = camera.CFrame
-		local targetCFrame = CFrame.new(currentCFrame.Position, targetPosition)
-
-		if cameraController and cameraController.MimicRotation then
-			cameraController:MimicRotation(targetCFrame)
-			return
-		end
-
-		if cameraController and cameraController.ApplyRotationDelta then
-			local rotationDelta = Vector2.new(delta.Y, delta.X) * AIM_ROTATION_SCALE * -1
-			cameraController:ApplyRotationDelta(rotationDelta)
-			return
-		end
-
-		camera.CFrame = targetCFrame
-		local env = getfenv() :: any
-		local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
-		if mousemoverel then
-			mousemoverel(delta.X, delta.Y)
-		end
-		return
-	end
 
 	local env = getfenv() :: any
 	local mousemoverel = env.mousemoverel or (env.input and env.input.mousemoverel)
@@ -254,7 +202,7 @@ local function _applyMouseAim(camera: Camera, targetPosition: Vector3)
 	end
 end
 
-local function _aimAt(target: Player)
+local function _aimAt(target: Player, deltaTime: number)
 	local character = target.Character
 	if not character then
 		return
@@ -271,6 +219,7 @@ local function _aimAt(target: Player)
 	end
 
 	local targetPosition = (targetPart :: BasePart).Position
+	_applyCameraAim(camera, targetPosition, deltaTime)
 	_applyMouseAim(camera, targetPosition)
 
 	if _state.settings.isDebug and _state.client.Logger then
@@ -317,7 +266,7 @@ local function _connect()
 
 		local target = _getBestTarget()
 		if target then
-			_aimAt(target)
+			_aimAt(target, deltaTime)
 		end
 	end)
 
@@ -330,7 +279,6 @@ end
 function Aimbot.init(self: Aimbot, client: any)
 	_state.client = client
 	_maid = Maid.new()
-	_state.cameraController = _resolveCameraController()
 	_connect()
 end
 
