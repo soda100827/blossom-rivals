@@ -52,6 +52,7 @@ local _state = {
 		isDebug = false,
 	},
 	target = nil :: Player?,
+	lockedTarget = nil :: Player?,
 	fovCircle = nil :: any,
 	defaultAutoRotate = nil :: boolean?,
 	hasAutoRotateOverride = false,
@@ -238,6 +239,45 @@ local function _getBestTarget(aimScreenPos: Vector2): Player?
 	return bestTarget
 end
 
+local function _isTargetValid(target: Player): boolean
+	local camera = Workspace.CurrentCamera
+	local localPlayer = Players.LocalPlayer
+	if not camera or not localPlayer then
+		return false
+	end
+	if target == localPlayer then
+		return false
+	end
+	if _state.settings.shouldTeamCheck and target.Team == localPlayer.Team then
+		return false
+	end
+	local character = target.Character
+	if not character then
+		return false
+	end
+	local humanoid = character:FindFirstChild("Humanoid")
+	if _state.settings.shouldAliveCheck then
+		if not humanoid or not humanoid:IsA("Humanoid") or humanoid.Health <= 0 then
+			return false
+		end
+	end
+	local targetPart = character:FindFirstChild(_state.settings.targetPart)
+	if not targetPart or not targetPart:IsA("BasePart") then
+		return false
+	end
+	local onScreen = _isOnScreen(targetPart.Position)
+	if not onScreen then
+		return false
+	end
+	if _state.settings.shouldWallCheck then
+		local origin = camera.CFrame.Position
+		if not _isVisible(targetPart, origin) then
+			return false
+		end
+	end
+	return true
+end
+
 local function _updateFOV(aimScreenPos: Vector2)
 	if not _state.fovCircle then
 		return
@@ -363,15 +403,24 @@ local function _connect()
 		if not isAiming then
 			_setAutoRotateOverride(false)
 			_setMouseSensitivityOverride(false)
+			_state.lockedTarget = nil
 			return
 		end
 
-		local target = _getBestTarget(aimScreenPos)
+		local target = _state.lockedTarget
+		if target and not _isTargetValid(target) then
+			target = nil
+		end
+		if not target then
+			target = _getBestTarget(aimScreenPos)
+		end
 		if not target then
 			_setAutoRotateOverride(false)
 			_setMouseSensitivityOverride(false)
+			_state.lockedTarget = nil
 			return
 		end
+		_state.lockedTarget = target
 		_aimAt(target, deltaTime)
 	end)
 
