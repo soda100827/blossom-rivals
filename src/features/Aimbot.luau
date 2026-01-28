@@ -60,6 +60,22 @@ local function _getMouseLocation(): Vector2
 	return UserInputService:GetMouseLocation()
 end
 
+local function _getScreenCenter(): Vector2
+	local camera = Workspace.CurrentCamera
+	if not camera then
+		return _getMouseLocation()
+	end
+	local viewport = camera.ViewportSize
+	return Vector2.new(viewport.X / 2, viewport.Y / 2)
+end
+
+local function _getAimScreenPosition(isAiming: boolean): Vector2
+	if isAiming then
+		return _getScreenCenter()
+	end
+	return _getMouseLocation()
+end
+
 local function _isOnScreen(position: Vector3): (boolean, Vector2)
 	local camera = Workspace.CurrentCamera
 	if not camera then
@@ -91,10 +107,9 @@ local function _isVisible(targetPart: BasePart, origin: Vector3): boolean
 	return true
 end
 
-local function _getBestTarget(): Player?
+local function _getBestTarget(aimScreenPos: Vector2): Player?
 	local camera = Workspace.CurrentCamera
 	local localPlayer = Players.LocalPlayer
-	local mousePos = _getMouseLocation()
 
 	if not camera or not localPlayer then
 		return nil
@@ -140,7 +155,7 @@ local function _getBestTarget(): Player?
 			end
 		end
 
-		local distance = (screenPos - mousePos).Magnitude
+		local distance = (screenPos - aimScreenPos).Magnitude
 		if distance < closestDistance then
 			closestDistance = distance
 			bestTarget = player
@@ -150,7 +165,7 @@ local function _getBestTarget(): Player?
 	return bestTarget
 end
 
-local function _updateFOV()
+local function _updateFOV(aimScreenPos: Vector2)
 	if not _state.fovCircle then
 		return
 	end
@@ -158,7 +173,7 @@ local function _updateFOV()
 	_state.fovCircle.Visible = _state.settings.shouldShowFov
 	_state.fovCircle.Radius = _state.settings.fovRadius
 	_state.fovCircle.Color = _state.settings.fovColor
-	_state.fovCircle.Position = _getMouseLocation()
+	_state.fovCircle.Position = aimScreenPos
 end
 
 local function _applyCameraAim(camera: Camera, targetPosition: Vector3, deltaTime: number)
@@ -254,17 +269,20 @@ local function _connect()
 
 	-- Run after the game's camera controller so we don't get overwritten.
 	RunService:BindToRenderStep(AIMBOT_RENDER_STEP, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
-		_updateFOV()
+		local isAiming = UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+		local aimScreenPos = _getAimScreenPosition(isAiming)
+
+		_updateFOV(aimScreenPos)
 
 		if not _state.settings.isEnabled then
 			return
 		end
 
-		if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
+		if not isAiming then
 			return
 		end
 
-		local target = _getBestTarget()
+		local target = _getBestTarget(aimScreenPos)
 		if target then
 			_aimAt(target, deltaTime)
 		end
