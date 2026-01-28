@@ -15,6 +15,7 @@ local BUNDLE_URL =
 local MODULES: { { name: string, loader: Module } } = {
 	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
 	{ name = "Player", loader = require("src/features/Player") :: Module },
+	{ name = "Aimbot", loader = require("src/features/Aimbot") :: Module },
 	{ name = "Interface", loader = require("src/ui/Interface") :: Module },
 }
 

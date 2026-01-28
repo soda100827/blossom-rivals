@@ -175,10 +175,119 @@ local function _mount()
 	})
 
 	local tabs = {
+		main = window:AddTab("Main"),
 		visuals = window:AddTab("Visuals"),
 		misc = window:AddTab("Misc"),
 		uiSettings = window:AddTab("UI Settings"),
 	}
+
+	local aimbotGroup = tabs.main:AddLeftGroupbox("Aimbot")
+	aimbotGroup:AddToggle("AimbotEnabled", {
+		Text = "Enabled",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.toggle then
+				mod:toggle(state)
+			end
+		end,
+	})
+
+	aimbotGroup:AddToggle("AimbotTeamCheck", {
+		Text = "Team Check",
+		Default = true,
+		Callback = function(state)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setTeamCheck then
+				mod:setTeamCheck(state)
+			end
+		end,
+	})
+
+	aimbotGroup:AddToggle("AimbotWallCheck", {
+		Text = "Wall Check",
+		Default = true,
+		Callback = function(state)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setWallCheck then
+				mod:setWallCheck(state)
+			end
+		end,
+	})
+
+	aimbotGroup:AddToggle("AimbotAliveCheck", {
+		Text = "Alive Check",
+		Default = true,
+		Callback = function(state)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setAliveCheck then
+				mod:setAliveCheck(state)
+			end
+		end,
+	})
+
+	aimbotGroup
+		:AddToggle("AimbotShowFOV", {
+			Text = "Show FOV",
+			Default = false,
+			Callback = function(state)
+				local mod = _state.client.Modules.Aimbot
+				if mod and mod.setShowFOV then
+					mod:setShowFOV(state)
+				end
+			end,
+		})
+		:AddColorPicker("AimbotFOVColor", {
+			Default = Color3.fromRGB(255, 255, 255),
+			Title = "FOV Color",
+			Callback = function(value)
+				local mod = _state.client.Modules.Aimbot
+				if mod and mod.setFOVColor then
+					mod:setFOVColor(value)
+				end
+			end,
+		})
+
+	aimbotGroup:AddSlider("AimbotFOVRadius", {
+		Text = "FOV Radius",
+		Default = 100,
+		Min = 10,
+		Max = 500,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setFOVRadius then
+				mod:setFOVRadius(value)
+			end
+		end,
+	})
+
+	aimbotGroup:AddSlider("AimbotSmoothness", {
+		Text = "Smoothness",
+		Default = 1,
+		Min = 1,
+		Max = 20,
+		Rounding = 1,
+		Callback = function(value)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setSmoothness then
+				mod:setSmoothness(value)
+			end
+		end,
+	})
+
+	aimbotGroup:AddDropdown("AimbotTargetPart", {
+		Values = { "Head", "HumanoidRootPart", "UpperTorso" },
+		Default = 1,
+		Multi = false,
+		Text = "Target Part",
+		Callback = function(value)
+			local mod = _state.client.Modules.Aimbot
+			if mod and mod.setTargetPart then
+				mod:setTargetPart(value)
+			end
+		end,
+	})
 
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {

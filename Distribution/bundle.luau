@@ -387,8 +387,74 @@ value)_state.jumpPowerValue=value _applyJumpPower()end function Player.
 setFlySpeed(self,value)_state.flySpeed=value end return Player end function
 __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+do local function __modImpl()local Players=game:GetService('Players')local
+RunService=game:GetService('RunService')local UserInputService=game:GetService(
+'UserInputService')local Workspace=game:GetService('Workspace')local Maid=
+__DARKLUA_BUNDLE_MODULES.b()local Aimbot={}Aimbot.__index=Aimbot local _maid=nil
+local _state={client=nil,settings={Enabled=false,TeamCheck=true,AliveCheck=true,
+WallCheck=true,ShowFOV=false,FOVRadius=100,FOVColor=Color3.fromRGB(255,255,255),
+Smoothness=1,TargetPart='Head'},target=nil,fovCircle=nil}local function
+_getMouseLocation()return UserInputService:GetMouseLocation()end local function
+_isOnScreen(position)local camera=Workspace.CurrentCamera if not camera then
+return false,Vector2.zero end local screenPos,onScreen=camera:
+WorldToViewportPoint(position)return onScreen,Vector2.new(screenPos.X,screenPos.
+Y)end local function _isVisible(targetPart,origin)local params=RaycastParams.
+new()if Players.LocalPlayer and Players.LocalPlayer.Character then params.
+FilterDescendantsInstances={Players.LocalPlayer.Character,Workspace.
+CurrentCamera}else params.FilterDescendantsInstances={Workspace.CurrentCamera}
+end params.FilterType=Enum.RaycastFilterType.Exclude params.IgnoreWater=true
+local direction=targetPart.Position-origin local result=Workspace:Raycast(origin
+,direction,params)if result then return result.Instance:IsDescendantOf((
+targetPart.Parent))end return true end local function _getBestTarget()local
+camera=Workspace.CurrentCamera local localPlayer=Players.LocalPlayer local
+mousePos=_getMouseLocation()if not camera or not localPlayer then return nil end
+local bestTarget=nil local closestDistance=_state.settings.FOVRadius for _,
+player in ipairs(Players:GetPlayers())do if player==localPlayer then continue
+end if _state.settings.TeamCheck and player.Team==localPlayer.Team then continue
+end local character=player.Character if not character then continue end local
+humanoid=character:FindFirstChild('Humanoid')if _state.settings.AliveCheck then
+if not humanoid or not humanoid:IsA('Humanoid')or humanoid.Health<=0 then
+continue end end local targetPart=character:FindFirstChild(_state.settings.
+TargetPart)if not targetPart or not targetPart:IsA('BasePart')then continue end
+local onScreen,screenPos=_isOnScreen(targetPart.Position)if not onScreen then
+continue end if _state.settings.WallCheck then local origin=camera.CFrame.
+Position if not _isVisible(targetPart,origin)then continue end end local
+distance=(screenPos-mousePos).Magnitude if distance<closestDistance then
+closestDistance=distance bestTarget=player end end return bestTarget end
+local function _updateFOV()if not _state.fovCircle then return end _state.
+fovCircle.Visible=_state.settings.ShowFOV _state.fovCircle.Radius=_state.
+settings.FOVRadius _state.fovCircle.Color=_state.settings.FOVColor _state.
+fovCircle.Position=_getMouseLocation()end local function _aimAt(target)local
+character=target.Character if not character then return end local targetPart=
+character:FindFirstChild(_state.settings.TargetPart)if not targetPart or not
+targetPart:IsA('BasePart')then return end local _,screenPos=_isOnScreen(
+targetPart.Position)local mousePos=_getMouseLocation()local delta=screenPos-
+mousePos local smoothness=math.max(1,_state.settings.Smoothness)local env=(
+getfenv())local mousemoverel=env.mousemoverel or(env.input and env.input.
+mousemoverel)if mousemoverel then mousemoverel(delta.X/smoothness,delta.Y/
+smoothness)end end local function _connect()_maid:DoCleaning()local env=(
+getfenv())if env.Drawing then local circle=env.Drawing.new('Circle')circle.
+Thickness=1 circle.NumSides=100 circle.Filled=false circle.Transparency=1 _state
+.fovCircle=circle _maid:GiveTask(function()if _state.fovCircle then _state.
+fovCircle:Remove()_state.fovCircle=nil end end)end _maid:GiveTask(RunService.
+RenderStepped:Connect(function()_updateFOV()if not _state.settings.Enabled then
+return end if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.
+MouseButton2)then return end local target=_getBestTarget()if target then _aimAt(
+target)end end))end function Aimbot.init(self,client)_state.client=client _maid=
+Maid.new()_connect()end function Aimbot.cleanup(self)_maid:DoCleaning()end
+function Aimbot.toggle(self,state)_state.settings.Enabled=state end function
+Aimbot.setTeamCheck(self,state)_state.settings.TeamCheck=state end function
+Aimbot.setAliveCheck(self,state)_state.settings.AliveCheck=state end function
+Aimbot.setWallCheck(self,state)_state.settings.WallCheck=state end function
+Aimbot.setShowFOV(self,state)_state.settings.ShowFOV=state end function Aimbot.
+setFOVRadius(self,radius)_state.settings.FOVRadius=radius end function Aimbot.
+setFOVColor(self,color)_state.settings.FOVColor=color end function Aimbot.
+setSmoothness(self,value)_state.settings.Smoothness=value end function Aimbot.
+setTargetPart(self,partName)_state.settings.TargetPart=partName end return
+Aimbot end function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES
+.cache.g if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end
+return v.c end end do local function __modImpl()local RunService=game:
+GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -431,9 +497,35 @@ _loadRemote('addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
 'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
 themeManager _state.saveManager=saveManager local window=library:CreateWindow({
 Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
-IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={visuals=window:AddTab(
-'Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}
-local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
+IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={main=window:AddTab('Main'),
+visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:
+AddTab('UI Settings')}local aimbotGroup=tabs.main:AddLeftGroupbox('Aimbot')
+aimbotGroup:AddToggle('AimbotEnabled',{Text='Enabled',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Aimbot if mod and mod.toggle then
+mod:toggle(state)end end})aimbotGroup:AddToggle('AimbotTeamCheck',{Text=
+'Team Check',Default=true,Callback=function(state)local mod=_state.client.
+Modules.Aimbot if mod and mod.setTeamCheck then mod:setTeamCheck(state)end end})
+aimbotGroup:AddToggle('AimbotWallCheck',{Text='Wall Check',Default=true,Callback
+=function(state)local mod=_state.client.Modules.Aimbot if mod and mod.
+setWallCheck then mod:setWallCheck(state)end end})aimbotGroup:AddToggle(
+'AimbotAliveCheck',{Text='Alive Check',Default=true,Callback=function(state)
+local mod=_state.client.Modules.Aimbot if mod and mod.setAliveCheck then mod:
+setAliveCheck(state)end end})aimbotGroup:AddToggle('AimbotShowFOV',{Text=
+'Show FOV',Default=false,Callback=function(state)local mod=_state.client.Modules
+.Aimbot if mod and mod.setShowFOV then mod:setShowFOV(state)end end}):
+AddColorPicker('AimbotFOVColor',{Default=Color3.fromRGB(255,255,255),Title=
+'FOV Color',Callback=function(value)local mod=_state.client.Modules.Aimbot if
+mod and mod.setFOVColor then mod:setFOVColor(value)end end})aimbotGroup:
+AddSlider('AimbotFOVRadius',{Text='FOV Radius',Default=100,Min=10,Max=500,
+Rounding=0,Callback=function(value)local mod=_state.client.Modules.Aimbot if mod
+and mod.setFOVRadius then mod:setFOVRadius(value)end end})aimbotGroup:AddSlider(
+'AimbotSmoothness',{Text='Smoothness',Default=1,Min=1,Max=20,Rounding=1,Callback
+=function(value)local mod=_state.client.Modules.Aimbot if mod and mod.
+setSmoothness then mod:setSmoothness(value)end end})aimbotGroup:AddDropdown(
+'AimbotTargetPart',{Values={'Head','HumanoidRootPart','UpperTorso'},Default=1,
+Multi=false,Text='Target Part',Callback=function(value)local mod=_state.client.
+Modules.Aimbot if mod and mod.setTargetPart then mod:setTargetPart(value)end end
+})local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
 'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
 local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
 state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end end})
@@ -566,16 +658,17 @@ _runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
 function Interface.init(self,client)_state.client=client _state.logger=client.
 Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
 _maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
-isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.g()
-local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end end local
+isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.h()
+local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end end local
 ReplicatedFirst=game:GetService('ReplicatedFirst')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
 __DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
 local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
-'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.g())}}local Client={}Client.__index=Client local _maid=
+'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Aimbot',loader=(
+__DARKLUA_BUNDLE_MODULES.g())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.h())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=(
 function()local getfenvAny=getfenv local g=(getfenvAny(0))return g.BlossomSilent
 or(g.getgenv and g.getgenv().BlossomSilent)or false end)(),logger=nil}local
