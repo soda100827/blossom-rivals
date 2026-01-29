@@ -257,7 +257,7 @@ local function _aimAt(target: Player)
 	-- Roblox order: Y (Yaw), X (Pitch), Z (Roll) for EulerAngles?
 	-- ToOrientation returns (RX, RY, RZ).
 
-	local targetRotation = Vector2.new(y, x)
+	local targetRotation = Vector2.new(x, y)
 
 	-- Debug once per target switch or low frequency?
 	-- For now, just print if we have logic

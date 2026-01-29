@@ -457,7 +457,7 @@ currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(currentCFrame.
 Position,targetPos)if not _state.cameraController or not _state.cameraController
 .SetRotation then local alpha=if _state.smoothness>0 then(1-_state.smoothness)
 else 1 camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return end local x,y,
-_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(y,x)_state.logger
+_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)_state.logger
 :info('Aiming...',targetRotation)if _state.smoothness>0 then local currentRot=(
 _state.cameraController.Rotation)local diff=targetRotation-currentRot local step
 =(1-_state.smoothness)local newRot=currentRot:Lerp(targetRotation,step)_state.
