@@ -332,7 +332,7 @@ local function _mount()
 
 	combatGroup:AddToggle("CombatClosestPosition", {
 		Text = "Closest Position",
-		Default = false,
+		Default = true,
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setClosestPositionEnabled then
@@ -351,7 +351,15 @@ local function _mount()
 			"LeftUpperLeg",
 			"RightUpperLeg",
 		},
-		Default = 1,
+		Default = {
+			"Head",
+			"UpperTorso",
+			"LowerTorso",
+			"LeftUpperArm",
+			"RightUpperArm",
+			"LeftUpperLeg",
+			"RightUpperLeg",
+		},
 		Multi = true,
 		Text = "Closest Position Whitelist",
 		Tooltip = "Parts to consider for Closest Position",
@@ -383,16 +391,7 @@ local function _mount()
 		end,
 	})
 
-	combatGroup:AddToggle("CombatTeamCheck", {
-		Text = "Team Check",
-		Default = false,
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setTeamCheckEnabled then
-				mod:setTeamCheckEnabled(state)
-			end
-		end,
-	})
+
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",

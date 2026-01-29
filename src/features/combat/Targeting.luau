@@ -185,7 +185,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 	local collectionService = game:GetService("CollectionService")
 
 	local closest, closestDist = nil, State.silentAimFovRadius
-	local screenCenter = camera.ViewportSize / 2
+	local mouseLocation = UserInputService:GetMouseLocation()
 
 	for _, entity in ipairs(collectionService:GetTagged("Entity")) do
 		if entity == localPlayer.Character then
@@ -241,7 +241,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 
 			local pos, onScreen = camera:WorldToViewportPoint(targetPart.Position)
 			if onScreen then
-				local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+				local dist = (Vector2.new(pos.X, pos.Y) - mouseLocation).Magnitude
 				if dist < closestDist then
 					closest = targetPart
 					closestDist = dist
