@@ -1,23 +1,36 @@
 local __DARKLUA_BUNDLE_MODULES={cache={}}do do local function __modImpl()local
-DEFAULT_SOURCE='System'local Logger={}Logger.__index=Logger local function
+RunService=game:GetService('RunService')local CoreGui=game:GetService('CoreGui')
+local DEFAULT_SOURCE='System'local COLORS={Cyan='33, 161, 163',Green='0, 255, 0'
+,Pink='255, 102, 153',White='255, 255, 255',Yellow='255, 215, 0',Red=
+'220, 20, 60'}local Logger={}Logger.__index=Logger local function
+_enableRichText()RunService.Heartbeat:Connect(function()pcall(function()local
+devConsole=CoreGui:FindFirstChild('DevConsoleMaster')if devConsole then for _,
+label in pairs(devConsole:GetDescendants())do if label:IsA('TextLabel')and not
+label.RichText then label.RichText=true end end end end)end)end local function
 formatMessage(level,source,...)local parts={...}for i,value in ipairs(parts)do
-parts[i]=tostring(value)end local message=table.concat(parts,' ')return string.
-format('[%s][%s] %s',level,source,message)end function Logger.new(source)local
-instance=setmetatable({source=source or DEFAULT_SOURCE},Logger)return(instance)
-end function Logger.info(self,...)print(formatMessage('INFO',self.source,...))
-end function Logger.warn(self,...)warn(formatMessage('WARN',self.source,...))end
-function Logger.error(self,...)error(formatMessage('ERROR',self.source,...),0)
-end return Logger end function __DARKLUA_BUNDLE_MODULES.a()local v=
-__DARKLUA_BUNDLE_MODULES.cache.a if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.a=v end return v.c end end do local function
-__modImpl()local Maid={}Maid.ClassName='Maid'function Maid.new()return
-setmetatable({_tasks={}},Maid)end function Maid.isMaid(value)return type(value)
-=='table'and value.ClassName=='Maid'end function Maid:__index(index)if Maid[
-index]then return Maid[index]else return self._tasks[index]end end function Maid
-:__newindex(index,newTask)if Maid[index]~=nil then error(("'%s' is reserved"):
-format(tostring(index)),2)end local tasks=self._tasks local oldTask=tasks[index]
-if oldTask==newTask then return end tasks[index]=newTask if oldTask then if
-type(oldTask)=='function'then oldTask()elseif typeof(oldTask)==
+parts[i]=tostring(value)end local message=table.concat(parts,' ')local
+levelColor=COLORS.White if level=='INFO'then levelColor=COLORS.White elseif
+level=='SUCCESS'then levelColor=COLORS.Green elseif level=='WARN'then levelColor
+=COLORS.Yellow elseif level=='ERROR'then levelColor=COLORS.Red end return string
+.format(
+[[<stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]</b></font></stroke> <stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]</b></font></stroke> <font color='rgb(%s)'>%s</font>]]
+,levelColor,level,COLORS.Pink,source,COLORS.White,message)end function Logger.
+new(source)local instance=setmetatable({source=source or DEFAULT_SOURCE},Logger)
+return(instance)end function Logger.info(self,...)print(formatMessage('INFO',
+self.source,...))end function Logger.success(self,...)print(formatMessage(
+'SUCCESS',self.source,...))end function Logger.warn(self,...)warn(formatMessage(
+'WARN',self.source,...))end function Logger.error(self,...)error(formatMessage(
+'ERROR',self.source,...),0)end task.spawn(_enableRichText)return Logger end
+function __DARKLUA_BUNDLE_MODULES.a()local v=__DARKLUA_BUNDLE_MODULES.cache.a if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.a=v end return v.c
+end end do local function __modImpl()local Maid={}Maid.ClassName='Maid'function
+Maid.new()return setmetatable({_tasks={}},Maid)end function Maid.isMaid(value)
+return type(value)=='table'and value.ClassName=='Maid'end function Maid:__index(
+index)if Maid[index]then return Maid[index]else return self._tasks[index]end end
+function Maid:__newindex(index,newTask)if Maid[index]~=nil then error((
+"'%s' is reserved"):format(tostring(index)),2)end local tasks=self._tasks local
+oldTask=tasks[index]if oldTask==newTask then return end tasks[index]=newTask if
+oldTask then if type(oldTask)=='function'then oldTask()elseif typeof(oldTask)==
 'RBXScriptConnection'then oldTask:Disconnect()elseif oldTask.Destroy then
 oldTask:Destroy()end end end function Maid:GiveTask(task)if not task then error(
 'Task cannot be false or nil',2)end local taskId=#self._tasks+1 self[taskId]=
@@ -215,12 +228,11 @@ local function _connect()_maid:DoCleaning()local removeConn=Players.
 PlayerRemoving:Connect(function(player)_removePlayer(player)end)_maid:GiveTask(
 removeConn)local renderConn=RunService.RenderStepped:Connect(function()_render()
 end)_maid:GiveTask(renderConn)end local function _enable()if not getDrawingLib()
-then _state.logger:warn('Drawing API not available; Visuals disabled.')_state.
-isEnabled=false return end _connect()end local function _disable()_maid:
-DoCleaning()_clear()end function Visuals.init(self,client)_state.client=client
-_state.logger=client.Logger _maid=Maid.new()end function Visuals.cleanup(self)
-_state.isEnabled=false _disable()end function Visuals.toggle(self,isEnabled)if
-_state.isEnabled==isEnabled then return end _state.isEnabled=isEnabled if
+then _state.isEnabled=false return end _connect()end local function _disable()
+_maid:DoCleaning()_clear()end function Visuals.init(self,client)_state.client=
+client _state.logger=client.Logger _maid=Maid.new()end function Visuals.cleanup(
+self)_state.isEnabled=false _disable()end function Visuals.toggle(self,isEnabled
+)if _state.isEnabled==isEnabled then return end _state.isEnabled=isEnabled if
 isEnabled then _enable()else _disable()end end function Visuals.setEspEnabled(
 self,isEnabled)_state.settings.isEspEnabled=isEnabled if not isEnabled then
 _clear()end end function Visuals.setShowNames(self,shouldShow)_state.settings.
@@ -408,70 +420,67 @@ controllers=playerScripts:WaitForChild('Controllers',5)if not controllers then
 return end local camControllerScript=controllers:WaitForChild('CameraController'
 ,5)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
 success,result=pcall(function()return require(camControllerScript)end)if success
-then _state.cameraController=result if logger then logger:info(
-'CameraController found and required')end else if logger then logger:error(
-'Failed to require CameraController: '..tostring(result))end end end end
-local function _updateFovCircle()local lib=_getDrawingLib()if not lib then
-return end local circle=_state.fovCircle if _state.isFovEnabled and _state.
-isAimbotEnabled then if not circle then circle=lib.new('Circle')_state.fovCircle
-=circle end local c=circle c.Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides
-=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=CONSTANTS.
-FOV_CIRCLE_COLOR local mouseLocation=UserInputService:GetMouseLocation()c.
-Position=mouseLocation c.Radius=_state.fovRadius c.Visible=true else local c=
-circle if c then c.Visible=false end end end local function _getBestTarget()
-local camera=_getCamera()local localPlayer=_getLocalPlayer()local mouseLocation=
-UserInputService:GetMouseLocation()local bestTarget=nil local shortestDistance=
-_state.fovRadius for _,player in ipairs(Players:GetPlayers())do if player==
-localPlayer then continue end if _state.isTeamCheckEnabled and player.Team==
-localPlayer.Team then continue end local character=player.Character if not
-character then continue end local humanoid=character:FindFirstChildOfClass(
-'Humanoid')if not humanoid or humanoid.Health<=0 then continue end local head=
-character:FindFirstChild('Head')if not head then continue end if not head:IsA(
-'BasePart')then continue end local headPart=head if _state.isWallCheckEnabled
-then local origin=camera.CFrame.Position local direction=headPart.Position-
-origin local raycastParams=RaycastParams.new()raycastParams.
-FilterDescendantsInstances={localPlayer.Character,character}raycastParams.
-FilterType=Enum.RaycastFilterType.Exclude local result=Workspace:Raycast(origin,
-direction,raycastParams)if result then continue end end local screenPos,onScreen
-=camera:WorldToViewportPoint(headPart.Position)if not onScreen then continue end
-local distance=(Vector2.new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if
-distance<shortestDistance then shortestDistance=distance bestTarget=player end
-end return bestTarget end local function _aimAt(target)if not _state.
-cameraController then return end if not target.Character then return end local
-head=target.Character:FindFirstChild('Head')if not head or not head:IsA(
-'BasePart')then return end local camera=_getCamera()local targetPos=(head).
-Position local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(
-currentCFrame.Position,targetPos)local x,y,_=lookAtCFrame:ToOrientation()local
-targetRotation=Vector2.new(x,y)if _state.smoothness>0 then local currentRot=(
-_state.cameraController.Rotation)local diff=targetRotation-currentRot local step
-=(1-_state.smoothness)local newRot=currentRot:Lerp(targetRotation,step)_state.
-cameraController:SetRotation(newRot)else _state.cameraController:SetRotation(
-targetRotation)end end local function _handleInput(input)if not _state.
-triggerKey then return end local key=_state.triggerKey local isTrigger=false if
-input.UserInputType==Enum.UserInputType.Keyboard and input.KeyCode==key then
-isTrigger=true elseif input.UserInputType==Enum.UserInputType.MouseButton1 and
-key=='MouseButton1'then isTrigger=true elseif input.UserInputType==Enum.
-UserInputType.MouseButton2 and key=='MouseButton2'then isTrigger=true end if
-isTrigger then _state.isAiming=(input.UserInputState==Enum.UserInputState.Begin)
-end end local function _checkKeyDown()if type(_state.triggerKey)=='string'then
-local keyName=_state.triggerKey if keyName=='MouseButton1'then return
-UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)elseif
-keyName=='MouseButton2'then return UserInputService:IsMouseButtonPressed(Enum.
-UserInputType.MouseButton2)else local success,keyCode=pcall(function()return
-Enum.KeyCode[keyName]end)if success and keyCode then return UserInputService:
-IsKeyDown(keyCode)end end elseif typeof(_state.triggerKey)=='EnumItem'then if
-_state.triggerKey.EnumType==Enum.KeyCode then return UserInputService:IsKeyDown(
-_state.triggerKey)elseif _state.triggerKey.EnumType==Enum.UserInputType then
-return UserInputService:IsMouseButtonPressed(_state.triggerKey)end end return
-false end local function _connect()_maid:DoCleaning()_fetchCameraController(
-_state.logger)local runConn=RunService.RenderStepped:Connect(function()
-_updateFovCircle()if _state.isAimbotEnabled then _state.isAiming=_checkKeyDown()
-if _state.isAiming then local target=_getBestTarget()if target then _aimAt(
-target)end end end end)_maid:GiveTask(runConn)end local function _disconnect()if
-_state.fovCircle then pcall(function()((_state.fovCircle)):Remove()end)_state.
-fovCircle=nil end _maid:DoCleaning()end function Combat.init(self,client)_state.
-client=client _state.logger=client.Logger _maid=Maid.new()_connect()_state.
-logger:info('Combat aimbot module initialized')end function Combat.cleanup(self)
+then _state.cameraController=result end end end local function _updateFovCircle(
+)local lib=_getDrawingLib()if not lib then return end local circle=_state.
+fovCircle if _state.isFovEnabled and _state.isAimbotEnabled then if not circle
+then circle=lib.new('Circle')_state.fovCircle=circle end local c=circle c.
+Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.
+FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=CONSTANTS.FOV_CIRCLE_COLOR local
+mouseLocation=UserInputService:GetMouseLocation()c.Position=mouseLocation c.
+Radius=_state.fovRadius c.Visible=true else local c=circle if c then c.Visible=
+false end end end local function _getBestTarget()local camera=_getCamera()local
+localPlayer=_getLocalPlayer()local mouseLocation=UserInputService:
+GetMouseLocation()local bestTarget=nil local shortestDistance=_state.fovRadius
+for _,player in ipairs(Players:GetPlayers())do if player==localPlayer then
+continue end if _state.isTeamCheckEnabled and player.Team==localPlayer.Team then
+continue end local character=player.Character if not character then continue end
+local humanoid=character:FindFirstChildOfClass('Humanoid')if not humanoid or
+humanoid.Health<=0 then continue end local head=character:FindFirstChild('Head')
+if not head then continue end if not head:IsA('BasePart')then continue end local
+headPart=head if _state.isWallCheckEnabled then local origin=camera.CFrame.
+Position local direction=headPart.Position-origin local raycastParams=
+RaycastParams.new()raycastParams.FilterDescendantsInstances={localPlayer.
+Character,character}raycastParams.FilterType=Enum.RaycastFilterType.Exclude
+local result=Workspace:Raycast(origin,direction,raycastParams)if result then
+continue end end local screenPos,onScreen=camera:WorldToViewportPoint(headPart.
+Position)if not onScreen then continue end local distance=(Vector2.new(screenPos
+.X,screenPos.Y)-mouseLocation).Magnitude if distance<shortestDistance then
+shortestDistance=distance bestTarget=player end end return bestTarget end
+local function _aimAt(target)if not _state.cameraController then return end if
+not target.Character then return end local head=target.Character:FindFirstChild(
+'Head')if not head or not head:IsA('BasePart')then return end local camera=
+_getCamera()local targetPos=(head).Position local currentCFrame=camera.CFrame
+local lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)local x,y,_=
+lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)if _state.
+smoothness>0 then local currentRot=(_state.cameraController.Rotation)local diff=
+targetRotation-currentRot local step=(1-_state.smoothness)local newRot=
+currentRot:Lerp(targetRotation,step)_state.cameraController:SetRotation(newRot)
+else _state.cameraController:SetRotation(targetRotation)end end local function
+_handleInput(input)if not _state.triggerKey then return end local key=_state.
+triggerKey local isTrigger=false if input.UserInputType==Enum.UserInputType.
+Keyboard and input.KeyCode==key then isTrigger=true elseif input.UserInputType==
+Enum.UserInputType.MouseButton1 and key=='MouseButton1'then isTrigger=true
+elseif input.UserInputType==Enum.UserInputType.MouseButton2 and key==
+'MouseButton2'then isTrigger=true end if isTrigger then _state.isAiming=(input.
+UserInputState==Enum.UserInputState.Begin)end end local function _checkKeyDown()
+if type(_state.triggerKey)=='string'then local keyName=_state.triggerKey if
+keyName=='MouseButton1'then return UserInputService:IsMouseButtonPressed(Enum.
+UserInputType.MouseButton1)elseif keyName=='MouseButton2'then return
+UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)else local
+success,keyCode=pcall(function()return Enum.KeyCode[keyName]end)if success and
+keyCode then return UserInputService:IsKeyDown(keyCode)end end elseif typeof(
+_state.triggerKey)=='EnumItem'then if _state.triggerKey.EnumType==Enum.KeyCode
+then return UserInputService:IsKeyDown(_state.triggerKey)elseif _state.
+triggerKey.EnumType==Enum.UserInputType then return UserInputService:
+IsMouseButtonPressed(_state.triggerKey)end end return false end local function
+_connect()_maid:DoCleaning()_fetchCameraController(_state.logger)local runConn=
+RunService.RenderStepped:Connect(function()_updateFovCircle()if _state.
+isAimbotEnabled then _state.isAiming=_checkKeyDown()if _state.isAiming then
+local target=_getBestTarget()if target then _aimAt(target)end end end end)_maid:
+GiveTask(runConn)end local function _disconnect()if _state.fovCircle then pcall(
+function()((_state.fovCircle)):Remove()end)_state.fovCircle=nil end _maid:
+DoCleaning()end function Combat.init(self,client)_state.client=client _state.
+logger=client.Logger _maid=Maid.new()_connect()end function Combat.cleanup(self)
 _state.isAimbotEnabled=false _disconnect()end function Combat.setAimbotEnabled(
 self,isEnabled)_state.isAimbotEnabled=isEnabled end function Combat.
 setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end function Combat.
@@ -488,90 +497,86 @@ __DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
-playerControls=nil,debugEnabled=true}local _signals={}local function _debugLog(
-...)if not _state.debugEnabled then return end local logger=_state.logger if
-logger and logger.info then logger:info(...)else print(...)end end
-local function _updatePlayerControls()if not _state.playerControls then return
-end local getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.
-getgenv local toggles=(getgenvFunc and getgenvFunc().Toggles)or _G.Toggles local
-options=(getgenvFunc and getgenvFunc().Options)or _G.Options if not toggles or
-not options then _debugLog('PlayerControls: Toggles/Options missing',toggles~=
-nil,options~=nil)end for _,control in ipairs(_state.playerControls)do local
-toggle=toggles and toggles[control.toggleId]local gate=toggle and toggle.Value==
-true local active=false if gate then local keybind=options and options[control.
-keybindId]if keybind and keybind.GetState then active=keybind:GetState()else
-active=false end end if control.last~=active then control.last=active control.
-setter(active)_debugLog('PlayerControls',control.toggleId,'gate',gate,'active',
-active,'keybind',control.keybindId)end end end local function _httpGet(url)
-return(game):HttpGet(url)end local function _loadRemote(path,logger)local source
-=_httpGet(REPO_URL..path)local chunk,err=loadstring(source)if not chunk then if
-logger then logger:error('UI load failed:',err)end error('UI load failed: '..
-tostring(err))end return chunk()end local function _setNotifyMuted(library,
-shouldMute)if shouldMute then library.Notify=library.Notify or function()end
-library._blossomNotify=library._blossomNotify or library.Notify library.Notify=
-function()end return end if library._blossomNotify then library.Notify=library.
-_blossomNotify end end local function _getLibraryVisible(library)if type(library
-.Opened)=='boolean'then return library.Opened end if type(library.Visible)==
-'boolean'then return library.Visible end if type(library.IsOpen)=='boolean'then
-return library.IsOpen end return true end local function _runAutoload(library,
-saveManager,isSilent)local wasVisible=_getLibraryVisible(library)if isSilent
-then _setNotifyMuted(library,true)if wasVisible then pcall(function()library:
-Toggle()end)end end pcall(function()saveManager:LoadAutoloadConfig()end)if
-isSilent then if wasVisible then pcall(function()library:Toggle()end)end
-_setNotifyMuted(library,false)end end local function _connect()_maid:DoCleaning(
-)local updateConn=RunService.RenderStepped:Connect(function()
-_updatePlayerControls()end)_maid:GiveTask(updateConn)end local function _mount()
-if _state.isMounted then return end _state.isMounted=true local logger=_state.
-logger local library=_loadRemote('Library.lua',logger)local themeManager=
-_loadRemote('addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
-'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
-themeManager _state.saveManager=saveManager local window=library:CreateWindow({
-Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
-IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:AddTab(
-'Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings
-=window:AddTab('UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox(
-'Aimbot')combatGroup:AddToggle('CombatAimbotEnabled',{Text='Enabled',Default=
-false,Callback=function(state)local mod=_state.client.Modules.Combat if mod and
-mod.setAimbotEnabled then mod:setAimbotEnabled(state)end end})combatGroup:
-AddToggle('CombatShowFov',{Text='Show FOV',Default=false,Callback=function(state
-)local mod=_state.client.Modules.Combat if mod and mod.setFovEnabled then mod:
-setFovEnabled(state)end end})combatGroup:AddSlider('CombatFovRadius',{Text=
-'FOV Radius',Default=100,Min=10,Max=800,Rounding=0,Callback=function(value)local
-mod=_state.client.Modules.Combat if mod and mod.setFovRadius then mod:
-setFovRadius(value)end end})combatGroup:AddToggle('CombatTeamCheck',{Text=
-'Team Check',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Combat if mod and mod.setTeamCheckEnabled then mod:setTeamCheckEnabled(
-state)end end})combatGroup:AddSlider('CombatSmoothness',{Text='Smoothness',
-Default=0,Min=0,Max=1,Rounding=2,Callback=function(value)local mod=_state.client
-.Modules.Combat if mod and mod.setSmoothness then mod:setSmoothness(value)end
-end})combatGroup:AddToggle('CombatWallCheck',{Text='Wall Check',Default=false,
+playerControls=nil}local _signals={}local function _updatePlayerControls()if not
+_state.playerControls then return end local getfenvAny=getfenv local env=(
+getfenvAny(0))local getgenvFunc=env.getgenv local toggles=(getgenvFunc and
+getgenvFunc().Toggles)or _G.Toggles local options=(getgenvFunc and getgenvFunc()
+.Options)or _G.Options if not toggles or not options then end for _,control in
+ipairs(_state.playerControls)do local toggle=toggles and toggles[control.
+toggleId]local gate=toggle and toggle.Value==true local active=false if gate
+then local keybind=options and options[control.keybindId]if keybind and keybind.
+GetState then active=keybind:GetState()else active=false end end if control.last
+~=active then control.last=active control.setter(active)end end end
+local function _httpGet(url)return(game):HttpGet(url)end local function
+_loadRemote(path,logger)local source=_httpGet(REPO_URL..path)local chunk,err=
+loadstring(source)if not chunk then if logger then logger:error(
+'UI load failed:',err)end error('UI load failed: '..tostring(err))end return
+chunk()end local function _setNotifyMuted(library,shouldMute)if shouldMute then
+library.Notify=library.Notify or function()end library._blossomNotify=library.
+_blossomNotify or library.Notify library.Notify=function()end return end if
+library._blossomNotify then library.Notify=library._blossomNotify end end
+local function _getLibraryVisible(library)if type(library.Opened)=='boolean'then
+return library.Opened end if type(library.Visible)=='boolean'then return library
+.Visible end if type(library.IsOpen)=='boolean'then return library.IsOpen end
+return true end local function _runAutoload(library,saveManager,isSilent)local
+wasVisible=_getLibraryVisible(library)if isSilent then _setNotifyMuted(library,
+true)if wasVisible then pcall(function()library:Toggle()end)end end pcall(
+function()saveManager:LoadAutoloadConfig()end)if isSilent then if wasVisible
+then pcall(function()library:Toggle()end)end _setNotifyMuted(library,false)end
+end local function _connect()_maid:DoCleaning()local updateConn=RunService.
+RenderStepped:Connect(function()_updatePlayerControls()end)_maid:GiveTask(
+updateConn)end local function _mount()if _state.isMounted then return end _state
+.isMounted=true local logger=_state.logger local library=_loadRemote(
+'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
+logger)local saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.
+library=library _state.themeManager=themeManager _state.saveManager=saveManager
+local window=library:CreateWindow({Title='Blossom '.._state.client.Version,
+Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})
+local tabs={combat=window:AddTab('Combat'),visuals=window:AddTab('Visuals'),misc
+=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local combatGroup
+=tabs.combat:AddLeftGroupbox('Aimbot')combatGroup:AddToggle(
+'CombatAimbotEnabled',{Text='Enabled',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Combat if mod and mod.setAimbotEnabled then mod:
+setAimbotEnabled(state)end end})combatGroup:AddToggle('CombatShowFov',{Text=
+'Show FOV',Default=false,Callback=function(state)local mod=_state.client.Modules
+.Combat if mod and mod.setFovEnabled then mod:setFovEnabled(state)end end})
+combatGroup:AddSlider('CombatFovRadius',{Text='FOV Radius',Default=100,Min=10,
+Max=800,Rounding=0,Callback=function(value)local mod=_state.client.Modules.
+Combat if mod and mod.setFovRadius then mod:setFovRadius(value)end end})
+combatGroup:AddToggle('CombatTeamCheck',{Text='Team Check',Default=false,
 Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setWallCheckEnabled then mod:setWallCheckEnabled(state)end end})combatGroup:
-AddLabel('Trigger Key'):AddKeyPicker('CombatTriggerKey',{Default='MouseButton2',
-NoUI=true,Text='Trigger Key',Callback=function(key)local mod=_state.client.
-Modules.Combat if mod and mod.setTriggerKey then mod:setTriggerKey(key)end end})
-local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
-'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
-state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end end})
-espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then mod:
-setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1
-,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.Modules
-.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}):
-AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
-espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
-mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
-Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
-value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
-),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
-.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
-value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setTeamCheckEnabled then mod:setTeamCheckEnabled(state)end end})combatGroup:
+AddSlider('CombatSmoothness',{Text='Smoothness',Default=0,Min=0,Max=1,Rounding=2
+,Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
+setSmoothness then mod:setSmoothness(value)end end})combatGroup:AddToggle(
+'CombatWallCheck',{Text='Wall Check',Default=false,Callback=function(state)local
+mod=_state.client.Modules.Combat if mod and mod.setWallCheckEnabled then mod:
+setWallCheckEnabled(state)end end})combatGroup:AddLabel('Trigger Key'):
+AddKeyPicker('CombatTriggerKey',{Default='MouseButton2',NoUI=true,Text=
+'Trigger Key',Callback=function(key)local mod=_state.client.Modules.Combat if
+mod and mod.setTriggerKey then mod:setTriggerKey(key)end end})local espGroup=
+tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text=
+'Visuals (ESP)',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Visuals if mod and mod.toggle then mod:toggle(state)end if mod and mod.
+setEspEnabled then mod:setEspEnabled(state)end end})espGroup:AddToggle(
+'ESPNames',{Text='Name',Default=true,Callback=function(state)local mod=_state.
+client.Modules.Visuals if mod and mod.setShowNames then mod:setShowNames(state)
+end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title=
+'Text Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
+mod and mod.setTextColor then mod:setTextColor(value)end end}):AddColorPicker(
+'ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title='Name Outline',Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setNameOutlineColor then mod:setNameOutlineColor(value)end end})espGroup:
+AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(state)local
+mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then mod:
+setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=Color3.
+new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.client.
+Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(value)end
+end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Weapon Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end
+end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Visuals if mod and mod.
 setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
 'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
@@ -679,122 +684,83 @@ miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=
 function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
 AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
 enabled)_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
-_runAutoload(library,saveManager,false)logger:info('UI mounted successfully')end
-function Interface.init(self,client)_state.client=client _state.logger=client.
-Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)
-_maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
-isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.h()
-local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end end local
-ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
-'Players')local RunService=game:GetService('RunService')local Logger=
-__DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
-__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
+_runAutoload(library,saveManager,false)end function Interface.init(self,client)
+_state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()
+_mount()end function Interface.cleanup(self)_maid:DoCleaning()if _state.library
+then _state.library:Unload()end _state.isMounted=false end return Interface end
+function __DARKLUA_BUNDLE_MODULES.h()local v=__DARKLUA_BUNDLE_MODULES.cache.h if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c
+end end end local ReplicatedFirst=game:GetService('ReplicatedFirst')local
+Players=game:GetService('Players')local RunService=game:GetService('RunService')
+local Logger=__DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()
+local Signal=__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
-local CLIENT_MODULE_NAME='Client'local CONTROLLER_NAMES={'PlayerDataController',
-'ComplianceController','FunctionsController','MiscController',
-'UserInterfaceController','MonetizationController','EnemyController',
-'CameraController','MechanicsController','FighterController',
-'SpectateController','TightropeController','EntityController','DuelController',
-'GameComponentsController','ControlsController','LeaderboardController',
-'LobbyController','QueuePadController','LightingController',
-'ShootingRangeController','CoreGuiController','MusicController',
-'MobileController','ShopController','ProximityPromptController',
-'PlayerInteractionController','DebugController','MatchmakingController',
-'ChattingController','EventController','PrivateServerController',
-'TestingController','ShadyChickenController','WrapController',
-'ScavengerHuntController','SocialController','FFlagController','AudioController'
-,'BirthdayController','ArcadeController','EmoteController','SeasonController'}
-local MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name=
-'Player',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Combat',loader=(
+local CLIENT_MODULE_NAME='Client'local getfenvAny=getfenv local env=(getfenvAny(
+0))local genv=(env.getgenv and env.getgenv())or env local function getGlobal(k)
+return genv[k]or env[k]end local queue_on_teleport=getGlobal('queue_on_teleport'
+)or getGlobal('queueonteleport')or(env.syn and env.syn.queue_on_teleport)local
+clear_teleport_queue=getGlobal('clear_teleport_queue')or getGlobal(
+'clearteleportqueue')or(env.syn and env.syn.clear_teleport_queue)local
+getloadedmodules=getGlobal('getloadedmodules')or function()return nil end local
+MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.e())},{name='Player',
+loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Combat',loader=(
 __DARKLUA_BUNDLE_MODULES.g())},{name='Interface',loader=(
 __DARKLUA_BUNDLE_MODULES.h())}}local Client={}Client.__index=Client local _maid=
-Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=(
-function()local getfenvAny=getfenv local g=(getfenvAny(0))return g.BlossomSilent
-or(g.getgenv and g.getgenv().BlossomSilent)or false end)(),logger=nil}local
-_signals={started=Signal.new(),stopped=Signal.new()}local _modules={}
-local function _disableAnalyticsPipeline(logger)local success,err=pcall(function
-()local controller=ReplicatedFirst:FindFirstChild('AnalyticsPipelineController')
-if not controller then controller=ReplicatedFirst:WaitForChild(
-'AnalyticsPipelineController',10)end if controller then(controller).Disabled=
-true logger:info('AnalyticsPipelineController Disabled')end end)if not success
-then logger:warn('Failed to disable AnalyticsPipelineController:',err)end end
-local function _getQueueOnTeleport()local env=(getfenv())return env.
-queue_on_teleport or env.queueonteleport or(env.syn and env.syn.
-queue_on_teleport)end local function _getClearTeleportQueue()local env=(getfenv(
-))return env.clear_teleport_queue or env.clearteleportqueue or(env.syn and env.
-syn.clear_teleport_queue)end local function _handleTeleportQueue(shouldEnable)if
-shouldEnable then local queueOnTeleport=_getQueueOnTeleport()local
-clearTeleportQueue=_getClearTeleportQueue()if clearTeleportQueue then
-clearTeleportQueue()end if queueOnTeleport then _state.logger:info(
-'Queueing auto-load script...')local silentFlag=_state.isSilent and
-'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''queueOnTeleport((
-[[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):
-format(silentFlag,BUNDLE_URL))else _state.logger:warn(
-'queue_on_teleport function not found!')end else local clearTeleportQueue=
-_getClearTeleportQueue()if clearTeleportQueue then _state.logger:info(
-'Clearing teleport queue...')clearTeleportQueue()else _state.logger:warn(
-'clear_teleport_queue function not found!')end end end local function _connect()
-_maid:DoCleaning()if _state.shouldTeleportQueue then _handleTeleportQueue(true)
-end end local function _waitForClientLoaded()_state.logger:info(
-'Debug: _waitForClientLoaded started')local localPlayer=Players.LocalPlayer
-while not localPlayer do _state.logger:info('Debug: Waiting for LocalPlayer...')
-RunService.Heartbeat:Wait()localPlayer=Players.LocalPlayer end _state.logger:
-info('Debug: LocalPlayer found')local playerScripts=localPlayer:WaitForChild(
-'PlayerScripts')_state.logger:info('Debug: PlayerScripts found')local
-clientModule while true do clientModule=playerScripts:FindFirstChild(
-CLIENT_MODULE_NAME)if clientModule and clientModule:IsA('ModuleScript')then
-break end _state.logger:info(
-'Debug: Waiting for Client module script to exist...')task.wait(1)end _state.
-logger:info('Debug: Client module script found')local controllersFolder while
-true do controllersFolder=playerScripts:FindFirstChild('Controllers')if
-controllersFolder then break end _state.logger:info(
-'Debug: Waiting for Controllers folder...')task.wait(1)end local
-getLoadedModules=((getfenv(0))).getloadedmodules or function()return nil end
-local function isModuleLoaded(mod)local loaded=getLoadedModules()if not loaded
-then return true end for _,v in ipairs(loaded)do if v==mod then return true end
-end return false end _state.logger:info(
-'Debug: Waiting for Client to require all controllers...')local lastLogTime=0
-while true do local allLoaded=true local missingCount=0 local firstMissing=nil
-local waitingForLoad=false if getLoadedModules()and not isModuleLoaded(
-clientModule)then allLoaded=false waitingForLoad=true if tick()-lastLogTime>2
-then _state.logger:info(
-'Debug: Waiting for game to require the Client module...')lastLogTime=tick()end
-else for _,name in ipairs(CONTROLLER_NAMES)do local controllerMod=
-controllersFolder:FindFirstChild(name)if not controllerMod then allLoaded=false
-missingCount+=1 if not firstMissing then firstMissing=name..' (Not Found)'end
-elseif getLoadedModules()and not isModuleLoaded(controllerMod)then allLoaded=
-false waitingForLoad=true if not firstMissing then firstMissing=name..
-' (Not Loaded)'end end end end if allLoaded then break end if tick()-lastLogTime
->2 then local status=waitingForLoad and'Waiting for require...'or
-'Waiting for instance...'_state.logger:info(string.format(
-'Debug: Still waiting... Missing/Unloaded: %s [%s]',tostring(firstMissing),
-status))lastLogTime=tick()end task.wait(0.5)end _state.logger:info(
-'Client controllers confirmed loaded by game.')end local function _getModuleInit
-(moduleResult)return moduleResult.init or moduleResult.Init end local function
-_getModuleCleanup(moduleResult)return moduleResult.cleanup or moduleResult.
-Cleanup end function Client.loadModule(self,name,moduleOrPath)if _modules[name]
-then _state.logger:warn('Module already loaded:',name)return end local loader=
-function()if type(moduleOrPath)=='string'then local dynamicRequire=require
-return dynamicRequire(moduleOrPath)end return moduleOrPath end local success,
-result=pcall(loader)if success then local moduleResult=result _modules[name]=
-moduleResult local initFn=(_getModuleInit(moduleResult))if initFn then task.
-spawn(function()initFn(moduleResult,self)end)end _state.logger:info(
-'Loaded module:',name)else _state.logger:warn('Failed to load module:',name,
-result)end end function Client.setTeleportQueue(self,shouldEnable)_state.
+Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
+BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
+Signal.new(),stopped=Signal.new()}local _modules={}local function
+_disableAnalyticsPipeline(logger)pcall(function()local controller=
+ReplicatedFirst:FindFirstChild('AnalyticsPipelineController')if not controller
+then controller=ReplicatedFirst:WaitForChild('AnalyticsPipelineController',10)
+end if controller then(controller).Disabled=true logger:info(
+'AnalyticsPipelineController \u{be44}\u{d65c}\u{c131}\u{d654}\u{b428}.')end end)
+end local function _handleTeleportQueue(shouldEnable)if shouldEnable then if
+clear_teleport_queue then clear_teleport_queue()end if queue_on_teleport then
+local silentFlag=_state.isSilent and
+'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''queue_on_teleport(
+([[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):
+format(silentFlag,BUNDLE_URL))end else if clear_teleport_queue then
+clear_teleport_queue()end end end local function _connect()_maid:DoCleaning()if
+_state.shouldTeleportQueue then _handleTeleportQueue(true)end end local function
+_waitForClientLoaded()_state.logger:info(
+'Rivals\u{c758} Client\u{b85c}\u{b4dc}\u{b97c} \u{ae30}\u{b2e4}\u{b9ac}\u{b294}\u{c911}.'
+)local localPlayer=Players.LocalPlayer while not localPlayer do RunService.
+Heartbeat:Wait()localPlayer=Players.LocalPlayer end local playerScripts=
+localPlayer:WaitForChild('PlayerScripts')local clientModule repeat clientModule=
+playerScripts:FindFirstChild(CLIENT_MODULE_NAME)if not(clientModule and
+clientModule:IsA('ModuleScript'))then clientModule=nil task.wait(1)end until
+clientModule local controllersFolder repeat controllersFolder=playerScripts:
+FindFirstChild('Controllers')if not controllersFolder then task.wait(1)end until
+controllersFolder local folder=controllersFolder local function isModuleLoaded(
+mod)local loaded=getloadedmodules()if not loaded then return true end for _,v in
+ipairs(loaded)do if v==mod then return true end end return false end while true
+do local allLoaded=true if getloadedmodules()and not isModuleLoaded(clientModule
+)then allLoaded=false else for _,child in ipairs(folder:GetChildren())do if
+child:IsA('ModuleScript')then if getloadedmodules()and not isModuleLoaded(child)
+then allLoaded=false break end end end end if allLoaded then break end task.
+wait(0.5)end end function Client.loadModule(self,name,moduleOrPath)if _modules[
+name]then return end local loader=function()if type(moduleOrPath)=='string'then
+local dynamicRequire=require return dynamicRequire(moduleOrPath)end return
+moduleOrPath end local success,result=pcall(loader)if success then local
+moduleResult=result _modules[name]=moduleResult local initFn=moduleResult.init
+or moduleResult.Init if initFn then task.spawn(function()(initFn)(moduleResult,
+self)end)end else _state.logger:warn('Failed to load module:',name,result)end
+end function Client.setTeleportQueue(self,shouldEnable)_state.
 shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(
 shouldEnable)end end function Client.setSilent(self,isSilent)if _state.isSilent
 ==isSilent then return end _state.isSilent=isSilent if _state.
 shouldTeleportQueue and _state.isRunning then _handleTeleportQueue(true)end end
 function Client.start(self)if _state.isRunning then return end _state.isRunning=
 true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
-'Client initializing...')_waitForClientLoaded()for _,entry in ipairs(MODULES)do
-self:loadModule(entry.name,entry.loader)end _connect()_signals.started:Fire()end
-function Client.destroy(self)if not _state.isRunning then return end _state.
-isRunning=false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in
-pairs(_modules)do local cleanupFn=(_getModuleCleanup(moduleResult))if cleanupFn
-then pcall(cleanupFn,moduleResult)end end _state.logger:info('Client stopped.')
-end local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
+'Blossom \u{cd08}\u{ae30}\u{d654} \u{c2dc}\u{c791}\u{b428}.')
+_waitForClientLoaded()for _,entry in ipairs(MODULES)do self:loadModule(entry.
+name,entry.loader)end _connect()_state.logger:success(
+'\u{c2a4}\u{d06c}\u{b9bd}\u{d2b8} \u{baa8}\u{b450} \u{b85c}\u{b4dc} \u{c644}\u{b8cc}.'
+)_signals.started:Fire()end function Client.destroy(self)if not _state.isRunning
+then return end _state.isRunning=false _signals.stopped:Fire()_maid:DoCleaning()
+for _,moduleResult in pairs(_modules)do local cleanupFn=moduleResult.cleanup or
+moduleResult.Cleanup if cleanupFn then pcall(cleanupFn,moduleResult)end end end
+local loggerModule=(Logger)local client=((setmetatable({},Client)))client.
 Version='1.0.0'client.Logger=loggerModule.new('Blossom')client.Modules=_modules
 client.Started=_signals.started client.Stopped=_signals.stopped client.IsSilent=
 _state.isSilent _state.logger=client.Logger return client:start()

@@ -28,23 +28,10 @@ local _state = {
 	saveManager = nil :: any,
 	isMounted = false,
 	playerControls = nil :: any,
-	debugEnabled = true,
 }
 local _signals = {}
 
 --// Private helpers
-local function _debugLog(...)
-	if not _state.debugEnabled then
-		return
-	end
-	local logger = _state.logger
-	if logger and logger.info then
-		logger:info(...)
-	else
-		print(...)
-	end
-end
-
 local function _updatePlayerControls()
 	if not _state.playerControls then
 		return
@@ -55,7 +42,6 @@ local function _updatePlayerControls()
 	local toggles = (getgenvFunc and getgenvFunc().Toggles) or _G.Toggles
 	local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
 	if not toggles or not options then
-		_debugLog("PlayerControls: Toggles/Options missing", toggles ~= nil, options ~= nil)
 	end
 	for _, control in ipairs(_state.playerControls) do
 		local toggle = toggles and toggles[control.toggleId]
@@ -72,7 +58,6 @@ local function _updatePlayerControls()
 		if control.last ~= active then
 			control.last = active
 			control.setter(active)
-			_debugLog("PlayerControls", control.toggleId, "gate", gate, "active", active, "keybind", control.keybindId)
 		end
 	end
 end
@@ -766,7 +751,6 @@ local function _mount()
 	})
 
 	_runAutoload(library, saveManager, false)
-	logger:info("UI mounted successfully")
 end
 
 --// Public API

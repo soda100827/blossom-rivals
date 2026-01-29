@@ -507,7 +507,6 @@ end
 
 local function _enable()
 	if not getDrawingLib() then
-		_state.logger:warn("Drawing API not available; Visuals disabled.")
 		_state.isEnabled = false
 		return
 	end

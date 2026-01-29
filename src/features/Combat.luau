@@ -113,13 +113,6 @@ local function _fetchCameraController(logger: any)
 		end)
 		if success then
 			_state.cameraController = result
-			if logger then
-				logger:info("CameraController found and required")
-			end
-		else
-			if logger then
-				logger:error("Failed to require CameraController: " .. tostring(result))
-			end
 		end
 	end
 end
@@ -351,7 +344,6 @@ function Combat.init(self: CombatFeature, client: any): ()
 	_state.logger = client.Logger
 	_maid = Maid.new()
 	_connect()
-	_state.logger:info("Combat aimbot module initialized")
 end
 
 function Combat.cleanup(self: CombatFeature): ()

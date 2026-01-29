@@ -14,51 +14,24 @@ local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
 local CLIENT_MODULE_NAME = "Client"
-local CONTROLLER_NAMES = {
-	"PlayerDataController",
-	"ComplianceController",
-	"FunctionsController",
-	"MiscController",
-	"UserInterfaceController",
-	"MonetizationController",
-	"EnemyController",
-	"CameraController",
-	"MechanicsController",
-	"FighterController",
-	"SpectateController",
-	"TightropeController",
-	"EntityController",
-	"DuelController",
-	"GameComponentsController",
-	"ControlsController",
-	"LeaderboardController",
-	"LobbyController",
-	"QueuePadController",
-	"LightingController",
-	"ShootingRangeController",
-	"CoreGuiController",
-	"MusicController",
-	"MobileController",
-	"ShopController",
-	"ProximityPromptController",
-	"PlayerInteractionController",
-	"DebugController",
-	"MatchmakingController",
-	"ChattingController",
-	"EventController",
-	"PrivateServerController",
-	"TestingController",
-	"ShadyChickenController",
-	"WrapController",
-	"ScavengerHuntController",
-	"SocialController",
-	"FFlagController",
-	"AudioController",
-	"BirthdayController",
-	"ArcadeController",
-	"EmoteController",
-	"SeasonController",
-}
+
+--// Environment Check
+local getfenvAny = getfenv :: any
+local env = getfenvAny(0) :: any
+local genv = (env.getgenv and env.getgenv()) or env
+local function getGlobal(k: string)
+	return genv[k] or env[k]
+end
+
+local queue_on_teleport = getGlobal("queue_on_teleport")
+	or getGlobal("queueonteleport")
+	or (env.syn and env.syn.queue_on_teleport)
+local clear_teleport_queue = getGlobal("clear_teleport_queue")
+	or getGlobal("clearteleportqueue")
+	or (env.syn and env.syn.clear_teleport_queue)
+local getloadedmodules = getGlobal("getloadedmodules") or function()
+	return nil
+end
 
 local MODULES: { { name: string, loader: Module } } = {
 	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
@@ -76,6 +49,7 @@ export type LoggerInstance = {
 	info: (self: LoggerInstance, ...unknown) -> (),
 	warn: (self: LoggerInstance, ...unknown) -> (),
 	error: (self: LoggerInstance, ...unknown) -> (),
+	success: (self: LoggerInstance, ...unknown) -> (),
 }
 
 export type LoggerModule = {
@@ -119,11 +93,7 @@ local _state: {
 } = {
 	isRunning = false,
 	shouldTeleportQueue = false,
-	isSilent = (function()
-		local getfenvAny = getfenv :: any
-		local g = getfenvAny(0) :: any
-		return g.BlossomSilent or (g.getgenv and g.getgenv().BlossomSilent) or false
-	end)(),
+	isSilent = genv.BlossomSilent or env.BlossomSilent or false,
 	logger = nil :: any,
 }
 local _signals: { started: Signal, stopped: Signal } = {
@@ -134,120 +104,81 @@ local _modules: { [string]: Module } = {}
 
 --// Private helpers
 local function _disableAnalyticsPipeline(logger: LoggerInstance)
-	local success, err = pcall(function()
+	pcall(function()
 		local controller = ReplicatedFirst:FindFirstChild("AnalyticsPipelineController")
 		if not controller then
 			controller = ReplicatedFirst:WaitForChild("AnalyticsPipelineController", 10)
 		end
 		if controller then
 			(controller :: any).Disabled = true
-			logger:info("AnalyticsPipelineController Disabled")
+			logger:info("AnalyticsPipelineController 비활성화됨.")
 		end
 	end)
-
-	if not success then
-		logger:warn("Failed to disable AnalyticsPipelineController:", err)
-	end
-end
-
-local function _getQueueOnTeleport(): ((string) -> ())?
-	local env = getfenv() :: any
-	return env.queue_on_teleport or env.queueonteleport or (env.syn and env.syn.queue_on_teleport)
-end
-
-local function _getClearTeleportQueue(): (() -> ())?
-	local env = getfenv() :: any
-	return env.clear_teleport_queue or env.clearteleportqueue or (env.syn and env.syn.clear_teleport_queue)
 end
 
 local function _handleTeleportQueue(shouldEnable: boolean)
 	if shouldEnable then
-		local queueOnTeleport = _getQueueOnTeleport()
-		local clearTeleportQueue = _getClearTeleportQueue()
-
-		-- Attempt to clear first to avoid duplicates if possible
-		if clearTeleportQueue then
-			clearTeleportQueue()
+		if clear_teleport_queue then
+			clear_teleport_queue()
 		end
 
-		if queueOnTeleport then
-			_state.logger:info("Queueing auto-load script...")
+		if queue_on_teleport then
 			local silentFlag = _state.isSilent and "getgenv().BlossomSilent = true; _G.BlossomSilent = true;" or ""
-			queueOnTeleport(
+			queue_on_teleport(
 				([[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):format(
 					silentFlag,
 					BUNDLE_URL
 				)
 			)
-		else
-			_state.logger:warn("queue_on_teleport function not found!")
 		end
 	else
-		local clearTeleportQueue = _getClearTeleportQueue()
-		if clearTeleportQueue then
-			_state.logger:info("Clearing teleport queue...")
-			clearTeleportQueue()
-		else
-			_state.logger:warn("clear_teleport_queue function not found!")
+		if clear_teleport_queue then
+			clear_teleport_queue()
 		end
 	end
 end
 
 local function _connect()
 	_maid:DoCleaning()
-	-- Refresh queue if needed (e.g. silent state changed)
 	if _state.shouldTeleportQueue then
 		_handleTeleportQueue(true)
 	end
 end
 
 local function _waitForClientLoaded()
-	_state.logger:info("Debug: _waitForClientLoaded started")
+	_state.logger:info("Rivals의 Client로드를 기다리는중.")
 
 	local localPlayer = Players.LocalPlayer
 	while not localPlayer do
-		_state.logger:info("Debug: Waiting for LocalPlayer...")
 		RunService.Heartbeat:Wait()
 		localPlayer = Players.LocalPlayer
 	end
-	_state.logger:info("Debug: LocalPlayer found")
 
 	local playerScripts = localPlayer:WaitForChild("PlayerScripts")
-	_state.logger:info("Debug: PlayerScripts found")
 
-	-- Wait for Client Module
 	local clientModule
-	while true do
+	repeat
 		clientModule = playerScripts:FindFirstChild(CLIENT_MODULE_NAME)
-		if clientModule and clientModule:IsA("ModuleScript") then
-			break
+		if not (clientModule and clientModule:IsA("ModuleScript")) then
+			clientModule = nil
+			task.wait(1)
 		end
-		_state.logger:info("Debug: Waiting for Client module script to exist...")
-		task.wait(1)
-	end
-	_state.logger:info("Debug: Client module script found")
+	until clientModule
 
-	-- Wait for Controllers folder
 	local controllersFolder
-	while true do
+	repeat
 		controllersFolder = playerScripts:FindFirstChild("Controllers")
-		if controllersFolder then
-			break
+		if not controllersFolder then
+			task.wait(1)
 		end
-		_state.logger:info("Debug: Waiting for Controllers folder...")
-		task.wait(1)
-	end
+	until controllersFolder
+	local folder = controllersFolder :: Instance
 
-	-- Function to check if a module is loaded via getloadedmodules if available
-	local getLoadedModules = (getfenv(0) :: any).getloadedmodules or function()
-		return nil
-	end
 	local function isModuleLoaded(mod: ModuleScript): boolean
-		local loaded = getLoadedModules()
+		local loaded = getloadedmodules()
 		if not loaded then
 			return true
-		end -- Fallback: if not supported, assume loaded if exists (or we can't check)
-
+		end
 		for _, v in ipairs(loaded) do
 			if v == mod then
 				return true
@@ -256,38 +187,16 @@ local function _waitForClientLoaded()
 		return false
 	end
 
-	_state.logger:info("Debug: Waiting for Client to require all controllers...")
-	local lastLogTime = 0
-
 	while true do
 		local allLoaded = true
-		local missingCount = 0
-		local firstMissing = nil
-		local waitingForLoad = false
-
-		-- First, check if Client module itself is loaded (required by game)
-		if getLoadedModules() and not isModuleLoaded(clientModule) then
+		if getloadedmodules() and not isModuleLoaded(clientModule :: ModuleScript) then
 			allLoaded = false
-			waitingForLoad = true
-			if tick() - lastLogTime > 2 then
-				_state.logger:info("Debug: Waiting for game to require the Client module...")
-				lastLogTime = tick()
-			end
 		else
-			-- Check controllers
-			for _, name in ipairs(CONTROLLER_NAMES) do
-				local controllerMod = controllersFolder:FindFirstChild(name)
-				if not controllerMod then
-					allLoaded = false
-					missingCount += 1
-					if not firstMissing then
-						firstMissing = name .. " (Not Found)"
-					end
-				elseif getLoadedModules() and not isModuleLoaded(controllerMod :: ModuleScript) then
-					allLoaded = false
-					waitingForLoad = true
-					if not firstMissing then
-						firstMissing = name .. " (Not Loaded)"
+			for _, child in ipairs(folder:GetChildren()) do
+				if child:IsA("ModuleScript") then
+					if getloadedmodules() and not isModuleLoaded(child) then
+						allLoaded = false
+						break
 					end
 				end
 			end
@@ -296,32 +205,13 @@ local function _waitForClientLoaded()
 		if allLoaded then
 			break
 		end
-
-		if tick() - lastLogTime > 2 then
-			local status = waitingForLoad and "Waiting for require..." or "Waiting for instance..."
-			_state.logger:info(
-				string.format("Debug: Still waiting... Missing/Unloaded: %s [%s]", tostring(firstMissing), status)
-			)
-			lastLogTime = tick()
-		end
-
 		task.wait(0.5)
 	end
-	_state.logger:info("Client controllers confirmed loaded by game.")
-end
-
-local function _getModuleInit(moduleResult: Module)
-	return moduleResult.init or moduleResult.Init
-end
-
-local function _getModuleCleanup(moduleResult: Module)
-	return moduleResult.cleanup or moduleResult.Cleanup
 end
 
 --// Public API
 function Client.loadModule(self: BlossomClient, name: string, moduleOrPath: ModuleOrPath): ()
 	if _modules[name] then
-		_state.logger:warn("Module already loaded:", name)
 		return
 	end
 
@@ -337,13 +227,12 @@ function Client.loadModule(self: BlossomClient, name: string, moduleOrPath: Modu
 	if success then
 		local moduleResult = result :: Module
 		_modules[name] = moduleResult
-		local initFn = _getModuleInit(moduleResult) :: any
+		local initFn = moduleResult.init or moduleResult.Init
 		if initFn then
 			task.spawn(function()
-				initFn(moduleResult, self)
+				(initFn :: any)(moduleResult, self)
 			end)
 		end
-		_state.logger:info("Loaded module:", name)
 	else
 		_state.logger:warn("Failed to load module:", name, result)
 	end
@@ -361,7 +250,6 @@ function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
 		return
 	end
 	_state.isSilent = isSilent
-	-- If teleport queue is active, we need to update the script string
 	if _state.shouldTeleportQueue and _state.isRunning then
 		_handleTeleportQueue(true)
 	end
@@ -374,7 +262,7 @@ function Client.start(self: BlossomClient): ()
 	_state.isRunning = true
 
 	_disableAnalyticsPipeline(_state.logger)
-	_state.logger:info("Client initializing...")
+	_state.logger:info("Blossom 초기화 시작됨.")
 	_waitForClientLoaded()
 
 	for _, entry in ipairs(MODULES) do
@@ -382,6 +270,7 @@ function Client.start(self: BlossomClient): ()
 	end
 
 	_connect()
+	_state.logger:success("스크립트 모두 로드 완료.")
 	_signals.started:Fire()
 end
 
@@ -394,13 +283,11 @@ function Client.destroy(self: BlossomClient): ()
 	_maid:DoCleaning()
 
 	for _, moduleResult in pairs(_modules) do
-		local cleanupFn = _getModuleCleanup(moduleResult) :: any
+		local cleanupFn = moduleResult.cleanup or moduleResult.Cleanup
 		if cleanupFn then
 			pcall(cleanupFn, moduleResult)
 		end
 	end
-
-	_state.logger:info("Client stopped.")
 end
 
 local loggerModule = (Logger :: any) :: LoggerModule
