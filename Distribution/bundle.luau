@@ -754,13 +754,13 @@ function Client.start(self)if _state.isRunning then return end _state.isRunning=
 true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
 'Blossom \u{cd08}\u{ae30}\u{d654} \u{c2dc}\u{c791}\u{b428}.')
 _waitForClientLoaded()for _,entry in ipairs(MODULES)do self:loadModule(entry.
-name,entry.loader)end _connect()_state.logger:success(
-'Blossom \u{b85c}\u{b4dc} \u{c644}\u{b8cc}.')_signals.started:Fire()end function
-Client.destroy(self)if not _state.isRunning then return end _state.isRunning=
-false _signals.stopped:Fire()_maid:DoCleaning()for _,moduleResult in pairs(
-_modules)do local cleanupFn=moduleResult.cleanup or moduleResult.Cleanup if
-cleanupFn then pcall(cleanupFn,moduleResult)end end end local loggerModule=(
-Logger)local client=((setmetatable({},Client)))client.Version='1.0.0'client.
-Logger=loggerModule.new('Blossom')client.Modules=_modules client.Started=
-_signals.started client.Stopped=_signals.stopped client.IsSilent=_state.isSilent
-_state.logger=client.Logger return client:start()
+name,entry.loader)end _connect()_signals.started:Fire()_state.logger:success(
+'Blossom \u{b85c}\u{b4dc} \u{c644}\u{b8cc}.')end function Client.destroy(self)if
+not _state.isRunning then return end _state.isRunning=false _signals.stopped:
+Fire()_maid:DoCleaning()for _,moduleResult in pairs(_modules)do local cleanupFn=
+moduleResult.cleanup or moduleResult.Cleanup if cleanupFn then pcall(cleanupFn,
+moduleResult)end end end local loggerModule=(Logger)local client=((setmetatable(
+{},Client)))client.Version='1.0.0'client.Logger=loggerModule.new('Blossom')
+client.Modules=_modules client.Started=_signals.started client.Stopped=_signals.
+stopped client.IsSilent=_state.isSilent _state.logger=client.Logger return
+client:start()

@@ -270,8 +270,8 @@ function Client.start(self: BlossomClient): ()
 	end
 
 	_connect()
-	_state.logger:success("Blossom 로드 완료.")
 	_signals.started:Fire()
+	_state.logger:success("Blossom 로드 완료.")
 end
 
 function Client.destroy(self: BlossomClient): ()
