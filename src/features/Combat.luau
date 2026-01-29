@@ -16,6 +16,7 @@ local CONSTANTS = {
 	FOV_CIRCLE_NUM_SIDES = 64,
 	MIN_AIM_SPEED = 4,
 	MAX_AIM_SPEED = 40,
+	AIMBOT_RENDER_STEP_NAME = "CombatAimbot",
 }
 
 --// Types
@@ -347,7 +348,7 @@ local function _aimAt(target: Player, deltaTime: number)
 
 	-- Debug once per target switch or low frequency?
 	-- For now, just print if we have logic
-	_state.logger:info("Aiming...", targetRotation)
+	_throttleLog("Aiming...", targetRotation)
 
 	-- Smoothness
 	if _state.isHardLockEnabled then
@@ -370,26 +371,32 @@ local function _connect()
 		_fetchCameraController(_state.logger)
 	end)
 
-	local runConn = RunService.RenderStepped:Connect(function(deltaTime)
-		_updateFovCircle()
+	RunService:BindToRenderStep(
+		CONSTANTS.AIMBOT_RENDER_STEP_NAME,
+		Enum.RenderPriority.Camera.Value + 1,
+		function(deltaTime)
+			_updateFovCircle()
 
-		_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled)
+			_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled)
 
-		if _state.isAimbotEnabled then
-			local target = _resolveTarget()
-			if target then
-				_applyInputLock(true)
-				_state.logger:info("Target found:", target.Name)
-				_aimAt(target, deltaTime)
+			if _state.isAimbotEnabled then
+				local target = _resolveTarget()
+				if target then
+					_applyInputLock(true)
+					_state.logger:info("Target found:", target.Name)
+					_aimAt(target, deltaTime)
+				else
+					_applyInputLock(false)
+				end
 			else
+				_state.target = nil
 				_applyInputLock(false)
 			end
-		else
-			_state.target = nil
-			_applyInputLock(false)
 		end
+	)
+	_maid:GiveTask(function()
+		RunService:UnbindFromRenderStep(CONSTANTS.AIMBOT_RENDER_STEP_NAME)
 	end)
-	_maid:GiveTask(runConn)
 end
 
 local function _disconnect()
