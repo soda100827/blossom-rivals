@@ -99,6 +99,21 @@ local function _getDrawingLib()
 	return lib
 end
 
+local function _getKeybindState(optionId: string): boolean?
+	local getfenvAny = getfenv :: any
+	local env = getfenvAny(0) :: any
+	local getgenvFunc = env.getgenv
+	local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
+	if not options then
+		return nil
+	end
+	local keybind = options[optionId]
+	if keybind and keybind.GetState then
+		return keybind:GetState()
+	end
+	return nil
+end
+
 local function _fetchCameraController(logger: any)
 	if _state.cameraController then
 		return
@@ -306,6 +321,10 @@ local function _handleInput(input: InputObject)
 end
 
 local function _checkKeyDown()
+	local keybindState = _getKeybindState("CombatTriggerKey")
+	if type(keybindState) == "boolean" then
+		return keybindState
+	end
 	-- Polling specific keys if keypicker returns strings
 	if type(_state.triggerKey) == "string" then
 		local keyName = _state.triggerKey
