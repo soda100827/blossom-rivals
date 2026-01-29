@@ -3,14 +3,14 @@
 --// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local HttpService = game:GetService("HttpService")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
-local SAVE_FILE = "blossom_skin_configs.json"
+local SAVE_FOLDER = "unlockall"
+local SAVE_FILE = "unlockall/config.json"
 
 --// Types
 type CosmeticOptions = {
@@ -75,17 +75,6 @@ local function _getEnv()
 	return env, genv
 end
 
-local function _disableReplicatedFirstScripts()
-	pcall(function()
-		for _, child in pairs(ReplicatedFirst:GetChildren()) do
-			if child:IsA("LocalScript") then
-				child.Enabled = false
-				child:Destroy()
-			end
-		end
-	end)
-end
-
 local function _cloneCosmetic(name: string, cosmeticType: string, options: CosmeticOptions?): any?
 	local cosmeticLibrary = _state.cosmeticLibrary
 	if not cosmeticLibrary then
@@ -124,6 +113,7 @@ end
 local function _saveConfig()
 	local env, genv = _getEnv()
 	local writefile = (genv.writefile or env.writefile) :: any
+	local makefolder = (genv.makefolder or env.makefolder) :: any
 	if not writefile then
 		return
 	end
@@ -141,6 +131,9 @@ local function _saveConfig()
 					}
 				end
 			end
+		end
+		if makefolder then
+			makefolder(SAVE_FOLDER)
 		end
 		writefile(SAVE_FILE, HttpService:JSONEncode(config))
 	end)
@@ -604,10 +597,9 @@ function UnlockAll.run(self: UnlockAllFeature): ()
 	end
 	_state.isActive = true
 
-	_disableReplicatedFirstScripts()
-
 	local player = Players.LocalPlayer
 	if not player then
+		_state.logger:warn("UnlockAll: LocalPlayer missing.")
 		_state.isActive = false
 		return
 	end
@@ -626,12 +618,16 @@ function UnlockAll.run(self: UnlockAllFeature): ()
 	_state.cosmeticLibrary = require(ReplicatedStorage.Modules:WaitForChild("CosmeticLibrary", 10))
 	_state.itemLibrary = require(ReplicatedStorage.Modules:WaitForChild("ItemLibrary", 10))
 	_state.dataController = require(controllers:WaitForChild("PlayerDataController", 10))
+	if not _state.dataController then
+		_state.logger:warn("UnlockAll: DataController missing.")
+		_state.isActive = false
+		return
+	end
 
 	pcall(function()
 		_state.fighterController = require(controllers:WaitForChild("FighterController", 10))
 	end)
 
-	_loadConfig()
 	_patchCosmeticLibrary()
 	_patchDataController()
 	_hookNamecall()
@@ -640,6 +636,7 @@ function UnlockAll.run(self: UnlockAllFeature): ()
 	_patchItemLibrary()
 	_patchViewProfile()
 	_patchClientEntity()
+	_loadConfig()
 end
 
 return UnlockAll

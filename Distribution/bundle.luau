@@ -528,68 +528,65 @@ _applyInputLock(false)end end function Combat.setWallCheckEnabled(self,isEnabled
 __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
-ReplicatedStorage=game:GetService('ReplicatedStorage')local ReplicatedFirst=game
-:GetService('ReplicatedFirst')local HttpService=game:GetService('HttpService')
-local Maid=(__DARKLUA_BUNDLE_MODULES.b())local SAVE_FILE=
-'blossom_skin_configs.json'local UnlockAll={}UnlockAll.__index=UnlockAll local
-_maid=nil local _state={client=nil,logger=nil,isActive=false,player=nil,
-controllers=nil,enumLibrary=nil,cosmeticLibrary=nil,itemLibrary=nil,
-dataController=nil,fighterController=nil,equipped={},favorites={},
-constructingWeapon=nil,viewingProfile=nil,lastUsedWeapon=nil,originals={}}local
-_signals={}local function _getEnv()local getfenvAny=getfenv local env=(
+ReplicatedStorage=game:GetService('ReplicatedStorage')local HttpService=game:
+GetService('HttpService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local
+SAVE_FOLDER='unlockall'local SAVE_FILE='unlockall/config.json'local UnlockAll={}
+UnlockAll.__index=UnlockAll local _maid=nil local _state={client=nil,logger=nil,
+isActive=false,player=nil,controllers=nil,enumLibrary=nil,cosmeticLibrary=nil,
+itemLibrary=nil,dataController=nil,fighterController=nil,equipped={},favorites={
+},constructingWeapon=nil,viewingProfile=nil,lastUsedWeapon=nil,originals={}}
+local _signals={}local function _getEnv()local getfenvAny=getfenv local env=(
 getfenvAny(0))local genv=(env.getgenv and env.getgenv())or env return env,genv
-end local function _disableReplicatedFirstScripts()pcall(function()for _,child
-in pairs(ReplicatedFirst:GetChildren())do if child:IsA('LocalScript')then child.
-Enabled=false child:Destroy()end end end)end local function _cloneCosmetic(name,
-cosmeticType,options)local cosmeticLibrary=_state.cosmeticLibrary if not
-cosmeticLibrary then return nil end local base=cosmeticLibrary.Cosmetics[name]if
-not base then return nil end local data={}for key,value in pairs(base)do data[
-key]=value end data.Name=name data.Type=data.Type or cosmeticType data.Seed=data
-.Seed or math.random(1,1000000)local enumLibrary=_state.enumLibrary if
-enumLibrary then local success,enumId=pcall(enumLibrary.ToEnum,enumLibrary,name)
-if success and enumId then data.Enum=enumId data.ObjectID=data.ObjectID or
-enumId end end if options then if options.inverted~=nil then data.Inverted=
-options.inverted end if options.favoritesOnly~=nil then data.OnlyUseFavorites=
-options.favoritesOnly end end return data end local function _saveConfig()local
-env,genv=_getEnv()local writefile=(genv.writefile or env.writefile)if not
-writefile then return end pcall(function()local config={equipped={},favorites=
-_state.favorites}for weapon,cosmetics in pairs(_state.equipped)do config.
-equipped[weapon]={}for cosmeticType,cosmeticData in pairs(cosmetics)do if
+end local function _cloneCosmetic(name,cosmeticType,options)local
+cosmeticLibrary=_state.cosmeticLibrary if not cosmeticLibrary then return nil
+end local base=cosmeticLibrary.Cosmetics[name]if not base then return nil end
+local data={}for key,value in pairs(base)do data[key]=value end data.Name=name
+data.Type=data.Type or cosmeticType data.Seed=data.Seed or math.random(1,1000000
+)local enumLibrary=_state.enumLibrary if enumLibrary then local success,enumId=
+pcall(enumLibrary.ToEnum,enumLibrary,name)if success and enumId then data.Enum=
+enumId data.ObjectID=data.ObjectID or enumId end end if options then if options.
+inverted~=nil then data.Inverted=options.inverted end if options.favoritesOnly~=
+nil then data.OnlyUseFavorites=options.favoritesOnly end end return data end
+local function _saveConfig()local env,genv=_getEnv()local writefile=(genv.
+writefile or env.writefile)local makefolder=(genv.makefolder or env.makefolder)
+if not writefile then return end pcall(function()local config={equipped={},
+favorites=_state.favorites}for weapon,cosmetics in pairs(_state.equipped)do
+config.equipped[weapon]={}for cosmeticType,cosmeticData in pairs(cosmetics)do if
 cosmeticData and cosmeticData.Name then config.equipped[weapon][cosmeticType]={
 name=cosmeticData.Name,seed=cosmeticData.Seed,inverted=cosmeticData.Inverted}end
-end end writefile(SAVE_FILE,HttpService:JSONEncode(config))end)end
-local function _loadConfig()local env,genv=_getEnv()local readfile=(genv.
-readfile or env.readfile)local isfile=(genv.isfile or env.isfile)if not readfile
-or not isfile or not isfile(SAVE_FILE)then return end pcall(function()local
-config=HttpService:JSONDecode(readfile(SAVE_FILE))if config.equipped then for
-weapon,cosmetics in pairs(config.equipped)do _state.equipped[weapon]={}for
-cosmeticType,cosmeticData in pairs(cosmetics)do local cloned=_cloneCosmetic(
-cosmeticData.name,cosmeticType,{inverted=cosmeticData.inverted})if cloned then
-cloned.Seed=cosmeticData.seed _state.equipped[weapon][cosmeticType]=cloned end
-end end end _state.favorites=config.favorites or{}end)end local function
-_patchCosmeticLibrary()local cosmeticLibrary=_state.cosmeticLibrary if not
-cosmeticLibrary then return end cosmeticLibrary.OwnsCosmeticNormally=function()
-return true end cosmeticLibrary.OwnsCosmeticUniversally=function()return true
-end cosmeticLibrary.OwnsCosmeticForWeapon=function()return true end if not
-_state.originals.ownsCosmetic then _state.originals.ownsCosmetic=cosmeticLibrary
-.OwnsCosmetic end local originalOwnsCosmetic=_state.originals.ownsCosmetic
-cosmeticLibrary.OwnsCosmetic=function(self,inventory,name,weapon)if name:find(
-'MISSING_')and originalOwnsCosmetic then return originalOwnsCosmetic(self,
-inventory,name,weapon)end return true end end local function
-_patchDataController()local dataController=_state.dataController if not
-dataController then return end if not _state.originals.dataGet then _state.
-originals.dataGet=dataController.Get end if not _state.originals.
-dataGetWeaponData then _state.originals.dataGetWeaponData=dataController.
-GetWeaponData end local originalGet=_state.originals.dataGet local
-originalGetWeaponData=_state.originals.dataGetWeaponData dataController.Get=
-function(self,key)local data=originalGet(self,key)if key=='CosmeticInventory'
-then local proxy={}if data then for k,v in pairs(data)do proxy[k]=v end end
-return setmetatable(proxy,{__index=function()return true end})end if key==
-'FavoritedCosmetics'then local result=data and table.clone(data)or{}for weapon,
-favs in pairs(_state.favorites)do result[weapon]=result[weapon]or{}for name,
-isFav in pairs(favs)do result[weapon][name]=isFav end end return result end
-return data end dataController.GetWeaponData=function(self,weaponName)local data
-=originalGetWeaponData(self,weaponName)if not data then return nil end local
+end end if makefolder then makefolder(SAVE_FOLDER)end writefile(SAVE_FILE,
+HttpService:JSONEncode(config))end)end local function _loadConfig()local env,
+genv=_getEnv()local readfile=(genv.readfile or env.readfile)local isfile=(genv.
+isfile or env.isfile)if not readfile or not isfile or not isfile(SAVE_FILE)then
+return end pcall(function()local config=HttpService:JSONDecode(readfile(
+SAVE_FILE))if config.equipped then for weapon,cosmetics in pairs(config.equipped
+)do _state.equipped[weapon]={}for cosmeticType,cosmeticData in pairs(cosmetics)
+do local cloned=_cloneCosmetic(cosmeticData.name,cosmeticType,{inverted=
+cosmeticData.inverted})if cloned then cloned.Seed=cosmeticData.seed _state.
+equipped[weapon][cosmeticType]=cloned end end end end _state.favorites=config.
+favorites or{}end)end local function _patchCosmeticLibrary()local
+cosmeticLibrary=_state.cosmeticLibrary if not cosmeticLibrary then return end
+cosmeticLibrary.OwnsCosmeticNormally=function()return true end cosmeticLibrary.
+OwnsCosmeticUniversally=function()return true end cosmeticLibrary.
+OwnsCosmeticForWeapon=function()return true end if not _state.originals.
+ownsCosmetic then _state.originals.ownsCosmetic=cosmeticLibrary.OwnsCosmetic end
+local originalOwnsCosmetic=_state.originals.ownsCosmetic cosmeticLibrary.
+OwnsCosmetic=function(self,inventory,name,weapon)if name:find('MISSING_')and
+originalOwnsCosmetic then return originalOwnsCosmetic(self,inventory,name,weapon
+)end return true end end local function _patchDataController()local
+dataController=_state.dataController if not dataController then return end if
+not _state.originals.dataGet then _state.originals.dataGet=dataController.Get
+end if not _state.originals.dataGetWeaponData then _state.originals.
+dataGetWeaponData=dataController.GetWeaponData end local originalGet=_state.
+originals.dataGet local originalGetWeaponData=_state.originals.dataGetWeaponData
+dataController.Get=function(self,key)local data=originalGet(self,key)if key==
+'CosmeticInventory'then local proxy={}if data then for k,v in pairs(data)do
+proxy[k]=v end end return setmetatable(proxy,{__index=function()return true end}
+)end if key=='FavoritedCosmetics'then local result=data and table.clone(data)or{
+}for weapon,favs in pairs(_state.favorites)do result[weapon]=result[weapon]or{}
+for name,isFav in pairs(favs)do result[weapon][name]=isFav end end return result
+end return data end dataController.GetWeaponData=function(self,weaponName)local
+data=originalGetWeaponData(self,weaponName)if not data then return nil end local
 merged={}for key,value in pairs(data)do merged[key]=value end merged.Name=
 weaponName if _state.equipped[weaponName]then for cosmeticType,cosmeticData in
 pairs(_state.equipped[weaponName])do merged[cosmeticType]=cosmeticData end end
@@ -720,24 +717,26 @@ local function _connect()_maid:DoCleaning()end function UnlockAll.init(self,
 client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
 _connect()end function UnlockAll.cleanup(self)if _maid then _maid:DoCleaning()
 end _state.isActive=false end function UnlockAll.run(self)if _state.isActive
-then return end _state.isActive=true _disableReplicatedFirstScripts()local
-player=Players.LocalPlayer if not player then _state.isActive=false return end
-_state.player=player local playerScripts=player:WaitForChild('PlayerScripts')
-local controllers=playerScripts:WaitForChild('Controllers')_state.controllers=
-controllers local enumLibrary=require(ReplicatedStorage.Modules:WaitForChild(
-'EnumLibrary',10))if enumLibrary then enumLibrary:WaitForEnumBuilder()end _state
-.enumLibrary=enumLibrary _state.cosmeticLibrary=require(ReplicatedStorage.
-Modules:WaitForChild('CosmeticLibrary',10))_state.itemLibrary=require(
-ReplicatedStorage.Modules:WaitForChild('ItemLibrary',10))_state.dataController=
-require(controllers:WaitForChild('PlayerDataController',10))pcall(function()
-_state.fighterController=require(controllers:WaitForChild('FighterController',10
-))end)_loadConfig()_patchCosmeticLibrary()_patchDataController()_hookNamecall()
-_patchClientItem()_patchClientViewModel()_patchItemLibrary()_patchViewProfile()
-_patchClientEntity()end return UnlockAll end function __DARKLUA_BUNDLE_MODULES.h
-()local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end do local function
-__modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+then return end _state.isActive=true local player=Players.LocalPlayer if not
+player then _state.logger:warn('UnlockAll: LocalPlayer missing.')_state.isActive
+=false return end _state.player=player local playerScripts=player:WaitForChild(
+'PlayerScripts')local controllers=playerScripts:WaitForChild('Controllers')
+_state.controllers=controllers local enumLibrary=require(ReplicatedStorage.
+Modules:WaitForChild('EnumLibrary',10))if enumLibrary then enumLibrary:
+WaitForEnumBuilder()end _state.enumLibrary=enumLibrary _state.cosmeticLibrary=
+require(ReplicatedStorage.Modules:WaitForChild('CosmeticLibrary',10))_state.
+itemLibrary=require(ReplicatedStorage.Modules:WaitForChild('ItemLibrary',10))
+_state.dataController=require(controllers:WaitForChild('PlayerDataController',10
+))if not _state.dataController then _state.logger:warn(
+'UnlockAll: DataController missing.')_state.isActive=false return end pcall(
+function()_state.fighterController=require(controllers:WaitForChild(
+'FighterController',10))end)_patchCosmeticLibrary()_patchDataController()
+_hookNamecall()_patchClientItem()_patchClientViewModel()_patchItemLibrary()
+_patchViewProfile()_patchClientEntity()_loadConfig()end return UnlockAll end
+function __DARKLUA_BUNDLE_MODULES.h()local v=__DARKLUA_BUNDLE_MODULES.cache.h if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c
+end end do local function __modImpl()local RunService=game:GetService(
+'RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
