@@ -14,6 +14,8 @@ local CONSTANTS = {
 	FOV_CIRCLE_COLOR = Color3.fromRGB(255, 255, 255),
 	FOV_CIRCLE_THICKNESS = 1,
 	FOV_CIRCLE_NUM_SIDES = 64,
+	MIN_AIM_SPEED = 4,
+	MAX_AIM_SPEED = 40,
 }
 
 --// Types
@@ -26,6 +28,7 @@ export type CombatFeature = {
 	setTeamCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSmoothness: (self: CombatFeature, smoothness: number) -> (),
 	setWallCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setHardLockEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state
@@ -42,9 +45,13 @@ local _state: {
 	isTeamCheckEnabled: boolean,
 	isWallCheckEnabled: boolean,
 	smoothness: number,
+	isHardLockEnabled: boolean,
 	target: Player?,
 	fovCircle: any?,
 	cameraController: any?,
+	isInputLocked: boolean,
+	mouseBehavior: Enum.MouseBehavior?,
+	mouseDeltaSensitivity: number?,
 } =
 	{
 		client = nil :: any,
@@ -55,9 +62,13 @@ local _state: {
 		isTeamCheckEnabled = false,
 		isWallCheckEnabled = false,
 		smoothness = 0,
+		isHardLockEnabled = false,
 		target = nil,
 		fovCircle = nil,
 		cameraController = nil,
+		isInputLocked = false,
+		mouseBehavior = nil,
+		mouseDeltaSensitivity = nil,
 	}
 
 local _lastLogTime = 0
@@ -92,6 +103,37 @@ local function _getDrawingLib()
 		lib = rawget(_G, "Drawing")
 	end
 	return lib
+end
+
+local function _applyInputLock(isLocked: boolean)
+	if not _state.isHardLockEnabled then
+		return
+	end
+	if isLocked == _state.isInputLocked then
+		return
+	end
+
+	if isLocked then
+		if _state.mouseBehavior == nil then
+			_state.mouseBehavior = UserInputService.MouseBehavior
+		end
+		if _state.mouseDeltaSensitivity == nil then
+			_state.mouseDeltaSensitivity = UserInputService.MouseDeltaSensitivity
+		end
+		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+		UserInputService.MouseDeltaSensitivity = 0
+	else
+		if _state.mouseBehavior ~= nil then
+			UserInputService.MouseBehavior = _state.mouseBehavior
+			_state.mouseBehavior = nil
+		end
+		if _state.mouseDeltaSensitivity ~= nil then
+			UserInputService.MouseDeltaSensitivity = _state.mouseDeltaSensitivity
+			_state.mouseDeltaSensitivity = nil
+		end
+	end
+
+	_state.isInputLocked = isLocked
 end
 
 local function _fetchCameraController(logger: any)
@@ -163,8 +205,60 @@ local function _updateFovCircle()
 	end
 end
 
-local function _getBestTarget(): Player?
+local function _isValidTarget(player: Player): (boolean, BasePart?)
 	local camera = _getCamera()
+	local localPlayer = _getLocalPlayer()
+	if player == localPlayer then
+		return false, nil
+	end
+	if _state.isTeamCheckEnabled and player.Team == localPlayer.Team then
+		return false, nil
+	end
+
+	local character = player.Character
+	if not character then
+		return false, nil
+	end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if not humanoid or humanoid.Health <= 0 then
+		return false, nil
+	end
+
+	local head = character:FindFirstChild("Head")
+	if not head or not head:IsA("BasePart") then
+		return false, nil
+	end
+	local headPart = head :: BasePart
+
+	if _state.isWallCheckEnabled then
+		local origin = camera.CFrame.Position
+		local direction = headPart.Position - origin
+		local raycastParams = RaycastParams.new()
+		raycastParams.FilterDescendantsInstances = { localPlayer.Character, character }
+		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+		local result = Workspace:Raycast(origin, direction, raycastParams)
+		if result then
+			return false, nil
+		end
+	end
+
+	local screenPos, onScreen = camera:WorldToViewportPoint(headPart.Position)
+	if not onScreen then
+		return false, nil
+	end
+
+	local mouseLocation = UserInputService:GetMouseLocation()
+	local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
+	if distance > _state.fovRadius then
+		return false, nil
+	end
+
+	return true, headPart
+end
+
+local function _getBestTarget(): Player?
 	local localPlayer = _getLocalPlayer()
 	local mouseLocation = UserInputService:GetMouseLocation()
 
@@ -175,48 +269,18 @@ local function _getBestTarget(): Player?
 		if player == localPlayer then
 			continue
 		end
-		if _state.isTeamCheckEnabled and player.Team == localPlayer.Team then
+		local isValid = _isValidTarget(player)
+		if not isValid then
 			continue
 		end
 
-		local character = player.Character
-		if not character then
+		local head = player.Character and player.Character:FindFirstChild("Head")
+		if not head or not head:IsA("BasePart") then
 			continue
 		end
 
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		if not humanoid or humanoid.Health <= 0 then
-			continue
-		end
-
-		local head = character:FindFirstChild("Head")
-		if not head then
-			continue
-		end
-
-		if not head:IsA("BasePart") then
-			continue
-		end
-		local headPart = head :: BasePart
-
-		if _state.isWallCheckEnabled then
-			local origin = camera.CFrame.Position
-			local direction = headPart.Position - origin
-			local raycastParams = RaycastParams.new()
-			raycastParams.FilterDescendantsInstances = { localPlayer.Character, character }
-			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-			local result = Workspace:Raycast(origin, direction, raycastParams)
-			if result then
-				continue -- Obscured
-			end
-		end
-
-		local screenPos, onScreen = camera:WorldToViewportPoint(headPart.Position)
-		if not onScreen then
-			continue
-		end
-
+		local camera = _getCamera()
+		local screenPos = camera:WorldToViewportPoint((head :: BasePart).Position)
 		local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
 		if distance < shortestDistance then
 			shortestDistance = distance
@@ -227,7 +291,19 @@ local function _getBestTarget(): Player?
 	return bestTarget
 end
 
-local function _aimAt(target: Player)
+local function _resolveTarget(): Player?
+	if _state.target then
+		local isValid = _isValidTarget(_state.target)
+		if isValid then
+			return _state.target
+		end
+	end
+	local newTarget = _getBestTarget()
+	_state.target = newTarget
+	return newTarget
+end
+
+local function _aimAt(target: Player, deltaTime: number)
 	if not target.Character then
 		return
 	end
@@ -244,7 +320,9 @@ local function _aimAt(target: Player)
 	local lookAtCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
 
 	if not _state.cameraController or not _state.cameraController.SetRotation then
-		local alpha = if _state.smoothness > 0 then (1 - _state.smoothness) else 1
+		local speed = CONSTANTS.MIN_AIM_SPEED
+			+ (1 - _state.smoothness) * (CONSTANTS.MAX_AIM_SPEED - CONSTANTS.MIN_AIM_SPEED)
+		local alpha = 1 - math.exp(-speed * deltaTime)
 		camera.CFrame = currentCFrame:Lerp(lookAtCFrame, alpha)
 		return
 	end
@@ -266,12 +344,10 @@ local function _aimAt(target: Player)
 	-- Smoothness
 	if _state.smoothness > 0 then
 		local currentRot = _state.cameraController.Rotation :: Vector2
-		local diff = targetRotation - currentRot
-		-- Handle wrap around for Yaw (Y) if needed, but Vector2 math might just work if close
-		-- Simple Lerp
-		local step = (1 - _state.smoothness) -- If smoothness 1, step 0. If 0, step 1.
-		-- Adjusted for frame rate potentially, but standard lerp for now
-		local newRot = currentRot:Lerp(targetRotation, step)
+		local speed = CONSTANTS.MIN_AIM_SPEED
+			+ (1 - _state.smoothness) * (CONSTANTS.MAX_AIM_SPEED - CONSTANTS.MIN_AIM_SPEED)
+		local alpha = 1 - math.exp(-speed * deltaTime)
+		local newRot = currentRot:Lerp(targetRotation, alpha)
 		_state.cameraController:SetRotation(newRot)
 	else
 		_state.cameraController:SetRotation(targetRotation)
@@ -284,17 +360,23 @@ local function _connect()
 		_fetchCameraController(_state.logger)
 	end)
 
-	local runConn = RunService.RenderStepped:Connect(function()
+	local runConn = RunService.RenderStepped:Connect(function(deltaTime)
 		_updateFovCircle()
 
 		_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled)
 
 		if _state.isAimbotEnabled then
-			local target = _getBestTarget()
+			local target = _resolveTarget()
 			if target then
+				_applyInputLock(true)
 				_state.logger:info("Target found:", target.Name)
-				_aimAt(target)
+				_aimAt(target, deltaTime)
+			else
+				_applyInputLock(false)
 			end
+		else
+			_state.target = nil
+			_applyInputLock(false)
 		end
 	end)
 	_maid:GiveTask(runConn)
@@ -307,6 +389,8 @@ local function _disconnect()
 		end)
 		_state.fovCircle = nil
 	end
+	_state.target = nil
+	_applyInputLock(false)
 	_maid:DoCleaning()
 end
 
@@ -349,6 +433,16 @@ end
 
 function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 	_state.isWallCheckEnabled = isEnabled
+end
+
+function Combat.setHardLockEnabled(self: CombatFeature, isEnabled: boolean): ()
+	if _state.isHardLockEnabled == isEnabled then
+		return
+	end
+	_state.isHardLockEnabled = isEnabled
+	if not isEnabled then
+		_applyInputLock(false)
+	end
 end
 
 return Combat
