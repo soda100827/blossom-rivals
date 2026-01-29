@@ -34,6 +34,9 @@ export type CombatFeature = {
 	setTeamCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSmoothness: (self: CombatFeature, smoothness: number) -> (),
 	setWallCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setSilentAimEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setSilentAimFovEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setSilentAimFovRadius: (self: CombatFeature, radius: number) -> (),
 }
 
 --// Private state
@@ -45,17 +48,24 @@ local _state: {
 	client: any,
 	logger: any,
 	isAimbotEnabled: boolean,
+	isSilentAimEnabled: boolean,
 	isFovEnabled: boolean,
+	isSilentAimFovEnabled: boolean,
 	fovRadius: number,
+	silentAimFovRadius: number,
 	fovColor: Color3,
 	fovTransparency: number,
 	isTeamCheckEnabled: boolean,
 	isWallCheckEnabled: boolean,
 	smoothness: number,
 	target: Player?,
+	silentTarget: Player?,
 	targetLostAt: number?,
+	silentTargetLostAt: number?,
 	fovCircle: any?,
+	silentAimFovCircle: any?,
 	cameraController: any?,
+	fighterController: any?,
 	isInputLocked: boolean,
 	mouseBehavior: Enum.MouseBehavior?,
 	mouseDeltaSensitivity: number?,
@@ -64,17 +74,24 @@ local _state: {
 		client = nil :: any,
 		logger = nil :: any,
 		isAimbotEnabled = false,
+		isSilentAimEnabled = false,
 		isFovEnabled = false,
+		isSilentAimFovEnabled = false,
 		fovRadius = 100,
+		silentAimFovRadius = 100,
 		fovColor = CONSTANTS.FOV_CIRCLE_COLOR,
 		fovTransparency = 0,
 		isTeamCheckEnabled = false,
 		isWallCheckEnabled = false,
 		smoothness = 0,
 		target = nil,
+		silentTarget = nil,
 		targetLostAt = nil,
+		silentTargetLostAt = nil,
 		fovCircle = nil,
+		silentAimFovCircle = nil,
 		cameraController = nil,
+		fighterController = nil,
 		isInputLocked = false,
 		mouseBehavior = nil,
 		mouseDeltaSensitivity = nil,
@@ -168,7 +185,8 @@ local function _fetchCameraController(logger: any)
 	local camControllerScript = controllers:WaitForChild("CameraController")
 	if camControllerScript and camControllerScript:IsA("ModuleScript") then
 		local success, result = pcall(function()
-			return require(camControllerScript)
+			local dynamicRequire = require :: any
+			return dynamicRequire(camControllerScript)
 		end)
 		if success then
 			_state.cameraController = result
@@ -183,38 +201,138 @@ local function _fetchCameraController(logger: any)
 	end
 end
 
+local function _fetchFighterController(logger: any)
+	if _state.fighterController then
+		return
+	end
+	local playerScripts = _getLocalPlayer():WaitForChild("PlayerScripts", 10)
+	if not playerScripts then
+		return
+	end
+
+	local controllers = playerScripts:WaitForChild("Controllers", 10)
+	if not controllers then
+		return
+	end
+
+	local fighterControllerScript = controllers:WaitForChild("FighterController", 5)
+	if fighterControllerScript and fighterControllerScript:IsA("ModuleScript") then
+		local success, result = pcall(function()
+			local dynamicRequire = require :: any
+			return dynamicRequire(fighterControllerScript)
+		end)
+		if success then
+			_state.fighterController = result
+			if logger then
+				logger:info("Success FighterController")
+			end
+		else
+			if logger then
+				logger:error("Failed FighterController", result)
+			end
+		end
+	end
+end
+
+local function _getGlobal(name: string): any
+	local getfenvAny = getfenv :: any
+	local env = getfenvAny(0) :: any
+	local genv = (env.getgenv and env.getgenv()) or env
+	return genv[name] or env[name]
+end
+
+local function _hookFighter(fighter: any)
+	local hookfunction = _getGlobal("hookfunction") or _getGlobal("replaceclosure")
+	if not hookfunction then
+		_state.logger:warn("hookfunction not found, Silent Aim will not work.")
+		return
+	end
+
+	local oldGetCameraData
+	oldGetCameraData = hookfunction(fighter.GetCameraData, function(self, ...)
+		local result = oldGetCameraData(self, ...)
+		if _state.isSilentAimEnabled and _state.silentTarget then
+			local character = _state.silentTarget.Character
+			local head = character and character:FindFirstChild("Head")
+			if head and head:IsA("BasePart") then
+				local origin = result[utf8.char(0)].Position
+				local targetPos = (head :: BasePart).Position
+				result[utf8.char(1)] = CFrame.lookAt(origin, targetPos)
+			end
+		end
+		return result
+	end)
+	_state.logger:info("Fighter:GetCameraData hooked for Silent Aim.")
+end
+
+local function _setupSilentAim()
+	task.spawn(function()
+		_fetchFighterController(_state.logger)
+		if _state.fighterController then
+			local fighter = _state.fighterController:WaitForLocalFighter()
+			if fighter then
+				_hookFighter(fighter)
+			end
+
+			-- Hook FighterAdded if necessary (depends on if Fighter objects are reused)
+			-- Based on rivals_src, new Fighter objects are created.
+			if _state.fighterController.ObjectAdded then
+				_state.fighterController.ObjectAdded:Connect(function(obj)
+					if obj.IsLocalPlayer then
+						task.defer(function()
+							local newFighter = _state.fighterController:WaitForLocalFighter()
+							if newFighter then
+								_hookFighter(newFighter)
+							end
+						end)
+					end
+				end)
+			end
+		end
+	end)
+end
+
 local function _updateFovCircle()
 	local lib = _getDrawingLib()
 	if not lib then
 		return
 	end
 
-	local circle = _state.fovCircle
-	if _state.isFovEnabled then
-		if not circle then
-			circle = lib.new("Circle")
-			_state.fovCircle = circle
-		end
+	local function updateCircle(circleType, isEnabled, radius, color, transparency)
+		local circle = _state[circleType]
+		if isEnabled then
+			if not circle then
+				circle = lib.new("Circle")
+				_state[circleType] = circle
+			end
 
-		-- Use local variable cast to 'any' to mute strict linting on dynamic drawing object
-		local c = circle :: any
+			local c = circle :: any
+			c.Thickness = CONSTANTS.FOV_CIRCLE_THICKNESS
+			c.NumSides = CONSTANTS.FOV_CIRCLE_NUM_SIDES
+			c.Filled = false
+			c.Color = color
+			c.Transparency = math.clamp(transparency, 0, 1)
 
-		c.Thickness = CONSTANTS.FOV_CIRCLE_THICKNESS
-		c.NumSides = CONSTANTS.FOV_CIRCLE_NUM_SIDES
-		c.Filled = false
-		c.Color = _state.fovColor
-		c.Transparency = math.clamp(_state.fovTransparency, 0, 1)
-
-		local mouseLocation = UserInputService:GetMouseLocation()
-		c.Position = mouseLocation
-		c.Radius = _state.fovRadius
-		c.Visible = true
-	else
-		local c = circle :: any
-		if c then
-			c.Visible = false
+			local mouseLocation = UserInputService:GetMouseLocation()
+			c.Position = mouseLocation
+			c.Radius = radius
+			c.Visible = true
+		else
+			local c = circle :: any
+			if c then
+				c.Visible = false
+			end
 		end
 	end
+
+	updateCircle("fovCircle", _state.isFovEnabled, _state.fovRadius, _state.fovColor, _state.fovTransparency)
+	updateCircle(
+		"silentAimFovCircle",
+		_state.isSilentAimFovEnabled,
+		_state.silentAimFovRadius,
+		_state.fovColor,
+		_state.fovTransparency
+	)
 end
 
 local function _getTargetState(player: Player): (boolean, BasePart?, boolean, number)
@@ -247,7 +365,7 @@ local function _getTargetState(player: Player): (boolean, BasePart?, boolean, nu
 		local origin = camera.CFrame.Position
 		local direction = headPart.Position - origin
 		local raycastParams = RaycastParams.new()
-		raycastParams.FilterDescendantsInstances = { localPlayer.Character, character }
+		raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, character }
 		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
 		local result = Workspace:Raycast(origin, direction, raycastParams)
@@ -266,11 +384,11 @@ local function _getTargetState(player: Player): (boolean, BasePart?, boolean, nu
 	return true, headPart, true, distance
 end
 
-local function _getBestTarget(): Player?
+local function _getBestTarget(radius: number): Player?
 	local localPlayer = _getLocalPlayer()
 
 	local bestTarget = nil
-	local shortestDistance = _state.fovRadius
+	local shortestDistance = radius
 
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player == localPlayer then
@@ -281,7 +399,7 @@ local function _getBestTarget(): Player?
 			continue
 		end
 
-		if distance > _state.fovRadius then
+		if distance > radius then
 			continue
 		end
 		if distance < shortestDistance then
@@ -307,18 +425,51 @@ local function _resolveTarget(): Player?
 			_state.target = nil
 		else
 			local now = os.clock()
-			if not _state.targetLostAt then
+			local targetLostAt = _state.targetLostAt
+			if not targetLostAt then
+				targetLostAt = now
 				_state.targetLostAt = now
 			end
-			if now - _state.targetLostAt < CONSTANTS.TARGET_DROP_DELAY then
+			if now - (targetLostAt :: number) < CONSTANTS.TARGET_DROP_DELAY then
 				return _state.target
 			end
 			_state.targetLostAt = nil
 			_state.target = nil
 		end
 	end
-	local newTarget = _getBestTarget()
+	local newTarget = _getBestTarget(_state.fovRadius)
 	_state.target = newTarget
+	return newTarget
+end
+
+local function _resolveSilentTarget(): Player?
+	if _state.silentTarget then
+		local dropRadius = _state.silentAimFovRadius * CONSTANTS.TARGET_DROP_FOV_MULTIPLIER
+		local isValid, headPart, onScreen, distance = _getTargetState(_state.silentTarget)
+		if isValid and headPart and onScreen and distance <= dropRadius then
+			_state.silentTargetLostAt = nil
+			return _state.silentTarget
+		end
+
+		if not isValid or not headPart then
+			_state.silentTargetLostAt = nil
+			_state.silentTarget = nil
+		else
+			local now = os.clock()
+			local silentTargetLostAt = _state.silentTargetLostAt
+			if not silentTargetLostAt then
+				silentTargetLostAt = now
+				_state.silentTargetLostAt = now
+			end
+			if now - (silentTargetLostAt :: number) < CONSTANTS.TARGET_DROP_DELAY then
+				return _state.silentTarget
+			end
+			_state.silentTargetLostAt = nil
+			_state.silentTarget = nil
+		end
+	end
+	local newTarget = _getBestTarget(_state.silentAimFovRadius)
+	_state.silentTarget = newTarget
 	return newTarget
 end
 
@@ -383,6 +534,7 @@ local function _connect()
 	task.spawn(function()
 		_fetchCameraController(_state.logger)
 	end)
+	_setupSilentAim()
 
 	RunService:BindToRenderStep(
 		CONSTANTS.AIMBOT_RENDER_STEP_NAME,
@@ -390,7 +542,7 @@ local function _connect()
 		function(deltaTime)
 			_updateFovCircle()
 
-			_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled)
+			_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Silent:", _state.isSilentAimEnabled)
 
 			if _state.isAimbotEnabled then
 				local target = _resolveTarget()
@@ -404,6 +556,12 @@ local function _connect()
 			else
 				_state.target = nil
 				_applyInputLock(false)
+			end
+
+			if _state.isSilentAimEnabled then
+				_resolveSilentTarget()
+			else
+				_state.silentTarget = nil
 			end
 		end
 	)
@@ -419,8 +577,16 @@ local function _disconnect()
 		end)
 		_state.fovCircle = nil
 	end
+	if _state.silentAimFovCircle then
+		pcall(function()
+			(_state.silentAimFovCircle :: any):Remove()
+		end)
+		_state.silentAimFovCircle = nil
+	end
 	_state.target = nil
+	_state.silentTarget = nil
 	_state.targetLostAt = nil
+	_state.silentTargetLostAt = nil
 	_applyInputLock(false)
 	_maid:DoCleaning()
 end
@@ -481,6 +647,23 @@ end
 
 function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 	_state.isWallCheckEnabled = isEnabled
+end
+
+function Combat.setSilentAimEnabled(self: CombatFeature, isEnabled: boolean): ()
+	_state.logger:info("Set Silent Aim Enabled:", isEnabled)
+	_state.isSilentAimEnabled = isEnabled
+	if not isEnabled then
+		_state.silentTarget = nil
+		_state.silentTargetLostAt = nil
+	end
+end
+
+function Combat.setSilentAimFovEnabled(self: CombatFeature, isEnabled: boolean): ()
+	_state.isSilentAimFovEnabled = isEnabled
+end
+
+function Combat.setSilentAimFovRadius(self: CombatFeature, radius: number): ()
+	_state.silentAimFovRadius = radius
 end
 
 return Combat

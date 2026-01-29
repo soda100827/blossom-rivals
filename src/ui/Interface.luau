@@ -253,6 +253,46 @@ local function _mount()
 			end
 		end,
 	})
+	local silentAimGroup = tabs.combat:AddRightGroupbox("Silent Aim")
+	local silentAimToggle = silentAimGroup:AddToggle("SilentAimEnabled", {
+		Text = "Enabled",
+		Default = false,
+		Callback = function(state)
+			_updateControlBindings()
+		end,
+	})
+	silentAimToggle:AddKeyPicker("SilentAimKeybind", {
+		Default = "MouseButton2",
+		NoUI = false,
+		Text = "Trigger Key",
+		SyncToggleState = false,
+		Callback = function()
+			_updateControlBindings()
+		end,
+	})
+	silentAimGroup:AddToggle("SilentAimShowFov", {
+		Text = "Show FOV",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setSilentAimFovEnabled then
+				mod:setSilentAimFovEnabled(state)
+			end
+		end,
+	})
+	silentAimGroup:AddSlider("SilentAimFovRadius", {
+		Text = "FOV Radius",
+		Default = 100,
+		Min = 10,
+		Max = 800,
+		Rounding = 0,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setSilentAimFovRadius then
+				mod:setSilentAimFovRadius(value)
+			end
+		end,
+	})
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",
@@ -741,6 +781,17 @@ local function _mount()
 				local mod = _state.client.Modules.Player
 				if mod and mod.setJumpPowerEnabled then
 					mod:setJumpPowerEnabled(active)
+				end
+			end,
+		},
+		{
+			toggleId = "SilentAimEnabled",
+			keybindId = "SilentAimKeybind",
+			last = nil,
+			setter = function(active)
+				local mod = _state.client.Modules.Combat
+				if mod and mod.setSilentAimEnabled then
+					mod:setSilentAimEnabled(active)
 				end
 			end,
 		},
