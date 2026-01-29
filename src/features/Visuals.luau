@@ -10,6 +10,7 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 -- local VoltTypes = require("src/types/Volt") -- We can accept it exists contextually, or define generic types.
 -- Since the file is merely a type definition returning nil, we use it for type extraction.
 local ExploitTypes = require("../types/ExploitTypes")
+local TeamUtils = require("../utils/TeamUtils")
 
 --// Constants
 
@@ -35,7 +36,7 @@ local DEFAULT_SETTINGS = {
 	shouldShowSkeleton = false,
 	shouldShowHealthbar = false,
 	shouldShowHighlight = false,
-	shouldCheckTeam = false,
+	shouldShowTeammates = true,
 	maxDistance = 2000,
 	boxColor = Color3.new(1, 1, 1),
 	textColor = Color3.new(1, 1, 1),
@@ -87,7 +88,7 @@ export type Visuals = {
 	setShowSkeleton: (self: Visuals, shouldShow: boolean) -> (),
 	setShowHealthbar: (self: Visuals, shouldShow: boolean) -> (),
 	setShowHighlight: (self: Visuals, shouldShow: boolean) -> (),
-	setTeamCheck: (self: Visuals, isEnabled: boolean) -> (),
+	setShowTeammates: (self: Visuals, shouldShow: boolean) -> (),
 	setMaxDistance: (self: Visuals, value: number) -> (),
 	setBoxColor: (self: Visuals, color: Color3) -> (),
 	setTextColor: (self: Visuals, color: Color3) -> (),
@@ -364,7 +365,7 @@ local function _render()
 			continue
 		end
 
-		if _state.settings.shouldCheckTeam and player.Team == localPlayer.Team then
+		if not _state.settings.shouldShowTeammates and TeamUtils.isSameTeam(player, localPlayer) then
 			_removePlayer(player)
 			continue
 		end
@@ -580,8 +581,8 @@ function Visuals.setShowHighlight(self: Visuals, shouldShow: boolean): ()
 	end
 end
 
-function Visuals.setTeamCheck(self: Visuals, isEnabled: boolean): ()
-	_state.settings.shouldCheckTeam = isEnabled
+function Visuals.setShowTeammates(self: Visuals, shouldShow: boolean): ()
+	_state.settings.shouldShowTeammates = shouldShow
 end
 
 function Visuals.setMaxDistance(self: Visuals, value: number): ()

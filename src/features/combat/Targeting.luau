@@ -1,11 +1,21 @@
 --!strict
+
+--// Services
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+
+--// Dependencies (require)
 local State = require("./State")
 local Constants = require("./Constants")
 local Helpers = require("./Helpers")
+local TeamUtils = require("../../utils/TeamUtils")
 
+--// Constants
+
+--// Types
+
+--// Private state
 local Targeting = {}
 
 function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
@@ -14,7 +24,7 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 	if player == localPlayer then
 		return false, nil, false, math.huge
 	end
-	if State.isTeamCheckEnabled and player.Team == localPlayer.Team then
+	if TeamUtils.isSameTeam(player, localPlayer) then
 		return false, nil, false, math.huge
 	end
 
@@ -28,7 +38,7 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 		return false, nil, false, math.huge
 	end
 
-	local targetParts = {}
+	local targetParts: { BasePart } = {}
 	if State.isClosestPositionEnabled then
 		for _, partName in ipairs(State.closestPositionWhitelist) do
 			local p = character:FindFirstChild(partName)
@@ -47,7 +57,7 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 		return false, nil, false, math.huge
 	end
 
-	local bestPart = nil
+	local bestPart: BasePart? = nil
 	local shortestDist = math.huge
 	local anyOnScreen = false
 
@@ -93,7 +103,7 @@ end
 function Targeting.getBestTarget(radius: number): Player?
 	local localPlayer = Helpers.getLocalPlayer()
 
-	local bestTarget = nil
+	local bestTarget: Player? = nil
 	local shortestDistance = radius
 
 	for _, player in ipairs(Players:GetPlayers()) do
@@ -184,7 +194,8 @@ function Targeting.getClosestSilentTarget(): BasePart?
 	local localPlayer = Helpers.getLocalPlayer()
 	local collectionService = game:GetService("CollectionService")
 
-	local closest, closestDist = nil, State.silentAimFovRadius
+	local closest: BasePart? = nil
+	local closestDist = State.silentAimFovRadius
 	local mouseLocation = UserInputService:GetMouseLocation()
 
 	for _, entity in ipairs(collectionService:GetTagged("Entity")) do
@@ -197,7 +208,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 			continue
 		end
 
-		local targetParts = {}
+		local targetParts: { BasePart } = {}
 		if State.isClosestPositionEnabled then
 			for _, partName in ipairs(State.closestPositionWhitelist) do
 				local p = entity:FindFirstChild(partName)
@@ -218,11 +229,9 @@ function Targeting.getClosestSilentTarget(): BasePart?
 
 		for _, targetPart in ipairs(targetParts) do
 			-- Team check
-			if State.isTeamCheckEnabled then
-				local player = game:GetService("Players"):GetPlayerFromCharacter(entity :: Model)
-				if player and player.Team == localPlayer.Team then
-					continue
-				end
+			local player = Players:GetPlayerFromCharacter(entity :: Model)
+			if player and TeamUtils.isSameTeam(player, localPlayer) then
+				continue
 			end
 
 			-- Wall check
@@ -249,7 +258,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 			end
 		end
 	end
-	return closest :: any
+	return closest
 end
 
 return Targeting

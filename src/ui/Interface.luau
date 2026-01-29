@@ -642,8 +642,8 @@ local function _mount()
 		Default = true,
 		Callback = function(state)
 			local mod = _state.client.Modules.Visuals
-			if mod and mod.setTeamCheck then
-				mod:setTeamCheck(not state)
+			if mod and mod.setShowTeammates then
+				mod:setShowTeammates(state)
 			end
 		end,
 	})

@@ -29,7 +29,6 @@ local State: Types.CombatState = {
 		"LeftUpperLeg",
 		"RightUpperLeg",
 	},
-	isTeamCheckEnabled = false,
 	isWallCheckEnabled = false,
 	smoothness = 0,
 	target = nil,

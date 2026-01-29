@@ -169,13 +169,6 @@ function Helpers.fetchFighterController(logger: any)
 		end)
 		if success then
 			State.fighterController = result
-			if logger then
-				logger:info("Success FighterController")
-			end
-		else
-			if logger then
-				logger:error("Failed FighterController", result)
-			end
 		end
 	end
 end

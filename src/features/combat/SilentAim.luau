@@ -71,8 +71,6 @@ function SilentAim.setup()
 				end
 				return oldEncode(self, cf)
 			end)
-
-			State.logger:info("Utility.Raycast and Utility.EncodeCFrame hooked for Silent Aim.")
 		end
 
 		local cameraShaker = Helpers.getCameraShaker()
@@ -87,7 +85,6 @@ function SilentAim.setup()
 					end
 					return oldIdx(t, k)
 				end
-				State.logger:info("CameraShaker.Presets hooked to neutralize shake.")
 			end
 		end
 	end)

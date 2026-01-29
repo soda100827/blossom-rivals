@@ -122,10 +122,6 @@ function Combat.setFovTransparency(self: Types.CombatFeature, transparency: numb
 	State.fovTransparency = math.clamp(transparency, 0, 1)
 end
 
-function Combat.setTeamCheckEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
-	State.isTeamCheckEnabled = isEnabled
-end
-
 function Combat.setSmoothness(self: Types.CombatFeature, smoothness: number): ()
 	local wasMaxSmoothness = Helpers.isMaxSmoothness()
 	State.smoothness = math.clamp(smoothness, 0, Constants.MAX_SMOOTHNESS)

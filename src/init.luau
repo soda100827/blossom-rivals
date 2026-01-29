@@ -133,8 +133,9 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 		end
 
 		local originalRequire
+		local pipelineModule = pipeline :: any
 		originalRequire = hookfunction(require, function(module, ...)
-			if module == pipeline then
+			if (module :: any) == pipelineModule then
 				return function() end
 			end
 			return (originalRequire :: any)(module, ...)
@@ -142,7 +143,6 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 		logger:info("AnalyticsPipeline disabled and stubbed.")
 	end)
 end
-
 
 local function _handleTeleportQueue(shouldEnable: boolean)
 	if shouldEnable then
@@ -282,7 +282,6 @@ function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
 		_handleTeleportQueue(true)
 	end
 end
-
 
 function Client.start(self: BlossomClient): ()
 	if _state.isRunning then
