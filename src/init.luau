@@ -4,6 +4,7 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
 
 --// Dependencies (require)
 local Logger = require("src/utils/Logger")
@@ -14,6 +15,7 @@ local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
 local CLIENT_MODULE_NAME = "Client"
+local UNLOCK_ALL_SAVE_FILE = "blossom_skin_configs.json"
 
 --// Environment Check
 local getfenvAny = getfenv :: any
@@ -77,6 +79,8 @@ export type BlossomClient = {
 	loadModule: (self: BlossomClient, name: string, moduleOrPath: ModuleOrPath) -> (),
 	setTeleportQueue: (self: BlossomClient, shouldEnable: boolean) -> (),
 	setSilent: (self: BlossomClient, isSilent: boolean) -> (),
+	loadUnlockAllConfig: (self: BlossomClient) -> ({ [string]: any }?),
+	saveUnlockAllConfig: (self: BlossomClient, equipped: { [string]: any }, favorites: { [string]: any }) -> (),
 	start: (self: BlossomClient) -> (),
 	destroy: (self: BlossomClient) -> (),
 }
@@ -105,15 +109,58 @@ local _modules: { [string]: Module } = {}
 
 --// Private helpers
 local function _disableAnalyticsPipeline(logger: LoggerInstance)
+	local hookfunction = getGlobal("hookfunction")
+	if not hookfunction then
+		return
+	end
+
 	pcall(function()
 		local controller = ReplicatedFirst:FindFirstChild("AnalyticsPipelineController")
 		if not controller then
 			controller = ReplicatedFirst:WaitForChild("AnalyticsPipelineController", 10)
 		end
-		if controller then
-			-- (controller :: any).Disabled = true
-			-- logger:info("AnalyticsPipelineController 비활성화됨.")
+		if not controller then
+			return
 		end
+		local pipeline = controller:FindFirstChild("AnalyticsPipeline")
+		if not (pipeline and pipeline:IsA("ModuleScript")) then
+			return
+		end
+
+		local originalRequire
+		originalRequire = hookfunction(require, function(module, ...)
+			if module == pipeline then
+				return function() end
+			end
+			return (originalRequire :: any)(module, ...)
+		end)
+		logger:info("AnalyticsPipeline stubbed.")
+	end)
+end
+
+local function _loadUnlockAllConfig()
+	local readfile = getGlobal("readfile")
+	local isfile = getGlobal("isfile")
+	if not readfile or not isfile or not isfile(UNLOCK_ALL_SAVE_FILE) then
+		return nil
+	end
+	local ok, config = pcall(function()
+		return HttpService:JSONDecode(readfile(UNLOCK_ALL_SAVE_FILE))
+	end)
+	if not ok then
+		return nil
+	end
+	return config
+end
+
+local function _saveUnlockAllConfig(equipped: { [string]: any }, favorites: { [string]: any })
+	local writefile = getGlobal("writefile")
+	if not writefile then
+		return
+	end
+	pcall(function()
+		local config = { equipped = equipped, favorites = favorites }
+		writefile(UNLOCK_ALL_SAVE_FILE, HttpService:JSONEncode(config))
 	end)
 end
 
@@ -254,6 +301,14 @@ function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
 	if _state.shouldTeleportQueue and _state.isRunning then
 		_handleTeleportQueue(true)
 	end
+end
+
+function Client.loadUnlockAllConfig(self: BlossomClient): ({ [string]: any }?)
+	return _loadUnlockAllConfig()
+end
+
+function Client.saveUnlockAllConfig(self: BlossomClient, equipped: { [string]: any }, favorites: { [string]: any }): ()
+	_saveUnlockAllConfig(equipped, favorites)
 end
 
 function Client.start(self: BlossomClient): ()

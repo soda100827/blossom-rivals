@@ -528,14 +528,13 @@ _applyInputLock(false)end end function Combat.setWallCheckEnabled(self,isEnabled
 __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
-ReplicatedStorage=game:GetService('ReplicatedStorage')local HttpService=game:
-GetService('HttpService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local
-SAVE_FOLDER='unlockall'local SAVE_FILE='unlockall/config.json'local UnlockAll={}
-UnlockAll.__index=UnlockAll local _maid=nil local _state={client=nil,logger=nil,
-isActive=false,player=nil,controllers=nil,enumLibrary=nil,cosmeticLibrary=nil,
-itemLibrary=nil,dataController=nil,fighterController=nil,equipped={},favorites={
-},constructingWeapon=nil,viewingProfile=nil,lastUsedWeapon=nil,originals={}}
-local _signals={}local function _getEnv()local getfenvAny=getfenv local env=(
+ReplicatedStorage=game:GetService('ReplicatedStorage')local Maid=(
+__DARKLUA_BUNDLE_MODULES.b())local UnlockAll={}UnlockAll.__index=UnlockAll local
+_maid=nil local _state={client=nil,logger=nil,isActive=false,player=nil,
+controllers=nil,enumLibrary=nil,cosmeticLibrary=nil,itemLibrary=nil,
+dataController=nil,fighterController=nil,equipped={},favorites={},
+constructingWeapon=nil,viewingProfile=nil,lastUsedWeapon=nil,originals={}}local
+_signals={}local function _getEnv()local getfenvAny=getfenv local env=(
 getfenvAny(0))local genv=(env.getgenv and env.getgenv())or env return env,genv
 end local function _cloneCosmetic(name,cosmeticType,options)local
 cosmeticLibrary=_state.cosmeticLibrary if not cosmeticLibrary then return nil
@@ -547,26 +546,23 @@ pcall(enumLibrary.ToEnum,enumLibrary,name)if success and enumId then data.Enum=
 enumId data.ObjectID=data.ObjectID or enumId end end if options then if options.
 inverted~=nil then data.Inverted=options.inverted end if options.favoritesOnly~=
 nil then data.OnlyUseFavorites=options.favoritesOnly end end return data end
-local function _saveConfig()local env,genv=_getEnv()local writefile=(genv.
-writefile or env.writefile)local makefolder=(genv.makefolder or env.makefolder)
-if not writefile then return end pcall(function()local config={equipped={},
-favorites=_state.favorites}for weapon,cosmetics in pairs(_state.equipped)do
-config.equipped[weapon]={}for cosmeticType,cosmeticData in pairs(cosmetics)do if
-cosmeticData and cosmeticData.Name then config.equipped[weapon][cosmeticType]={
-name=cosmeticData.Name,seed=cosmeticData.Seed,inverted=cosmeticData.Inverted}end
-end end if makefolder then makefolder(SAVE_FOLDER)end writefile(SAVE_FILE,
-HttpService:JSONEncode(config))end)end local function _loadConfig()local env,
-genv=_getEnv()local readfile=(genv.readfile or env.readfile)local isfile=(genv.
-isfile or env.isfile)if not readfile or not isfile or not isfile(SAVE_FILE)then
-return end pcall(function()local config=HttpService:JSONDecode(readfile(
-SAVE_FILE))if config.equipped then for weapon,cosmetics in pairs(config.equipped
-)do _state.equipped[weapon]={}for cosmeticType,cosmeticData in pairs(cosmetics)
-do local cloned=_cloneCosmetic(cosmeticData.name,cosmeticType,{inverted=
-cosmeticData.inverted})if cloned then cloned.Seed=cosmeticData.seed _state.
-equipped[weapon][cosmeticType]=cloned end end end end _state.favorites=config.
-favorites or{}end)end local function _patchCosmeticLibrary()local
-cosmeticLibrary=_state.cosmeticLibrary if not cosmeticLibrary then return end
-cosmeticLibrary.OwnsCosmeticNormally=function()return true end cosmeticLibrary.
+local function _saveConfig()local client=_state.client if not client or not
+client.saveUnlockAllConfig then return end local equippedConfig={}for weapon,
+cosmetics in pairs(_state.equipped)do equippedConfig[weapon]={}for cosmeticType,
+cosmeticData in pairs(cosmetics)do if cosmeticData and cosmeticData.Name then
+equippedConfig[weapon][cosmeticType]={name=cosmeticData.Name,seed=cosmeticData.
+Seed,inverted=cosmeticData.Inverted}end end end client:saveUnlockAllConfig(
+equippedConfig,_state.favorites)end local function _loadConfig()local client=
+_state.client if not client or not client.loadUnlockAllConfig then return end
+local config=client:loadUnlockAllConfig()if not config then return end if config
+.equipped then for weapon,cosmetics in pairs(config.equipped)do _state.equipped[
+weapon]={}for cosmeticType,cosmeticData in pairs(cosmetics)do local cloned=
+_cloneCosmetic(cosmeticData.name,cosmeticType,{inverted=cosmeticData.inverted})
+if cloned then cloned.Seed=cosmeticData.seed _state.equipped[weapon][
+cosmeticType]=cloned end end end end _state.favorites=config.favorites or{}end
+local function _patchCosmeticLibrary()local cosmeticLibrary=_state.
+cosmeticLibrary if not cosmeticLibrary then return end cosmeticLibrary.
+OwnsCosmeticNormally=function()return true end cosmeticLibrary.
 OwnsCosmeticUniversally=function()return true end cosmeticLibrary.
 OwnsCosmeticForWeapon=function()return true end if not _state.originals.
 ownsCosmetic then _state.originals.ownsCosmetic=cosmeticLibrary.OwnsCosmetic end
@@ -943,12 +939,14 @@ false end return Interface end function __DARKLUA_BUNDLE_MODULES.i()local v=
 __DARKLUA_BUNDLE_MODULES.cache.i if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.i=v end return v.c end end end local
 ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
-'Players')local RunService=game:GetService('RunService')local Logger=
-__DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
-__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
+'Players')local RunService=game:GetService('RunService')local HttpService=game:
+GetService('HttpService')local Logger=__DARKLUA_BUNDLE_MODULES.a()local Maid=
+__DARKLUA_BUNDLE_MODULES.b()local Signal=__DARKLUA_BUNDLE_MODULES.c()local
+BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
-local CLIENT_MODULE_NAME='Client'local getfenvAny=getfenv local env=(getfenvAny(
-0))local genv=(env.getgenv and env.getgenv())or env local function getGlobal(k)
+local CLIENT_MODULE_NAME='Client'local UNLOCK_ALL_SAVE_FILE=
+'blossom_skin_configs.json'local getfenvAny=getfenv local env=(getfenvAny(0))
+local genv=(env.getgenv and env.getgenv())or env local function getGlobal(k)
 return genv[k]or env[k]end local queue_on_teleport=getGlobal('queue_on_teleport'
 )or getGlobal('queueonteleport')or(env.syn and env.syn.queue_on_teleport)local
 clear_teleport_queue=getGlobal('clear_teleport_queue')or getGlobal(
@@ -962,13 +960,26 @@ __DARKLUA_BUNDLE_MODULES.i())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
 BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
 Signal.new(),stopped=Signal.new()}local _modules={}local function
-_disableAnalyticsPipeline(logger)pcall(function()local controller=
+_disableAnalyticsPipeline(logger)local hookfunction=getGlobal('hookfunction')if
+not hookfunction then return end pcall(function()local controller=
 ReplicatedFirst:FindFirstChild('AnalyticsPipelineController')if not controller
 then controller=ReplicatedFirst:WaitForChild('AnalyticsPipelineController',10)
-end if controller then end end)end local function _handleTeleportQueue(
-shouldEnable)if shouldEnable then if clear_teleport_queue then
-clear_teleport_queue()end if queue_on_teleport then local silentFlag=_state.
-isSilent and'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''
+end if not controller then return end local pipeline=controller:FindFirstChild(
+'AnalyticsPipeline')if not(pipeline and pipeline:IsA('ModuleScript'))then return
+end local originalRequire originalRequire=hookfunction(require,function(module,
+...)if module==pipeline then return function()end end return(originalRequire)(
+module,...)end)logger:info('AnalyticsPipeline stubbed.')end)end local function
+_loadUnlockAllConfig()local readfile=getGlobal('readfile')local isfile=
+getGlobal('isfile')if not readfile or not isfile or not isfile(
+UNLOCK_ALL_SAVE_FILE)then return nil end local ok,config=pcall(function()return
+HttpService:JSONDecode(readfile(UNLOCK_ALL_SAVE_FILE))end)if not ok then return
+nil end return config end local function _saveUnlockAllConfig(equipped,favorites
+)local writefile=getGlobal('writefile')if not writefile then return end pcall(
+function()local config={equipped=equipped,favorites=favorites}writefile(
+UNLOCK_ALL_SAVE_FILE,HttpService:JSONEncode(config))end)end local function
+_handleTeleportQueue(shouldEnable)if shouldEnable then if clear_teleport_queue
+then clear_teleport_queue()end if queue_on_teleport then local silentFlag=_state
+.isSilent and'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''
 queue_on_teleport((
 [[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):
 format(silentFlag,BUNDLE_URL))end else if clear_teleport_queue then
@@ -1002,8 +1013,11 @@ shouldTeleportQueue=shouldEnable if _state.isRunning then _handleTeleportQueue(
 shouldEnable)end end function Client.setSilent(self,isSilent)if _state.isSilent
 ==isSilent then return end _state.isSilent=isSilent if _state.
 shouldTeleportQueue and _state.isRunning then _handleTeleportQueue(true)end end
-function Client.start(self)if _state.isRunning then return end _state.isRunning=
-true _disableAnalyticsPipeline(_state.logger)_state.logger:info(
+function Client.loadUnlockAllConfig(self)return _loadUnlockAllConfig()end
+function Client.saveUnlockAllConfig(self,equipped,favorites)
+_saveUnlockAllConfig(equipped,favorites)end function Client.start(self)if _state
+.isRunning then return end _state.isRunning=true _disableAnalyticsPipeline(
+_state.logger)_state.logger:info(
 'Blossom \u{cd08}\u{ae30}\u{d654} \u{c2dc}\u{c791}\u{b428}.')
 _waitForClientLoaded()for _,entry in ipairs(MODULES)do self:loadModule(entry.
 name,entry.loader)end _connect()_signals.started:Fire()_state.logger:success(

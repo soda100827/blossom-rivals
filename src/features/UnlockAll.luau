@@ -3,14 +3,11 @@
 --// Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local HttpService = game:GetService("HttpService")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
-local SAVE_FOLDER = "unlockall"
-local SAVE_FILE = "unlockall/config.json"
 
 --// Types
 type CosmeticOptions = {
@@ -111,60 +108,53 @@ local function _cloneCosmetic(name: string, cosmeticType: string, options: Cosme
 end
 
 local function _saveConfig()
-	local env, genv = _getEnv()
-	local writefile = (genv.writefile or env.writefile) :: any
-	local makefolder = (genv.makefolder or env.makefolder) :: any
-	if not writefile then
+	local client = _state.client
+	if not client or not client.saveUnlockAllConfig then
 		return
 	end
 
-	pcall(function()
-		local config = { equipped = {}, favorites = _state.favorites }
-		for weapon, cosmetics in pairs(_state.equipped) do
-			config.equipped[weapon] = {}
-			for cosmeticType, cosmeticData in pairs(cosmetics) do
-				if cosmeticData and cosmeticData.Name then
-					config.equipped[weapon][cosmeticType] = {
-						name = cosmeticData.Name,
-						seed = cosmeticData.Seed,
-						inverted = cosmeticData.Inverted,
-					}
-				end
+	local equippedConfig = {}
+	for weapon, cosmetics in pairs(_state.equipped) do
+		equippedConfig[weapon] = {}
+		for cosmeticType, cosmeticData in pairs(cosmetics) do
+			if cosmeticData and cosmeticData.Name then
+				equippedConfig[weapon][cosmeticType] = {
+					name = cosmeticData.Name,
+					seed = cosmeticData.Seed,
+					inverted = cosmeticData.Inverted,
+				}
 			end
 		end
-		if makefolder then
-			makefolder(SAVE_FOLDER)
-		end
-		writefile(SAVE_FILE, HttpService:JSONEncode(config))
-	end)
+	end
+
+	client:saveUnlockAllConfig(equippedConfig, _state.favorites)
 end
 
 local function _loadConfig()
-	local env, genv = _getEnv()
-	local readfile = (genv.readfile or env.readfile) :: any
-	local isfile = (genv.isfile or env.isfile) :: any
-	if not readfile or not isfile or not isfile(SAVE_FILE) then
+	local client = _state.client
+	if not client or not client.loadUnlockAllConfig then
 		return
 	end
 
-	pcall(function()
-		local config = HttpService:JSONDecode(readfile(SAVE_FILE))
-		if config.equipped then
-			for weapon, cosmetics in pairs(config.equipped) do
-				_state.equipped[weapon] = {}
-				for cosmeticType, cosmeticData in pairs(cosmetics) do
-					local cloned = _cloneCosmetic(cosmeticData.name, cosmeticType, {
-						inverted = cosmeticData.inverted,
-					})
-					if cloned then
-						cloned.Seed = cosmeticData.seed
-						_state.equipped[weapon][cosmeticType] = cloned
-					end
+	local config = client:loadUnlockAllConfig()
+	if not config then
+		return
+	end
+	if config.equipped then
+		for weapon, cosmetics in pairs(config.equipped) do
+			_state.equipped[weapon] = {}
+			for cosmeticType, cosmeticData in pairs(cosmetics) do
+				local cloned = _cloneCosmetic(cosmeticData.name, cosmeticType, {
+					inverted = cosmeticData.inverted,
+				})
+				if cloned then
+					cloned.Seed = cosmeticData.seed
+					_state.equipped[weapon][cosmeticType] = cloned
 				end
 			end
 		end
-		_state.favorites = config.favorites or {}
-	end)
+	end
+	_state.favorites = config.favorites or {}
 end
 
 local function _patchCosmeticLibrary()
