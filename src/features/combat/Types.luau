@@ -1,5 +1,12 @@
 --!strict
 
+--// Services
+
+--// Dependencies (require)
+
+--// Constants
+
+--// Types
 export type CombatState = {
 	client: any,
 	logger: any,
@@ -37,6 +44,10 @@ export type CombatState = {
 	mouseDeltaSensitivity: number?,
 }
 
+export type CombatVisuals = {
+	updateFovCircle: () -> (),
+}
+
 export type CombatFeature = {
 	init: (self: CombatFeature, client: any) -> (),
 	cleanup: (self: CombatFeature) -> (),
@@ -60,4 +71,9 @@ export type CombatFeature = {
 	setClosestPositionWhitelist: (self: CombatFeature, whitelist: { string }) -> (),
 }
 
+--// Private state
+
+--// Private helpers
+
+--// Public API
 return {}

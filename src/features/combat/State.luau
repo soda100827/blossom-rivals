@@ -1,7 +1,16 @@
 --!strict
+
+--// Services
+
+--// Dependencies (require)
 local Types = require("./Types")
 local Constants = require("./Constants")
 
+--// Constants
+
+--// Types
+
+--// Private state
 local State: Types.CombatState = {
 	client = nil :: any,
 	logger = nil :: any,
@@ -47,4 +56,7 @@ local State: Types.CombatState = {
 	mouseDeltaSensitivity = nil,
 }
 
+--// Private helpers
+
+--// Public API
 return State

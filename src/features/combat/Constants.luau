@@ -1,6 +1,15 @@
 --!strict
 
-return {
+--// Services
+
+--// Dependencies (require)
+
+--// Constants
+
+--// Types
+
+--// Private state
+local Constants = {
 	FOV_CIRCLE_COLOR = Color3.fromRGB(255, 255, 255),
 	FOV_CIRCLE_THICKNESS = 1,
 	FOV_CIRCLE_NUM_SIDES = 64,
@@ -11,3 +20,8 @@ return {
 	TARGET_DROP_FOV_MULTIPLIER = 1.2,
 	AIMBOT_RENDER_STEP_NAME = "CombatAimbot",
 }
+
+--// Private helpers
+
+--// Public API
+return Constants

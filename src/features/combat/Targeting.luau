@@ -18,6 +18,9 @@ local TeamUtils = require("../../utils/TeamUtils")
 --// Private state
 local Targeting = {}
 
+--// Private helpers
+
+--// Public API
 function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
 	local camera = Helpers.getCamera()
 	local localPlayer = Helpers.getLocalPlayer()

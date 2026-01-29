@@ -131,335 +131,365 @@ end local teamB=TeamUtils.getPlayerTeamId(playerB)if teamB==nil then return
 false end return teamA==teamB end return TeamUtils end function
 __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-RunService=game:GetService('RunService')local Workspace=game:GetService(
-'Workspace')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local ExploitTypes=
-__DARKLUA_BUNDLE_MODULES.d()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()
-local function getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))
-local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if
-not lib then lib=rawget(_G,'Drawing')end return lib end local DEFAULT_SETTINGS={
-isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false,
-shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
-shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,
-maxDistance=2000,boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),
-weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),skeletonColor=
-Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.
-new(0,0,0),nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,
-0),distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
-skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
-highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
-12,shouldOutline=true}local R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
-'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
-'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
-'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
-'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
-'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
-}local Visuals={}Visuals.__index=Visuals local _maid=nil local _state={client=
-nil,logger=nil,isEnabled=false,drawings={},highlights={},settings=table.clone(
-DEFAULT_SETTINGS),overrideCheck=nil}local _signals={}local function _getCamera()
-local camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
-WaitForChild('Camera'))end return camera end local function _clearDrawings()for
-player,group in pairs(_state.drawings)do for _,drawing in pairs(group)do if
-type(drawing)=='table'then for _,line in pairs(drawing)do line:Remove()end else
-drawing:Remove()end end _state.drawings[player]=nil end end local function
-_clearHighlights()for player,highlight in pairs(_state.highlights)do if
-highlight~=nil then(highlight):Destroy()end _state.highlights[player]=nil end
-end local function _clear()_clearDrawings()_clearHighlights()end local function
-_removePlayer(player)local group=_state.drawings[player]if group then for _,
-drawing in pairs(group)do if type(drawing)=='table'then for _,line in pairs(
-drawing)do line:Remove()end else drawing:Remove()end end _state.drawings[player]
-=nil end local highlight=_state.highlights[player]if highlight~=nil then(
-highlight):Destroy()_state.highlights[player]=nil end end local function
-_ensurePlayerDrawings(player)local existing=_state.drawings[player]if existing
-then return existing end local lib=getDrawingLib()if not lib then return nil end
-local group={name=lib.new('Text'),weapon=lib.new('Text'),distance=lib.new('Text'
-),boxOutline=lib.new('Square'),box=lib.new('Square'),healthbarOutline=lib.new(
-'Square'),healthbar=lib.new('Square'),skeleton={},skeletonOutline={}}for _,key
-in ipairs({'name','weapon','distance'})do group[key].Center=true group[key].
-Outline=true group[key].Visible=false end for _,key in ipairs({'box',
-'boxOutline','healthbar','healthbarOutline'})do group[key].Visible=false group[
-key].Filled=false end group.healthbar.Filled=true group.healthbarOutline.Filled=
-true for _=1,16 do local line=lib.new('Line')line.Visible=false table.insert(
-group.skeleton,line)local outline=lib.new('Line')outline.Visible=false table.
-insert(group.skeletonOutline,outline)end _state.drawings[player]=group return
-group end local function _updateHighlight(player,character)if not _state.
-settings.shouldShowHighlight then local highlight=_state.highlights[player]if
-highlight then highlight:Destroy()_state.highlights[player]=nil end return end
-local highlight=_state.highlights[player]if not highlight then local created=
-Instance.new('Highlight')created.Name='BlossomHighlight'created.FillTransparency
-=0.5 created.OutlineTransparency=0 created.Parent=game:GetService('CoreGui')
-_state.highlights[player]=created highlight=created end if not highlight then
-return end local activeHighlight=highlight local adornee=character if adornee:
-IsA('Model')then local rootPart=adornee:FindFirstChild('HumanoidRootPart')if
-rootPart and rootPart:IsA('BasePart')then adornee=rootPart end end if
-activeHighlight.Adornee~=adornee then activeHighlight.Adornee=adornee end
-activeHighlight.FillColor=_state.settings.highlightFill activeHighlight.
-OutlineColor=_state.settings.highlightOutline activeHighlight.Enabled=true end
-local function _setGroupVisible(group,isVisible)for _,drawing in pairs(group)do
-if type(drawing)=='table'then for _,line in pairs(drawing)do line.Visible=
-isVisible end else drawing.Visible=isVisible end end end local function
-_updateSkeleton(skeletonLines,skeletonOutlineLines,character)local camera=
-_getCamera()local lineIndex=1 for _,pair in ipairs(R15_JOINTS)do local p1=
+do local function __modImpl()local Constants={DEFAULT_SETTINGS={isEspEnabled=
+false,shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
+shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
+shouldShowHighlight=false,shouldShowTeammates=true,maxDistance=2000,boxColor=
+Color3.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),
+distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=
+Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=
+Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=
+Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.
+new(0,0,0),highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),
+boxThickness=1,skeletonThickness=1,textSize=12,shouldOutline=true},R15_JOINTS={{
+'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
+'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
+'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
+,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',
+'LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm','RightLowerArm'},{
+'RightLowerArm','RightHand'}}}return Constants end function
+__DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
+do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.g()
+local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
+__modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.f()local Types=
+__DARKLUA_BUNDLE_MODULES.g()local State={client=nil,logger=nil,isEnabled=false,
+drawings={},highlights={},settings=table.clone(Constants.DEFAULT_SETTINGS),
+overrideCheck=nil}return State end function __DARKLUA_BUNDLE_MODULES.h()local v=
+__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end do local function
+__modImpl()local Players=game:GetService('Players')local Workspace=game:
+GetService('Workspace')local ExploitTypes=__DARKLUA_BUNDLE_MODULES.d()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Constants=__DARKLUA_BUNDLE_MODULES.
+f()local State=__DARKLUA_BUNDLE_MODULES.h()local Helpers={}local function
+_setGroupVisible(group,isVisible)for _,drawing in pairs(group)do if type(drawing
+)=='table'then for _,line in pairs(drawing)do line.Visible=isVisible end else
+drawing.Visible=isVisible end end end local function _updateSkeleton(
+skeletonLines,skeletonOutlineLines,character)local camera=Helpers.getCamera()
+local lineIndex=1 for _,pair in ipairs(Constants.R15_JOINTS)do local p1=
 character:FindFirstChild(pair[1])local p2=character:FindFirstChild(pair[2])if p1
 and p2 and p1:IsA('BasePart')and p2:IsA('BasePart')then local v1,o1=camera:
 WorldToViewportPoint(p1.Position)local v2,o2=camera:WorldToViewportPoint(p2.
 Position)if o1 and o2 then local outline=skeletonOutlineLines[lineIndex]if
 outline then outline.From=Vector2.new(v1.X,v1.Y)outline.To=Vector2.new(v2.X,v2.Y
-)outline.Color=_state.settings.skeletonOutlineColor outline.Thickness=_state.
+)outline.Color=State.settings.skeletonOutlineColor outline.Thickness=State.
 settings.skeletonThickness+2 outline.Visible=true outline.ZIndex=1 end local
 line=skeletonLines[lineIndex]if line then line.From=Vector2.new(v1.X,v1.Y)line.
-To=Vector2.new(v2.X,v2.Y)line.Color=_state.settings.skeletonColor line.Thickness
-=_state.settings.skeletonThickness line.Visible=true line.ZIndex=2 lineIndex+=1
+To=Vector2.new(v2.X,v2.Y)line.Color=State.settings.skeletonColor line.Thickness=
+State.settings.skeletonThickness line.Visible=true line.ZIndex=2 lineIndex+=1
 end end end end for i=lineIndex,#skeletonLines do skeletonLines[i].Visible=false
 end for i=lineIndex,#skeletonOutlineLines do skeletonOutlineLines[i].Visible=
-false end end local function _render()if not _state.settings.isEspEnabled then
-_clear()return end local camera=_getCamera()local localPlayer=Players.
+false end end function Helpers.getDrawingLib()local getfenvAny=getfenv local g=(
+getfenvAny(0))local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv().
+Drawing end if not lib then lib=rawget(_G,'Drawing')end return lib end function
+Helpers.getCamera()local camera=Workspace.CurrentCamera if not camera then
+camera=(Workspace:WaitForChild('Camera'))end return camera end function Helpers.
+clearDrawings()for player,group in pairs(State.drawings)do for _,drawing in
+pairs(group)do if type(drawing)=='table'then for _,line in pairs(drawing)do line
+:Remove()end else drawing:Remove()end end State.drawings[player]=nil end end
+function Helpers.clearHighlights()for player,highlight in pairs(State.highlights
+)do if highlight~=nil then(highlight):Destroy()end State.highlights[player]=nil
+end end function Helpers.clearAll()Helpers.clearDrawings()Helpers.
+clearHighlights()end function Helpers.removePlayer(player)local group=State.
+drawings[player]if group then for _,drawing in pairs(group)do if type(drawing)==
+'table'then for _,line in pairs(drawing)do line:Remove()end else drawing:Remove(
+)end end State.drawings[player]=nil end local highlight=State.highlights[player]
+if highlight~=nil then(highlight):Destroy()State.highlights[player]=nil end end
+function Helpers.ensurePlayerDrawings(player)local existing=State.drawings[
+player]if existing then return existing end local lib=Helpers.getDrawingLib()if
+not lib then return nil end local group={name=lib.new('Text'),weapon=lib.new(
+'Text'),distance=lib.new('Text'),boxOutline=lib.new('Square'),box=lib.new(
+'Square'),healthbarOutline=lib.new('Square'),healthbar=lib.new('Square'),
+skeleton={},skeletonOutline={}}for _,key in ipairs({'name','weapon','distance'})
+do group[key].Center=true group[key].Outline=true group[key].Visible=false end
+for _,key in ipairs({'box','boxOutline','healthbar','healthbarOutline'})do group
+[key].Visible=false group[key].Filled=false end group.healthbar.Filled=true
+group.healthbarOutline.Filled=true for _=1,16 do local line=lib.new('Line')line.
+Visible=false table.insert(group.skeleton,line)local outline=lib.new('Line')
+outline.Visible=false table.insert(group.skeletonOutline,outline)end State.
+drawings[player]=group return group end function Helpers.updateHighlight(player,
+character)if not State.settings.shouldShowHighlight then local highlight=State.
+highlights[player]if highlight then highlight:Destroy()State.highlights[player]=
+nil end return end local highlight=State.highlights[player]if not highlight then
+local created=Instance.new('Highlight')created.Name='BlossomHighlight'created.
+FillTransparency=0.5 created.OutlineTransparency=0 created.Parent=game:
+GetService('CoreGui')State.highlights[player]=created highlight=created end if
+not highlight then return end local activeHighlight=highlight local adornee=
+character if adornee:IsA('Model')then local rootPart=adornee:FindFirstChild(
+'HumanoidRootPart')if rootPart and rootPart:IsA('BasePart')then adornee=rootPart
+end end if activeHighlight.Adornee~=adornee then activeHighlight.Adornee=adornee
+end activeHighlight.FillColor=State.settings.highlightFill activeHighlight.
+OutlineColor=State.settings.highlightOutline activeHighlight.Enabled=true end
+function Helpers.render()if not State.settings.isEspEnabled then Helpers.
+clearAll()return end local camera=Helpers.getCamera()local localPlayer=Players.
 LocalPlayer if not localPlayer then return end for _,player in ipairs(Players:
 GetPlayers())do if player==localPlayer or(localPlayer.Character and player.
 Character==localPlayer.Character)then continue end local character=player.
 Character local humanoid=character and character:FindFirstChildOfClass(
 'Humanoid')local root=character and character:FindFirstChild('HumanoidRootPart')
-if not character or not root or not humanoid or humanoid.Health<=0 then
-_removePlayer(player)continue end if not _state.settings.shouldShowTeammates and
-TeamUtils.isSameTeam(player,localPlayer)then _removePlayer(player)continue end
-local group=_ensurePlayerDrawings(player)if not group then continue end local
-rootPart=root local distance=(rootPart.Position-camera.CFrame.Position).
-Magnitude local _,onScreen=camera:WorldToViewportPoint(rootPart.Position)if not
-onScreen or distance>_state.settings.maxDistance then _setGroupVisible(group,
-false)local highlight=_state.highlights[player]if highlight then highlight.
-Enabled=false end continue end _updateHighlight(player,character)local rootPos=
-camera:WorldToViewportPoint(rootPart.Position)local legPos=camera:
-WorldToViewportPoint(rootPart.Position-Vector3.new(0,3,0))local headPos=camera:
-WorldToViewportPoint(rootPart.Position+Vector3.new(0,2,0))local height=math.abs(
-headPos.Y-legPos.Y)*1.5 local width=height*0.6 local boxPos=Vector2.new(rootPos.
-X-width/2,rootPos.Y-height/2)local boxSize=Vector2.new(width,height)if _state.
-settings.shouldShowBoxes then group.boxOutline.Size=boxSize group.boxOutline.
-Position=boxPos group.boxOutline.Color=_state.settings.boxOutlineColor group.
-boxOutline.Thickness=_state.settings.boxThickness+2 group.boxOutline.Visible=
-true group.boxOutline.ZIndex=1 group.box.Size=boxSize group.box.Position=boxPos
-group.box.Color=_state.settings.boxColor group.box.Thickness=_state.settings.
-boxThickness group.box.Visible=true group.box.ZIndex=2 else group.box.Visible=
-false group.boxOutline.Visible=false end if _state.settings.shouldShowHealthbar
-then local healthPerc=math.clamp(humanoid.Health/humanoid.MaxHealth,0,1)local
-barHeight=height*healthPerc group.healthbarOutline.Size=Vector2.new(4,height+2)
-group.healthbarOutline.Position=Vector2.new(boxPos.X-6,boxPos.Y-1)group.
-healthbarOutline.Color=_state.settings.healthbarOutlineColor group.
-healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
+if not character or not root or not humanoid or humanoid.Health<=0 then Helpers.
+removePlayer(player)continue end if not State.settings.shouldShowTeammates and
+TeamUtils.isSameTeam(player,localPlayer)then Helpers.removePlayer(player)
+continue end local group=Helpers.ensurePlayerDrawings(player)if not group then
+continue end local rootPart=root local distance=(rootPart.Position-camera.CFrame
+.Position).Magnitude local _,onScreen=camera:WorldToViewportPoint(rootPart.
+Position)if not onScreen or distance>State.settings.maxDistance then
+_setGroupVisible(group,false)local highlight=State.highlights[player]if
+highlight then highlight.Enabled=false end continue end Helpers.updateHighlight(
+player,character)local rootPos=camera:WorldToViewportPoint(rootPart.Position)
+local legPos=camera:WorldToViewportPoint(rootPart.Position-Vector3.new(0,3,0))
+local headPos=camera:WorldToViewportPoint(rootPart.Position+Vector3.new(0,2,0))
+local height=math.abs(headPos.Y-legPos.Y)*1.5 local width=height*0.6 local
+boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-height/2)local boxSize=Vector2.
+new(width,height)if State.settings.shouldShowBoxes then group.boxOutline.Size=
+boxSize group.boxOutline.Position=boxPos group.boxOutline.Color=State.settings.
+boxOutlineColor group.boxOutline.Thickness=State.settings.boxThickness+2 group.
+boxOutline.Visible=true group.boxOutline.ZIndex=1 group.box.Size=boxSize group.
+box.Position=boxPos group.box.Color=State.settings.boxColor group.box.Thickness=
+State.settings.boxThickness group.box.Visible=true group.box.ZIndex=2 else group
+.box.Visible=false group.boxOutline.Visible=false end if State.settings.
+shouldShowHealthbar then local healthPerc=math.clamp(humanoid.Health/humanoid.
+MaxHealth,0,1)local barHeight=height*healthPerc group.healthbarOutline.Size=
+Vector2.new(4,height+2)group.healthbarOutline.Position=Vector2.new(boxPos.X-6,
+boxPos.Y-1)group.healthbarOutline.Color=State.settings.healthbarOutlineColor
+group.healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
 healthbarOutline.ZIndex=1 group.healthbar.Size=Vector2.new(2,barHeight)group.
 healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-barHeight))group.
-healthbar.Color=_state.settings.healthbarColor:Lerp(Color3.new(1,0,0),1-
+healthbar.Color=State.settings.healthbarColor:Lerp(Color3.new(1,0,0),1-
 healthPerc)group.healthbar.Filled=true group.healthbar.Visible=true group.
 healthbar.ZIndex=2 else group.healthbar.Visible=false group.healthbarOutline.
-Visible=false end local textOffset=0 if _state.settings.shouldShowNames then
-group.name.Text=player.DisplayName or player.Name group.name.Size=_state.
-settings.textSize group.name.Color=_state.settings.textColor group.name.Outline=
-_state.settings.shouldOutline group.name.OutlineColor=_state.settings.
-nameOutlineColor group.name.Position=Vector2.new(rootPos.X,boxPos.Y-_state.
-settings.textSize-2)group.name.Visible=true else group.name.Visible=false end if
-_state.settings.shouldShowWeapon then local tool=character:
-FindFirstChildOfClass('Tool')if tool then group.weapon.Text=tool.Name group.
-weapon.Size=_state.settings.textSize group.weapon.Color=_state.settings.
-weaponColor group.weapon.Outline=_state.settings.shouldOutline group.weapon.
-OutlineColor=_state.settings.weaponOutlineColor group.weapon.Position=Vector2.
-new(rootPos.X,boxPos.Y+height+2+textOffset)group.weapon.Visible=true textOffset
-+=_state.settings.textSize else group.weapon.Visible=false end else group.weapon
-.Visible=false end if _state.settings.shouldShowDistance then group.distance.
-Text=tostring(math.floor(distance))..' studs'group.distance.Size=_state.settings
-.textSize group.distance.Color=_state.settings.distanceColor group.distance.
-Outline=_state.settings.shouldOutline group.distance.OutlineColor=_state.
-settings.distanceOutlineColor group.distance.Position=Vector2.new(rootPos.X,
-boxPos.Y+height+2+textOffset)group.distance.Visible=true textOffset+=_state.
-settings.textSize else group.distance.Visible=false end if _state.settings.
+Visible=false end local textOffset=0 if State.settings.shouldShowNames then
+group.name.Text=player.DisplayName or player.Name group.name.Size=State.settings
+.textSize group.name.Color=State.settings.textColor group.name.Outline=State.
+settings.shouldOutline group.name.OutlineColor=State.settings.nameOutlineColor
+group.name.Position=Vector2.new(rootPos.X,boxPos.Y-State.settings.textSize-2)
+group.name.Visible=true else group.name.Visible=false end if State.settings.
+shouldShowWeapon then local tool=character:FindFirstChildOfClass('Tool')if tool
+then group.weapon.Text=tool.Name group.weapon.Size=State.settings.textSize group
+.weapon.Color=State.settings.weaponColor group.weapon.Outline=State.settings.
+shouldOutline group.weapon.OutlineColor=State.settings.weaponOutlineColor group.
+weapon.Position=Vector2.new(rootPos.X,boxPos.Y+height+2+textOffset)group.weapon.
+Visible=true textOffset+=State.settings.textSize else group.weapon.Visible=false
+end else group.weapon.Visible=false end if State.settings.shouldShowDistance
+then group.distance.Text=tostring(math.floor(distance))..' studs'group.distance.
+Size=State.settings.textSize group.distance.Color=State.settings.distanceColor
+group.distance.Outline=State.settings.shouldOutline group.distance.OutlineColor=
+State.settings.distanceOutlineColor group.distance.Position=Vector2.new(rootPos.
+X,boxPos.Y+height+2+textOffset)group.distance.Visible=true textOffset+=State.
+settings.textSize else group.distance.Visible=false end if State.settings.
 shouldShowSkeleton then _updateSkeleton(group.skeleton,group.skeletonOutline,
 character)else for _,line in pairs(group.skeleton)do line.Visible=false end for
 _,line in pairs(group.skeletonOutline)do line.Visible=false end end end end
-local function _connect()_maid:DoCleaning()local removeConn=Players.
-PlayerRemoving:Connect(function(player)_removePlayer(player)end)_maid:GiveTask(
-removeConn)local renderConn=RunService.RenderStepped:Connect(function()_render()
-end)_maid:GiveTask(renderConn)end local function _enable()if not getDrawingLib()
-then _state.isEnabled=false return end _connect()end local function _disable()
-_maid:DoCleaning()_clear()end function Visuals.init(self,client)_state.client=
-client _state.logger=client.Logger _maid=Maid.new()end function Visuals.cleanup(
-self)_state.isEnabled=false _disable()end function Visuals.toggle(self,isEnabled
-)if _state.isEnabled==isEnabled then return end _state.isEnabled=isEnabled if
-isEnabled then _enable()else _disable()end end function Visuals.setEspEnabled(
-self,isEnabled)_state.settings.isEspEnabled=isEnabled if not isEnabled then
-_clear()end end function Visuals.setShowNames(self,shouldShow)_state.settings.
-shouldShowNames=shouldShow end function Visuals.setShowWeapon(self,shouldShow)
-_state.settings.shouldShowWeapon=shouldShow end function Visuals.setShowDistance
-(self,shouldShow)_state.settings.shouldShowDistance=shouldShow end function
-Visuals.setShowBoxes(self,shouldShow)_state.settings.shouldShowBoxes=shouldShow
-end function Visuals.setShowSkeleton(self,shouldShow)_state.settings.
-shouldShowSkeleton=shouldShow end function Visuals.setShowHealthbar(self,
-shouldShow)_state.settings.shouldShowHealthbar=shouldShow end function Visuals.
-setShowHighlight(self,shouldShow)_state.settings.shouldShowHighlight=shouldShow
-if not shouldShow then _clearHighlights()end end function Visuals.
-setShowTeammates(self,shouldShow)_state.settings.shouldShowTeammates=shouldShow
-end function Visuals.setMaxDistance(self,value)_state.settings.maxDistance=value
-end function Visuals.setBoxColor(self,color)_state.settings.boxColor=color end
-function Visuals.setTextColor(self,color)_state.settings.textColor=color end
-function Visuals.setWeaponColor(self,color)_state.settings.weaponColor=color end
-function Visuals.setDistanceColor(self,color)_state.settings.distanceColor=color
-end function Visuals.setSkeletonColor(self,color)_state.settings.skeletonColor=
-color end function Visuals.setHealthbarColor(self,color)_state.settings.
-healthbarColor=color end function Visuals.setHealthbarOutlineColor(self,color)
-_state.settings.healthbarOutlineColor=color end function Visuals.
-setNameOutlineColor(self,color)_state.settings.nameOutlineColor=color end
-function Visuals.setWeaponOutlineColor(self,color)_state.settings.
-weaponOutlineColor=color end function Visuals.setDistanceOutlineColor(self,color
-)_state.settings.distanceOutlineColor=color end function Visuals.
-setBoxOutlineColor(self,color)_state.settings.boxOutlineColor=color end function
-Visuals.setSkeletonOutlineColor(self,color)_state.settings.skeletonOutlineColor=
-color end function Visuals.setHighlightFill(self,color)_state.settings.
-highlightFill=color end function Visuals.setHighlightOutline(self,color)_state.
-settings.highlightOutline=color end function Visuals.setBoxThickness(self,value)
-_state.settings.boxThickness=value end function Visuals.setSkeletonThickness(
-self,value)_state.settings.skeletonThickness=value end function Visuals.
-setTextSize(self,value)_state.settings.textSize=value end function Visuals.
-setOutline(self,isEnabled)_state.settings.shouldOutline=isEnabled end function
-Visuals.setOverrideCheck(self,check)_state.overrideCheck=check end return
-Visuals end function __DARKLUA_BUNDLE_MODULES.f()local v=
-__DARKLUA_BUNDLE_MODULES.cache.f if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end do local function
+return Helpers end function __DARKLUA_BUNDLE_MODULES.i()local v=
+__DARKLUA_BUNDLE_MODULES.cache.i if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.i=v end return v.c end end do local function
+__modImpl()local Players=game:GetService('Players')local RunService=game:
+GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local Helpers=
+__DARKLUA_BUNDLE_MODULES.i()local State=__DARKLUA_BUNDLE_MODULES.h()local Types=
+__DARKLUA_BUNDLE_MODULES.g()local Visuals={}Visuals.__index=Visuals local _maid=
+nil local _signals={}local function _connect()_maid:DoCleaning()local removeConn
+=Players.PlayerRemoving:Connect(function(player)Helpers.removePlayer(player)end)
+_maid:GiveTask(removeConn)local renderConn=RunService.RenderStepped:Connect(
+function()Helpers.render()end)_maid:GiveTask(renderConn)end local function
+_enable()if not Helpers.getDrawingLib()then State.isEnabled=false return end
+_connect()end local function _disable()_maid:DoCleaning()Helpers.clearAll()end
+function Visuals.init(self,client)State.client=client State.logger=client.Logger
+_maid=Maid.new()end function Visuals.cleanup(self)State.isEnabled=false
+_disable()end function Visuals.toggle(self,isEnabled)if State.isEnabled==
+isEnabled then return end State.isEnabled=isEnabled if isEnabled then _enable()
+else _disable()end end function Visuals.setEspEnabled(self,isEnabled)State.
+settings.isEspEnabled=isEnabled if not isEnabled then Helpers.clearAll()end end
+function Visuals.setShowNames(self,shouldShow)State.settings.shouldShowNames=
+shouldShow end function Visuals.setShowWeapon(self,shouldShow)State.settings.
+shouldShowWeapon=shouldShow end function Visuals.setShowDistance(self,shouldShow
+)State.settings.shouldShowDistance=shouldShow end function Visuals.setShowBoxes(
+self,shouldShow)State.settings.shouldShowBoxes=shouldShow end function Visuals.
+setShowSkeleton(self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end
+function Visuals.setShowHealthbar(self,shouldShow)State.settings.
+shouldShowHealthbar=shouldShow end function Visuals.setShowHighlight(self,
+shouldShow)State.settings.shouldShowHighlight=shouldShow if not shouldShow then
+Helpers.clearHighlights()end end function Visuals.setShowTeammates(self,
+shouldShow)State.settings.shouldShowTeammates=shouldShow end function Visuals.
+setMaxDistance(self,value)State.settings.maxDistance=value end function Visuals.
+setBoxColor(self,color)State.settings.boxColor=color end function Visuals.
+setTextColor(self,color)State.settings.textColor=color end function Visuals.
+setWeaponColor(self,color)State.settings.weaponColor=color end function Visuals.
+setDistanceColor(self,color)State.settings.distanceColor=color end function
+Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=color end
+function Visuals.setHealthbarColor(self,color)State.settings.healthbarColor=
+color end function Visuals.setHealthbarOutlineColor(self,color)State.settings.
+healthbarOutlineColor=color end function Visuals.setNameOutlineColor(self,color)
+State.settings.nameOutlineColor=color end function Visuals.setWeaponOutlineColor
+(self,color)State.settings.weaponOutlineColor=color end function Visuals.
+setDistanceOutlineColor(self,color)State.settings.distanceOutlineColor=color end
+function Visuals.setBoxOutlineColor(self,color)State.settings.boxOutlineColor=
+color end function Visuals.setSkeletonOutlineColor(self,color)State.settings.
+skeletonOutlineColor=color end function Visuals.setHighlightFill(self,color)
+State.settings.highlightFill=color end function Visuals.setHighlightOutline(self
+,color)State.settings.highlightOutline=color end function Visuals.
+setBoxThickness(self,value)State.settings.boxThickness=value end function
+Visuals.setSkeletonThickness(self,value)State.settings.skeletonThickness=value
+end function Visuals.setTextSize(self,value)State.settings.textSize=value end
+function Visuals.setOutline(self,isEnabled)State.settings.shouldOutline=
+isEnabled end function Visuals.setOverrideCheck(self,check)State.overrideCheck=
+check end return Visuals end function __DARKLUA_BUNDLE_MODULES.j()local v=
+__DARKLUA_BUNDLE_MODULES.cache.j if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.j=v end return v.c end end do local function
+__modImpl()local Constants={DEFAULT_FLY_SPEED=50,INPUT_MAP={[Enum.KeyCode.W]=
+'forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]='left',[Enum.KeyCode.D]=
+'right',[Enum.KeyCode.Space]='up',[Enum.KeyCode.LeftControl]='down'}}return
+Constants end function __DARKLUA_BUNDLE_MODULES.k()local v=
+__DARKLUA_BUNDLE_MODULES.cache.k if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.k=v end return v.c end end do local function
+__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.l()local v=
+__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.l=v end return v.c end end do local function
+__modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.k()local Types=
+__DARKLUA_BUNDLE_MODULES.l()local State={client=nil,logger=nil,character=nil,
+humanoid=nil,rootPart=nil,isFlyEnabled=false,isNoclipEnabled=false,
+isWalkSpeedEnabled=false,isJumpPowerEnabled=false,walkSpeedValue=16,
+jumpPowerValue=50,flySpeed=Constants.DEFAULT_FLY_SPEED,defaultWalkSpeed=nil,
+defaultJumpPower=nil,defaultJumpHeight=nil,defaultUseJumpPower=nil,
+defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},characterMaid=nil,
+input={forward=0,back=0,left=0,right=0,up=0,down=0}}return State end function
+__DARKLUA_BUNDLE_MODULES.m()local v=__DARKLUA_BUNDLE_MODULES.cache.m if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+Workspace=game:GetService('Workspace')local Constants=__DARKLUA_BUNDLE_MODULES.
+k()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers={}function Helpers.
+getLocalPlayer()return Players.LocalPlayer end function Helpers.resetInput()
+State.input={forward=0,back=0,left=0,right=0,up=0,down=0}end function Helpers.
+cacheDefaults(humanoid)State.defaultWalkSpeed=humanoid.WalkSpeed State.
+defaultUseJumpPower=humanoid.UseJumpPower if humanoid.UseJumpPower then State.
+defaultJumpPower=humanoid.JumpPower State.defaultJumpHeight=nil else State.
+defaultJumpPower=nil State.defaultJumpHeight=humanoid.JumpHeight end State.
+defaultAutoRotate=humanoid.AutoRotate State.defaultPlatformStand=humanoid.
+PlatformStand end function Helpers.applyWalkSpeed()local humanoid=State.humanoid
+if not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
+WalkSpeed=State.defaultWalkSpeed end end function Helpers.applyJumpPower()return
+end function Helpers.restoreMovementDefaults()local humanoid=State.humanoid if
+not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
+WalkSpeed=State.defaultWalkSpeed end if State.defaultUseJumpPower~=nil then
+humanoid.UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower
+then if State.defaultJumpPower~=nil then humanoid.JumpPower=State.
+defaultJumpPower end else if State.defaultJumpHeight~=nil then humanoid.
+JumpHeight=State.defaultJumpHeight end end if State.defaultAutoRotate~=nil then
+humanoid.AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=
+nil then humanoid.PlatformStand=State.defaultPlatformStand end end function
+Helpers.setCharacter(character)State.character=character State.humanoid=nil
+State.rootPart=nil if not character then return end local humanoid=character:
+FindFirstChildOfClass('Humanoid')if not humanoid then humanoid=(character:
+WaitForChild('Humanoid',5))end local rootPart=character:FindFirstChild(
+'HumanoidRootPart')if not rootPart then rootPart=character:WaitForChild(
+'HumanoidRootPart',5)end if humanoid then State.humanoid=humanoid Helpers.
+cacheDefaults(humanoid)end if rootPart and rootPart:IsA('BasePart')then State.
+rootPart=rootPart end Helpers.applyWalkSpeed()Helpers.applyJumpPower()end
+function Helpers.applyNoclip()local character=State.character if not character
+then return end for _,part in ipairs(character:GetDescendants())do if part:IsA(
+'BasePart')then if State.noclipParts[part]==nil then State.noclipParts[part]=
+part.CanCollide end part.CanCollide=false end end end function Helpers.
+restoreNoclip()for part,original in pairs(State.noclipParts)do if part and part.
+Parent then part.CanCollide=original end end State.noclipParts={}end function
+Helpers.applyFlyState()local humanoid=State.humanoid if not humanoid then return
+end if State.isFlyEnabled then humanoid.PlatformStand=false humanoid.AutoRotate=
+true else local rootPart=State.rootPart if rootPart then rootPart.
+AssemblyLinearVelocity=Vector3.zero rootPart.AssemblyAngularVelocity=Vector3.
+zero end if State.defaultPlatformStand~=nil then humanoid.PlatformStand=State.
+defaultPlatformStand end if State.defaultAutoRotate~=nil then humanoid.
+AutoRotate=State.defaultAutoRotate end end end function Helpers.getFlyMoveVector
+()local camera=Workspace.CurrentCamera if not camera then return Vector3.zero
+end local forward=camera.CFrame.LookVector local right=camera.CFrame.RightVector
+local up=camera.CFrame.UpVector local move=forward*(State.input.forward-State.
+input.back)+right*(State.input.right-State.input.left)+up*(State.input.up-State.
+input.down)if move.Magnitude>1 then move=move.Unit end return move end function
+Helpers.onCharacterAdded(character)Helpers.resetInput()Helpers.setCharacter(
+character)if State.isFlyEnabled then Helpers.applyFlyState()end if State.
+isNoclipEnabled then Helpers.applyNoclip()end end function Helpers.
+onCharacterRemoving()Helpers.restoreNoclip()if State.characterMaid then State.
+characterMaid:DoCleaning()State.characterMaid=nil end Helpers.resetInput()State.
+character=nil State.humanoid=nil State.rootPart=nil end function Helpers.
+onInputChanged(input,isPressed)local keyName=Constants.INPUT_MAP[input.KeyCode]
+if not keyName then return end State.input[keyName]=isPressed and 1 or 0 end
+return Helpers end function __DARKLUA_BUNDLE_MODULES.n()local v=
+__DARKLUA_BUNDLE_MODULES.cache.n if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
 GetService('RunService')local UserInputService=game:GetService(
 'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
-__DARKLUA_BUNDLE_MODULES.b())local DEFAULT_FLY_SPEED=50 local INPUT_MAP={[Enum.
-KeyCode.W]='forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]='left',[Enum.
-KeyCode.D]='right',[Enum.KeyCode.Space]='up',[Enum.KeyCode.LeftControl]='down'}
-local Player={}Player.__index=Player local _maid=nil local _state={client=nil,
-logger=nil,character=nil,humanoid=nil,rootPart=nil,isFlyEnabled=false,
-isNoclipEnabled=false,isWalkSpeedEnabled=false,isJumpPowerEnabled=false,
-walkSpeedValue=16,jumpPowerValue=50,flySpeed=DEFAULT_FLY_SPEED,defaultWalkSpeed=
-nil,defaultJumpPower=nil,defaultJumpHeight=nil,defaultUseJumpPower=nil,
-defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},characterMaid=nil,
-input={forward=0,back=0,left=0,right=0,up=0,down=0}}local _signals={}
-local function _getLocalPlayer()return Players.LocalPlayer end local function
-_cacheDefaults(humanoid)_state.defaultWalkSpeed=humanoid.WalkSpeed _state.
-defaultUseJumpPower=humanoid.UseJumpPower if humanoid.UseJumpPower then _state.
-defaultJumpPower=humanoid.JumpPower _state.defaultJumpHeight=nil else _state.
-defaultJumpPower=nil _state.defaultJumpHeight=humanoid.JumpHeight end _state.
-defaultAutoRotate=humanoid.AutoRotate _state.defaultPlatformStand=humanoid.
-PlatformStand end local function _applyWalkSpeed()local humanoid=_state.humanoid
-if not humanoid then return end if _state.defaultWalkSpeed~=nil then humanoid.
-WalkSpeed=_state.defaultWalkSpeed end end local function _applyJumpPower()return
-end local function _restoreMovementDefaults()local humanoid=_state.humanoid if
-not humanoid then return end if _state.defaultWalkSpeed~=nil then humanoid.
-WalkSpeed=_state.defaultWalkSpeed end if _state.defaultUseJumpPower~=nil then
-humanoid.UseJumpPower=_state.defaultUseJumpPower end if _state.
-defaultUseJumpPower then if _state.defaultJumpPower~=nil then humanoid.JumpPower
-=_state.defaultJumpPower end else if _state.defaultJumpHeight~=nil then humanoid
-.JumpHeight=_state.defaultJumpHeight end end if _state.defaultAutoRotate~=nil
-then humanoid.AutoRotate=_state.defaultAutoRotate end if _state.
-defaultPlatformStand~=nil then humanoid.PlatformStand=_state.
-defaultPlatformStand end end local function _setCharacter(character)_state.
-character=character _state.humanoid=nil _state.rootPart=nil if not character
-then return end local humanoid=character:FindFirstChildOfClass('Humanoid')if not
-humanoid then humanoid=(character:WaitForChild('Humanoid',5))end local rootPart=
-character:FindFirstChild('HumanoidRootPart')if not rootPart then rootPart=
-character:WaitForChild('HumanoidRootPart',5)end if humanoid then _state.humanoid
-=humanoid _cacheDefaults(humanoid)end if rootPart and rootPart:IsA('BasePart')
-then _state.rootPart=rootPart end _applyWalkSpeed()_applyJumpPower()end
-local function _applyNoclip()local character=_state.character if not character
-then return end for _,part in ipairs(character:GetDescendants())do if part:IsA(
-'BasePart')then if _state.noclipParts[part]==nil then _state.noclipParts[part]=
-part.CanCollide end part.CanCollide=false end end end local function
-_restoreNoclip()for part,original in pairs(_state.noclipParts)do if part and
-part.Parent then part.CanCollide=original end end _state.noclipParts={}end
-local function _applyFlyState()local humanoid=_state.humanoid if not humanoid
-then return end if _state.isFlyEnabled then humanoid.PlatformStand=false
-humanoid.AutoRotate=true else local rootPart=_state.rootPart if rootPart then
-rootPart.AssemblyLinearVelocity=Vector3.zero rootPart.AssemblyAngularVelocity=
-Vector3.zero end if _state.defaultPlatformStand~=nil then humanoid.PlatformStand
-=_state.defaultPlatformStand end if _state.defaultAutoRotate~=nil then humanoid.
-AutoRotate=_state.defaultAutoRotate end end end local function _getFlyMoveVector
-()local camera=Workspace.CurrentCamera if not camera then return Vector3.zero
-end local forward=camera.CFrame.LookVector local right=camera.CFrame.RightVector
-local up=camera.CFrame.UpVector local move=forward*(_state.input.forward-_state.
-input.back)+right*(_state.input.right-_state.input.left)+up*(_state.input.up-
-_state.input.down)if move.Magnitude>1 then move=move.Unit end return move end
-local function _onCharacterAdded(character)_state.input={forward=0,back=0,left=0
-,right=0,up=0,down=0}_setCharacter(character)if _state.isFlyEnabled then
-_applyFlyState()end if _state.isNoclipEnabled then _applyNoclip()end end
-local function _onCharacterRemoving()_restoreNoclip()if _state.characterMaid
-then _state.characterMaid:DoCleaning()_state.characterMaid=nil end _state.input=
-{forward=0,back=0,left=0,right=0,up=0,down=0}_state.character=nil _state.
-humanoid=nil _state.rootPart=nil end local function _onInputChanged(input,
-isPressed)local keyName=INPUT_MAP[input.KeyCode]if not keyName then return end
-_state.input[keyName]=isPressed and 1 or 0 end local function _bindPlayer(player
-)local addedConn=player.CharacterAdded:Connect(function(character)
-_onCharacterAdded(character)if _state.characterMaid then _state.characterMaid:
-DoCleaning()end _state.characterMaid=Maid.new()local humanoid=_state.humanoid
-local rootPart=_state.rootPart if humanoid and rootPart then local stateConn=
-humanoid.StateChanged:Connect(function(_,newState)if not _state.
-isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.Jumping
-then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=_state.
-jumpPowerValue if current.Y<jumpVelocity then rootPart.AssemblyLinearVelocity=
-Vector3.new(current.X,jumpVelocity,current.Z)end end end)_state.characterMaid:
-GiveTask(stateConn)end end)_maid:GiveTask(addedConn)local removingConn=player.
-CharacterRemoving:Connect(function()_onCharacterRemoving()end)_maid:GiveTask(
-removingConn)if player.Character then _onCharacterAdded(player.Character)if
-_state.characterMaid then _state.characterMaid:DoCleaning()end _state.
-characterMaid=Maid.new()local humanoid=_state.humanoid local rootPart=_state.
-rootPart if humanoid and rootPart then local stateConn=humanoid.StateChanged:
-Connect(function(_,newState)if not _state.isJumpPowerEnabled then return end if
-newState==Enum.HumanoidStateType.Jumping then local current=rootPart.
-AssemblyLinearVelocity local jumpVelocity=_state.jumpPowerValue if current.Y<
-jumpVelocity then rootPart.AssemblyLinearVelocity=Vector3.new(current.X,
-jumpVelocity,current.Z)end end end)_state.characterMaid:GiveTask(stateConn)end
-end end local function _connect()_maid:DoCleaning()local player=_getLocalPlayer(
-)if player then _bindPlayer(player)else local playerAddedConn=Players.
-PlayerAdded:Connect(function(addedPlayer)if addedPlayer==_getLocalPlayer()then
-_bindPlayer(addedPlayer)end end)_maid:GiveTask(playerAddedConn)end local
-inputBeganConn=UserInputService.InputBegan:Connect(function(input,processed)if
-processed then return end _onInputChanged(input,true)end)_maid:GiveTask(
-inputBeganConn)local inputEndedConn=UserInputService.InputEnded:Connect(function
-(input,processed)if processed then return end _onInputChanged(input,false)end)
-_maid:GiveTask(inputEndedConn)local renderConn=RunService.RenderStepped:Connect(
-function()if not _state.isFlyEnabled then local rootPart=_state.rootPart local
-humanoid=_state.humanoid if rootPart and humanoid and _state.isWalkSpeedEnabled
-then local moveDir=humanoid.MoveDirection local horizontal=Vector3.new(moveDir.X
-,0,moveDir.Z)if horizontal.Magnitude>0 then horizontal=horizontal.Unit*_state.
-walkSpeedValue end local current=rootPart.AssemblyLinearVelocity rootPart.
-AssemblyLinearVelocity=Vector3.new(horizontal.X,current.Y,horizontal.Z)end
-return end local rootPart=_state.rootPart if not rootPart then return end local
-move=_getFlyMoveVector()rootPart.AssemblyLinearVelocity=move*_state.flySpeed
-rootPart.AssemblyAngularVelocity=Vector3.zero local camera=Workspace.
-CurrentCamera if camera then local look=Vector3.new(camera.CFrame.LookVector.X,0
-,camera.CFrame.LookVector.Z)if look.Magnitude>0.001 then rootPart.CFrame=CFrame.
-new(rootPart.Position,rootPart.Position+look)end end end)_maid:GiveTask(
-renderConn)local steppedConn=RunService.Stepped:Connect(function()if _state.
-isNoclipEnabled then _applyNoclip()end end)_maid:GiveTask(steppedConn)end
-function Player.init(self,client)_state.client=client _state.logger=client.
-Logger _maid=Maid.new()_connect()end function Player.cleanup(self)_state.
-isFlyEnabled=false _state.isNoclipEnabled=false _state.isWalkSpeedEnabled=false
-_state.isJumpPowerEnabled=false _restoreNoclip()_restoreMovementDefaults()if
-_maid then _maid:DoCleaning()end end function Player.setFlyEnabled(self,
-isEnabled)if _state.isFlyEnabled==isEnabled then return end _state.isFlyEnabled=
-isEnabled _applyFlyState()end function Player.setNoclipEnabled(self,isEnabled)if
-_state.isNoclipEnabled==isEnabled then return end _state.isNoclipEnabled=
-isEnabled if not isEnabled then _restoreNoclip()else _applyNoclip()end end
-function Player.setWalkSpeedEnabled(self,isEnabled)if _state.isWalkSpeedEnabled
-==isEnabled then return end _state.isWalkSpeedEnabled=isEnabled _applyWalkSpeed(
-)end function Player.setJumpPowerEnabled(self,isEnabled)if _state.
-isJumpPowerEnabled==isEnabled then return end _state.isJumpPowerEnabled=
-isEnabled _applyJumpPower()end function Player.setWalkSpeed(self,value)_state.
-walkSpeedValue=value _applyWalkSpeed()end function Player.setJumpPower(self,
-value)_state.jumpPowerValue=value _applyJumpPower()end function Player.
-setFlySpeed(self,value)_state.flySpeed=value end return Player end function
-__DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end
-do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.h()
-local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end do local function
-__modImpl()return{FOV_CIRCLE_COLOR=Color3.fromRGB(255,255,255),
-FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,MIN_AIM_SPEED=4,MAX_AIM_SPEED=40,
-MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,TARGET_DROP_FOV_MULTIPLIER=1.2,
-AIMBOT_RENDER_STEP_NAME='CombatAimbot'}end function __DARKLUA_BUNDLE_MODULES.i()
-local v=__DARKLUA_BUNDLE_MODULES.cache.i if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.i=v end return v.c end end do local function
-__modImpl()local Types=__DARKLUA_BUNDLE_MODULES.h()local Constants=
-__DARKLUA_BUNDLE_MODULES.i()local State={client=nil,logger=nil,isAimbotEnabled=
+__DARKLUA_BUNDLE_MODULES.b())local Helpers=__DARKLUA_BUNDLE_MODULES.n()local
+State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()local
+Player={}Player.__index=Player local _maid=nil local _signals={}local function
+_connect()_maid:DoCleaning()local function bindCharacter()if State.characterMaid
+then State.characterMaid:DoCleaning()end State.characterMaid=Maid.new()local
+humanoid=State.humanoid local rootPart=State.rootPart if humanoid and rootPart
+then local stateConn=humanoid.StateChanged:Connect(function(_,newState)if not
+State.isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.
+Jumping then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=
+State.jumpPowerValue if current.Y<jumpVelocity then rootPart.
+AssemblyLinearVelocity=Vector3.new(current.X,jumpVelocity,current.Z)end end end)
+State.characterMaid:GiveTask(stateConn)end end local function
+handleCharacterAdded(character)Helpers.onCharacterAdded(character)bindCharacter(
+)end local function handleCharacterRemoving()Helpers.onCharacterRemoving()end
+local function attachPlayer(player)local addedConn=player.CharacterAdded:
+Connect(function(character)handleCharacterAdded(character)end)_maid:GiveTask(
+addedConn)local removingConn=player.CharacterRemoving:Connect(function()
+handleCharacterRemoving()end)_maid:GiveTask(removingConn)if player.Character
+then handleCharacterAdded(player.Character)end end local player=Helpers.
+getLocalPlayer()if player then attachPlayer(player)else local playerAddedConn=
+Players.PlayerAdded:Connect(function(addedPlayer)if addedPlayer==Helpers.
+getLocalPlayer()then attachPlayer(addedPlayer)end end)_maid:GiveTask(
+playerAddedConn)end local inputBeganConn=UserInputService.InputBegan:Connect(
+function(input,processed)if processed then return end Helpers.onInputChanged(
+input,true)end)_maid:GiveTask(inputBeganConn)local inputEndedConn=
+UserInputService.InputEnded:Connect(function(input,processed)if processed then
+return end Helpers.onInputChanged(input,false)end)_maid:GiveTask(inputEndedConn)
+local renderConn=RunService.RenderStepped:Connect(function()if not State.
+isFlyEnabled then local rootPart=State.rootPart local humanoid=State.humanoid if
+rootPart and humanoid and State.isWalkSpeedEnabled then local moveDir=humanoid.
+MoveDirection local horizontal=Vector3.new(moveDir.X,0,moveDir.Z)if horizontal.
+Magnitude>0 then horizontal=horizontal.Unit*State.walkSpeedValue end local
+current=rootPart.AssemblyLinearVelocity rootPart.AssemblyLinearVelocity=Vector3.
+new(horizontal.X,current.Y,horizontal.Z)end return end local rootPart=State.
+rootPart if not rootPart then return end local move=Helpers.getFlyMoveVector()
+rootPart.AssemblyLinearVelocity=move*State.flySpeed rootPart.
+AssemblyAngularVelocity=Vector3.zero local camera=Workspace.CurrentCamera if
+camera then local look=Vector3.new(camera.CFrame.LookVector.X,0,camera.CFrame.
+LookVector.Z)if look.Magnitude>0.001 then rootPart.CFrame=CFrame.new(rootPart.
+Position,rootPart.Position+look)end end end)_maid:GiveTask(renderConn)local
+steppedConn=RunService.Stepped:Connect(function()if State.isNoclipEnabled then
+Helpers.applyNoclip()end end)_maid:GiveTask(steppedConn)end function Player.init
+(self,client)State.client=client State.logger=client.Logger _maid=Maid.new()
+_connect()end function Player.cleanup(self)State.isFlyEnabled=false State.
+isNoclipEnabled=false State.isWalkSpeedEnabled=false State.isJumpPowerEnabled=
+false Helpers.restoreNoclip()Helpers.restoreMovementDefaults()if _maid then
+_maid:DoCleaning()end end function Player.setFlyEnabled(self,isEnabled)if State.
+isFlyEnabled==isEnabled then return end State.isFlyEnabled=isEnabled Helpers.
+applyFlyState()end function Player.setNoclipEnabled(self,isEnabled)if State.
+isNoclipEnabled==isEnabled then return end State.isNoclipEnabled=isEnabled if
+not isEnabled then Helpers.restoreNoclip()else Helpers.applyNoclip()end end
+function Player.setWalkSpeedEnabled(self,isEnabled)if State.isWalkSpeedEnabled==
+isEnabled then return end State.isWalkSpeedEnabled=isEnabled Helpers.
+applyWalkSpeed()end function Player.setJumpPowerEnabled(self,isEnabled)if State.
+isJumpPowerEnabled==isEnabled then return end State.isJumpPowerEnabled=isEnabled
+Helpers.applyJumpPower()end function Player.setWalkSpeed(self,value)State.
+walkSpeedValue=value Helpers.applyWalkSpeed()end function Player.setJumpPower(
+self,value)State.jumpPowerValue=value Helpers.applyJumpPower()end function
+Player.setFlySpeed(self,value)State.flySpeed=value end return Player end
+function __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c
+end end do local function __modImpl()return{}end function
+__DARKLUA_BUNDLE_MODULES.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c end end
+do local function __modImpl()local Constants={FOV_CIRCLE_COLOR=Color3.fromRGB(
+255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,MIN_AIM_SPEED=4,
+MAX_AIM_SPEED=40,MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,
+TARGET_DROP_FOV_MULTIPLIER=1.2,AIMBOT_RENDER_STEP_NAME='CombatAimbot'}return
+Constants end function __DARKLUA_BUNDLE_MODULES.q()local v=
+__DARKLUA_BUNDLE_MODULES.cache.q if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.q=v end return v.c end end do local function
+__modImpl()local Types=__DARKLUA_BUNDLE_MODULES.p()local Constants=
+__DARKLUA_BUNDLE_MODULES.q()local State={client=nil,logger=nil,isAimbotEnabled=
 false,isSilentAimEnabled=false,isFovEnabled=true,isSilentAimFovEnabled=true,
 fovRadius=100,silentAimFovRadius=100,fovColor=Constants.FOV_CIRCLE_COLOR,
 silentAimFovColor=Constants.FOV_CIRCLE_COLOR,fovTransparency=0,
@@ -471,12 +501,12 @@ smoothness=0,target=nil,silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil
 ,fovCircle=nil,silentAimFovCircle=nil,cameraController=nil,fighterController=nil
 ,remoteHooked=false,utilityHooked=false,cameraShakerHooked=false,isInputLocked=
 false,mouseBehavior=nil,mouseDeltaSensitivity=nil}return State end function
-__DARKLUA_BUNDLE_MODULES.j()local v=__DARKLUA_BUNDLE_MODULES.cache.j if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.j=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.r()local v=__DARKLUA_BUNDLE_MODULES.cache.r if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.r=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
 Workspace=game:GetService('Workspace')local UserInputService=game:GetService(
-'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.j()local Constants=
-__DARKLUA_BUNDLE_MODULES.i()local Helpers={}function Helpers.getGlobal(name)
+'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.r()local Constants=
+__DARKLUA_BUNDLE_MODULES.q()local Helpers={}function Helpers.getGlobal(name)
 local getfenvAny=getfenv local env=(getfenvAny(0))local genv=(env.getgenv and
 env.getgenv())or env return genv[name]or env[name]end function Helpers.
 getUtility()local replicatedStorage=game:GetService('ReplicatedStorage')local
@@ -528,12 +558,12 @@ fighterControllerScript and fighterControllerScript:IsA('ModuleScript')then
 local success,result=pcall(function()local dynamicRequire=require return
 dynamicRequire(fighterControllerScript)end)if success then State.
 fighterController=result end end end return Helpers end function
-__DARKLUA_BUNDLE_MODULES.k()local v=__DARKLUA_BUNDLE_MODULES.cache.k if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.k=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.s()local v=__DARKLUA_BUNDLE_MODULES.cache.s if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.s=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
 Workspace=game:GetService('Workspace')local UserInputService=game:GetService(
-'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.j()local Constants=
-__DARKLUA_BUNDLE_MODULES.i()local Helpers=__DARKLUA_BUNDLE_MODULES.k()local
+'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.r()local Constants=
+__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()local
 TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Targeting={}function Targeting.
 getTargetState(player)local camera=Helpers.getCamera()local localPlayer=Helpers.
 getLocalPlayer()if player==localPlayer then return false,nil,false,math.huge end
@@ -610,10 +640,10 @@ then continue end end local pos,onScreen=camera:WorldToViewportPoint(targetPart.
 Position)if onScreen then local dist=(Vector2.new(pos.X,pos.Y)-mouseLocation).
 Magnitude if dist<closestDist then closest=targetPart closestDist=dist end end
 end end return closest end return Targeting end function
-__DARKLUA_BUNDLE_MODULES.l()local v=__DARKLUA_BUNDLE_MODULES.cache.l if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.l=v end return v.c end end
-do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.j()local
-Constants=__DARKLUA_BUNDLE_MODULES.i()local Helpers=__DARKLUA_BUNDLE_MODULES.k()
+__DARKLUA_BUNDLE_MODULES.t()local v=__DARKLUA_BUNDLE_MODULES.cache.t if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.t=v end return v.c end end
+do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.r()local
+Constants=__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
 local Aimbot={}function Aimbot.aimAt(target,bestPart,deltaTime)if not target.
 Character then return end local targetPos=(bestPart).Position local camera=
 Helpers.getCamera()local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.
@@ -629,11 +659,11 @@ elseif State.smoothness>0 then local currentRot=(State.cameraController.Rotation
 MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)
 local newRot=currentRot:Lerp(targetRotation,alpha)State.cameraController:
 SetRotation(newRot)else State.cameraController:SetRotation(targetRotation)end
-end return Aimbot end function __DARKLUA_BUNDLE_MODULES.m()local v=
-__DARKLUA_BUNDLE_MODULES.cache.m if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end do local function
-__modImpl()local State=__DARKLUA_BUNDLE_MODULES.j()local Helpers=
-__DARKLUA_BUNDLE_MODULES.k()local Targeting=__DARKLUA_BUNDLE_MODULES.l()local
+end return Aimbot end function __DARKLUA_BUNDLE_MODULES.u()local v=
+__DARKLUA_BUNDLE_MODULES.cache.u if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end do local function
+__modImpl()local State=__DARKLUA_BUNDLE_MODULES.r()local Helpers=
+__DARKLUA_BUNDLE_MODULES.s()local Targeting=__DARKLUA_BUNDLE_MODULES.t()local
 SilentAim={}local _lastSilentTargetPos=nil function SilentAim.isGunAction()local
 debugGlobal=Helpers.getGlobal('debug')local traceback=debugGlobal and
 debugGlobal.traceback or debug.traceback local stack=traceback()return(stack:
@@ -662,11 +692,11 @@ cameraShakerHooked=true local mt=getmetatable(cameraShaker.Presets)if mt and mt.
 __index then local oldIdx=mt.__index mt.__index=function(t,k)if State.
 isSilentAimEnabled and(k=='StartShooting'or k=='')then return nil end return
 oldIdx(t,k)end end end end)end return SilentAim end function
-__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.v()local v=__DARKLUA_BUNDLE_MODULES.cache.v if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end
 do local function __modImpl()local UserInputService=game:GetService(
-'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.j()local Constants=
-__DARKLUA_BUNDLE_MODULES.i()local Helpers=__DARKLUA_BUNDLE_MODULES.k()local
+'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.r()local Constants=
+__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()local
 Visuals={}local function _updateCircle(circleId,isEnabled,radius,color,
 transparency)local lib=Helpers.getDrawingLib()if not lib then return end local
 stateAny=State local circle=stateAny[circleId]if isEnabled then if not circle
@@ -680,16 +710,16 @@ _updateCircle('fovCircle',State.isFovEnabled,State.fovRadius,State.fovColor,
 State.fovTransparency)_updateCircle('silentAimFovCircle',State.
 isSilentAimFovEnabled,State.silentAimFovRadius,State.silentAimFovColor,State.
 silentAimFovTransparency)end return Visuals end function
-__DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
 do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.b())local State=__DARKLUA_BUNDLE_MODULES.j()local
-Constants=__DARKLUA_BUNDLE_MODULES.i()local Helpers=__DARKLUA_BUNDLE_MODULES.k()
-local Targeting=__DARKLUA_BUNDLE_MODULES.l()local Aimbot=
-__DARKLUA_BUNDLE_MODULES.m()local SilentAim=__DARKLUA_BUNDLE_MODULES.n()local
-Visuals=__DARKLUA_BUNDLE_MODULES.o()local Types=__DARKLUA_BUNDLE_MODULES.h()
-local Combat={}Combat.__index=Combat local _maid=nil local function _connect()
-_maid:DoCleaning()task.spawn(function()Helpers.fetchCameraController(State.
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local State=__DARKLUA_BUNDLE_MODULES.r()local
+Constants=__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
+local Targeting=__DARKLUA_BUNDLE_MODULES.t()local Aimbot=
+__DARKLUA_BUNDLE_MODULES.u()local Types=__DARKLUA_BUNDLE_MODULES.p()local
+SilentAim=(__DARKLUA_BUNDLE_MODULES.v())local Visuals=(__DARKLUA_BUNDLE_MODULES.
+w())local Combat={}Combat.__index=Combat local _maid=nil local function _connect
+()_maid:DoCleaning()task.spawn(function()Helpers.fetchCameraController(State.
 logger)end)SilentAim.setup()RunService:BindToRenderStep(Constants.
 AIMBOT_RENDER_STEP_NAME,Enum.RenderPriority.Camera.Value+1,function(deltaTime)
 Visuals.updateFovCircle()if State.isAimbotEnabled then local target=Targeting.
@@ -736,8 +766,8 @@ setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=enabled end function
 Combat.setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=
 enabled end function Combat.setClosestPositionWhitelist(self,whitelist)State.
 closestPositionWhitelist=whitelist end return Combat end function
-__DARKLUA_BUNDLE_MODULES.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end
 do local function __modImpl()local RunService=game:GetService('RunService')local
 Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
@@ -977,9 +1007,9 @@ enabled)_state.client:setSilent(enabled)end})_runAutoload(library,saveManager,
 false)end function Interface.init(self,client)_state.client=client _state.logger
 =client.Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(
 self)_maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
-isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.q()
-local v=__DARKLUA_BUNDLE_MODULES.cache.q if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.q=v end return v.c end end end local
+isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.y()
+local v=__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end end local
 ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
 'Players')local RunService=game:GetService('RunService')local Logger=
 __DARKLUA_BUNDLE_MODULES.a()local Maid=__DARKLUA_BUNDLE_MODULES.b()local Signal=
@@ -992,10 +1022,10 @@ return genv[k]or env[k]end local queue_on_teleport=getGlobal('queue_on_teleport'
 clear_teleport_queue=getGlobal('clear_teleport_queue')or getGlobal(
 'clearteleportqueue')or(env.syn and env.syn.clear_teleport_queue)local
 getloadedmodules=getGlobal('getloadedmodules')or function()return nil end local
-MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.f())},{name='Player',
-loader=(__DARKLUA_BUNDLE_MODULES.g())},{name='Combat',loader=(
-__DARKLUA_BUNDLE_MODULES.p())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.q())}}local Client={}Client.__index=Client local _maid=
+MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.j())},{name='Player',
+loader=(__DARKLUA_BUNDLE_MODULES.o())},{name='Combat',loader=(
+__DARKLUA_BUNDLE_MODULES.x())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.y())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
 BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
 Signal.new(),stopped=Signal.new()}local _modules={}local function

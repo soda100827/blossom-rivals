@@ -1,11 +1,23 @@
 --!strict
+
+--// Services
+
+--// Dependencies (require)
 local State = require("./State")
 local Helpers = require("./Helpers")
 local Targeting = require("./Targeting")
 
+--// Constants
+
+--// Types
+
+--// Private state
 local SilentAim = {}
 local _lastSilentTargetPos: Vector3? = nil
 
+--// Private helpers
+
+--// Public API
 function SilentAim.isGunAction(): boolean
 	local debugGlobal = Helpers.getGlobal("debug")
 	local traceback = debugGlobal and debugGlobal.traceback or debug.traceback

@@ -1,10 +1,22 @@
 --!strict
+
+--// Services
+
+--// Dependencies (require)
 local State = require("./State")
 local Constants = require("./Constants")
 local Helpers = require("./Helpers")
 
+--// Constants
+
+--// Types
+
+--// Private state
 local Aimbot = {}
 
+--// Private helpers
+
+--// Public API
 function Aimbot.aimAt(target: Player, bestPart: BasePart, deltaTime: number)
 	if not target.Character then
 		return

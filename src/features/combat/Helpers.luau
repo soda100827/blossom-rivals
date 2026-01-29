@@ -1,12 +1,24 @@
 --!strict
+
+--// Services
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+
+--// Dependencies (require)
 local State = require("./State")
 local Constants = require("./Constants")
 
+--// Constants
+
+--// Types
+
+--// Private state
 local Helpers = {}
 
+--// Private helpers
+
+--// Public API
 function Helpers.getGlobal(name: string): any
 	local getfenvAny = getfenv :: any
 	local env = getfenvAny(0) :: any
