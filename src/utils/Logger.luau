@@ -66,10 +66,8 @@ local function formatMessage(level: string, source: string, ...): string
 	end
 
 	return string.format(
-		"<stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]</b></font></stroke> <stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]</b></font></stroke> <font color='rgb(%s)'>%s</font>",
+		"<stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]:</b></font></stroke> <font color='rgb(%s)'>%s</font>",
 		levelColor,
-		level,
-		COLORS.Pink,
 		source,
 		COLORS.White,
 		message

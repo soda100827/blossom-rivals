@@ -13,20 +13,20 @@ levelColor=COLORS.White if level=='INFO'then levelColor=COLORS.White elseif
 level=='SUCCESS'then levelColor=COLORS.Green elseif level=='WARN'then levelColor
 =COLORS.Yellow elseif level=='ERROR'then levelColor=COLORS.Red end return string
 .format(
-[[<stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]</b></font></stroke> <stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]</b></font></stroke> <font color='rgb(%s)'>%s</font>]]
-,levelColor,level,COLORS.Pink,source,COLORS.White,message)end function Logger.
-new(source)local instance=setmetatable({source=source or DEFAULT_SOURCE},Logger)
-return(instance)end function Logger.info(self,...)print(formatMessage('INFO',
-self.source,...))end function Logger.success(self,...)print(formatMessage(
-'SUCCESS',self.source,...))end function Logger.warn(self,...)warn(formatMessage(
-'WARN',self.source,...))end function Logger.error(self,...)error(formatMessage(
-'ERROR',self.source,...),0)end task.spawn(_enableRichText)return Logger end
-function __DARKLUA_BUNDLE_MODULES.a()local v=__DARKLUA_BUNDLE_MODULES.cache.a if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.a=v end return v.c
-end end do local function __modImpl()local Maid={}Maid.ClassName='Maid'function
-Maid.new()return setmetatable({_tasks={}},Maid)end function Maid.isMaid(value)
-return type(value)=='table'and value.ClassName=='Maid'end function Maid:__index(
-index)if Maid[index]then return Maid[index]else return self._tasks[index]end end
+[[<stroke color='#000000' thickness='1'><font color='rgb(%s)'><b>[%s]:</b></font></stroke> <font color='rgb(%s)'>%s</font>]]
+,levelColor,source,COLORS.White,message)end function Logger.new(source)local
+instance=setmetatable({source=source or DEFAULT_SOURCE},Logger)return(instance)
+end function Logger.info(self,...)print(formatMessage('INFO',self.source,...))
+end function Logger.success(self,...)print(formatMessage('SUCCESS',self.source,
+...))end function Logger.warn(self,...)warn(formatMessage('WARN',self.source,...
+))end function Logger.error(self,...)error(formatMessage('ERROR',self.source,...
+),0)end task.spawn(_enableRichText)return Logger end function
+__DARKLUA_BUNDLE_MODULES.a()local v=__DARKLUA_BUNDLE_MODULES.cache.a if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.a=v end return v.c end end
+do local function __modImpl()local Maid={}Maid.ClassName='Maid'function Maid.new
+()return setmetatable({_tasks={}},Maid)end function Maid.isMaid(value)return
+type(value)=='table'and value.ClassName=='Maid'end function Maid:__index(index)
+if Maid[index]then return Maid[index]else return self._tasks[index]end end
 function Maid:__newindex(index,newTask)if Maid[index]~=nil then error((
 "'%s' is reserved"):format(tostring(index)),2)end local tasks=self._tasks local
 oldTask=tasks[index]if oldTask==newTask then return end tasks[index]=newTask if
