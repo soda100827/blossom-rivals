@@ -1,0 +1,190 @@
+--!strict
+local RunService = game:GetService("RunService")
+local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
+
+local State = require("./State")
+local Constants = require("./Constants")
+local Helpers = require("./Helpers")
+local Targeting = require("./Targeting")
+local Aimbot = require("./Aimbot")
+local SilentAim = require("./SilentAim")
+local Visuals = require("./Visuals")
+local Types = require("./Types")
+
+local Combat = {}
+Combat.__index = Combat
+
+local _maid = nil :: any
+
+local function _connect()
+	_maid:DoCleaning()
+	task.spawn(function()
+		Helpers.fetchCameraController(State.logger)
+	end)
+	SilentAim.setup()
+
+	RunService:BindToRenderStep(
+		Constants.AIMBOT_RENDER_STEP_NAME,
+		Enum.RenderPriority.Camera.Value + 1,
+		function(deltaTime)
+			Visuals.updateFovCircle()
+
+			if State.isAimbotEnabled then
+				local target = Targeting.resolveTarget()
+				if target then
+					local _isValid, _bestPart, _anyOnScreen, _shortestDist = Targeting.getTargetState(target)
+					if _isValid and _bestPart then
+						Helpers.applyInputLock(true)
+						Aimbot.aimAt(target, _bestPart, deltaTime)
+					else
+						Helpers.applyInputLock(false)
+					end
+				else
+					Helpers.applyInputLock(false)
+				end
+			else
+				State.target = nil
+				Helpers.applyInputLock(false)
+			end
+
+			if State.isSilentAimEnabled then
+				Targeting.resolveSilentTarget()
+			else
+				State.silentTarget = nil
+			end
+		end
+	)
+	_maid:GiveTask(function()
+		RunService:UnbindFromRenderStep(Constants.AIMBOT_RENDER_STEP_NAME)
+	end)
+end
+
+local function _disconnect()
+	if State.fovCircle then
+		pcall(function()
+			(State.fovCircle :: any):Remove()
+		end)
+		State.fovCircle = nil
+	end
+	if State.silentAimFovCircle then
+		pcall(function()
+			(State.silentAimFovCircle :: any):Remove()
+		end)
+		State.silentAimFovCircle = nil
+	end
+	State.target = nil
+	State.silentTarget = nil
+	State.targetLostAt = nil
+	State.silentTargetLostAt = nil
+	Helpers.applyInputLock(false)
+	_maid:DoCleaning()
+end
+
+--// Public API
+function Combat.init(self: Types.CombatFeature, client: any): ()
+	State.client = client
+	State.logger = client.Logger
+	_maid = Maid.new()
+	_connect()
+end
+
+function Combat.cleanup(self: Types.CombatFeature): ()
+	State.isAimbotEnabled = false
+	_disconnect()
+end
+
+function Combat.setAimbotEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
+	if State.isAimbotEnabled == isEnabled then
+		return
+	end
+	State.logger:info("Set Aimbot Enabled:", isEnabled)
+	State.isAimbotEnabled = isEnabled
+	if not isEnabled then
+		State.target = nil
+		State.targetLostAt = nil
+		Helpers.applyInputLock(false)
+	end
+end
+
+function Combat.setFovEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
+	State.isFovEnabled = isEnabled
+end
+
+function Combat.setFovRadius(self: Types.CombatFeature, radius: number): ()
+	State.fovRadius = radius
+end
+
+function Combat.setFovColor(self: Types.CombatFeature, color: Color3): ()
+	State.fovColor = color
+end
+
+function Combat.setFovTransparency(self: Types.CombatFeature, transparency: number): ()
+	State.fovTransparency = math.clamp(transparency, 0, 1)
+end
+
+function Combat.setTeamCheckEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
+	State.isTeamCheckEnabled = isEnabled
+end
+
+function Combat.setSmoothness(self: Types.CombatFeature, smoothness: number): ()
+	local wasMaxSmoothness = Helpers.isMaxSmoothness()
+	State.smoothness = math.clamp(smoothness, 0, Constants.MAX_SMOOTHNESS)
+	if wasMaxSmoothness and not Helpers.isMaxSmoothness() then
+		Helpers.applyInputLock(false)
+	end
+end
+
+function Combat.setWallCheckEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
+	State.isWallCheckEnabled = isEnabled
+end
+
+function Combat.setSilentAimEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
+	State.logger:info("Set Silent Aim Enabled:", isEnabled)
+	State.isSilentAimEnabled = isEnabled
+	if not isEnabled then
+		State.silentTarget = nil
+		State.silentTargetLostAt = nil
+	end
+end
+
+function Combat.setSilentAimFovEnabled(self: Types.CombatFeature, isEnabled: boolean): ()
+	State.isSilentAimFovEnabled = isEnabled
+end
+
+function Combat.setSilentAimFovRadius(self: Types.CombatFeature, radius: number): ()
+	State.silentAimFovRadius = radius
+end
+
+function Combat.setSilentAimFovColor(self: Types.CombatFeature, color: Color3): ()
+	State.silentAimFovColor = color
+end
+
+function Combat.setSilentAimFovTransparency(self: Types.CombatFeature, transparency: number): ()
+	State.silentAimFovTransparency = math.clamp(transparency, 0, 1)
+end
+
+function Combat.setSilentHitChance(self: Types.CombatFeature, chance: number): ()
+	State.silentHitChance = math.clamp(chance, 0, 100)
+end
+
+function Combat.setTargetPart(self: Types.CombatFeature, part: string): ()
+	State.targetPart = part
+end
+
+function Combat.setManipulationEnabled(self: Types.CombatFeature, enabled: boolean): ()
+	State.isManipulationEnabled = enabled
+end
+
+function Combat.setAntiKatanaEnabled(self: Types.CombatFeature, enabled: boolean): ()
+	State.isAntiKatanaEnabled = enabled
+end
+
+function Combat.setClosestPositionEnabled(self: Types.CombatFeature, enabled: boolean): ()
+	State.isClosestPositionEnabled = enabled
+end
+
+function Combat.setClosestPositionWhitelist(self: Types.CombatFeature, whitelist: { string }): ()
+	State.closestPositionWhitelist = whitelist
+end
+
+return Combat

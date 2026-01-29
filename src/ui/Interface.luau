@@ -201,7 +201,7 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("SilentHitChance", {
-		Text = "Silent Hit Chance",
+		Text = "Silent Hit Chance:",
 		Default = 100,
 		Min = 0,
 		Max = 100,
@@ -216,7 +216,7 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("SilentAimFovRadius", {
-		Text = "Silent Aim Radius",
+		Text = "Silent Aim Radius:",
 		Default = 100,
 		Min = 10,
 		Max = 800,
@@ -263,22 +263,22 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("CombatSmoothness", {
-		Text = "Aimbot Smoothing",
+		Text = "Aimbot Smoothing:",
 		Default = 0,
 		Min = 0,
-		Max = 1,
-		Rounding = 2,
+		Max = 100,
+		Rounding = 0,
 		Suffix = "%", -- Matches image style
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setSmoothness then
-				mod:setSmoothness(value)
+				mod:setSmoothness((value :: number) / 100) -- Convert to 0-1 for back-end
 			end
 		end,
 	})
 
 	combatGroup:AddSlider("CombatFovRadius", {
-		Text = "Aimbot Radius",
+		Text = "Aimbot Radius:",
 		Default = 100,
 		Min = 10,
 		Max = 800,

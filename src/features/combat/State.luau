@@ -1,0 +1,43 @@
+--!strict
+local Types = require("./Types")
+local Constants = require("./Constants")
+
+local State: Types.CombatState = {
+	client = nil :: any,
+	logger = nil :: any,
+	isAimbotEnabled = false,
+	isSilentAimEnabled = false,
+	isFovEnabled = true,
+	isSilentAimFovEnabled = true,
+	fovRadius = 100,
+	silentAimFovRadius = 100,
+	fovColor = Constants.FOV_CIRCLE_COLOR,
+	silentAimFovColor = Constants.FOV_CIRCLE_COLOR,
+	fovTransparency = 0,
+	silentAimFovTransparency = 0,
+	silentHitChance = 100,
+	targetPart = "Head",
+	isManipulationEnabled = false,
+	isAntiKatanaEnabled = false,
+	isClosestPositionEnabled = false,
+	closestPositionWhitelist = { "Head" },
+	isTeamCheckEnabled = false,
+	isWallCheckEnabled = false,
+	smoothness = 0,
+	target = nil,
+	silentTarget = nil,
+	targetLostAt = nil,
+	silentTargetLostAt = nil,
+	fovCircle = nil,
+	silentAimFovCircle = nil,
+	cameraController = nil,
+	fighterController = nil,
+	remoteHooked = false,
+	utilityHooked = false,
+	cameraShakerHooked = false,
+	isInputLocked = false,
+	mouseBehavior = nil,
+	mouseDeltaSensitivity = nil,
+}
+
+return State
