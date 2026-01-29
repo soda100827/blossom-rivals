@@ -412,41 +412,42 @@ isSilentAimFovEnabled=false,fovRadius=100,silentAimFovRadius=100,fovColor=
 CONSTANTS.FOV_CIRCLE_COLOR,fovTransparency=0,isTeamCheckEnabled=false,
 isWallCheckEnabled=false,smoothness=0,target=nil,silentTarget=nil,targetLostAt=
 nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,cameraController
-=nil,fighterController=nil,isInputLocked=false,mouseBehavior=nil,
-mouseDeltaSensitivity=nil}local _lastLogTime=0 local function _throttleLog(...)
-if os.clock()-_lastLogTime>2 then _state.logger:info(...)_lastLogTime=os.clock()
-end end local function _getCamera()local camera=Workspace.CurrentCamera if not
-camera then camera=(Workspace:WaitForChild('Camera'))end return camera end
-local function _getLocalPlayer()return Players.LocalPlayer end local function
-_getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))local lib=g.
-Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if not lib
-then lib=rawget(_G,'Drawing')end return lib end local function _applyInputLock(
-isLocked)if isLocked and _state.smoothness<CONSTANTS.MAX_SMOOTHNESS then return
-end if isLocked==_state.isInputLocked then return end if isLocked then if _state
-.mouseBehavior==nil then _state.mouseBehavior=UserInputService.MouseBehavior end
-if _state.mouseDeltaSensitivity==nil then _state.mouseDeltaSensitivity=
-UserInputService.MouseDeltaSensitivity end UserInputService.MouseBehavior=Enum.
-MouseBehavior.LockCenter UserInputService.MouseDeltaSensitivity=0 else local
-restoreBehavior=_state.mouseBehavior or Enum.MouseBehavior.Default local
-restoreSensitivity=_state.mouseDeltaSensitivity or 1 UserInputService.
-MouseBehavior=restoreBehavior UserInputService.MouseDeltaSensitivity=
-restoreSensitivity _state.mouseBehavior=nil _state.mouseDeltaSensitivity=nil end
-_state.isInputLocked=isLocked end local function _isMaxSmoothness()return _state
-.smoothness>=CONSTANTS.MAX_SMOOTHNESS end local function _fetchCameraController(
-logger)if _state.cameraController then return end if logger then logger:info(
-'Fetching start...')end local playerScripts=_getLocalPlayer():WaitForChild(
-'PlayerScripts')if not playerScripts then return end local controllers=
-playerScripts:WaitForChild('Controllers')if not controllers then return end
-local camControllerScript=controllers:WaitForChild('CameraController')if
-camControllerScript and camControllerScript:IsA('ModuleScript')then local
-success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(camControllerScript)end)if success then _state.cameraController=
-result if logger then logger:info('Success CameraController')end else if logger
-then logger:error('Failed CameraController',result)end end end end
-local function _fetchFighterController(logger)if _state.fighterController then
-return end local playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts',10
-)if not playerScripts then return end local controllers=playerScripts:
-WaitForChild('Controllers',10)if not controllers then return end local
+=nil,fighterController=nil,remoteHooked=false,isInputLocked=false,mouseBehavior=
+nil,mouseDeltaSensitivity=nil}local _lastLogTime=0 local function _throttleLog(
+...)if os.clock()-_lastLogTime>2 then _state.logger:info(...)_lastLogTime=os.
+clock()end end local function _getCamera()local camera=Workspace.CurrentCamera
+if not camera then camera=(Workspace:WaitForChild('Camera'))end return camera
+end local function _getLocalPlayer()return Players.LocalPlayer end
+local function _getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))
+local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if
+not lib then lib=rawget(_G,'Drawing')end return lib end local function
+_applyInputLock(isLocked)if isLocked and _state.smoothness<CONSTANTS.
+MAX_SMOOTHNESS then return end if isLocked==_state.isInputLocked then return end
+if isLocked then if _state.mouseBehavior==nil then _state.mouseBehavior=
+UserInputService.MouseBehavior end if _state.mouseDeltaSensitivity==nil then
+_state.mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity end
+UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter UserInputService.
+MouseDeltaSensitivity=0 else local restoreBehavior=_state.mouseBehavior or Enum.
+MouseBehavior.Default local restoreSensitivity=_state.mouseDeltaSensitivity or 1
+UserInputService.MouseBehavior=restoreBehavior UserInputService.
+MouseDeltaSensitivity=restoreSensitivity _state.mouseBehavior=nil _state.
+mouseDeltaSensitivity=nil end _state.isInputLocked=isLocked end local function
+_isMaxSmoothness()return _state.smoothness>=CONSTANTS.MAX_SMOOTHNESS end
+local function _fetchCameraController(logger)if _state.cameraController then
+return end if logger then logger:info('Fetching start...')end local
+playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts')if not
+playerScripts then return end local controllers=playerScripts:WaitForChild(
+'Controllers')if not controllers then return end local camControllerScript=
+controllers:WaitForChild('CameraController')if camControllerScript and
+camControllerScript:IsA('ModuleScript')then local success,result=pcall(function(
+)local dynamicRequire=require return dynamicRequire(camControllerScript)end)if
+success then _state.cameraController=result if logger then logger:info(
+'Success CameraController')end else if logger then logger:error(
+'Failed CameraController',result)end end end end local function
+_fetchFighterController(logger)if _state.fighterController then return end local
+playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts',10)if not
+playerScripts then return end local controllers=playerScripts:WaitForChild(
+'Controllers',10)if not controllers then return end local
 fighterControllerScript=controllers:WaitForChild('FighterController',5)if
 fighterControllerScript and fighterControllerScript:IsA('ModuleScript')then
 local success,result=pcall(function()local dynamicRequire=require return
@@ -455,84 +456,94 @@ fighterController=result if logger then logger:info('Success FighterController')
 end else if logger then logger:error('Failed FighterController',result)end end
 end end local function _getGlobal(name)local getfenvAny=getfenv local env=(
 getfenvAny(0))local genv=(env.getgenv and env.getgenv())or env return genv[name]
-or env[name]end local function _hookFighter(fighter)local hookfunction=
-_getGlobal('hookfunction')or _getGlobal('replaceclosure')if not hookfunction
-then _state.logger:warn('hookfunction not found, Silent Aim will not work.')
-return end local oldGetCameraData oldGetCameraData=hookfunction(fighter.
-GetCameraData,function(self,...)local result=oldGetCameraData(self,...)if _state
-.isSilentAimEnabled and _state.silentTarget then local character=_state.
-silentTarget.Character local head=character and character:FindFirstChild('Head')
-if head and head:IsA('BasePart')then local origin=result[utf8.char(0)].Position
-local targetPos=(head).Position result[utf8.char(1)]=CFrame.lookAt(origin,
-targetPos)end end return result end)_state.logger:info(
-'Fighter:GetCameraData hooked for Silent Aim.')end local function
-_setupSilentAim()task.spawn(function()_fetchFighterController(_state.logger)if
-_state.fighterController then local fighter=_state.fighterController:
-WaitForLocalFighter()if fighter then _hookFighter(fighter)end if _state.
-fighterController.ObjectAdded then _state.fighterController.ObjectAdded:Connect(
-function(obj)if obj.IsLocalPlayer then task.defer(function()local newFighter=
-_state.fighterController:WaitForLocalFighter()if newFighter then _hookFighter(
-newFighter)end end)end end)end end end)end local function _updateFovCircle()
-local lib=_getDrawingLib()if not lib then return end local function updateCircle
-(circleType,isEnabled,radius,color,transparency)local circle=_state[circleType]
-if isEnabled then if not circle then circle=lib.new('Circle')_state[circleType]=
-circle end local c=circle c.Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=
-CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=color c.Transparency=math.
-clamp(transparency,0,1)local mouseLocation=UserInputService:GetMouseLocation()c.
-Position=mouseLocation c.Radius=radius c.Visible=true else local c=circle if c
-then c.Visible=false end end end updateCircle('fovCircle',_state.isFovEnabled,
-_state.fovRadius,_state.fovColor,_state.fovTransparency)updateCircle(
-'silentAimFovCircle',_state.isSilentAimFovEnabled,_state.silentAimFovRadius,
-_state.fovColor,_state.fovTransparency)end local function _getTargetState(player
-)local camera=_getCamera()local localPlayer=_getLocalPlayer()if player==
-localPlayer then return false,nil,false,math.huge end if _state.
-isTeamCheckEnabled and player.Team==localPlayer.Team then return false,nil,false
-,math.huge end local character=player.Character if not character then return
-false,nil,false,math.huge end local humanoid=character:FindFirstChildOfClass(
-'Humanoid')if not humanoid or humanoid.Health<=0 then return false,nil,false,
-math.huge end local head=character:FindFirstChild('Head')if not head or not head
-:IsA('BasePart')then return false,nil,false,math.huge end local headPart=head if
-_state.isWallCheckEnabled then local origin=camera.CFrame.Position local
-direction=headPart.Position-origin local raycastParams=RaycastParams.new()
-raycastParams.FilterDescendantsInstances={(localPlayer.Character),character}
-raycastParams.FilterType=Enum.RaycastFilterType.Exclude local result=Workspace:
-Raycast(origin,direction,raycastParams)if result then return false,nil,false,
-math.huge end end local screenPos,onScreen=camera:WorldToViewportPoint(headPart.
-Position)if not onScreen then return true,headPart,false,math.huge end local
-mouseLocation=UserInputService:GetMouseLocation()local distance=(Vector2.new(
-screenPos.X,screenPos.Y)-mouseLocation).Magnitude return true,headPart,true,
-distance end local function _getBestTarget(radius)local localPlayer=
-_getLocalPlayer()local bestTarget=nil local shortestDistance=radius for _,player
-in ipairs(Players:GetPlayers())do if player==localPlayer then continue end local
-isValid,headPart,onScreen,distance=_getTargetState(player)if not isValid or not
-headPart or not onScreen then continue end if distance>radius then continue end
-if distance<shortestDistance then shortestDistance=distance bestTarget=player
-end end return bestTarget end local function _resolveTarget()if _state.target
-then local dropRadius=_state.fovRadius*CONSTANTS.TARGET_DROP_FOV_MULTIPLIER
-local isValid,headPart,onScreen,distance=_getTargetState(_state.target)if
-isValid and headPart and onScreen and distance<=dropRadius then _state.
-targetLostAt=nil return _state.target end if not isValid or not headPart then
-_state.targetLostAt=nil _state.target=nil else local now=os.clock()local
-targetLostAt=_state.targetLostAt if not targetLostAt then targetLostAt=now
-_state.targetLostAt=now end if now-(targetLostAt)<CONSTANTS.TARGET_DROP_DELAY
-then return _state.target end _state.targetLostAt=nil _state.target=nil end end
-local newTarget=_getBestTarget(_state.fovRadius)_state.target=newTarget return
-newTarget end local function _resolveSilentTarget()if _state.silentTarget then
-local dropRadius=_state.silentAimFovRadius*CONSTANTS.TARGET_DROP_FOV_MULTIPLIER
-local isValid,headPart,onScreen,distance=_getTargetState(_state.silentTarget)if
-isValid and headPart and onScreen and distance<=dropRadius then _state.
-silentTargetLostAt=nil return _state.silentTarget end if not isValid or not
-headPart then _state.silentTargetLostAt=nil _state.silentTarget=nil else local
-now=os.clock()local silentTargetLostAt=_state.silentTargetLostAt if not
-silentTargetLostAt then silentTargetLostAt=now _state.silentTargetLostAt=now end
-if now-(silentTargetLostAt)<CONSTANTS.TARGET_DROP_DELAY then return _state.
-silentTarget end _state.silentTargetLostAt=nil _state.silentTarget=nil end end
-local newTarget=_getBestTarget(_state.silentAimFovRadius)_state.silentTarget=
-newTarget return newTarget end local function _aimAt(target,deltaTime)if not
-target.Character then return end local head=target.Character:FindFirstChild(
-'Head')if not head or not head:IsA('BasePart')then return end local camera=
-_getCamera()local targetPos=(head).Position local currentCFrame=camera.CFrame
-local lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)if not _state.
+or env[name]end local function _hookRemote(remote)local hookfunction=_getGlobal(
+'hookfunction')or _getGlobal('replaceclosure')if not hookfunction then _state.
+logger:warn([[hookfunction not found, Silent Aim Remote Hook will not work.]])
+return end if _state.remoteHooked then return end _state.remoteHooked=true local
+oldFireServer oldFireServer=hookfunction(remote.FireServer,function(self,...)
+local args={...}if _state.isSilentAimEnabled and _state.silentTarget then local
+action=args[2]local data=args[3]if _state.logger then pcall(function()
+_throttleLog('UseItem Action:',tostring(action))end)end if type(data)=='table'
+then local cameraData=data[utf8.char(1)]or data['\1']if type(cameraData)==
+'table'and cameraData[utf8.char(1)]then local character=_state.silentTarget.
+Character local head=character and character:FindFirstChild('Head')if head and
+head:IsA('BasePart')then local originPos=nil local char0=cameraData[utf8.char(0)
+]or cameraData['\0']if char0 then pcall(function()originPos=(char0).Position or(
+char0).p end)end if originPos then local targetPos=(head).Position cameraData[
+utf8.char(1)]=CFrame.lookAt(originPos,targetPos)cameraData['\1']=cameraData[utf8
+.char(1)]cameraData[utf8.char(2)]=head cameraData['\2']=head cameraData[utf8.
+char(3)]=CFrame.new()cameraData['\3']=cameraData[utf8.char(3)]_state.logger:
+info('Silent Aim redirected shot to:',_state.silentTarget.Name)end end end end
+end return oldFireServer(self,unpack(args))end)_state.logger:info(
+'Fighter:UseItem Remote hooked for Silent Aim.')end local function
+_setupSilentAim()task.spawn(function()local replicatedStorage=(game:GetService(
+'ReplicatedStorage'))local remote=replicatedStorage:WaitForChild('Remotes',10)if
+remote then remote=(remote):WaitForChild('Replication',5)end if remote then
+remote=(remote):WaitForChild('Fighter',5)end if remote then remote=(remote):
+WaitForChild('UseItem',5)end if remote and remote:IsA('RemoteEvent')then
+_hookRemote(remote)else _state.logger:error(
+'Failed to find UseItem remote for Silent Aim hook.')end end)end local function
+_updateFovCircle()local lib=_getDrawingLib()if not lib then return end
+local function updateCircle(circleType,isEnabled,radius,color,transparency)local
+circle=_state[circleType]if isEnabled then if not circle then circle=lib.new(
+'Circle')_state[circleType]=circle end local c=circle c.Thickness=CONSTANTS.
+FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.
+Color=color c.Transparency=math.clamp(transparency,0,1)local mouseLocation=
+UserInputService:GetMouseLocation()c.Position=mouseLocation c.Radius=radius c.
+Visible=true else local c=circle if c then c.Visible=false end end end
+updateCircle('fovCircle',_state.isFovEnabled,_state.fovRadius,_state.fovColor,
+_state.fovTransparency)updateCircle('silentAimFovCircle',_state.
+isSilentAimFovEnabled,_state.silentAimFovRadius,_state.fovColor,_state.
+fovTransparency)end local function _getTargetState(player)local camera=
+_getCamera()local localPlayer=_getLocalPlayer()if player==localPlayer then
+return false,nil,false,math.huge end if _state.isTeamCheckEnabled and player.
+Team==localPlayer.Team then return false,nil,false,math.huge end local character
+=player.Character if not character then return false,nil,false,math.huge end
+local humanoid=character:FindFirstChildOfClass('Humanoid')if not humanoid or
+humanoid.Health<=0 then return false,nil,false,math.huge end local head=
+character:FindFirstChild('Head')if not head or not head:IsA('BasePart')then
+return false,nil,false,math.huge end local headPart=head if _state.
+isWallCheckEnabled then local origin=camera.CFrame.Position local direction=
+headPart.Position-origin local raycastParams=RaycastParams.new()raycastParams.
+FilterDescendantsInstances={(localPlayer.Character),character}raycastParams.
+FilterType=Enum.RaycastFilterType.Exclude local result=Workspace:Raycast(origin,
+direction,raycastParams)if result then return false,nil,false,math.huge end end
+local screenPos,onScreen=camera:WorldToViewportPoint(headPart.Position)if not
+onScreen then return true,headPart,false,math.huge end local mouseLocation=
+UserInputService:GetMouseLocation()local distance=(Vector2.new(screenPos.X,
+screenPos.Y)-mouseLocation).Magnitude return true,headPart,true,distance end
+local function _getBestTarget(radius)local localPlayer=_getLocalPlayer()local
+bestTarget=nil local shortestDistance=radius for _,player in ipairs(Players:
+GetPlayers())do if player==localPlayer then continue end local isValid,headPart,
+onScreen,distance=_getTargetState(player)if not isValid or not headPart or not
+onScreen then continue end if distance>radius then continue end if distance<
+shortestDistance then shortestDistance=distance bestTarget=player end end return
+bestTarget end local function _resolveTarget()if _state.target then local
+dropRadius=_state.fovRadius*CONSTANTS.TARGET_DROP_FOV_MULTIPLIER local isValid,
+headPart,onScreen,distance=_getTargetState(_state.target)if isValid and headPart
+and onScreen and distance<=dropRadius then _state.targetLostAt=nil return _state
+.target end if not isValid or not headPart then _state.targetLostAt=nil _state.
+target=nil else local now=os.clock()local targetLostAt=_state.targetLostAt if
+not targetLostAt then targetLostAt=now _state.targetLostAt=now end if now-(
+targetLostAt)<CONSTANTS.TARGET_DROP_DELAY then return _state.target end _state.
+targetLostAt=nil _state.target=nil end end local newTarget=_getBestTarget(_state
+.fovRadius)_state.target=newTarget return newTarget end local function
+_resolveSilentTarget()if _state.silentTarget then local dropRadius=_state.
+silentAimFovRadius*CONSTANTS.TARGET_DROP_FOV_MULTIPLIER local isValid,headPart,
+onScreen,distance=_getTargetState(_state.silentTarget)if isValid and headPart
+and onScreen and distance<=dropRadius then _state.silentTargetLostAt=nil return
+_state.silentTarget end if not isValid or not headPart then _state.
+silentTargetLostAt=nil _state.silentTarget=nil else local now=os.clock()local
+silentTargetLostAt=_state.silentTargetLostAt if not silentTargetLostAt then
+silentTargetLostAt=now _state.silentTargetLostAt=now end if now-(
+silentTargetLostAt)<CONSTANTS.TARGET_DROP_DELAY then return _state.silentTarget
+end _state.silentTargetLostAt=nil _state.silentTarget=nil end end local
+newTarget=_getBestTarget(_state.silentAimFovRadius)_state.silentTarget=newTarget
+return newTarget end local function _aimAt(target,deltaTime)if not target.
+Character then return end local head=target.Character:FindFirstChild('Head')if
+not head or not head:IsA('BasePart')then return end local camera=_getCamera()
+local targetPos=(head).Position local currentCFrame=camera.CFrame local
+lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)if not _state.
 cameraController or not _state.cameraController.SetRotation then local alpha=1
 if not _isMaxSmoothness()then local speed=CONSTANTS.MIN_AIM_SPEED+(1-_state.
 smoothness)*(CONSTANTS.MAX_AIM_SPEED-CONSTANTS.MIN_AIM_SPEED)alpha=1-math.exp(-

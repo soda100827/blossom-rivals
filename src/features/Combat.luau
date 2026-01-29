@@ -66,6 +66,7 @@ local _state: {
 	silentAimFovCircle: any?,
 	cameraController: any?,
 	fighterController: any?,
+	remoteHooked: boolean,
 	isInputLocked: boolean,
 	mouseBehavior: Enum.MouseBehavior?,
 	mouseDeltaSensitivity: number?,
@@ -92,6 +93,7 @@ local _state: {
 		silentAimFovCircle = nil,
 		cameraController = nil,
 		fighterController = nil,
+		remoteHooked = false,
 		isInputLocked = false,
 		mouseBehavior = nil,
 		mouseDeltaSensitivity = nil,
@@ -241,53 +243,91 @@ local function _getGlobal(name: string): any
 	return genv[name] or env[name]
 end
 
-local function _hookFighter(fighter: any)
+local function _hookRemote(remote: RemoteEvent)
 	local hookfunction = _getGlobal("hookfunction") or _getGlobal("replaceclosure")
 	if not hookfunction then
-		_state.logger:warn("hookfunction not found, Silent Aim will not work.")
+		_state.logger:warn("hookfunction not found, Silent Aim Remote Hook will not work.")
 		return
 	end
 
-	local oldGetCameraData
-	oldGetCameraData = hookfunction(fighter.GetCameraData, function(self, ...)
-		local result = oldGetCameraData(self, ...)
+	if _state.remoteHooked then
+		return
+	end
+	_state.remoteHooked = true
+
+	local oldFireServer
+	oldFireServer = hookfunction(remote.FireServer, function(self, ...)
+		local args = { ... }
 		if _state.isSilentAimEnabled and _state.silentTarget then
-			local character = _state.silentTarget.Character
-			local head = character and character:FindFirstChild("Head")
-			if head and head:IsA("BasePart") then
-				local origin = result[utf8.char(0)].Position
-				local targetPos = (head :: BasePart).Position
-				result[utf8.char(1)] = CFrame.lookAt(origin, targetPos)
+			local action = args[2]
+			local data = args[3]
+
+			-- Log action to help debug if it's not "StartShooting"
+			-- Use a throttle or log only once to avoid spam
+			if _state.logger then
+				-- pcall to avoid errors if action is not stringifiable
+				pcall(function()
+					_throttleLog("UseItem Action:", tostring(action))
+				end)
+			end
+
+			if type(data) == "table" then
+				-- Search for camera data table (the one with "\0" and "\1")
+				-- Usually it's at data["\1"]
+				local cameraData = data[utf8.char(1)] or data["\1"]
+				if type(cameraData) == "table" and cameraData[utf8.char(1)] then
+					local character = _state.silentTarget.Character
+					local head = character and character:FindFirstChild("Head")
+					if head and head:IsA("BasePart") then
+						local originPos = nil
+						local char0 = cameraData[utf8.char(0)] or cameraData["\0"]
+						if char0 then
+							pcall(function()
+								originPos = (char0 :: any).Position or (char0 :: any).p
+							end)
+						end
+
+						if originPos then
+							local targetPos = (head :: BasePart).Position
+							-- Redirect direction
+							cameraData[utf8.char(1)] = CFrame.lookAt(originPos, targetPos)
+							cameraData["\1"] = cameraData[utf8.char(1)]
+
+							-- Optional: set hit part and local CFrame for server validation
+							cameraData[utf8.char(2)] = head
+							cameraData["\2"] = head
+							cameraData[utf8.char(3)] = CFrame.new()
+							cameraData["\3"] = cameraData[utf8.char(3)]
+
+							_state.logger:info("Silent Aim redirected shot to:", _state.silentTarget.Name)
+						end
+					end
+				end
 			end
 		end
-		return result
+		return oldFireServer(self, unpack(args))
 	end)
-	_state.logger:info("Fighter:GetCameraData hooked for Silent Aim.")
+	_state.logger:info("Fighter:UseItem Remote hooked for Silent Aim.")
 end
 
 local function _setupSilentAim()
 	task.spawn(function()
-		_fetchFighterController(_state.logger)
-		if _state.fighterController then
-			local fighter = _state.fighterController:WaitForLocalFighter()
-			if fighter then
-				_hookFighter(fighter)
-			end
+		local replicatedStorage = game:GetService("ReplicatedStorage") :: any
+		local remote = replicatedStorage:WaitForChild("Remotes", 10)
+		if remote then
+			remote = (remote :: any):WaitForChild("Replication", 5)
+		end
+		if remote then
+			remote = (remote :: any):WaitForChild("Fighter", 5)
+		end
+		if remote then
+			remote = (remote :: any):WaitForChild("UseItem", 5)
+		end
 
-			-- Hook FighterAdded if necessary (depends on if Fighter objects are reused)
-			-- Based on rivals_src, new Fighter objects are created.
-			if _state.fighterController.ObjectAdded then
-				_state.fighterController.ObjectAdded:Connect(function(obj)
-					if obj.IsLocalPlayer then
-						task.defer(function()
-							local newFighter = _state.fighterController:WaitForLocalFighter()
-							if newFighter then
-								_hookFighter(newFighter)
-							end
-						end)
-					end
-				end)
-			end
+		if remote and remote:IsA("RemoteEvent") then
+			_hookRemote(remote :: RemoteEvent)
+		else
+			_state.logger:error("Failed to find UseItem remote for Silent Aim hook.")
 		end
 	end)
 end
