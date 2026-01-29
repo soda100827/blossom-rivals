@@ -415,10 +415,10 @@ local getfenvAny=getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib
 and g.getgenv then lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,
 'Drawing')end return lib end local function _fetchCameraController(logger)if
 _state.cameraController then return end local playerScripts=_getLocalPlayer():
-WaitForChild('PlayerScripts',5)if not playerScripts then return end local
-controllers=playerScripts:WaitForChild('Controllers',5)if not controllers then
+WaitForChild('PlayerScripts')if not playerScripts then return end local
+controllers=playerScripts:WaitForChild('Controllers')if not controllers then
 return end local camControllerScript=controllers:WaitForChild('CameraController'
-,5)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
+)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
 success,result=pcall(function()return require(camControllerScript)end)if success
 then _state.cameraController=result end end end local function _updateFovCircle(
 )local lib=_getDrawingLib()if not lib then return end local circle=_state.
@@ -451,7 +451,7 @@ not target.Character then return end local head=target.Character:FindFirstChild(
 'Head')if not head or not head:IsA('BasePart')then return end local camera=
 _getCamera()local targetPos=(head).Position local currentCFrame=camera.CFrame
 local lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)local x,y,_=
-lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)if _state.
+lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(y,x)if _state.
 smoothness>0 then local currentRot=(_state.cameraController.Rotation)local diff=
 targetRotation-currentRot local step=(1-_state.smoothness)local newRot=
 currentRot:Lerp(targetRotation,step)_state.cameraController:SetRotation(newRot)
@@ -473,22 +473,22 @@ _state.triggerKey)=='EnumItem'then if _state.triggerKey.EnumType==Enum.KeyCode
 then return UserInputService:IsKeyDown(_state.triggerKey)elseif _state.
 triggerKey.EnumType==Enum.UserInputType then return UserInputService:
 IsMouseButtonPressed(_state.triggerKey)end end return false end local function
-_connect()_maid:DoCleaning()_fetchCameraController(_state.logger)local runConn=
-RunService.RenderStepped:Connect(function()_updateFovCircle()if _state.
-isAimbotEnabled then _state.isAiming=_checkKeyDown()if _state.isAiming then
-local target=_getBestTarget()if target then _aimAt(target)end end end end)_maid:
-GiveTask(runConn)end local function _disconnect()if _state.fovCircle then pcall(
-function()((_state.fovCircle)):Remove()end)_state.fovCircle=nil end _maid:
-DoCleaning()end function Combat.init(self,client)_state.client=client _state.
-logger=client.Logger _maid=Maid.new()_connect()end function Combat.cleanup(self)
-_state.isAimbotEnabled=false _disconnect()end function Combat.setAimbotEnabled(
-self,isEnabled)_state.isAimbotEnabled=isEnabled end function Combat.
-setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end function Combat.
-setFovRadius(self,radius)_state.fovRadius=radius end function Combat.
-setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled end
-function Combat.setSmoothness(self,smoothness)_state.smoothness=smoothness end
-function Combat.setWallCheckEnabled(self,isEnabled)_state.isWallCheckEnabled=
-isEnabled end function Combat.setTriggerKey(self,key)_state.triggerKey=key end
+_connect()_maid:DoCleaning()task.spawn(function()_fetchCameraController(_state.
+logger)end)local runConn=RunService.RenderStepped:Connect(function()
+_updateFovCircle()if _state.isAimbotEnabled then _state.isAiming=_checkKeyDown()
+if _state.isAiming then local target=_getBestTarget()if target then _aimAt(
+target)end end end end)_maid:GiveTask(runConn)end local function _disconnect()if
+_state.fovCircle then pcall(function()((_state.fovCircle)):Remove()end)_state.
+fovCircle=nil end _maid:DoCleaning()end function Combat.init(self,client)_state.
+client=client _state.logger=client.Logger _maid=Maid.new()_connect()end function
+Combat.cleanup(self)_state.isAimbotEnabled=false _disconnect()end function
+Combat.setAimbotEnabled(self,isEnabled)_state.isAimbotEnabled=isEnabled end
+function Combat.setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end
+function Combat.setFovRadius(self,radius)_state.fovRadius=radius end function
+Combat.setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled
+end function Combat.setSmoothness(self,smoothness)_state.smoothness=smoothness
+end function Combat.setWallCheckEnabled(self,isEnabled)_state.isWallCheckEnabled
+=isEnabled end function Combat.setTriggerKey(self,key)_state.triggerKey=key end
 return Combat end function __DARKLUA_BUNDLE_MODULES.g()local v=
 __DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function

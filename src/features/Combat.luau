@@ -96,17 +96,17 @@ local function _fetchCameraController(logger: any)
 		return
 	end
 
-	local playerScripts = _getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	local playerScripts = _getLocalPlayer():WaitForChild("PlayerScripts")
 	if not playerScripts then
 		return
 	end
 
-	local controllers = playerScripts:WaitForChild("Controllers", 5)
+	local controllers = playerScripts:WaitForChild("Controllers")
 	if not controllers then
 		return
 	end
 
-	local camControllerScript = controllers:WaitForChild("CameraController", 5)
+	local camControllerScript = controllers:WaitForChild("CameraController")
 	if camControllerScript and camControllerScript:IsA("ModuleScript") then
 		local success, result = pcall(function()
 			return require(camControllerScript)
@@ -241,7 +241,7 @@ local function _aimAt(target: Player)
 	-- Roblox order: Y (Yaw), X (Pitch), Z (Roll) for EulerAngles?
 	-- ToOrientation returns (RX, RY, RZ).
 
-	local targetRotation = Vector2.new(x, y)
+	local targetRotation = Vector2.new(y, x)
 
 	-- Smoothness
 	if _state.smoothness > 0 then
@@ -308,7 +308,9 @@ end
 
 local function _connect()
 	_maid:DoCleaning()
-	_fetchCameraController(_state.logger)
+	task.spawn(function()
+		_fetchCameraController(_state.logger)
+	end)
 
 	local runConn = RunService.RenderStepped:Connect(function()
 		_updateFovCircle()
