@@ -175,7 +175,6 @@ local function _mount()
 	})
 
 	local tabs = {
-
 		combat = window:AddTab("Combat"),
 		visuals = window:AddTab("Visuals"),
 		misc = window:AddTab("Misc"),

@@ -390,24 +390,23 @@ then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
 Workspace=game:GetService('Workspace')local RunService=game:GetService(
 'RunService')local UserInputService=game:GetService('UserInputService')local
-TweenService=game:GetService('TweenService')local Maid=(__DARKLUA_BUNDLE_MODULES
-.b())local CONSTANTS={FOV_CIRCLE_COLOR=Color3.fromRGB(255,255,255),
-FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64}local Combat={}Combat.__index=
-Combat local _maid=nil local _state={client=nil,logger=nil,isAimbotEnabled=false
-,isFovEnabled=false,fovRadius=100,isTeamCheckEnabled=false,isWallCheckEnabled=
-false,smoothness=0,triggerKey=Enum.UserInputType.MouseButton2,target=nil,
-fovCircle=nil,cameraController=nil,isAiming=false}local function _getCamera()
-local camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
-WaitForChild('Camera'))end return camera end local function _getLocalPlayer()
-return Players.LocalPlayer end local function _getDrawingLib()local getfenvAny=
-getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib and g.getgenv then
-lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,'Drawing')end return
-lib end local function _fetchCameraController(logger)if _state.cameraController
-then return end local playerScripts=_getLocalPlayer():WaitForChild(
-'PlayerScripts',5)if not playerScripts then return end local controllers=
-playerScripts:WaitForChild('Controllers',5)if not controllers then return end
-local camControllerScript=controllers:WaitForChild('CameraController',5)if
-camControllerScript and camControllerScript:IsA('ModuleScript')then local
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local CONSTANTS={FOV_CIRCLE_COLOR=Color3.
+fromRGB(255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64}local Combat
+={}Combat.__index=Combat local _maid=nil local _state={client=nil,logger=nil,
+isAimbotEnabled=false,isFovEnabled=false,fovRadius=100,isTeamCheckEnabled=false,
+isWallCheckEnabled=false,smoothness=0,triggerKey=Enum.UserInputType.MouseButton2
+,target=nil,fovCircle=nil,cameraController=nil,isAiming=false}local function
+_getCamera()local camera=Workspace.CurrentCamera if not camera then camera=(
+Workspace:WaitForChild('Camera'))end return camera end local function
+_getLocalPlayer()return Players.LocalPlayer end local function _getDrawingLib()
+local getfenvAny=getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib
+and g.getgenv then lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,
+'Drawing')end return lib end local function _fetchCameraController(logger)if
+_state.cameraController then return end local playerScripts=_getLocalPlayer():
+WaitForChild('PlayerScripts',5)if not playerScripts then return end local
+controllers=playerScripts:WaitForChild('Controllers',5)if not controllers then
+return end local camControllerScript=controllers:WaitForChild('CameraController'
+,5)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
 success,result=pcall(function()return require(camControllerScript)end)if success
 then _state.cameraController=result if logger then logger:info(
 'CameraController found and required')end else if logger then logger:error(
