@@ -450,58 +450,59 @@ direction,raycastParams)if result then continue end end local screenPos,onScreen
 =camera:WorldToViewportPoint(headPart.Position)if not onScreen then continue end
 local distance=(Vector2.new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if
 distance<shortestDistance then shortestDistance=distance bestTarget=player end
-end return bestTarget end local function _aimAt(target)if not _state.
-cameraController then return end if not target.Character then return end local
-head=target.Character:FindFirstChild('Head')if not head or not head:IsA(
-'BasePart')then return end local camera=_getCamera()local targetPos=(head).
-Position local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(
-currentCFrame.Position,targetPos)local x,y,_=lookAtCFrame:ToOrientation()local
-targetRotation=Vector2.new(y,x)_state.logger:info('Aiming...',targetRotation)if
-_state.smoothness>0 then local currentRot=(_state.cameraController.Rotation)
-local diff=targetRotation-currentRot local step=(1-_state.smoothness)local
-newRot=currentRot:Lerp(targetRotation,step)_state.cameraController:SetRotation(
-newRot)else _state.cameraController:SetRotation(targetRotation)end end
-local function _handleInput(input)if not _state.triggerKey then return end local
-key=_state.triggerKey local isTrigger=false if input.UserInputType==Enum.
-UserInputType.Keyboard and input.KeyCode==key then isTrigger=true elseif input.
-UserInputType==Enum.UserInputType.MouseButton1 and key=='MouseButton1'then
-isTrigger=true elseif input.UserInputType==Enum.UserInputType.MouseButton2 and
-key=='MouseButton2'then isTrigger=true end if isTrigger then _state.isAiming=(
-input.UserInputState==Enum.UserInputState.Begin)end end local function
-_checkKeyDown()if type(_state.triggerKey)=='string'then local keyName=_state.
-triggerKey if keyName=='MouseButton1'then return UserInputService:
-IsMouseButtonPressed(Enum.UserInputType.MouseButton1)elseif keyName==
-'MouseButton2'then return UserInputService:IsMouseButtonPressed(Enum.
-UserInputType.MouseButton2)else local success,keyCode=pcall(function()return
-Enum.KeyCode[keyName]end)if success and keyCode then return UserInputService:
-IsKeyDown(keyCode)end end elseif typeof(_state.triggerKey)=='EnumItem'then if
-_state.triggerKey.EnumType==Enum.KeyCode then return UserInputService:IsKeyDown(
-_state.triggerKey)elseif _state.triggerKey.EnumType==Enum.UserInputType then
-return UserInputService:IsMouseButtonPressed(_state.triggerKey)end end return
-false end local function _connect()_maid:DoCleaning()task.spawn(function()
-_fetchCameraController(_state.logger)end)local runConn=RunService.RenderStepped:
-Connect(function()_updateFovCircle()if _state.isAimbotEnabled then _state.
-isAiming=_checkKeyDown()_throttleLog('Aimbot Status | Enabled:',_state.
-isAimbotEnabled,'Key:',_state.isAiming)if _state.isAiming then local target=
-_getBestTarget()if target then _state.logger:info('Target found:',target.Name)
-_aimAt(target)end end end end)_maid:GiveTask(runConn)end local function
-_disconnect()if _state.fovCircle then pcall(function()((_state.fovCircle)):
-Remove()end)_state.fovCircle=nil end _maid:DoCleaning()end function Combat.init(
-self,client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
-_connect()end function Combat.cleanup(self)_state.isAimbotEnabled=false
-_disconnect()end function Combat.setAimbotEnabled(self,isEnabled)_state.logger:
-info('Set Aimbot Enabled:',isEnabled)_state.isAimbotEnabled=isEnabled end
-function Combat.setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end
-function Combat.setFovRadius(self,radius)_state.fovRadius=radius end function
-Combat.setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled
-end function Combat.setSmoothness(self,smoothness)_state.smoothness=smoothness
-end function Combat.setWallCheckEnabled(self,isEnabled)_state.isWallCheckEnabled
-=isEnabled end function Combat.setTriggerKey(self,key)_state.triggerKey=key end
-return Combat end function __DARKLUA_BUNDLE_MODULES.g()local v=
-__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
-__modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+end return bestTarget end local function _aimAt(target)if not target.Character
+then return end local head=target.Character:FindFirstChild('Head')if not head or
+not head:IsA('BasePart')then return end local camera=_getCamera()local targetPos
+=(head).Position local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.
+lookAt(currentCFrame.Position,targetPos)if not _state.cameraController or not
+_state.cameraController.SetRotation then local alpha=if _state.smoothness>0 then
+(1-_state.smoothness)else 1 camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)
+return end local x,y,_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.
+new(y,x)_state.logger:info('Aiming...',targetRotation)if _state.smoothness>0
+then local currentRot=(_state.cameraController.Rotation)local diff=
+targetRotation-currentRot local step=(1-_state.smoothness)local newRot=
+currentRot:Lerp(targetRotation,step)_state.cameraController:SetRotation(newRot)
+else _state.cameraController:SetRotation(targetRotation)end end local function
+_handleInput(input)if not _state.triggerKey then return end local key=_state.
+triggerKey local isTrigger=false if input.UserInputType==Enum.UserInputType.
+Keyboard and input.KeyCode==key then isTrigger=true elseif input.UserInputType==
+Enum.UserInputType.MouseButton1 and key=='MouseButton1'then isTrigger=true
+elseif input.UserInputType==Enum.UserInputType.MouseButton2 and key==
+'MouseButton2'then isTrigger=true end if isTrigger then _state.isAiming=(input.
+UserInputState==Enum.UserInputState.Begin)end end local function _checkKeyDown()
+if type(_state.triggerKey)=='string'then local keyName=_state.triggerKey if
+keyName=='MouseButton1'then return UserInputService:IsMouseButtonPressed(Enum.
+UserInputType.MouseButton1)elseif keyName=='MouseButton2'then return
+UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)else local
+success,keyCode=pcall(function()return Enum.KeyCode[keyName]end)if success and
+keyCode then return UserInputService:IsKeyDown(keyCode)end end elseif typeof(
+_state.triggerKey)=='EnumItem'then if _state.triggerKey.EnumType==Enum.KeyCode
+then return UserInputService:IsKeyDown(_state.triggerKey)elseif _state.
+triggerKey.EnumType==Enum.UserInputType then return UserInputService:
+IsMouseButtonPressed(_state.triggerKey)end end return false end local function
+_connect()_maid:DoCleaning()task.spawn(function()_fetchCameraController(_state.
+logger)end)local runConn=RunService.RenderStepped:Connect(function()
+_updateFovCircle()_throttleLog('Aimbot Status | Enabled:',_state.isAimbotEnabled
+,'Key:',_state.isAiming)if _state.isAimbotEnabled then _state.isAiming=
+_checkKeyDown()if _state.isAiming then local target=_getBestTarget()if target
+then _state.logger:info('Target found:',target.Name)_aimAt(target)end end end
+end)_maid:GiveTask(runConn)end local function _disconnect()if _state.fovCircle
+then pcall(function()((_state.fovCircle)):Remove()end)_state.fovCircle=nil end
+_maid:DoCleaning()end function Combat.init(self,client)_state.client=client
+_state.logger=client.Logger _maid=Maid.new()_connect()end function Combat.
+cleanup(self)_state.isAimbotEnabled=false _disconnect()end function Combat.
+setAimbotEnabled(self,isEnabled)_state.logger:info('Set Aimbot Enabled:',
+isEnabled)_state.isAimbotEnabled=isEnabled end function Combat.setFovEnabled(
+self,isEnabled)_state.isFovEnabled=isEnabled end function Combat.setFovRadius(
+self,radius)_state.fovRadius=radius end function Combat.setTeamCheckEnabled(self
+,isEnabled)_state.isTeamCheckEnabled=isEnabled end function Combat.setSmoothness
+(self,smoothness)_state.smoothness=smoothness end function Combat.
+setWallCheckEnabled(self,isEnabled)_state.isWallCheckEnabled=isEnabled end
+function Combat.setTriggerKey(self,key)_state.triggerKey=key end return Combat
+end function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.
+g if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v
+.c end end do local function __modImpl()local RunService=game:GetService(
+'RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,

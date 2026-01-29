@@ -233,9 +233,6 @@ local function _getBestTarget(): Player?
 end
 
 local function _aimAt(target: Player)
-	if not _state.cameraController then
-		return
-	end
 	if not target.Character then
 		return
 	end
@@ -250,6 +247,12 @@ local function _aimAt(target: Player)
 	-- Calculate LookVector needed
 	local currentCFrame = camera.CFrame
 	local lookAtCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
+
+	if not _state.cameraController or not _state.cameraController.SetRotation then
+		local alpha = if _state.smoothness > 0 then (1 - _state.smoothness) else 1
+		camera.CFrame = currentCFrame:Lerp(lookAtCFrame, alpha)
+		return
+	end
 
 	-- We need to extract the Pitch (X) and Yaw (Y) rotation from this CFrame
 	-- CameraController:SetRotation(Vector2) logic usually calls for X and Y in radians
@@ -337,11 +340,11 @@ local function _connect()
 	local runConn = RunService.RenderStepped:Connect(function()
 		_updateFovCircle()
 
+		_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Key:", _state.isAiming)
+
 		if _state.isAimbotEnabled then
 			-- Check if key is held
 			_state.isAiming = _checkKeyDown()
-
-			_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Key:", _state.isAiming)
 
 			if _state.isAiming then
 				local target = _getBestTarget()
