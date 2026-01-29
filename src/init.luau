@@ -37,6 +37,7 @@ local MODULES: { { name: string, loader: Module } } = {
 	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
 	{ name = "Player", loader = require("src/features/Player") :: Module },
 	{ name = "Combat", loader = require("src/features/Combat") :: Module },
+	{ name = "UnlockAll", loader = require("src/features/UnlockAll") :: Module },
 	{ name = "Interface", loader = require("src/ui/Interface") :: Module },
 }
 

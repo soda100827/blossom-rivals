@@ -765,6 +765,14 @@ local function _mount()
 		end,
 	})
 
+	local unlockGroup = tabs.misc:AddLeftGroupbox("Unlock All")
+	unlockGroup:AddButton("Unlock All", function()
+		local mod = _state.client.Modules.UnlockAll
+		if mod and mod.run then
+			mod:run()
+		end
+	end)
+
 	_runAutoload(library, saveManager, false)
 end
 
