@@ -18,7 +18,7 @@ type CosmeticOptions = {
 export type UnlockAllFeature = {
 	init: (self: UnlockAllFeature, client: any) -> (),
 	cleanup: (self: UnlockAllFeature) -> (),
-	run: (self: UnlockAllFeature) -> (),
+	setEnabled: (self: UnlockAllFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state
@@ -29,7 +29,7 @@ local _maid = nil :: any
 local _state: {
 	client: any,
 	logger: any,
-	isActive: boolean,
+	isEnabled: boolean,
 	player: Player?,
 	controllers: Instance?,
 	enumLibrary: any?,
@@ -47,7 +47,7 @@ local _state: {
 	{
 		client = nil :: any,
 		logger = nil :: any,
-		isActive = false,
+		isEnabled = false,
 		player = nil,
 		controllers = nil,
 		enumLibrary = nil,
@@ -163,6 +163,15 @@ local function _patchCosmeticLibrary()
 		return
 	end
 
+	if not _state.originals.ownsCosmeticNormally then
+		_state.originals.ownsCosmeticNormally = cosmeticLibrary.OwnsCosmeticNormally
+	end
+	if not _state.originals.ownsCosmeticUniversally then
+		_state.originals.ownsCosmeticUniversally = cosmeticLibrary.OwnsCosmeticUniversally
+	end
+	if not _state.originals.ownsCosmeticForWeapon then
+		_state.originals.ownsCosmeticForWeapon = cosmeticLibrary.OwnsCosmeticForWeapon
+	end
 	cosmeticLibrary.OwnsCosmeticNormally = function()
 		return true
 	end
@@ -273,6 +282,9 @@ local function _hookNamecall()
 
 	local oldNamecall
 	oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+		if not _state.isEnabled then
+			return oldNamecall(self, ...)
+		end
 		if getnamecallmethod() ~= "FireServer" then
 			return oldNamecall(self, ...)
 		end
@@ -566,32 +578,15 @@ local function _connect()
 	_maid:DoCleaning()
 end
 
---// Public API
-function UnlockAll.init(self: UnlockAllFeature, client: any): ()
-	_state.client = client
-	_state.logger = client.Logger
-	_maid = Maid.new()
-	_connect()
-end
-
-function UnlockAll.cleanup(self: UnlockAllFeature): ()
-	if _maid then
-		_maid:DoCleaning()
+local function _ensureLoaded(): boolean
+	if _state.player then
+		return true
 	end
-	_state.isActive = false
-end
-
-function UnlockAll.run(self: UnlockAllFeature): ()
-	if _state.isActive then
-		return
-	end
-	_state.isActive = true
 
 	local player = Players.LocalPlayer
 	if not player then
 		_state.logger:warn("UnlockAll: LocalPlayer missing.")
-		_state.isActive = false
-		return
+		return false
 	end
 	_state.player = player
 
@@ -610,13 +605,26 @@ function UnlockAll.run(self: UnlockAllFeature): ()
 	_state.dataController = require(controllers:WaitForChild("PlayerDataController", 10))
 	if not _state.dataController then
 		_state.logger:warn("UnlockAll: DataController missing.")
-		_state.isActive = false
-		return
+		return false
 	end
 
 	pcall(function()
 		_state.fighterController = require(controllers:WaitForChild("FighterController", 10))
 	end)
+
+	return true
+end
+
+local function _enable()
+	if _state.isEnabled then
+		return
+	end
+	_state.isEnabled = true
+
+	if not _ensureLoaded() then
+		_state.isEnabled = false
+		return
+	end
 
 	_patchCosmeticLibrary()
 	_patchDataController()
@@ -627,6 +635,146 @@ function UnlockAll.run(self: UnlockAllFeature): ()
 	_patchViewProfile()
 	_patchClientEntity()
 	_loadConfig()
+end
+
+local function _restoreCosmeticLibrary()
+	local cosmeticLibrary = _state.cosmeticLibrary
+	if not cosmeticLibrary then
+		return
+	end
+	if _state.originals.ownsCosmeticNormally then
+		cosmeticLibrary.OwnsCosmeticNormally = _state.originals.ownsCosmeticNormally
+	end
+	if _state.originals.ownsCosmeticUniversally then
+		cosmeticLibrary.OwnsCosmeticUniversally = _state.originals.ownsCosmeticUniversally
+	end
+	if _state.originals.ownsCosmeticForWeapon then
+		cosmeticLibrary.OwnsCosmeticForWeapon = _state.originals.ownsCosmeticForWeapon
+	end
+	if _state.originals.ownsCosmetic then
+		cosmeticLibrary.OwnsCosmetic = _state.originals.ownsCosmetic
+	end
+end
+
+local function _restoreDataController()
+	local dataController = _state.dataController
+	if not dataController then
+		return
+	end
+	if _state.originals.dataGet then
+		dataController.Get = _state.originals.dataGet
+	end
+	if _state.originals.dataGetWeaponData then
+		dataController.GetWeaponData = _state.originals.dataGetWeaponData
+	end
+end
+
+local function _restoreClientItem()
+	local player = _state.player
+	if not player then
+		return
+	end
+	if _state.originals.createViewModel then
+		local success, clientItem = pcall(function()
+			return require(player.PlayerScripts.Modules.ClientReplicatedClasses.ClientFighter.ClientItem)
+		end)
+		if success and clientItem then
+			clientItem._CreateViewModel = _state.originals.createViewModel
+		end
+	end
+end
+
+local function _restoreClientViewModel()
+	local player = _state.player
+	if not player then
+		return
+	end
+	local viewModelModule =
+		player.PlayerScripts.Modules.ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild("ClientViewModel")
+	if not viewModelModule then
+		return
+	end
+	local clientViewModel = require(viewModelModule)
+	if _state.originals.getWrap then
+		clientViewModel.GetWrap = _state.originals.getWrap
+	end
+	if _state.originals.viewModelNew then
+		clientViewModel.new = _state.originals.viewModelNew
+	end
+end
+
+local function _restoreItemLibrary()
+	local itemLibrary = _state.itemLibrary
+	if not itemLibrary then
+		return
+	end
+	if _state.originals.getViewModelImage then
+		itemLibrary.GetViewModelImageFromWeaponData = _state.originals.getViewModelImage
+	end
+end
+
+local function _restoreViewProfile()
+	local player = _state.player
+	if not player then
+		return
+	end
+	local success, viewProfile = pcall(function()
+		return require(player.PlayerScripts.Modules.Pages.ViewProfile)
+	end)
+	if success and viewProfile and _state.originals.viewProfileFetch then
+		viewProfile.Fetch = _state.originals.viewProfileFetch
+	end
+end
+
+local function _restoreClientEntity()
+	local player = _state.player
+	if not player then
+		return
+	end
+	local success, clientEntity = pcall(function()
+		return require(player.PlayerScripts.Modules.ClientReplicatedClasses.ClientEntity)
+	end)
+	if success and clientEntity and _state.originals.replicateFromServer then
+		clientEntity.ReplicateFromServer = _state.originals.replicateFromServer
+	end
+end
+
+local function _disable()
+	if not _state.isEnabled then
+		return
+	end
+	_state.isEnabled = false
+
+	_restoreCosmeticLibrary()
+	_restoreDataController()
+	_restoreClientItem()
+	_restoreClientViewModel()
+	_restoreItemLibrary()
+	_restoreViewProfile()
+	_restoreClientEntity()
+end
+
+--// Public API
+function UnlockAll.init(self: UnlockAllFeature, client: any): ()
+	_state.client = client
+	_state.logger = client.Logger
+	_maid = Maid.new()
+	_connect()
+end
+
+function UnlockAll.cleanup(self: UnlockAllFeature): ()
+	if _maid then
+		_maid:DoCleaning()
+	end
+	_disable()
+end
+
+function UnlockAll.setEnabled(self: UnlockAllFeature, isEnabled: boolean): ()
+	if isEnabled then
+		_enable()
+	else
+		_disable()
+	end
 end
 
 return UnlockAll

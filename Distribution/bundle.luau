@@ -530,7 +530,7 @@ then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
 ReplicatedStorage=game:GetService('ReplicatedStorage')local Maid=(
 __DARKLUA_BUNDLE_MODULES.b())local UnlockAll={}UnlockAll.__index=UnlockAll local
-_maid=nil local _state={client=nil,logger=nil,isActive=false,player=nil,
+_maid=nil local _state={client=nil,logger=nil,isEnabled=false,player=nil,
 controllers=nil,enumLibrary=nil,cosmeticLibrary=nil,itemLibrary=nil,
 dataController=nil,fighterController=nil,equipped={},favorites={},
 constructingWeapon=nil,viewingProfile=nil,lastUsedWeapon=nil,originals={}}local
@@ -561,7 +561,12 @@ _cloneCosmetic(cosmeticData.name,cosmeticType,{inverted=cosmeticData.inverted})
 if cloned then cloned.Seed=cosmeticData.seed _state.equipped[weapon][
 cosmeticType]=cloned end end end end _state.favorites=config.favorites or{}end
 local function _patchCosmeticLibrary()local cosmeticLibrary=_state.
-cosmeticLibrary if not cosmeticLibrary then return end cosmeticLibrary.
+cosmeticLibrary if not cosmeticLibrary then return end if not _state.originals.
+ownsCosmeticNormally then _state.originals.ownsCosmeticNormally=cosmeticLibrary.
+OwnsCosmeticNormally end if not _state.originals.ownsCosmeticUniversally then
+_state.originals.ownsCosmeticUniversally=cosmeticLibrary.OwnsCosmeticUniversally
+end if not _state.originals.ownsCosmeticForWeapon then _state.originals.
+ownsCosmeticForWeapon=cosmeticLibrary.OwnsCosmeticForWeapon end cosmeticLibrary.
 OwnsCosmeticNormally=function()return true end cosmeticLibrary.
 OwnsCosmeticUniversally=function()return true end cosmeticLibrary.
 OwnsCosmeticForWeapon=function()return true end if not _state.originals.
@@ -598,93 +603,93 @@ local replicationRemotes=remotes and remotes:FindFirstChild('Replication')local
 fighterRemotes=replicationRemotes and replicationRemotes:FindFirstChild(
 'Fighter')local useItemRemote=fighterRemotes and fighterRemotes:FindFirstChild(
 'UseItem')if not equipRemote then return end local oldNamecall oldNamecall=
-hookmetamethod(game,'__namecall',function(self,...)if getnamecallmethod()~=
-'FireServer'then return oldNamecall(self,...)end local args={...}if
-useItemRemote and self==useItemRemote then local objectID=args[1]local
-fighterController=_state.fighterController local player=_state.player if
-fighterController and player then pcall(function()local fighter=
-fighterController:GetFighter(player)if fighter and fighter.Items then for _,item
-in pairs(fighter.Items)do if item:Get('ObjectID')==objectID then _state.
-lastUsedWeapon=item.Name break end end end end)end end if self==equipRemote then
-local weaponName=args[1]local cosmeticType=args[2]local cosmeticName=args[3]
-local options=args[4]or{}if cosmeticName and cosmeticName~='None'and
-cosmeticName~=''then local inventory=_state.dataController and _state.
-dataController:Get('CosmeticInventory')if inventory and rawget(inventory,
-cosmeticName)then return oldNamecall(self,...)end end _state.equipped[weaponName
-]=_state.equipped[weaponName]or{}if not cosmeticName or cosmeticName=='None'or
-cosmeticName==''then _state.equipped[weaponName][cosmeticType]=nil if not next(
-_state.equipped[weaponName])then _state.equipped[weaponName]=nil end else local
-cloned=_cloneCosmetic(cosmeticName,cosmeticType,{inverted=options.IsInverted,
-favoritesOnly=options.OnlyUseFavorites})if cloned then _state.equipped[
-weaponName][cosmeticType]=cloned end end task.defer(function()pcall(function()
-_state.dataController.CurrentData:Replicate('WeaponInventory')end)task.wait(0.2)
-_saveConfig()end)return end if self==favoriteRemote then _state.favorites[args[1
-] ]=_state.favorites[args[1] ]or{}_state.favorites[args[1] ][args[2] ]=args[3]or
-nil _saveConfig()task.spawn(function()pcall(function()_state.dataController.
-CurrentData:Replicate('FavoritedCosmetics')end)end)return end return
-oldNamecall(self,...)end)_state.originals.namecall=oldNamecall end
-local function _patchClientItem()local player=_state.player if not player then
-return end local success,clientItem=pcall(function()return require(player.
-PlayerScripts.Modules.ClientReplicatedClasses.ClientFighter.ClientItem)end)if
-not success or not clientItem or not clientItem._CreateViewModel then return end
-if _state.originals.createViewModel then return end _state.originals.
-createViewModel=clientItem._CreateViewModel clientItem._CreateViewModel=function
-(self,viewmodelRef)local weaponName=self.Name local weaponPlayer=self.
-ClientFighter and self.ClientFighter.Player _state.constructingWeapon=(
-weaponPlayer==player)and weaponName or nil local hasSkin=_state.equipped[
-weaponName]and _state.equipped[weaponName].Skin if weaponPlayer==player and
-hasSkin and viewmodelRef then local dataKey=self:ToEnum('Data')local skinKey=
-self:ToEnum('Skin')local nameKey=self:ToEnum('Name')if viewmodelRef[dataKey]then
-viewmodelRef[dataKey][skinKey]=_state.equipped[weaponName].Skin viewmodelRef[
-dataKey][nameKey]=_state.equipped[weaponName].Skin.Name elseif viewmodelRef.Data
-then viewmodelRef.Data.Skin=_state.equipped[weaponName].Skin viewmodelRef.Data.
-Name=_state.equipped[weaponName].Skin.Name end end local result=_state.originals
-.createViewModel(self,viewmodelRef)_state.constructingWeapon=nil return result
-end end local function _patchClientViewModel()local player=_state.player if not
-player then return end local viewModelModule=player.PlayerScripts.Modules.
-ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild(
-'ClientViewModel')if not viewModelModule then return end local clientViewModel=
-require(viewModelModule)if clientViewModel.GetWrap and not _state.originals.
-getWrap then _state.originals.getWrap=clientViewModel.GetWrap clientViewModel.
-GetWrap=function(self)local weaponName=self.ClientItem and self.ClientItem.Name
-local weaponPlayer=self.ClientItem and self.ClientItem.ClientFighter and self.
-ClientItem.ClientFighter.Player if weaponName and weaponPlayer==player and
-_state.equipped[weaponName]and _state.equipped[weaponName].Wrap then return
-_state.equipped[weaponName].Wrap end return _state.originals.getWrap(self)end
-end if not _state.originals.viewModelNew then _state.originals.viewModelNew=
-clientViewModel.new clientViewModel.new=function(replicatedData,clientItem)local
-weaponPlayer=clientItem.ClientFighter and clientItem.ClientFighter.Player local
-weaponName=_state.constructingWeapon or clientItem.Name if weaponPlayer==player
-and _state.equipped[weaponName]then local replicatedClass=require(
-ReplicatedStorage.Modules.ReplicatedClass)local dataKey=replicatedClass:ToEnum(
-'Data')replicatedData[dataKey]=replicatedData[dataKey]or{}local cosmetics=_state
-.equipped[weaponName]if cosmetics.Skin then replicatedData[dataKey][
-replicatedClass:ToEnum('Skin')]=cosmetics.Skin end if cosmetics.Wrap then
-replicatedData[dataKey][replicatedClass:ToEnum('Wrap')]=cosmetics.Wrap end if
-cosmetics.Charm then replicatedData[dataKey][replicatedClass:ToEnum('Charm')]=
-cosmetics.Charm end end local result=_state.originals.viewModelNew(
-replicatedData,clientItem)local hasWrap=_state.equipped[weaponName]and _state.
-equipped[weaponName].Wrap if weaponPlayer==player and hasWrap and result.
-_UpdateWrap then result:_UpdateWrap()task.delay(0.1,function()if not result.
-_destroyed then result:_UpdateWrap()end end)end return result end end end
-local function _patchItemLibrary()local itemLibrary=_state.itemLibrary if not
-itemLibrary or _state.originals.getViewModelImage then return end _state.
-originals.getViewModelImage=itemLibrary.GetViewModelImageFromWeaponData
-itemLibrary.GetViewModelImageFromWeaponData=function(self,weaponData,highRes)if
-not weaponData then return _state.originals.getViewModelImage(self,weaponData,
-highRes)end local weaponName=weaponData.Name local shouldShowSkin=false if
-weaponData.Skin and _state.equipped[weaponName]then shouldShowSkin=weaponData.
-Skin==_state.equipped[weaponName].Skin elseif _state.viewingProfile==_state.
-player and _state.equipped[weaponName]then shouldShowSkin=_state.equipped[
-weaponName].Skin~=nil end if shouldShowSkin and _state.equipped[weaponName]and
-_state.equipped[weaponName].Skin then local skinInfo=self.ViewModels[_state.
-equipped[weaponName].Skin.Name]if skinInfo then return skinInfo[highRes and
-'ImageHighResolution'or'Image']or skinInfo.Image end end return _state.originals
-.getViewModelImage(self,weaponData,highRes)end end local function
-_patchViewProfile()local player=_state.player if not player then return end
-local success,viewProfile=pcall(function()return require(player.PlayerScripts.
-Modules.Pages.ViewProfile)end)if not success or not viewProfile or not
-viewProfile.Fetch then return end if _state.originals.viewProfileFetch then
+hookmetamethod(game,'__namecall',function(self,...)if not _state.isEnabled then
+return oldNamecall(self,...)end if getnamecallmethod()~='FireServer'then return
+oldNamecall(self,...)end local args={...}if useItemRemote and self==
+useItemRemote then local objectID=args[1]local fighterController=_state.
+fighterController local player=_state.player if fighterController and player
+then pcall(function()local fighter=fighterController:GetFighter(player)if
+fighter and fighter.Items then for _,item in pairs(fighter.Items)do if item:Get(
+'ObjectID')==objectID then _state.lastUsedWeapon=item.Name break end end end end
+)end end if self==equipRemote then local weaponName=args[1]local cosmeticType=
+args[2]local cosmeticName=args[3]local options=args[4]or{}if cosmeticName and
+cosmeticName~='None'and cosmeticName~=''then local inventory=_state.
+dataController and _state.dataController:Get('CosmeticInventory')if inventory
+and rawget(inventory,cosmeticName)then return oldNamecall(self,...)end end
+_state.equipped[weaponName]=_state.equipped[weaponName]or{}if not cosmeticName
+or cosmeticName=='None'or cosmeticName==''then _state.equipped[weaponName][
+cosmeticType]=nil if not next(_state.equipped[weaponName])then _state.equipped[
+weaponName]=nil end else local cloned=_cloneCosmetic(cosmeticName,cosmeticType,{
+inverted=options.IsInverted,favoritesOnly=options.OnlyUseFavorites})if cloned
+then _state.equipped[weaponName][cosmeticType]=cloned end end task.defer(
+function()pcall(function()_state.dataController.CurrentData:Replicate(
+'WeaponInventory')end)task.wait(0.2)_saveConfig()end)return end if self==
+favoriteRemote then _state.favorites[args[1] ]=_state.favorites[args[1] ]or{}
+_state.favorites[args[1] ][args[2] ]=args[3]or nil _saveConfig()task.spawn(
+function()pcall(function()_state.dataController.CurrentData:Replicate(
+'FavoritedCosmetics')end)end)return end return oldNamecall(self,...)end)_state.
+originals.namecall=oldNamecall end local function _patchClientItem()local player
+=_state.player if not player then return end local success,clientItem=pcall(
+function()return require(player.PlayerScripts.Modules.ClientReplicatedClasses.
+ClientFighter.ClientItem)end)if not success or not clientItem or not clientItem.
+_CreateViewModel then return end if _state.originals.createViewModel then return
+end _state.originals.createViewModel=clientItem._CreateViewModel clientItem.
+_CreateViewModel=function(self,viewmodelRef)local weaponName=self.Name local
+weaponPlayer=self.ClientFighter and self.ClientFighter.Player _state.
+constructingWeapon=(weaponPlayer==player)and weaponName or nil local hasSkin=
+_state.equipped[weaponName]and _state.equipped[weaponName].Skin if weaponPlayer
+==player and hasSkin and viewmodelRef then local dataKey=self:ToEnum('Data')
+local skinKey=self:ToEnum('Skin')local nameKey=self:ToEnum('Name')if
+viewmodelRef[dataKey]then viewmodelRef[dataKey][skinKey]=_state.equipped[
+weaponName].Skin viewmodelRef[dataKey][nameKey]=_state.equipped[weaponName].Skin
+.Name elseif viewmodelRef.Data then viewmodelRef.Data.Skin=_state.equipped[
+weaponName].Skin viewmodelRef.Data.Name=_state.equipped[weaponName].Skin.Name
+end end local result=_state.originals.createViewModel(self,viewmodelRef)_state.
+constructingWeapon=nil return result end end local function
+_patchClientViewModel()local player=_state.player if not player then return end
+local viewModelModule=player.PlayerScripts.Modules.ClientReplicatedClasses.
+ClientFighter.ClientItem:FindFirstChild('ClientViewModel')if not viewModelModule
+then return end local clientViewModel=require(viewModelModule)if clientViewModel
+.GetWrap and not _state.originals.getWrap then _state.originals.getWrap=
+clientViewModel.GetWrap clientViewModel.GetWrap=function(self)local weaponName=
+self.ClientItem and self.ClientItem.Name local weaponPlayer=self.ClientItem and
+self.ClientItem.ClientFighter and self.ClientItem.ClientFighter.Player if
+weaponName and weaponPlayer==player and _state.equipped[weaponName]and _state.
+equipped[weaponName].Wrap then return _state.equipped[weaponName].Wrap end
+return _state.originals.getWrap(self)end end if not _state.originals.
+viewModelNew then _state.originals.viewModelNew=clientViewModel.new
+clientViewModel.new=function(replicatedData,clientItem)local weaponPlayer=
+clientItem.ClientFighter and clientItem.ClientFighter.Player local weaponName=
+_state.constructingWeapon or clientItem.Name if weaponPlayer==player and _state.
+equipped[weaponName]then local replicatedClass=require(ReplicatedStorage.Modules
+.ReplicatedClass)local dataKey=replicatedClass:ToEnum('Data')replicatedData[
+dataKey]=replicatedData[dataKey]or{}local cosmetics=_state.equipped[weaponName]
+if cosmetics.Skin then replicatedData[dataKey][replicatedClass:ToEnum('Skin')]=
+cosmetics.Skin end if cosmetics.Wrap then replicatedData[dataKey][
+replicatedClass:ToEnum('Wrap')]=cosmetics.Wrap end if cosmetics.Charm then
+replicatedData[dataKey][replicatedClass:ToEnum('Charm')]=cosmetics.Charm end end
+local result=_state.originals.viewModelNew(replicatedData,clientItem)local
+hasWrap=_state.equipped[weaponName]and _state.equipped[weaponName].Wrap if
+weaponPlayer==player and hasWrap and result._UpdateWrap then result:_UpdateWrap(
+)task.delay(0.1,function()if not result._destroyed then result:_UpdateWrap()end
+end)end return result end end end local function _patchItemLibrary()local
+itemLibrary=_state.itemLibrary if not itemLibrary or _state.originals.
+getViewModelImage then return end _state.originals.getViewModelImage=itemLibrary
+.GetViewModelImageFromWeaponData itemLibrary.GetViewModelImageFromWeaponData=
+function(self,weaponData,highRes)if not weaponData then return _state.originals.
+getViewModelImage(self,weaponData,highRes)end local weaponName=weaponData.Name
+local shouldShowSkin=false if weaponData.Skin and _state.equipped[weaponName]
+then shouldShowSkin=weaponData.Skin==_state.equipped[weaponName].Skin elseif
+_state.viewingProfile==_state.player and _state.equipped[weaponName]then
+shouldShowSkin=_state.equipped[weaponName].Skin~=nil end if shouldShowSkin and
+_state.equipped[weaponName]and _state.equipped[weaponName].Skin then local
+skinInfo=self.ViewModels[_state.equipped[weaponName].Skin.Name]if skinInfo then
+return skinInfo[highRes and'ImageHighResolution'or'Image']or skinInfo.Image end
+end return _state.originals.getViewModelImage(self,weaponData,highRes)end end
+local function _patchViewProfile()local player=_state.player if not player then
+return end local success,viewProfile=pcall(function()return require(player.
+PlayerScripts.Modules.Pages.ViewProfile)end)if not success or not viewProfile or
+not viewProfile.Fetch then return end if _state.originals.viewProfileFetch then
 return end _state.originals.viewProfileFetch=viewProfile.Fetch viewProfile.Fetch
 =function(self,targetPlayer)_state.viewingProfile=targetPlayer return _state.
 originals.viewProfileFetch(self,targetPlayer)end end local function
@@ -709,30 +714,72 @@ enumLibrary.ToEnum,_state.enumLibrary,finisherData.Name)if ok and result then
 finisherEnum=result end end if finisherEnum then args[1]=finisherEnum return
 _state.originals.replicateFromServer(self,action,table.unpack(args))end end end
 return _state.originals.replicateFromServer(self,action,...)end end
-local function _connect()_maid:DoCleaning()end function UnlockAll.init(self,
-client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
-_connect()end function UnlockAll.cleanup(self)if _maid then _maid:DoCleaning()
-end _state.isActive=false end function UnlockAll.run(self)if _state.isActive
-then return end _state.isActive=true local player=Players.LocalPlayer if not
-player then _state.logger:warn('UnlockAll: LocalPlayer missing.')_state.isActive
-=false return end _state.player=player local playerScripts=player:WaitForChild(
-'PlayerScripts')local controllers=playerScripts:WaitForChild('Controllers')
-_state.controllers=controllers local enumLibrary=require(ReplicatedStorage.
-Modules:WaitForChild('EnumLibrary',10))if enumLibrary then enumLibrary:
-WaitForEnumBuilder()end _state.enumLibrary=enumLibrary _state.cosmeticLibrary=
-require(ReplicatedStorage.Modules:WaitForChild('CosmeticLibrary',10))_state.
-itemLibrary=require(ReplicatedStorage.Modules:WaitForChild('ItemLibrary',10))
-_state.dataController=require(controllers:WaitForChild('PlayerDataController',10
-))if not _state.dataController then _state.logger:warn(
-'UnlockAll: DataController missing.')_state.isActive=false return end pcall(
-function()_state.fighterController=require(controllers:WaitForChild(
-'FighterController',10))end)_patchCosmeticLibrary()_patchDataController()
-_hookNamecall()_patchClientItem()_patchClientViewModel()_patchItemLibrary()
-_patchViewProfile()_patchClientEntity()_loadConfig()end return UnlockAll end
-function __DARKLUA_BUNDLE_MODULES.h()local v=__DARKLUA_BUNDLE_MODULES.cache.h if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c
-end end do local function __modImpl()local RunService=game:GetService(
-'RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+local function _connect()_maid:DoCleaning()end local function _ensureLoaded()if
+_state.player then return true end local player=Players.LocalPlayer if not
+player then _state.logger:warn('UnlockAll: LocalPlayer missing.')return false
+end _state.player=player local playerScripts=player:WaitForChild('PlayerScripts'
+)local controllers=playerScripts:WaitForChild('Controllers')_state.controllers=
+controllers local enumLibrary=require(ReplicatedStorage.Modules:WaitForChild(
+'EnumLibrary',10))if enumLibrary then enumLibrary:WaitForEnumBuilder()end _state
+.enumLibrary=enumLibrary _state.cosmeticLibrary=require(ReplicatedStorage.
+Modules:WaitForChild('CosmeticLibrary',10))_state.itemLibrary=require(
+ReplicatedStorage.Modules:WaitForChild('ItemLibrary',10))_state.dataController=
+require(controllers:WaitForChild('PlayerDataController',10))if not _state.
+dataController then _state.logger:warn('UnlockAll: DataController missing.')
+return false end pcall(function()_state.fighterController=require(controllers:
+WaitForChild('FighterController',10))end)return true end local function _enable(
+)if _state.isEnabled then return end _state.isEnabled=true if not _ensureLoaded(
+)then _state.isEnabled=false return end _patchCosmeticLibrary()
+_patchDataController()_hookNamecall()_patchClientItem()_patchClientViewModel()
+_patchItemLibrary()_patchViewProfile()_patchClientEntity()_loadConfig()end
+local function _restoreCosmeticLibrary()local cosmeticLibrary=_state.
+cosmeticLibrary if not cosmeticLibrary then return end if _state.originals.
+ownsCosmeticNormally then cosmeticLibrary.OwnsCosmeticNormally=_state.originals.
+ownsCosmeticNormally end if _state.originals.ownsCosmeticUniversally then
+cosmeticLibrary.OwnsCosmeticUniversally=_state.originals.ownsCosmeticUniversally
+end if _state.originals.ownsCosmeticForWeapon then cosmeticLibrary.
+OwnsCosmeticForWeapon=_state.originals.ownsCosmeticForWeapon end if _state.
+originals.ownsCosmetic then cosmeticLibrary.OwnsCosmetic=_state.originals.
+ownsCosmetic end end local function _restoreDataController()local dataController
+=_state.dataController if not dataController then return end if _state.originals
+.dataGet then dataController.Get=_state.originals.dataGet end if _state.
+originals.dataGetWeaponData then dataController.GetWeaponData=_state.originals.
+dataGetWeaponData end end local function _restoreClientItem()local player=_state
+.player if not player then return end if _state.originals.createViewModel then
+local success,clientItem=pcall(function()return require(player.PlayerScripts.
+Modules.ClientReplicatedClasses.ClientFighter.ClientItem)end)if success and
+clientItem then clientItem._CreateViewModel=_state.originals.createViewModel end
+end end local function _restoreClientViewModel()local player=_state.player if
+not player then return end local viewModelModule=player.PlayerScripts.Modules.
+ClientReplicatedClasses.ClientFighter.ClientItem:FindFirstChild(
+'ClientViewModel')if not viewModelModule then return end local clientViewModel=
+require(viewModelModule)if _state.originals.getWrap then clientViewModel.GetWrap
+=_state.originals.getWrap end if _state.originals.viewModelNew then
+clientViewModel.new=_state.originals.viewModelNew end end local function
+_restoreItemLibrary()local itemLibrary=_state.itemLibrary if not itemLibrary
+then return end if _state.originals.getViewModelImage then itemLibrary.
+GetViewModelImageFromWeaponData=_state.originals.getViewModelImage end end
+local function _restoreViewProfile()local player=_state.player if not player
+then return end local success,viewProfile=pcall(function()return require(player.
+PlayerScripts.Modules.Pages.ViewProfile)end)if success and viewProfile and
+_state.originals.viewProfileFetch then viewProfile.Fetch=_state.originals.
+viewProfileFetch end end local function _restoreClientEntity()local player=
+_state.player if not player then return end local success,clientEntity=pcall(
+function()return require(player.PlayerScripts.Modules.ClientReplicatedClasses.
+ClientEntity)end)if success and clientEntity and _state.originals.
+replicateFromServer then clientEntity.ReplicateFromServer=_state.originals.
+replicateFromServer end end local function _disable()if not _state.isEnabled
+then return end _state.isEnabled=false _restoreCosmeticLibrary()
+_restoreDataController()_restoreClientItem()_restoreClientViewModel()
+_restoreItemLibrary()_restoreViewProfile()_restoreClientEntity()end function
+UnlockAll.init(self,client)_state.client=client _state.logger=client.Logger
+_maid=Maid.new()_connect()end function UnlockAll.cleanup(self)if _maid then
+_maid:DoCleaning()end _disable()end function UnlockAll.setEnabled(self,isEnabled
+)if isEnabled then _enable()else _disable()end end return UnlockAll end function
+__DARKLUA_BUNDLE_MODULES.h()local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -929,9 +976,10 @@ miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=
 function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
 AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
 enabled)_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
-local unlockGroup=tabs.misc:AddLeftGroupbox('Unlock All')unlockGroup:AddButton(
-'Unlock All',function()local mod=_state.client.Modules.UnlockAll if mod and mod.
-run then mod:run()end end)_runAutoload(library,saveManager,false)end function
+local unlockGroup=tabs.misc:AddLeftGroupbox('Unlock All')unlockGroup:AddToggle(
+'UnlockAllToggle',{Text='Unlock All',Default=false,Callback=function(state)local
+mod=_state.client.Modules.UnlockAll if mod and mod.setEnabled then mod:
+setEnabled(state)end end})_runAutoload(library,saveManager,false)end function
 Interface.init(self,client)_state.client=client _state.logger=client.Logger
 _maid=Maid.new()_connect()_mount()end function Interface.cleanup(self)_maid:
 DoCleaning()if _state.library then _state.library:Unload()end _state.isMounted=
@@ -960,15 +1008,19 @@ __DARKLUA_BUNDLE_MODULES.i())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
 BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
 Signal.new(),stopped=Signal.new()}local _modules={}local function
-_disableAnalyticsPipeline(logger)local hookfunction=getGlobal('hookfunction')if
-not hookfunction then return end pcall(function()local controller=
+_disableAnalyticsPipeline(logger)pcall(function()local controller=
 ReplicatedFirst:FindFirstChild('AnalyticsPipelineController')if not controller
 then controller=ReplicatedFirst:WaitForChild('AnalyticsPipelineController',10)
-end if not controller then return end local pipeline=controller:FindFirstChild(
-'AnalyticsPipeline')if not(pipeline and pipeline:IsA('ModuleScript'))then return
-end local originalRequire originalRequire=hookfunction(require,function(module,
-...)if module==pipeline then return function()end end return(originalRequire)(
-module,...)end)logger:info('AnalyticsPipeline stubbed.')end)end local function
+end if controller and controller:IsA('LocalScript')then(controller).Disabled=
+true end end)local hookfunction=getGlobal('hookfunction')if not hookfunction
+then return end pcall(function()local controller=ReplicatedFirst:FindFirstChild(
+'AnalyticsPipelineController')if not controller then controller=ReplicatedFirst:
+WaitForChild('AnalyticsPipelineController',10)end if not controller then return
+end local pipeline=controller:FindFirstChild('AnalyticsPipeline')if not(pipeline
+and pipeline:IsA('ModuleScript'))then return end local originalRequire
+originalRequire=hookfunction(require,function(module,...)if module==pipeline
+then return function()end end return(originalRequire)(module,...)end)logger:
+info('AnalyticsPipeline disabled and stubbed.')end)end local function
 _loadUnlockAllConfig()local readfile=getGlobal('readfile')local isfile=
 getGlobal('isfile')if not readfile or not isfile or not isfile(
 UNLOCK_ALL_SAVE_FILE)then return nil end local ok,config=pcall(function()return

@@ -79,7 +79,7 @@ export type BlossomClient = {
 	loadModule: (self: BlossomClient, name: string, moduleOrPath: ModuleOrPath) -> (),
 	setTeleportQueue: (self: BlossomClient, shouldEnable: boolean) -> (),
 	setSilent: (self: BlossomClient, isSilent: boolean) -> (),
-	loadUnlockAllConfig: (self: BlossomClient) -> ({ [string]: any }?),
+	loadUnlockAllConfig: (self: BlossomClient) -> { [string]: any }?,
 	saveUnlockAllConfig: (self: BlossomClient, equipped: { [string]: any }, favorites: { [string]: any }) -> (),
 	start: (self: BlossomClient) -> (),
 	destroy: (self: BlossomClient) -> (),
@@ -109,6 +109,16 @@ local _modules: { [string]: Module } = {}
 
 --// Private helpers
 local function _disableAnalyticsPipeline(logger: LoggerInstance)
+	pcall(function()
+		local controller = ReplicatedFirst:FindFirstChild("AnalyticsPipelineController")
+		if not controller then
+			controller = ReplicatedFirst:WaitForChild("AnalyticsPipelineController", 10)
+		end
+		if controller and controller:IsA("LocalScript") then
+			(controller :: any).Disabled = true
+		end
+	end)
+
 	local hookfunction = getGlobal("hookfunction")
 	if not hookfunction then
 		return
@@ -134,7 +144,7 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 			end
 			return (originalRequire :: any)(module, ...)
 		end)
-		logger:info("AnalyticsPipeline stubbed.")
+		logger:info("AnalyticsPipeline disabled and stubbed.")
 	end)
 end
 
@@ -303,7 +313,7 @@ function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
 	end
 end
 
-function Client.loadUnlockAllConfig(self: BlossomClient): ({ [string]: any }?)
+function Client.loadUnlockAllConfig(self: BlossomClient): { [string]: any }?
 	return _loadUnlockAllConfig()
 end
 
