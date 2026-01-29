@@ -406,99 +406,81 @@ Maid=(__DARKLUA_BUNDLE_MODULES.b())local CONSTANTS={FOV_CIRCLE_COLOR=Color3.
 fromRGB(255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64}local Combat
 ={}Combat.__index=Combat local _maid=nil local _state={client=nil,logger=nil,
 isAimbotEnabled=false,isFovEnabled=false,fovRadius=100,isTeamCheckEnabled=false,
-isWallCheckEnabled=false,smoothness=0,triggerKey=Enum.UserInputType.MouseButton2
-,target=nil,fovCircle=nil,cameraController=nil,isAiming=false}local _lastLogTime
-=0 local function _throttleLog(...)if os.clock()-_lastLogTime>2 then _state.
-logger:info(...)_lastLogTime=os.clock()end end local function _getCamera()local
-camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
-WaitForChild('Camera'))end return camera end local function _getLocalPlayer()
-return Players.LocalPlayer end local function _getDrawingLib()local getfenvAny=
-getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib and g.getgenv then
-lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,'Drawing')end return
-lib end local function _fetchCameraController(logger)if _state.cameraController
-then return end if logger then logger:info('Fetching start...')end local
-playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts')if not
-playerScripts then return end local controllers=playerScripts:WaitForChild(
-'Controllers')if not controllers then return end local camControllerScript=
-controllers:WaitForChild('CameraController')if camControllerScript and
-camControllerScript:IsA('ModuleScript')then local success,result=pcall(function(
-)return require(camControllerScript)end)if success then _state.cameraController=
-result if logger then logger:info('Success CameraController')end else if logger
-then logger:error('Failed CameraController',result)end end end end
-local function _updateFovCircle()local lib=_getDrawingLib()if not lib then
-return end local circle=_state.fovCircle if _state.isFovEnabled and _state.
-isAimbotEnabled then if not circle then circle=lib.new('Circle')_state.fovCircle
-=circle end local c=circle c.Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides
-=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=CONSTANTS.
-FOV_CIRCLE_COLOR local mouseLocation=UserInputService:GetMouseLocation()c.
-Position=mouseLocation c.Radius=_state.fovRadius c.Visible=true else local c=
-circle if c then c.Visible=false end end end local function _getBestTarget()
-local camera=_getCamera()local localPlayer=_getLocalPlayer()local mouseLocation=
-UserInputService:GetMouseLocation()local bestTarget=nil local shortestDistance=
-_state.fovRadius for _,player in ipairs(Players:GetPlayers())do if player==
-localPlayer then continue end if _state.isTeamCheckEnabled and player.Team==
-localPlayer.Team then continue end local character=player.Character if not
-character then continue end local humanoid=character:FindFirstChildOfClass(
-'Humanoid')if not humanoid or humanoid.Health<=0 then continue end local head=
-character:FindFirstChild('Head')if not head then continue end if not head:IsA(
-'BasePart')then continue end local headPart=head if _state.isWallCheckEnabled
-then local origin=camera.CFrame.Position local direction=headPart.Position-
-origin local raycastParams=RaycastParams.new()raycastParams.
-FilterDescendantsInstances={localPlayer.Character,character}raycastParams.
-FilterType=Enum.RaycastFilterType.Exclude local result=Workspace:Raycast(origin,
-direction,raycastParams)if result then continue end end local screenPos,onScreen
-=camera:WorldToViewportPoint(headPart.Position)if not onScreen then continue end
-local distance=(Vector2.new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if
-distance<shortestDistance then shortestDistance=distance bestTarget=player end
-end return bestTarget end local function _aimAt(target)if not target.Character
-then return end local head=target.Character:FindFirstChild('Head')if not head or
-not head:IsA('BasePart')then return end local camera=_getCamera()local targetPos
-=(head).Position local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.
-lookAt(currentCFrame.Position,targetPos)if not _state.cameraController or not
-_state.cameraController.SetRotation then local alpha=if _state.smoothness>0 then
-(1-_state.smoothness)else 1 camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)
-return end local x,y,_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.
-new(y,x)_state.logger:info('Aiming...',targetRotation)if _state.smoothness>0
-then local currentRot=(_state.cameraController.Rotation)local diff=
-targetRotation-currentRot local step=(1-_state.smoothness)local newRot=
-currentRot:Lerp(targetRotation,step)_state.cameraController:SetRotation(newRot)
-else _state.cameraController:SetRotation(targetRotation)end end local function
-_isTriggerInput(input)local key=_state.triggerKey if not key then return false
-end if input.UserInputType==Enum.UserInputType.Keyboard then if typeof(key)==
-'EnumItem'and key.EnumType==Enum.KeyCode then return input.KeyCode==key end if
-type(key)=='string'then local success,keyCode=pcall(function()return Enum.
-KeyCode[key]end)if success and keyCode then return input.KeyCode==keyCode end
-end elseif input.UserInputType==Enum.UserInputType.MouseButton1 then return key
-=='MouseButton1'or(typeof(key)=='EnumItem'and key==Enum.UserInputType.
-MouseButton1)elseif input.UserInputType==Enum.UserInputType.MouseButton2 then
-return key=='MouseButton2'or(typeof(key)=='EnumItem'and key==Enum.UserInputType.
-MouseButton2)end return false end local function _onInputChanged(input,isPressed
-)if not _isTriggerInput(input)then return end _state.isAiming=isPressed end
-local function _connect()_maid:DoCleaning()task.spawn(function()
-_fetchCameraController(_state.logger)end)local inputBeganConn=UserInputService.
-InputBegan:Connect(function(input,processed)if processed and not
-_isTriggerInput(input)then return end _onInputChanged(input,true)end)_maid:
-GiveTask(inputBeganConn)local inputEndedConn=UserInputService.InputEnded:
-Connect(function(input,processed)if processed and not _isTriggerInput(input)then
-return end _onInputChanged(input,false)end)_maid:GiveTask(inputEndedConn)local
-runConn=RunService.RenderStepped:Connect(function()_updateFovCircle()
-_throttleLog('Aimbot Status | Enabled:',_state.isAimbotEnabled,'Key:',_state.
-isAiming)if _state.isAimbotEnabled then if _state.isAiming then local target=
-_getBestTarget()if target then _state.logger:info('Target found:',target.Name)
-_aimAt(target)end end end end)_maid:GiveTask(runConn)end local function
+isWallCheckEnabled=false,smoothness=0,target=nil,fovCircle=nil,cameraController=
+nil}local _lastLogTime=0 local function _throttleLog(...)if os.clock()-
+_lastLogTime>2 then _state.logger:info(...)_lastLogTime=os.clock()end end
+local function _getCamera()local camera=Workspace.CurrentCamera if not camera
+then camera=(Workspace:WaitForChild('Camera'))end return camera end
+local function _getLocalPlayer()return Players.LocalPlayer end local function
+_getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))local lib=g.
+Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if not lib
+then lib=rawget(_G,'Drawing')end return lib end local function
+_fetchCameraController(logger)if _state.cameraController then return end if
+logger then logger:info('Fetching start...')end local playerScripts=
+_getLocalPlayer():WaitForChild('PlayerScripts')if not playerScripts then return
+end local controllers=playerScripts:WaitForChild('Controllers')if not
+controllers then return end local camControllerScript=controllers:WaitForChild(
+'CameraController')if camControllerScript and camControllerScript:IsA(
+'ModuleScript')then local success,result=pcall(function()return require(
+camControllerScript)end)if success then _state.cameraController=result if logger
+then logger:info('Success CameraController')end else if logger then logger:
+error('Failed CameraController',result)end end end end local function
+_updateFovCircle()local lib=_getDrawingLib()if not lib then return end local
+circle=_state.fovCircle if _state.isFovEnabled and _state.isAimbotEnabled then
+if not circle then circle=lib.new('Circle')_state.fovCircle=circle end local c=
+circle c.Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.
+FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=CONSTANTS.FOV_CIRCLE_COLOR local
+mouseLocation=UserInputService:GetMouseLocation()c.Position=mouseLocation c.
+Radius=_state.fovRadius c.Visible=true else local c=circle if c then c.Visible=
+false end end end local function _getBestTarget()local camera=_getCamera()local
+localPlayer=_getLocalPlayer()local mouseLocation=UserInputService:
+GetMouseLocation()local bestTarget=nil local shortestDistance=_state.fovRadius
+for _,player in ipairs(Players:GetPlayers())do if player==localPlayer then
+continue end if _state.isTeamCheckEnabled and player.Team==localPlayer.Team then
+continue end local character=player.Character if not character then continue end
+local humanoid=character:FindFirstChildOfClass('Humanoid')if not humanoid or
+humanoid.Health<=0 then continue end local head=character:FindFirstChild('Head')
+if not head then continue end if not head:IsA('BasePart')then continue end local
+headPart=head if _state.isWallCheckEnabled then local origin=camera.CFrame.
+Position local direction=headPart.Position-origin local raycastParams=
+RaycastParams.new()raycastParams.FilterDescendantsInstances={localPlayer.
+Character,character}raycastParams.FilterType=Enum.RaycastFilterType.Exclude
+local result=Workspace:Raycast(origin,direction,raycastParams)if result then
+continue end end local screenPos,onScreen=camera:WorldToViewportPoint(headPart.
+Position)if not onScreen then continue end local distance=(Vector2.new(screenPos
+.X,screenPos.Y)-mouseLocation).Magnitude if distance<shortestDistance then
+shortestDistance=distance bestTarget=player end end return bestTarget end
+local function _aimAt(target)if not target.Character then return end local head=
+target.Character:FindFirstChild('Head')if not head or not head:IsA('BasePart')
+then return end local camera=_getCamera()local targetPos=(head).Position local
+currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(currentCFrame.
+Position,targetPos)if not _state.cameraController or not _state.cameraController
+.SetRotation then local alpha=if _state.smoothness>0 then(1-_state.smoothness)
+else 1 camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return end local x,y,
+_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(y,x)_state.logger
+:info('Aiming...',targetRotation)if _state.smoothness>0 then local currentRot=(
+_state.cameraController.Rotation)local diff=targetRotation-currentRot local step
+=(1-_state.smoothness)local newRot=currentRot:Lerp(targetRotation,step)_state.
+cameraController:SetRotation(newRot)else _state.cameraController:SetRotation(
+targetRotation)end end local function _connect()_maid:DoCleaning()task.spawn(
+function()_fetchCameraController(_state.logger)end)local runConn=RunService.
+RenderStepped:Connect(function()_updateFovCircle()_throttleLog(
+'Aimbot Status | Enabled:',_state.isAimbotEnabled)if _state.isAimbotEnabled then
+local target=_getBestTarget()if target then _state.logger:info('Target found:',
+target.Name)_aimAt(target)end end end)_maid:GiveTask(runConn)end local function
 _disconnect()if _state.fovCircle then pcall(function()((_state.fovCircle)):
 Remove()end)_state.fovCircle=nil end _maid:DoCleaning()end function Combat.init(
 self,client)_state.client=client _state.logger=client.Logger _maid=Maid.new()
 _connect()end function Combat.cleanup(self)_state.isAimbotEnabled=false
-_disconnect()end function Combat.setAimbotEnabled(self,isEnabled)_state.logger:
-info('Set Aimbot Enabled:',isEnabled)_state.isAimbotEnabled=isEnabled end
-function Combat.setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end
-function Combat.setFovRadius(self,radius)_state.fovRadius=radius end function
-Combat.setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled
-end function Combat.setSmoothness(self,smoothness)_state.smoothness=smoothness
-end function Combat.setWallCheckEnabled(self,isEnabled)_state.isWallCheckEnabled
-=isEnabled end function Combat.setTriggerKey(self,key)_state.triggerKey=key end
-return Combat end function __DARKLUA_BUNDLE_MODULES.g()local v=
+_disconnect()end function Combat.setAimbotEnabled(self,isEnabled)if _state.
+isAimbotEnabled==isEnabled then return end _state.logger:info(
+'Set Aimbot Enabled:',isEnabled)_state.isAimbotEnabled=isEnabled end function
+Combat.setFovEnabled(self,isEnabled)_state.isFovEnabled=isEnabled end function
+Combat.setFovRadius(self,radius)_state.fovRadius=radius end function Combat.
+setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled end
+function Combat.setSmoothness(self,smoothness)_state.smoothness=smoothness end
+function Combat.setWallCheckEnabled(self,isEnabled)_state.isWallCheckEnabled=
+isEnabled end return Combat end function __DARKLUA_BUNDLE_MODULES.g()local v=
 __DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
 __modImpl()local RunService=game:GetService('RunService')local Maid=(
@@ -506,12 +488,12 @@ __DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
-playerControls=nil}local _signals={}local function _updatePlayerControls()if not
-_state.playerControls then return end local getfenvAny=getfenv local env=(
+controlBindings=nil}local _signals={}local function _updateControlBindings()if
+not _state.controlBindings then return end local getfenvAny=getfenv local env=(
 getfenvAny(0))local getgenvFunc=env.getgenv local toggles=(getgenvFunc and
 getgenvFunc().Toggles)or _G.Toggles local options=(getgenvFunc and getgenvFunc()
 .Options)or _G.Options if not toggles or not options then end for _,control in
-ipairs(_state.playerControls)do local toggle=toggles and toggles[control.
+ipairs(_state.controlBindings)do local toggle=toggles and toggles[control.
 toggleId]local gate=toggle and toggle.Value==true local active=false if gate
 then local keybind=options and options[control.keybindId]if keybind and keybind.
 GetState then active=keybind:GetState()else active=false end end if control.last
@@ -533,7 +515,7 @@ true)if wasVisible then pcall(function()library:Toggle()end)end end pcall(
 function()saveManager:LoadAutoloadConfig()end)if isSilent then if wasVisible
 then pcall(function()library:Toggle()end)end _setNotifyMuted(library,false)end
 end local function _connect()_maid:DoCleaning()local updateConn=RunService.
-RenderStepped:Connect(function()_updatePlayerControls()end)_maid:GiveTask(
+RenderStepped:Connect(function()_updateControlBindings()end)_maid:GiveTask(
 updateConn)end local function _mount()if _state.isMounted then return end _state
 .isMounted=true local logger=_state.logger local library=_loadRemote(
 'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
@@ -543,49 +525,47 @@ local window=library:CreateWindow({Title='Blossom '.._state.client.Version,
 Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})
 local tabs={combat=window:AddTab('Combat'),visuals=window:AddTab('Visuals'),misc
 =window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local combatGroup
-=tabs.combat:AddLeftGroupbox('Aimbot')combatGroup:AddToggle(
-'CombatAimbotEnabled',{Text='Enabled',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Combat if mod and mod.setAimbotEnabled then mod:
-setAimbotEnabled(state)end end})combatGroup:AddToggle('CombatShowFov',{Text=
-'Show FOV',Default=false,Callback=function(state)local mod=_state.client.Modules
-.Combat if mod and mod.setFovEnabled then mod:setFovEnabled(state)end end})
-combatGroup:AddSlider('CombatFovRadius',{Text='FOV Radius',Default=100,Min=10,
-Max=800,Rounding=0,Callback=function(value)local mod=_state.client.Modules.
-Combat if mod and mod.setFovRadius then mod:setFovRadius(value)end end})
-combatGroup:AddToggle('CombatTeamCheck',{Text='Team Check',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setTeamCheckEnabled then mod:setTeamCheckEnabled(state)end end})combatGroup:
-AddSlider('CombatSmoothness',{Text='Smoothness',Default=0,Min=0,Max=1,Rounding=2
-,Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
-setSmoothness then mod:setSmoothness(value)end end})combatGroup:AddToggle(
-'CombatWallCheck',{Text='Wall Check',Default=false,Callback=function(state)local
-mod=_state.client.Modules.Combat if mod and mod.setWallCheckEnabled then mod:
-setWallCheckEnabled(state)end end})combatGroup:AddLabel('Trigger Key'):
-AddKeyPicker('CombatTriggerKey',{Default='MouseButton2',NoUI=true,Text=
-'Trigger Key',Callback=function(key)local mod=_state.client.Modules.Combat if
-mod and mod.setTriggerKey then mod:setTriggerKey(key)end end})local espGroup=
-tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text=
-'Visuals (ESP)',Default=false,Callback=function(state)local mod=_state.client.
-Modules.Visuals if mod and mod.toggle then mod:toggle(state)end if mod and mod.
-setEspEnabled then mod:setEspEnabled(state)end end})espGroup:AddToggle(
-'ESPNames',{Text='Name',Default=true,Callback=function(state)local mod=_state.
-client.Modules.Visuals if mod and mod.setShowNames then mod:setShowNames(state)
-end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title=
-'Text Color',Callback=function(value)local mod=_state.client.Modules.Visuals if
-mod and mod.setTextColor then mod:setTextColor(value)end end}):AddColorPicker(
-'ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title='Name Outline',Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setNameOutlineColor then mod:setNameOutlineColor(value)end end})espGroup:
-AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(state)local
-mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then mod:
-setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=Color3.
-new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.client.
-Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(value)end
-end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0),Title=
-'Weapon Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
-if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(value)end
-end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+=tabs.combat:AddLeftGroupbox('Aimbot')local combatAimbotToggle=combatGroup:
+AddToggle('CombatAimbotEnabled',{Text='Enabled',Default=false,Callback=function(
+)_updateControlBindings()end})combatAimbotToggle:AddKeyPicker(
+'CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text='Trigger Key',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})
+combatGroup:AddToggle('CombatShowFov',{Text='Show FOV',Default=false,Callback=
+function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setFovEnabled then mod:setFovEnabled(state)end end})combatGroup:AddSlider(
+'CombatFovRadius',{Text='FOV Radius',Default=100,Min=10,Max=800,Rounding=0,
+Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
+setFovRadius then mod:setFovRadius(value)end end})combatGroup:AddToggle(
+'CombatTeamCheck',{Text='Team Check',Default=false,Callback=function(state)local
+mod=_state.client.Modules.Combat if mod and mod.setTeamCheckEnabled then mod:
+setTeamCheckEnabled(state)end end})combatGroup:AddSlider('CombatSmoothness',{
+Text='Smoothness',Default=0,Min=0,Max=1,Rounding=2,Callback=function(value)local
+mod=_state.client.Modules.Combat if mod and mod.setSmoothness then mod:
+setSmoothness(value)end end})combatGroup:AddToggle('CombatWallCheck',{Text=
+'Wall Check',Default=false,Callback=function(state)local mod=_state.client.
+Modules.Combat if mod and mod.setWallCheckEnabled then mod:setWallCheckEnabled(
+state)end end})local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:
+AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:
+toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end
+end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then
+mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.
+new(1,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.
+Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}
+):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
+if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
+espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowWeapon then
+mod:setShowWeapon(state)end end}):AddColorPicker('ESPWeaponColor',{Default=
+Color3.new(1,1,1),Title='Weapon Color',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setWeaponColor then mod:setWeaponColor(
+value)end end}):AddColorPicker('ESPWeaponOutlineColor',{Default=Color3.new(0,0,0
+),Title='Weapon Outline',Callback=function(value)local mod=_state.client.Modules
+.Visuals if mod and mod.setWeaponOutlineColor then mod:setWeaponOutlineColor(
+value)end end})espGroup:AddToggle('ESPDistance',{Text='Distance',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
 setShowDistance then mod:setShowDistance(state)end end}):AddColorPicker(
 'ESPDistanceColor',{Default=Color3.new(1,1,1),Title='Distance Color',Callback=
 function(value)local mod=_state.client.Modules.Visuals if mod and mod.
@@ -652,34 +632,37 @@ themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
 BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local
 playerGroup=tabs.misc:AddLeftGroupbox('Player')local playerFlyToggle=playerGroup
 :AddToggle('PlayerFly',{Text='Fly',Default=false,Callback=function(state)
-_updatePlayerControls()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
+_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
 Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=false,Callback=
-function()_updatePlayerControls()end})playerGroup:AddSlider('PlayerFlySpeed',{
+function()_updateControlBindings()end})playerGroup:AddSlider('PlayerFlySpeed',{
 Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Callback=function(value)
 local mod=_state.client.Modules.Player if mod and mod.setFlySpeed then mod:
 setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:AddToggle(
 'PlayerNoclip',{Text='Noclip',Default=false,Callback=function(state)
-_updatePlayerControls()end})playerNoclipToggle:AddKeyPicker(
+_updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
 'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',
-SyncToggleState=false,Callback=function()_updatePlayerControls()end})local
+SyncToggleState=false,Callback=function()_updateControlBindings()end})local
 playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
-'Walk Speed',Default=false,Callback=function(state)_updatePlayerControls()end})
+'Walk Speed',Default=false,Callback=function(state)_updateControlBindings()end})
 playerWalkSpeedToggle:AddKeyPicker('PlayerWalkSpeedKeybind',{Default='T',NoUI=
 false,Text='Walk Speed Keybind',SyncToggleState=false,Callback=function()
-_updatePlayerControls()end})playerGroup:AddSlider('PlayerWalkSpeed',{Text=
+_updateControlBindings()end})playerGroup:AddSlider('PlayerWalkSpeed',{Text=
 'Walk Speed',Default=16,Min=0,Max=200,Rounding=0,Callback=function(value)local
 mod=_state.client.Modules.Player if mod and mod.setWalkSpeed then mod:
 setWalkSpeed(value)end end})local playerJumpPowerToggle=playerGroup:AddToggle(
 'PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,Callback=function(
-state)_updatePlayerControls()end})playerJumpPowerToggle:AddKeyPicker(
+state)_updateControlBindings()end})playerJumpPowerToggle:AddKeyPicker(
 'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',
-SyncToggleState=false,Callback=function()_updatePlayerControls()end})playerGroup
-:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=200,
-Rounding=0,Callback=function(value)local mod=_state.client.Modules.Player if mod
-and mod.setJumpPower then mod:setJumpPower(value)end end})_state.playerControls=
-{{toggleId='PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(
-active)local mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then
-mod:setFlyEnabled(active)end end},{toggleId='PlayerNoclip',keybindId=
+SyncToggleState=false,Callback=function()_updateControlBindings()end})
+playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=
+200,Rounding=0,Callback=function(value)local mod=_state.client.Modules.Player if
+mod and mod.setJumpPower then mod:setJumpPower(value)end end})_state.
+controlBindings={{toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind'
+,last=nil,setter=function(active)local mod=_state.client.Modules.Combat if mod
+and mod.setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId=
+'PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local
+mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then mod:
+setFlyEnabled(active)end end},{toggleId='PlayerNoclip',keybindId=
 'PlayerNoclipKeybind',last=nil,setter=function(active)local mod=_state.client.
 Modules.Player if mod and mod.setNoclipEnabled then mod:setNoclipEnabled(active)
 end end},{toggleId='PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',
@@ -688,7 +671,7 @@ and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{
 toggleId='PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,
 setter=function(active)local mod=_state.client.Modules.Player if mod and mod.
 setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end}}
-_updatePlayerControls()local miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')
+_updateControlBindings()local miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')
 miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=
 function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
 AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(

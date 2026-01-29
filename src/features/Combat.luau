@@ -26,7 +26,6 @@ export type CombatFeature = {
 	setTeamCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSmoothness: (self: CombatFeature, smoothness: number) -> (),
 	setWallCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setTriggerKey: (self: CombatFeature, key: string | Enum.KeyCode) -> (),
 }
 
 --// Private state
@@ -43,11 +42,9 @@ local _state: {
 	isTeamCheckEnabled: boolean,
 	isWallCheckEnabled: boolean,
 	smoothness: number,
-	triggerKey: any, -- Enum.KeyCode or Enum.UserInputType
 	target: Player?,
 	fovCircle: any?,
 	cameraController: any?,
-	isAiming: boolean,
 } =
 	{
 		client = nil :: any,
@@ -58,11 +55,9 @@ local _state: {
 		isTeamCheckEnabled = false,
 		isWallCheckEnabled = false,
 		smoothness = 0,
-		triggerKey = Enum.UserInputType.MouseButton2,
 		target = nil,
 		fovCircle = nil,
 		cameraController = nil,
-		isAiming = false,
 	}
 
 local _lastLogTime = 0
@@ -283,74 +278,22 @@ local function _aimAt(target: Player)
 	end
 end
 
-local function _isTriggerInput(input: InputObject): boolean
-	local key = _state.triggerKey
-	if not key then
-		return false
-	end
-
-	if input.UserInputType == Enum.UserInputType.Keyboard then
-		if typeof(key) == "EnumItem" and key.EnumType == Enum.KeyCode then
-			return input.KeyCode == key
-		end
-		if type(key) == "string" then
-			local success, keyCode = pcall(function()
-				return Enum.KeyCode[key]
-			end)
-			if success and keyCode then
-				return input.KeyCode == keyCode
-			end
-		end
-	elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
-		return key == "MouseButton1" or (typeof(key) == "EnumItem" and key == Enum.UserInputType.MouseButton1)
-	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
-		return key == "MouseButton2" or (typeof(key) == "EnumItem" and key == Enum.UserInputType.MouseButton2)
-	end
-
-	return false
-end
-
-local function _onInputChanged(input: InputObject, isPressed: boolean)
-	if not _isTriggerInput(input) then
-		return
-	end
-	_state.isAiming = isPressed
-end
-
 local function _connect()
 	_maid:DoCleaning()
 	task.spawn(function()
 		_fetchCameraController(_state.logger)
 	end)
 
-	local inputBeganConn = UserInputService.InputBegan:Connect(function(input, processed)
-		if processed and not _isTriggerInput(input) then
-			return
-		end
-		_onInputChanged(input, true)
-	end)
-	_maid:GiveTask(inputBeganConn)
-
-	local inputEndedConn = UserInputService.InputEnded:Connect(function(input, processed)
-		if processed and not _isTriggerInput(input) then
-			return
-		end
-		_onInputChanged(input, false)
-	end)
-	_maid:GiveTask(inputEndedConn)
-
 	local runConn = RunService.RenderStepped:Connect(function()
 		_updateFovCircle()
 
-		_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Key:", _state.isAiming)
+		_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled)
 
 		if _state.isAimbotEnabled then
-			if _state.isAiming then
-				local target = _getBestTarget()
-				if target then
-					_state.logger:info("Target found:", target.Name)
-					_aimAt(target)
-				end
+			local target = _getBestTarget()
+			if target then
+				_state.logger:info("Target found:", target.Name)
+				_aimAt(target)
 			end
 		end
 	end)
@@ -381,6 +324,9 @@ function Combat.cleanup(self: CombatFeature): ()
 end
 
 function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
+	if _state.isAimbotEnabled == isEnabled then
+		return
+	end
 	_state.logger:info("Set Aimbot Enabled:", isEnabled)
 	_state.isAimbotEnabled = isEnabled
 end
@@ -403,12 +349,6 @@ end
 
 function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 	_state.isWallCheckEnabled = isEnabled
-end
-
-function Combat.setTriggerKey(self: CombatFeature, key: any): ()
-	-- LinoriaLib sends strings for KeyPickers usually, or EnumItems?
-	-- Adjust based on what we receive.
-	_state.triggerKey = key
 end
 
 return Combat

@@ -27,13 +27,13 @@ local _state = {
 	themeManager = nil :: any,
 	saveManager = nil :: any,
 	isMounted = false,
-	playerControls = nil :: any,
+	controlBindings = nil :: any,
 }
 local _signals = {}
 
 --// Private helpers
-local function _updatePlayerControls()
-	if not _state.playerControls then
+local function _updateControlBindings()
+	if not _state.controlBindings then
 		return
 	end
 	local getfenvAny = getfenv :: any
@@ -43,7 +43,7 @@ local function _updatePlayerControls()
 	local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
 	if not toggles or not options then
 	end
-	for _, control in ipairs(_state.playerControls) do
+	for _, control in ipairs(_state.controlBindings) do
 		local toggle = toggles and toggles[control.toggleId]
 		local gate = toggle and toggle.Value == true
 		local active = false
@@ -131,7 +131,7 @@ local function _connect()
 	_maid:DoCleaning()
 
 	local updateConn = RunService.RenderStepped:Connect(function()
-		_updatePlayerControls()
+		_updateControlBindings()
 	end)
 	_maid:GiveTask(updateConn)
 end
@@ -167,14 +167,20 @@ local function _mount()
 	}
 
 	local combatGroup = tabs.combat:AddLeftGroupbox("Aimbot")
-	combatGroup:AddToggle("CombatAimbotEnabled", {
+	local combatAimbotToggle = combatGroup:AddToggle("CombatAimbotEnabled", {
 		Text = "Enabled",
 		Default = false,
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setAimbotEnabled then
-				mod:setAimbotEnabled(state)
-			end
+		Callback = function()
+			_updateControlBindings()
+		end,
+	})
+	combatAimbotToggle:AddKeyPicker("CombatAimbotKeybind", {
+		Default = "MouseButton2",
+		NoUI = false,
+		Text = "Trigger Key",
+		SyncToggleState = false,
+		Callback = function()
+			_updateControlBindings()
 		end,
 	})
 	combatGroup:AddToggle("CombatShowFov", {
@@ -233,22 +239,6 @@ local function _mount()
 			end
 		end,
 	})
-	combatGroup:AddLabel("Trigger Key"):AddKeyPicker("CombatTriggerKey", {
-		Default = "MouseButton2",
-		NoUI = true,
-		Text = "Trigger Key",
-		Callback = function(key)
-			-- This callback usually just updates the state in the library,
-			-- but we might need to pass it to the module if it polls input itself,
-			-- OR the module can read options directly.
-			-- For now we rely on the module checking the key state or library state.
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setTriggerKey then
-				mod:setTriggerKey(key)
-			end
-		end,
-	})
-
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",
@@ -578,7 +568,7 @@ local function _mount()
 		Text = "Fly",
 		Default = false,
 		Callback = function(state)
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 	playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
@@ -587,7 +577,7 @@ local function _mount()
 		Text = "Fly Keybind",
 		SyncToggleState = false,
 		Callback = function()
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 
@@ -609,7 +599,7 @@ local function _mount()
 		Text = "Noclip",
 		Default = false,
 		Callback = function(state)
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 	playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
@@ -618,7 +608,7 @@ local function _mount()
 		Text = "Noclip Keybind",
 		SyncToggleState = false,
 		Callback = function()
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 
@@ -626,7 +616,7 @@ local function _mount()
 		Text = "Walk Speed",
 		Default = false,
 		Callback = function(state)
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 	playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
@@ -635,7 +625,7 @@ local function _mount()
 		Text = "Walk Speed Keybind",
 		SyncToggleState = false,
 		Callback = function()
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 
@@ -657,7 +647,7 @@ local function _mount()
 		Text = "Jump Power",
 		Default = false,
 		Callback = function(state)
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 	playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
@@ -666,7 +656,7 @@ local function _mount()
 		Text = "Jump Power Keybind",
 		SyncToggleState = false,
 		Callback = function()
-			_updatePlayerControls()
+			_updateControlBindings()
 		end,
 	})
 
@@ -684,7 +674,18 @@ local function _mount()
 		end,
 	})
 
-	_state.playerControls = {
+	_state.controlBindings = {
+		{
+			toggleId = "CombatAimbotEnabled",
+			keybindId = "CombatAimbotKeybind",
+			last = nil,
+			setter = function(active)
+				local mod = _state.client.Modules.Combat
+				if mod and mod.setAimbotEnabled then
+					mod:setAimbotEnabled(active)
+				end
+			end,
+		},
 		{
 			toggleId = "PlayerFly",
 			keybindId = "PlayerFlyKeybind",
@@ -730,7 +731,7 @@ local function _mount()
 			end,
 		},
 	}
-	_updatePlayerControls()
+	_updateControlBindings()
 
 	local miscGroup = tabs.misc:AddLeftGroupbox("Auto Load")
 	miscGroup:AddToggle("TeleportQueue", {
