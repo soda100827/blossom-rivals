@@ -65,6 +65,14 @@ local _state: {
 		isAiming = false,
 	}
 
+local _lastLogTime = 0
+local function _throttleLog(...)
+	if os.clock() - _lastLogTime > 2 then
+		_state.logger:info(...)
+		_lastLogTime = os.clock()
+	end
+end
+
 --// Private helpers
 local function _getCamera(): Camera
 	local camera = Workspace.CurrentCamera
@@ -333,6 +341,8 @@ local function _connect()
 			-- Check if key is held
 			_state.isAiming = _checkKeyDown()
 
+			_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Key:", _state.isAiming)
+
 			if _state.isAiming then
 				local target = _getBestTarget()
 				if target then
@@ -369,6 +379,7 @@ function Combat.cleanup(self: CombatFeature): ()
 end
 
 function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
+	_state.logger:info("Set Aimbot Enabled:", isEnabled)
 	_state.isAimbotEnabled = isEnabled
 end
 
