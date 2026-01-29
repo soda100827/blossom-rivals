@@ -4,7 +4,6 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
 
 --// Dependencies (require)
 local Logger = require("src/utils/Logger")
@@ -15,7 +14,6 @@ local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal
 local BUNDLE_URL =
 	"https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau"
 local CLIENT_MODULE_NAME = "Client"
-local UNLOCK_ALL_SAVE_FILE = "blossom_skin_configs.json"
 
 --// Environment Check
 local getfenvAny = getfenv :: any
@@ -39,7 +37,6 @@ local MODULES: { { name: string, loader: Module } } = {
 	{ name = "Visuals", loader = require("src/features/Visuals") :: Module },
 	{ name = "Player", loader = require("src/features/Player") :: Module },
 	{ name = "Combat", loader = require("src/features/Combat") :: Module },
-	{ name = "UnlockAll", loader = require("src/features/UnlockAll") :: Module },
 	{ name = "Interface", loader = require("src/ui/Interface") :: Module },
 }
 
@@ -79,8 +76,6 @@ export type BlossomClient = {
 	loadModule: (self: BlossomClient, name: string, moduleOrPath: ModuleOrPath) -> (),
 	setTeleportQueue: (self: BlossomClient, shouldEnable: boolean) -> (),
 	setSilent: (self: BlossomClient, isSilent: boolean) -> (),
-	loadUnlockAllConfig: (self: BlossomClient) -> { [string]: any }?,
-	saveUnlockAllConfig: (self: BlossomClient, equipped: { [string]: any }, favorites: { [string]: any }) -> (),
 	start: (self: BlossomClient) -> (),
 	destroy: (self: BlossomClient) -> (),
 }
@@ -148,31 +143,6 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 	end)
 end
 
-local function _loadUnlockAllConfig()
-	local readfile = getGlobal("readfile")
-	local isfile = getGlobal("isfile")
-	if not readfile or not isfile or not isfile(UNLOCK_ALL_SAVE_FILE) then
-		return nil
-	end
-	local ok, config = pcall(function()
-		return HttpService:JSONDecode(readfile(UNLOCK_ALL_SAVE_FILE))
-	end)
-	if not ok then
-		return nil
-	end
-	return config
-end
-
-local function _saveUnlockAllConfig(equipped: { [string]: any }, favorites: { [string]: any })
-	local writefile = getGlobal("writefile")
-	if not writefile then
-		return
-	end
-	pcall(function()
-		local config = { equipped = equipped, favorites = favorites }
-		writefile(UNLOCK_ALL_SAVE_FILE, HttpService:JSONEncode(config))
-	end)
-end
 
 local function _handleTeleportQueue(shouldEnable: boolean)
 	if shouldEnable then
@@ -313,13 +283,6 @@ function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
 	end
 end
 
-function Client.loadUnlockAllConfig(self: BlossomClient): { [string]: any }?
-	return _loadUnlockAllConfig()
-end
-
-function Client.saveUnlockAllConfig(self: BlossomClient, equipped: { [string]: any }, favorites: { [string]: any }): ()
-	_saveUnlockAllConfig(equipped, favorites)
-end
 
 function Client.start(self: BlossomClient): ()
 	if _state.isRunning then

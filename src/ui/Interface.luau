@@ -765,18 +765,6 @@ local function _mount()
 		end,
 	})
 
-	local unlockGroup = tabs.misc:AddLeftGroupbox("Unlock All")
-	unlockGroup:AddToggle("UnlockAllToggle", {
-		Text = "Unlock All",
-		Default = false,
-		Callback = function(state)
-			local mod = _state.client.Modules.UnlockAll
-			if mod and mod.setEnabled then
-				mod:setEnabled(state)
-			end
-		end,
-	})
-
 	_runAutoload(library, saveManager, false)
 end
 
