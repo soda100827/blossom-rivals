@@ -67,6 +67,8 @@ local _state: {
 	cameraController: any?,
 	fighterController: any?,
 	remoteHooked: boolean,
+	utilityHooked: boolean,
+	cameraShakerHooked: boolean,
 	isInputLocked: boolean,
 	mouseBehavior: Enum.MouseBehavior?,
 	mouseDeltaSensitivity: number?,
@@ -94,10 +96,57 @@ local _state: {
 		cameraController = nil,
 		fighterController = nil,
 		remoteHooked = false,
+		utilityHooked = false,
+		cameraShakerHooked = false,
 		isInputLocked = false,
 		mouseBehavior = nil,
 		mouseDeltaSensitivity = nil,
 	}
+
+local function _getGlobal(name: string): any
+	local getfenvAny = getfenv :: any
+	local env = getfenvAny(0) :: any
+	local genv = (env.getgenv and env.getgenv()) or env
+	return genv[name] or env[name]
+end
+
+local function _getUtility(): any
+	local replicatedStorage = game:GetService("ReplicatedStorage")
+	local modules = replicatedStorage:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local utility = modules:WaitForChild("Utility", 5)
+	if not utility then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(utility)
+	end)
+	return success and result or nil
+end
+
+local function _getCameraShaker(): any
+	local localPlayer = game:GetService("Players").LocalPlayer
+	local playerScripts = localPlayer:WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local cameraShaker = modules:WaitForChild("CameraShaker", 5)
+	if not cameraShaker then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(cameraShaker)
+	end)
+	return success and result or nil
+end
 
 local _lastLogTime = 0
 local function _throttleLog(...)
@@ -236,98 +285,139 @@ local function _fetchFighterController(logger: any)
 	end
 end
 
-local function _getGlobal(name: string): any
-	local getfenvAny = getfenv :: any
-	local env = getfenvAny(0) :: any
-	local genv = (env.getgenv and env.getgenv()) or env
-	return genv[name] or env[name]
+-- Moved to top
+
+local _lastSilentTargetPos: Vector3? = nil
+
+local function _isGunAction(): boolean
+	local debugGlobal = _getGlobal("debug")
+	local traceback = debugGlobal and debugGlobal.traceback or debug.traceback
+	local stack = traceback()
+	return (
+		stack:find("StartShooting")
+		or stack:find("GetEntitiesFromRaycast")
+		or stack:find("_LocalTracers")
+		or stack:find("_ImpactMarker")
+	) ~= nil
 end
 
-local function _hookRemote(remote: RemoteEvent)
-	local hookfunction = _getGlobal("hookfunction") or _getGlobal("replaceclosure")
-	if not hookfunction then
-		_state.logger:warn("hookfunction not found, Silent Aim Remote Hook will not work.")
-		return
-	end
+local function _getClosestSilentTarget(): BasePart?
+	local camera = _getCamera()
+	local localPlayer = _getLocalPlayer()
+	local collectionService = game:GetService("CollectionService")
 
-	if _state.remoteHooked then
-		return
-	end
-	_state.remoteHooked = true
+	local closest, closestDist = nil, _state.silentAimFovRadius
+	local screenCenter = camera.ViewportSize / 2
 
-	local oldFireServer
-	oldFireServer = hookfunction(remote.FireServer, function(self, ...)
-		local args = { ... }
-		if _state.isSilentAimEnabled and _state.silentTarget then
-			local action = args[2]
-			local data = args[3]
+	for _, entity in ipairs(collectionService:GetTagged("Entity")) do
+		if entity == localPlayer.Character then
+			continue
+		end
 
-			-- Log action to help debug if it's not "StartShooting"
-			-- Use a throttle or log only once to avoid spam
-			if _state.logger then
-				-- pcall to avoid errors if action is not stringifiable
-				pcall(function()
-					_throttleLog("UseItem Action:", tostring(action))
-				end)
-			end
+		local hum = entity:FindFirstChildOfClass("Humanoid")
+		if not hum or hum.Health <= 0 then
+			continue
+		end
 
-			if type(data) == "table" then
-				-- Search for camera data table (the one with "\0" and "\1")
-				-- Usually it's at data["\1"]
-				local cameraData = data[utf8.char(1)] or data["\1"]
-				if type(cameraData) == "table" and cameraData[utf8.char(1)] then
-					local character = _state.silentTarget.Character
-					local head = character and character:FindFirstChild("Head")
-					if head and head:IsA("BasePart") then
-						local originPos = nil
-						local char0 = cameraData[utf8.char(0)] or cameraData["\0"]
-						if char0 then
-							pcall(function()
-								originPos = (char0 :: any).Position or (char0 :: any).p
-							end)
-						end
+		local targetPart = entity:FindFirstChild("HitboxHead") or entity:FindFirstChild("Head")
+		if not targetPart or not targetPart:IsA("BasePart") then
+			continue
+		end
 
-						if originPos then
-							local targetPos = (head :: BasePart).Position
-							-- Redirect direction
-							cameraData[utf8.char(1)] = CFrame.lookAt(originPos, targetPos)
-							cameraData["\1"] = cameraData[utf8.char(1)]
-
-							-- Optional: set hit part and local CFrame for server validation
-							cameraData[utf8.char(2)] = head
-							cameraData["\2"] = head
-							cameraData[utf8.char(3)] = CFrame.new()
-							cameraData["\3"] = cameraData[utf8.char(3)]
-
-							_state.logger:info("Silent Aim redirected shot to:", _state.silentTarget.Name)
-						end
-					end
-				end
+		-- Team check
+		if _state.isTeamCheckEnabled then
+			local player = game:GetService("Players"):GetPlayerFromCharacter(entity :: Model)
+			if player and player.Team == localPlayer.Team then
+				continue
 			end
 		end
-		return oldFireServer(self, unpack(args))
-	end)
-	_state.logger:info("Fighter:UseItem Remote hooked for Silent Aim.")
+
+		-- Wall check
+		if _state.isWallCheckEnabled then
+			local origin = camera.CFrame.Position
+			local direction = targetPart.Position - origin
+			local raycastParams = RaycastParams.new()
+			raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, entity }
+			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+			local result = Workspace:Raycast(origin, direction, raycastParams)
+			if result then
+				continue
+			end
+		end
+
+		local pos, onScreen = camera:WorldToViewportPoint(targetPart.Position)
+		if onScreen then
+			local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+			if dist < closestDist then
+				closest = targetPart
+				closestDist = dist
+			end
+		end
+	end
+	return closest :: any
 end
 
 local function _setupSilentAim()
+	local hookfunction = _getGlobal("hookfunction") or _getGlobal("replaceclosure")
+	local checkcaller = _getGlobal("checkcaller") or function()
+		return false
+	end
+
+	if not hookfunction then
+		_state.logger:warn("hookfunction not found, Perfect Silent Aim will not work.")
+		return
+	end
+
 	task.spawn(function()
-		local replicatedStorage = game:GetService("ReplicatedStorage") :: any
-		local remote = replicatedStorage:WaitForChild("Remotes", 10)
-		if remote then
-			remote = (remote :: any):WaitForChild("Replication", 5)
-		end
-		if remote then
-			remote = (remote :: any):WaitForChild("Fighter", 5)
-		end
-		if remote then
-			remote = (remote :: any):WaitForChild("UseItem", 5)
+		local utility = _getUtility()
+		if utility and not _state.utilityHooked then
+			_state.utilityHooked = true
+
+			local oldRaycast
+			oldRaycast = hookfunction(utility.Raycast, function(self, origin, target, distance, filter, ...)
+				if
+					not checkcaller()
+					and _state.isSilentAimEnabled
+					and (distance == 400 or distance == 999)
+					and _isGunAction()
+				then
+					local targetPart = _getClosestSilentTarget()
+					if targetPart then
+						_lastSilentTargetPos = targetPart.Position
+						return oldRaycast(self, origin, targetPart.Position, distance, filter, ...)
+					end
+				end
+				_lastSilentTargetPos = nil
+				return oldRaycast(self, origin, target, distance, filter, ...)
+			end)
+
+			local oldEncode
+			oldEncode = hookfunction(utility.EncodeCFrame, function(self, cf)
+				if not checkcaller() and _state.isSilentAimEnabled and _lastSilentTargetPos and _isGunAction() then
+					local newCF = CFrame.lookAt(cf.Position, _lastSilentTargetPos)
+					return oldEncode(self, newCF)
+				end
+				return oldEncode(self, cf)
+			end)
+
+			_state.logger:info("Utility.Raycast and Utility.EncodeCFrame hooked for Silent Aim.")
 		end
 
-		if remote and remote:IsA("RemoteEvent") then
-			_hookRemote(remote :: RemoteEvent)
-		else
-			_state.logger:error("Failed to find UseItem remote for Silent Aim hook.")
+		local cameraShaker = _getCameraShaker()
+		if cameraShaker and not _state.cameraShakerHooked then
+			_state.cameraShakerHooked = true
+			local mt = getmetatable(cameraShaker.Presets)
+			if mt and mt.__index then
+				local oldIdx = mt.__index
+				mt.__index = function(t, k)
+					if _state.isSilentAimEnabled and (k == "StartShooting" or k == "") then
+						return nil
+					end
+					return oldIdx(t, k)
+				end
+				_state.logger:info("CameraShaker.Presets hooked to neutralize shake.")
+			end
 		end
 	end)
 end
@@ -599,6 +689,8 @@ local function _connect()
 			end
 
 			if _state.isSilentAimEnabled then
+				-- Silent target is now handled by hooks synchronously during raycast calls,
+				-- but we can still resolve it here for UI/Drawing purposes if needed.
 				_resolveSilentTarget()
 			else
 				_state.silentTarget = nil

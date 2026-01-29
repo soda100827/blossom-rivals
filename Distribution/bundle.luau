@@ -412,12 +412,27 @@ isSilentAimFovEnabled=false,fovRadius=100,silentAimFovRadius=100,fovColor=
 CONSTANTS.FOV_CIRCLE_COLOR,fovTransparency=0,isTeamCheckEnabled=false,
 isWallCheckEnabled=false,smoothness=0,target=nil,silentTarget=nil,targetLostAt=
 nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,cameraController
-=nil,fighterController=nil,remoteHooked=false,isInputLocked=false,mouseBehavior=
-nil,mouseDeltaSensitivity=nil}local _lastLogTime=0 local function _throttleLog(
-...)if os.clock()-_lastLogTime>2 then _state.logger:info(...)_lastLogTime=os.
-clock()end end local function _getCamera()local camera=Workspace.CurrentCamera
-if not camera then camera=(Workspace:WaitForChild('Camera'))end return camera
-end local function _getLocalPlayer()return Players.LocalPlayer end
+=nil,fighterController=nil,remoteHooked=false,utilityHooked=false,
+cameraShakerHooked=false,isInputLocked=false,mouseBehavior=nil,
+mouseDeltaSensitivity=nil}local function _getGlobal(name)local getfenvAny=
+getfenv local env=(getfenvAny(0))local genv=(env.getgenv and env.getgenv())or
+env return genv[name]or env[name]end local function _getUtility()local
+replicatedStorage=game:GetService('ReplicatedStorage')local modules=
+replicatedStorage:WaitForChild('Modules',5)if not modules then return nil end
+local utility=modules:WaitForChild('Utility',5)if not utility then return nil
+end local success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(utility)end)return success and result or nil end local function
+_getCameraShaker()local localPlayer=game:GetService('Players').LocalPlayer local
+playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
+then return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return nil end local cameraShaker=modules:WaitForChild(
+'CameraShaker',5)if not cameraShaker then return nil end local success,result=
+pcall(function()local dynamicRequire=require return dynamicRequire(cameraShaker)
+end)return success and result or nil end local _lastLogTime=0 local function
+_throttleLog(...)if os.clock()-_lastLogTime>2 then _state.logger:info(...)
+_lastLogTime=os.clock()end end local function _getCamera()local camera=Workspace
+.CurrentCamera if not camera then camera=(Workspace:WaitForChild('Camera'))end
+return camera end local function _getLocalPlayer()return Players.LocalPlayer end
 local function _getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))
 local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if
 not lib then lib=rawget(_G,'Drawing')end return lib end local function
@@ -454,45 +469,62 @@ local success,result=pcall(function()local dynamicRequire=require return
 dynamicRequire(fighterControllerScript)end)if success then _state.
 fighterController=result if logger then logger:info('Success FighterController')
 end else if logger then logger:error('Failed FighterController',result)end end
-end end local function _getGlobal(name)local getfenvAny=getfenv local env=(
-getfenvAny(0))local genv=(env.getgenv and env.getgenv())or env return genv[name]
-or env[name]end local function _hookRemote(remote)local hookfunction=_getGlobal(
-'hookfunction')or _getGlobal('replaceclosure')if not hookfunction then _state.
-logger:warn([[hookfunction not found, Silent Aim Remote Hook will not work.]])
-return end if _state.remoteHooked then return end _state.remoteHooked=true local
-oldFireServer oldFireServer=hookfunction(remote.FireServer,function(self,...)
-local args={...}if _state.isSilentAimEnabled and _state.silentTarget then local
-action=args[2]local data=args[3]if _state.logger then pcall(function()
-_throttleLog('UseItem Action:',tostring(action))end)end if type(data)=='table'
-then local cameraData=data[utf8.char(1)]or data['\1']if type(cameraData)==
-'table'and cameraData[utf8.char(1)]then local character=_state.silentTarget.
-Character local head=character and character:FindFirstChild('Head')if head and
-head:IsA('BasePart')then local originPos=nil local char0=cameraData[utf8.char(0)
-]or cameraData['\0']if char0 then pcall(function()originPos=(char0).Position or(
-char0).p end)end if originPos then local targetPos=(head).Position cameraData[
-utf8.char(1)]=CFrame.lookAt(originPos,targetPos)cameraData['\1']=cameraData[utf8
-.char(1)]cameraData[utf8.char(2)]=head cameraData['\2']=head cameraData[utf8.
-char(3)]=CFrame.new()cameraData['\3']=cameraData[utf8.char(3)]_state.logger:
-info('Silent Aim redirected shot to:',_state.silentTarget.Name)end end end end
-end return oldFireServer(self,unpack(args))end)_state.logger:info(
-'Fighter:UseItem Remote hooked for Silent Aim.')end local function
-_setupSilentAim()task.spawn(function()local replicatedStorage=(game:GetService(
-'ReplicatedStorage'))local remote=replicatedStorage:WaitForChild('Remotes',10)if
-remote then remote=(remote):WaitForChild('Replication',5)end if remote then
-remote=(remote):WaitForChild('Fighter',5)end if remote then remote=(remote):
-WaitForChild('UseItem',5)end if remote and remote:IsA('RemoteEvent')then
-_hookRemote(remote)else _state.logger:error(
-'Failed to find UseItem remote for Silent Aim hook.')end end)end local function
-_updateFovCircle()local lib=_getDrawingLib()if not lib then return end
-local function updateCircle(circleType,isEnabled,radius,color,transparency)local
-circle=_state[circleType]if isEnabled then if not circle then circle=lib.new(
-'Circle')_state[circleType]=circle end local c=circle c.Thickness=CONSTANTS.
-FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.
-Color=color c.Transparency=math.clamp(transparency,0,1)local mouseLocation=
-UserInputService:GetMouseLocation()c.Position=mouseLocation c.Radius=radius c.
-Visible=true else local c=circle if c then c.Visible=false end end end
-updateCircle('fovCircle',_state.isFovEnabled,_state.fovRadius,_state.fovColor,
-_state.fovTransparency)updateCircle('silentAimFovCircle',_state.
+end end local _lastSilentTargetPos=nil local function _isGunAction()local
+debugGlobal=_getGlobal('debug')local traceback=debugGlobal and debugGlobal.
+traceback or debug.traceback local stack=traceback()return(stack:find(
+'StartShooting')or stack:find('GetEntitiesFromRaycast')or stack:find(
+'_LocalTracers')or stack:find('_ImpactMarker'))~=nil end local function
+_getClosestSilentTarget()local camera=_getCamera()local localPlayer=
+_getLocalPlayer()local collectionService=game:GetService('CollectionService')
+local closest,closestDist=nil,_state.silentAimFovRadius local screenCenter=
+camera.ViewportSize/2 for _,entity in ipairs(collectionService:GetTagged(
+'Entity'))do if entity==localPlayer.Character then continue end local hum=entity
+:FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
+local targetPart=entity:FindFirstChild('HitboxHead')or entity:FindFirstChild(
+'Head')if not targetPart or not targetPart:IsA('BasePart')then continue end if
+_state.isTeamCheckEnabled then local player=game:GetService('Players'):
+GetPlayerFromCharacter(entity)if player and player.Team==localPlayer.Team then
+continue end end if _state.isWallCheckEnabled then local origin=camera.CFrame.
+Position local direction=targetPart.Position-origin local raycastParams=
+RaycastParams.new()raycastParams.FilterDescendantsInstances={(localPlayer.
+Character),entity}raycastParams.FilterType=Enum.RaycastFilterType.Exclude local
+result=Workspace:Raycast(origin,direction,raycastParams)if result then continue
+end end local pos,onScreen=camera:WorldToViewportPoint(targetPart.Position)if
+onScreen then local dist=(Vector2.new(pos.X,pos.Y)-screenCenter).Magnitude if
+dist<closestDist then closest=targetPart closestDist=dist end end end return
+closest end local function _setupSilentAim()local hookfunction=_getGlobal(
+'hookfunction')or _getGlobal('replaceclosure')local checkcaller=_getGlobal(
+'checkcaller')or function()return false end if not hookfunction then _state.
+logger:warn('hookfunction not found, Perfect Silent Aim will not work.')return
+end task.spawn(function()local utility=_getUtility()if utility and not _state.
+utilityHooked then _state.utilityHooked=true local oldRaycast oldRaycast=
+hookfunction(utility.Raycast,function(self,origin,target,distance,filter,...)if
+not checkcaller()and _state.isSilentAimEnabled and(distance==400 or distance==
+999)and _isGunAction()then local targetPart=_getClosestSilentTarget()if
+targetPart then _lastSilentTargetPos=targetPart.Position return oldRaycast(self,
+origin,targetPart.Position,distance,filter,...)end end _lastSilentTargetPos=nil
+return oldRaycast(self,origin,target,distance,filter,...)end)local oldEncode
+oldEncode=hookfunction(utility.EncodeCFrame,function(self,cf)if not checkcaller(
+)and _state.isSilentAimEnabled and _lastSilentTargetPos and _isGunAction()then
+local newCF=CFrame.lookAt(cf.Position,_lastSilentTargetPos)return oldEncode(self
+,newCF)end return oldEncode(self,cf)end)_state.logger:info(
+[[Utility.Raycast and Utility.EncodeCFrame hooked for Silent Aim.]])end local
+cameraShaker=_getCameraShaker()if cameraShaker and not _state.cameraShakerHooked
+then _state.cameraShakerHooked=true local mt=getmetatable(cameraShaker.Presets)
+if mt and mt.__index then local oldIdx=mt.__index mt.__index=function(t,k)if
+_state.isSilentAimEnabled and(k=='StartShooting'or k=='')then return nil end
+return oldIdx(t,k)end _state.logger:info(
+'CameraShaker.Presets hooked to neutralize shake.')end end end)end
+local function _updateFovCircle()local lib=_getDrawingLib()if not lib then
+return end local function updateCircle(circleType,isEnabled,radius,color,
+transparency)local circle=_state[circleType]if isEnabled then if not circle then
+circle=lib.new('Circle')_state[circleType]=circle end local c=circle c.Thickness
+=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.
+Filled=false c.Color=color c.Transparency=math.clamp(transparency,0,1)local
+mouseLocation=UserInputService:GetMouseLocation()c.Position=mouseLocation c.
+Radius=radius c.Visible=true else local c=circle if c then c.Visible=false end
+end end updateCircle('fovCircle',_state.isFovEnabled,_state.fovRadius,_state.
+fovColor,_state.fovTransparency)updateCircle('silentAimFovCircle',_state.
 isSilentAimFovEnabled,_state.silentAimFovRadius,_state.fovColor,_state.
 fovTransparency)end local function _getTargetState(player)local camera=
 _getCamera()local localPlayer=_getLocalPlayer()if player==localPlayer then
