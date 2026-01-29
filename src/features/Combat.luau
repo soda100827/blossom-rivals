@@ -129,14 +129,12 @@ local function _applyInputLock(isLocked: boolean)
 		UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
 		UserInputService.MouseDeltaSensitivity = 0
 	else
-		if _state.mouseBehavior ~= nil then
-			UserInputService.MouseBehavior = _state.mouseBehavior
-			_state.mouseBehavior = nil
-		end
-		if _state.mouseDeltaSensitivity ~= nil then
-			UserInputService.MouseDeltaSensitivity = _state.mouseDeltaSensitivity
-			_state.mouseDeltaSensitivity = nil
-		end
+		local restoreBehavior = _state.mouseBehavior or Enum.MouseBehavior.Default
+		local restoreSensitivity = _state.mouseDeltaSensitivity or 1
+		UserInputService.MouseBehavior = restoreBehavior
+		UserInputService.MouseDeltaSensitivity = restoreSensitivity
+		_state.mouseBehavior = nil
+		_state.mouseDeltaSensitivity = nil
 	end
 
 	_state.isInputLocked = isLocked
@@ -185,7 +183,7 @@ local function _updateFovCircle()
 	end
 
 	local circle = _state.fovCircle
-	if _state.isFovEnabled and _state.isAimbotEnabled then
+	if _state.isFovEnabled then
 		if not circle then
 			circle = lib.new("Circle")
 			_state.fovCircle = circle
@@ -198,7 +196,7 @@ local function _updateFovCircle()
 		c.NumSides = CONSTANTS.FOV_CIRCLE_NUM_SIDES
 		c.Filled = false
 		c.Color = _state.fovColor
-		c.Transparency = 1 - _state.fovTransparency
+		c.Transparency = math.clamp(_state.fovTransparency, 0, 1)
 
 		local mouseLocation = UserInputService:GetMouseLocation()
 		c.Position = mouseLocation
@@ -425,6 +423,10 @@ function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
 	end
 	_state.logger:info("Set Aimbot Enabled:", isEnabled)
 	_state.isAimbotEnabled = isEnabled
+	if not isEnabled then
+		_state.target = nil
+		_applyInputLock(false)
+	end
 end
 
 function Combat.setFovEnabled(self: CombatFeature, isEnabled: boolean): ()

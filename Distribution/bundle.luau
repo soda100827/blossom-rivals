@@ -423,27 +423,27 @@ _state.mouseBehavior==nil then _state.mouseBehavior=UserInputService.
 MouseBehavior end if _state.mouseDeltaSensitivity==nil then _state.
 mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity end
 UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter UserInputService.
-MouseDeltaSensitivity=0 else if _state.mouseBehavior~=nil then UserInputService.
-MouseBehavior=_state.mouseBehavior _state.mouseBehavior=nil end if _state.
-mouseDeltaSensitivity~=nil then UserInputService.MouseDeltaSensitivity=_state.
-mouseDeltaSensitivity _state.mouseDeltaSensitivity=nil end end _state.
-isInputLocked=isLocked end local function _fetchCameraController(logger)if
-_state.cameraController then return end if logger then logger:info(
-'Fetching start...')end local playerScripts=_getLocalPlayer():WaitForChild(
-'PlayerScripts')if not playerScripts then return end local controllers=
-playerScripts:WaitForChild('Controllers')if not controllers then return end
-local camControllerScript=controllers:WaitForChild('CameraController')if
-camControllerScript and camControllerScript:IsA('ModuleScript')then local
-success,result=pcall(function()return require(camControllerScript)end)if success
-then _state.cameraController=result if logger then logger:info(
-'Success CameraController')end else if logger then logger:error(
-'Failed CameraController',result)end end end end local function _updateFovCircle
-()local lib=_getDrawingLib()if not lib then return end local circle=_state.
-fovCircle if _state.isFovEnabled and _state.isAimbotEnabled then if not circle
-then circle=lib.new('Circle')_state.fovCircle=circle end local c=circle c.
-Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.
-FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=_state.fovColor c.Transparency=1-
-_state.fovTransparency local mouseLocation=UserInputService:GetMouseLocation()c.
+MouseDeltaSensitivity=0 else local restoreBehavior=_state.mouseBehavior or Enum.
+MouseBehavior.Default local restoreSensitivity=_state.mouseDeltaSensitivity or 1
+UserInputService.MouseBehavior=restoreBehavior UserInputService.
+MouseDeltaSensitivity=restoreSensitivity _state.mouseBehavior=nil _state.
+mouseDeltaSensitivity=nil end _state.isInputLocked=isLocked end local function
+_fetchCameraController(logger)if _state.cameraController then return end if
+logger then logger:info('Fetching start...')end local playerScripts=
+_getLocalPlayer():WaitForChild('PlayerScripts')if not playerScripts then return
+end local controllers=playerScripts:WaitForChild('Controllers')if not
+controllers then return end local camControllerScript=controllers:WaitForChild(
+'CameraController')if camControllerScript and camControllerScript:IsA(
+'ModuleScript')then local success,result=pcall(function()return require(
+camControllerScript)end)if success then _state.cameraController=result if logger
+then logger:info('Success CameraController')end else if logger then logger:
+error('Failed CameraController',result)end end end end local function
+_updateFovCircle()local lib=_getDrawingLib()if not lib then return end local
+circle=_state.fovCircle if _state.isFovEnabled then if not circle then circle=
+lib.new('Circle')_state.fovCircle=circle end local c=circle c.Thickness=
+CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.
+Filled=false c.Color=_state.fovColor c.Transparency=math.clamp(_state.
+fovTransparency,0,1)local mouseLocation=UserInputService:GetMouseLocation()c.
 Position=mouseLocation c.Radius=_state.fovRadius c.Visible=true else local c=
 circle if c then c.Visible=false end end end local function _isValidTarget(
 player)local camera=_getCamera()local localPlayer=_getLocalPlayer()if player==
@@ -505,10 +505,11 @@ _state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()end
 function Combat.cleanup(self)_state.isAimbotEnabled=false _disconnect()end
 function Combat.setAimbotEnabled(self,isEnabled)if _state.isAimbotEnabled==
 isEnabled then return end _state.logger:info('Set Aimbot Enabled:',isEnabled)
-_state.isAimbotEnabled=isEnabled end function Combat.setFovEnabled(self,
-isEnabled)_state.isFovEnabled=isEnabled end function Combat.setFovRadius(self,
-radius)_state.fovRadius=radius end function Combat.setFovColor(self,color)_state
-.fovColor=color end function Combat.setFovTransparency(self,transparency)_state.
+_state.isAimbotEnabled=isEnabled if not isEnabled then _state.target=nil
+_applyInputLock(false)end end function Combat.setFovEnabled(self,isEnabled)
+_state.isFovEnabled=isEnabled end function Combat.setFovRadius(self,radius)
+_state.fovRadius=radius end function Combat.setFovColor(self,color)_state.
+fovColor=color end function Combat.setFovTransparency(self,transparency)_state.
 fovTransparency=math.clamp(transparency,0,1)end function Combat.
 setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled end
 function Combat.setSmoothness(self,smoothness)_state.smoothness=smoothness end
