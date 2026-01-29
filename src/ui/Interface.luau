@@ -166,27 +166,91 @@ local function _mount()
 		uiSettings = window:AddTab("UI Settings"),
 	}
 
-	local combatGroup = tabs.combat:AddLeftGroupbox("Aimbot")
-	local combatAimbotToggle = combatGroup:AddToggle("CombatAimbotEnabled", {
-		Text = "Enabled",
+	local combatGroup = tabs.combat:AddLeftGroupbox("Combat")
+
+	-- Silent Aim Section
+	local silentAimToggle = combatGroup:AddToggle("SilentAimEnabled", {
+		Text = "Silent Aim",
 		Default = false,
 		Callback = function()
 			_updateControlBindings()
 		end,
 	})
-	local combatAimbotKeybind = combatAimbotToggle:AddKeyPicker("CombatAimbotKeybind", {
+	silentAimToggle:AddKeyPicker("SilentAimKeybind", {
 		Default = "MouseButton2",
 		NoUI = false,
-		Text = "Trigger Key",
+		Text = "Silent Aim Keybind",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
 		end,
 	})
-	combatAimbotKeybind:AddColorPicker("CombatFovColor", {
+	silentAimToggle:AddColorPicker("SilentAimFovColor", {
 		Default = Color3.fromRGB(255, 255, 255),
 		Transparency = 0,
-		Title = "FOV Color",
+		Title = "Silent FOV Color",
+		Callback = function(color, transparency)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setSilentAimFovColor then
+				mod:setSilentAimFovColor(color)
+			end
+			if mod and mod.setSilentAimFovTransparency then
+				mod:setSilentAimFovTransparency(transparency or 0)
+			end
+		end,
+	})
+
+	combatGroup:AddSlider("SilentHitChance", {
+		Text = "Silent Hit Chance",
+		Default = 100,
+		Min = 0,
+		Max = 100,
+		Rounding = 0,
+		Suffix = "%",
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setSilentHitChance then
+				mod:setSilentHitChance(value)
+			end
+		end,
+	})
+
+	combatGroup:AddSlider("SilentAimFovRadius", {
+		Text = "Silent Aim Radius",
+		Default = 100,
+		Min = 10,
+		Max = 800,
+		Rounding = 0,
+		Suffix = "px",
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setSilentAimFovRadius then
+				mod:setSilentAimFovRadius(value)
+			end
+		end,
+	})
+
+	-- Aimbot Section
+	local combatAimbotToggle = combatGroup:AddToggle("CombatAimbotEnabled", {
+		Text = "Aimbot",
+		Default = false,
+		Callback = function()
+			_updateControlBindings()
+		end,
+	})
+	combatAimbotToggle:AddKeyPicker("CombatAimbotKeybind", {
+		Default = "MouseButton2",
+		NoUI = false,
+		Text = "Aimbot Keybind",
+		SyncToggleState = false,
+		Callback = function()
+			_updateControlBindings()
+		end,
+	})
+	combatAimbotToggle:AddColorPicker("CombatFovColor", {
+		Default = Color3.fromRGB(255, 255, 255),
+		Transparency = 0,
+		Title = "Aimbot FOV Color",
 		Callback = function(color, transparency)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setFovColor then
@@ -197,45 +261,14 @@ local function _mount()
 			end
 		end,
 	})
-	combatGroup:AddToggle("CombatShowFov", {
-		Text = "Show FOV",
-		Default = false,
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setFovEnabled then
-				mod:setFovEnabled(state)
-			end
-		end,
-	})
-	combatGroup:AddSlider("CombatFovRadius", {
-		Text = "FOV Radius",
-		Default = 100,
-		Min = 10,
-		Max = 800,
-		Rounding = 0,
-		Callback = function(value)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setFovRadius then
-				mod:setFovRadius(value)
-			end
-		end,
-	})
-	combatGroup:AddToggle("CombatTeamCheck", {
-		Text = "Team Check",
-		Default = false,
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setTeamCheckEnabled then
-				mod:setTeamCheckEnabled(state)
-			end
-		end,
-	})
+
 	combatGroup:AddSlider("CombatSmoothness", {
-		Text = "Smoothness",
+		Text = "Aimbot Smoothing",
 		Default = 0,
 		Min = 0,
 		Max = 1,
 		Rounding = 2,
+		Suffix = "%", -- Matches image style
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setSmoothness then
@@ -243,8 +276,36 @@ local function _mount()
 			end
 		end,
 	})
+
+	combatGroup:AddSlider("CombatFovRadius", {
+		Text = "Aimbot Radius",
+		Default = 100,
+		Min = 10,
+		Max = 800,
+		Rounding = 0,
+		Suffix = "px",
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setFovRadius then
+				mod:setFovRadius(value)
+			end
+		end,
+	})
+
+	-- Other Settings
+	combatGroup:AddToggle("CombatManipulation", {
+		Text = "Manipulation",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setManipulationEnabled then
+				mod:setManipulationEnabled(state)
+			end
+		end,
+	})
+
 	combatGroup:AddToggle("CombatWallCheck", {
-		Text = "Wall Check",
+		Text = "Visible Only",
 		Default = false,
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
@@ -253,43 +314,78 @@ local function _mount()
 			end
 		end,
 	})
-	local silentAimGroup = tabs.combat:AddRightGroupbox("Silent Aim")
-	local silentAimToggle = silentAimGroup:AddToggle("SilentAimEnabled", {
-		Text = "Enabled",
-		Default = false,
-		Callback = function(state)
-			_updateControlBindings()
-		end,
-	})
-	silentAimToggle:AddKeyPicker("SilentAimKeybind", {
-		Default = "MouseButton2",
-		NoUI = false,
-		Text = "Trigger Key",
-		SyncToggleState = false,
-		Callback = function()
-			_updateControlBindings()
-		end,
-	})
-	silentAimGroup:AddToggle("SilentAimShowFov", {
-		Text = "Show FOV",
+
+	combatGroup:AddToggle("CombatAntiKatana", {
+		Text = "Anti Katana",
 		Default = false,
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setSilentAimFovEnabled then
-				mod:setSilentAimFovEnabled(state)
+			if mod and mod.setAntiKatanaEnabled then
+				mod:setAntiKatanaEnabled(state)
 			end
 		end,
 	})
-	silentAimGroup:AddSlider("SilentAimFovRadius", {
-		Text = "FOV Radius",
-		Default = 100,
-		Min = 10,
-		Max = 800,
-		Rounding = 0,
+
+	combatGroup:AddToggle("CombatClosestPosition", {
+		Text = "Closest Position",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setClosestPositionEnabled then
+				mod:setClosestPositionEnabled(state)
+			end
+		end,
+	})
+
+	combatGroup:AddDropdown("CombatClosestWhitelist", {
+		Values = {
+			"Head",
+			"UpperTorso",
+			"LowerTorso",
+			"LeftUpperArm",
+			"RightUpperArm",
+			"LeftUpperLeg",
+			"RightUpperLeg",
+		},
+		Default = 1,
+		Multi = true,
+		Text = "Closest Position Whitelist",
+		Tooltip = "Parts to consider for Closest Position",
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setSilentAimFovRadius then
-				mod:setSilentAimFovRadius(value)
+			if mod and mod.setClosestPositionWhitelist then
+				local selectedNames = {}
+				for name, enabled in pairs(value) do
+					if enabled then
+						table.insert(selectedNames, name)
+					end
+				end
+				mod:setClosestPositionWhitelist(selectedNames)
+			end
+		end,
+	})
+
+	combatGroup:AddDropdown("CombatTargetPart", {
+		Values = { "Head", "UpperTorso", "LowerTorso" },
+		Default = 1,
+		Multi = false,
+		Text = "Target Part",
+		Tooltip = "Static target part when Closest Position is off",
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setTargetPart then
+				mod:setTargetPart(value)
+			end
+		end,
+	})
+
+	combatGroup:AddToggle("CombatTeamCheck", {
+		Text = "Team Check",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setTeamCheckEnabled then
+				mod:setTeamCheckEnabled(state)
 			end
 		end,
 	})

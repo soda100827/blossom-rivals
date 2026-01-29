@@ -407,17 +407,20 @@ fromRGB(255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,
 MIN_AIM_SPEED=4,MAX_AIM_SPEED=40,MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,
 TARGET_DROP_FOV_MULTIPLIER=1.2,AIMBOT_RENDER_STEP_NAME='CombatAimbot'}local
 Combat={}Combat.__index=Combat local _maid=nil local _state={client=nil,logger=
-nil,isAimbotEnabled=false,isSilentAimEnabled=false,isFovEnabled=false,
-isSilentAimFovEnabled=false,fovRadius=100,silentAimFovRadius=100,fovColor=
-CONSTANTS.FOV_CIRCLE_COLOR,fovTransparency=0,isTeamCheckEnabled=false,
-isWallCheckEnabled=false,smoothness=0,target=nil,silentTarget=nil,targetLostAt=
-nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,cameraController
-=nil,fighterController=nil,remoteHooked=false,utilityHooked=false,
-cameraShakerHooked=false,isInputLocked=false,mouseBehavior=nil,
-mouseDeltaSensitivity=nil}local function _getGlobal(name)local getfenvAny=
-getfenv local env=(getfenvAny(0))local genv=(env.getgenv and env.getgenv())or
-env return genv[name]or env[name]end local function _getUtility()local
-replicatedStorage=game:GetService('ReplicatedStorage')local modules=
+nil,isAimbotEnabled=false,isSilentAimEnabled=false,isFovEnabled=true,
+isSilentAimFovEnabled=true,fovRadius=100,silentAimFovRadius=100,fovColor=
+CONSTANTS.FOV_CIRCLE_COLOR,silentAimFovColor=CONSTANTS.FOV_CIRCLE_COLOR,
+fovTransparency=0,silentAimFovTransparency=0,silentHitChance=100,targetPart=
+'Head',isManipulationEnabled=false,isAntiKatanaEnabled=false,
+isClosestPositionEnabled=false,closestPositionWhitelist={'Head'},
+isTeamCheckEnabled=false,isWallCheckEnabled=false,smoothness=0,target=nil,
+silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
+silentAimFovCircle=nil,cameraController=nil,fighterController=nil,remoteHooked=
+false,utilityHooked=false,cameraShakerHooked=false,isInputLocked=false,
+mouseBehavior=nil,mouseDeltaSensitivity=nil}local function _getGlobal(name)local
+getfenvAny=getfenv local env=(getfenvAny(0))local genv=(env.getgenv and env.
+getgenv())or env return genv[name]or env[name]end local function _getUtility()
+local replicatedStorage=game:GetService('ReplicatedStorage')local modules=
 replicatedStorage:WaitForChild('Modules',5)if not modules then return nil end
 local utility=modules:WaitForChild('Utility',5)if not utility then return nil
 end local success,result=pcall(function()local dynamicRequire=require return
@@ -428,29 +431,27 @@ then return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
 modules then return nil end local cameraShaker=modules:WaitForChild(
 'CameraShaker',5)if not cameraShaker then return nil end local success,result=
 pcall(function()local dynamicRequire=require return dynamicRequire(cameraShaker)
-end)return success and result or nil end local _lastLogTime=0 local function
-_throttleLog(...)if os.clock()-_lastLogTime>2 then _state.logger:info(...)
-_lastLogTime=os.clock()end end local function _getCamera()local camera=Workspace
-.CurrentCamera if not camera then camera=(Workspace:WaitForChild('Camera'))end
-return camera end local function _getLocalPlayer()return Players.LocalPlayer end
-local function _getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))
-local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if
-not lib then lib=rawget(_G,'Drawing')end return lib end local function
-_applyInputLock(isLocked)if isLocked and _state.smoothness<CONSTANTS.
-MAX_SMOOTHNESS then return end if isLocked==_state.isInputLocked then return end
-if isLocked then if _state.mouseBehavior==nil then _state.mouseBehavior=
-UserInputService.MouseBehavior end if _state.mouseDeltaSensitivity==nil then
-_state.mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity end
-UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter UserInputService.
-MouseDeltaSensitivity=0 else local restoreBehavior=_state.mouseBehavior or Enum.
-MouseBehavior.Default local restoreSensitivity=_state.mouseDeltaSensitivity or 1
-UserInputService.MouseBehavior=restoreBehavior UserInputService.
-MouseDeltaSensitivity=restoreSensitivity _state.mouseBehavior=nil _state.
-mouseDeltaSensitivity=nil end _state.isInputLocked=isLocked end local function
-_isMaxSmoothness()return _state.smoothness>=CONSTANTS.MAX_SMOOTHNESS end
-local function _fetchCameraController(logger)if _state.cameraController then
-return end if logger then logger:info('Fetching start...')end local
-playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts')if not
+end)return success and result or nil end local function _getCamera()local camera
+=Workspace.CurrentCamera if not camera then camera=(Workspace:WaitForChild(
+'Camera'))end return camera end local function _getLocalPlayer()return Players.
+LocalPlayer end local function _getDrawingLib()local getfenvAny=getfenv local g=
+(getfenvAny(0))local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv()
+.Drawing end if not lib then lib=rawget(_G,'Drawing')end return lib end
+local function _applyInputLock(isLocked)if isLocked and _state.smoothness<
+CONSTANTS.MAX_SMOOTHNESS then return end if isLocked==_state.isInputLocked then
+return end if isLocked then if _state.mouseBehavior==nil then _state.
+mouseBehavior=UserInputService.MouseBehavior end if _state.mouseDeltaSensitivity
+==nil then _state.mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity
+end UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter
+UserInputService.MouseDeltaSensitivity=0 else local restoreBehavior=_state.
+mouseBehavior or Enum.MouseBehavior.Default local restoreSensitivity=_state.
+mouseDeltaSensitivity or 1 UserInputService.MouseBehavior=restoreBehavior
+UserInputService.MouseDeltaSensitivity=restoreSensitivity _state.mouseBehavior=
+nil _state.mouseDeltaSensitivity=nil end _state.isInputLocked=isLocked end
+local function _isMaxSmoothness()return _state.smoothness>=CONSTANTS.
+MAX_SMOOTHNESS end local function _fetchCameraController(logger)if _state.
+cameraController then return end if logger then logger:info('Fetching start...')
+end local playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts')if not
 playerScripts then return end local controllers=playerScripts:WaitForChild(
 'Controllers')if not controllers then return end local camControllerScript=
 controllers:WaitForChild('CameraController')if camControllerScript and
@@ -480,9 +481,13 @@ local closest,closestDist=nil,_state.silentAimFovRadius local screenCenter=
 camera.ViewportSize/2 for _,entity in ipairs(collectionService:GetTagged(
 'Entity'))do if entity==localPlayer.Character then continue end local hum=entity
 :FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
-local targetPart=entity:FindFirstChild('HitboxHead')or entity:FindFirstChild(
-'Head')if not targetPart or not targetPart:IsA('BasePart')then continue end if
-_state.isTeamCheckEnabled then local player=game:GetService('Players'):
+local targetParts={}if _state.isClosestPositionEnabled then for _,partName in
+ipairs(_state.closestPositionWhitelist)do local p=entity:FindFirstChild(partName
+)if p and p:IsA('BasePart')then table.insert(targetParts,p)end end else local p=
+entity:FindFirstChild(_state.targetPart)or entity:FindFirstChild('Head')if p and
+p:IsA('BasePart')then table.insert(targetParts,p)end end if#targetParts==0 then
+continue end for _,targetPart in ipairs(targetParts)do if _state.
+isTeamCheckEnabled then local player=game:GetService('Players'):
 GetPlayerFromCharacter(entity)if player and player.Team==localPlayer.Team then
 continue end end if _state.isWallCheckEnabled then local origin=camera.CFrame.
 Position local direction=targetPart.Position-origin local raycastParams=
@@ -491,7 +496,7 @@ Character),entity}raycastParams.FilterType=Enum.RaycastFilterType.Exclude local
 result=Workspace:Raycast(origin,direction,raycastParams)if result then continue
 end end local pos,onScreen=camera:WorldToViewportPoint(targetPart.Position)if
 onScreen then local dist=(Vector2.new(pos.X,pos.Y)-screenCenter).Magnitude if
-dist<closestDist then closest=targetPart closestDist=dist end end end return
+dist<closestDist then closest=targetPart closestDist=dist end end end end return
 closest end local function _setupSilentAim()local hookfunction=_getGlobal(
 'hookfunction')or _getGlobal('replaceclosure')local checkcaller=_getGlobal(
 'checkcaller')or function()return false end if not hookfunction then _state.
@@ -500,14 +505,16 @@ end task.spawn(function()local utility=_getUtility()if utility and not _state.
 utilityHooked then _state.utilityHooked=true local oldRaycast oldRaycast=
 hookfunction(utility.Raycast,function(self,origin,target,distance,filter,...)if
 not checkcaller()and _state.isSilentAimEnabled and(distance==400 or distance==
-999)and _isGunAction()then local targetPart=_getClosestSilentTarget()if
-targetPart then _lastSilentTargetPos=targetPart.Position return oldRaycast(self,
-origin,targetPart.Position,distance,filter,...)end end _lastSilentTargetPos=nil
-return oldRaycast(self,origin,target,distance,filter,...)end)local oldEncode
-oldEncode=hookfunction(utility.EncodeCFrame,function(self,cf)if not checkcaller(
-)and _state.isSilentAimEnabled and _lastSilentTargetPos and _isGunAction()then
-local newCF=CFrame.lookAt(cf.Position,_lastSilentTargetPos)return oldEncode(self
-,newCF)end return oldEncode(self,cf)end)_state.logger:info(
+999)and _isGunAction()then if math.random(1,100)>_state.silentHitChance then
+_lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
+...)end local targetPart=_getClosestSilentTarget()if targetPart then
+_lastSilentTargetPos=targetPart.Position return oldRaycast(self,origin,
+targetPart.Position,distance,filter,...)end end _lastSilentTargetPos=nil return
+oldRaycast(self,origin,target,distance,filter,...)end)local oldEncode oldEncode=
+hookfunction(utility.EncodeCFrame,function(self,cf)if not checkcaller()and
+_state.isSilentAimEnabled and _lastSilentTargetPos and _isGunAction()then local
+newCF=CFrame.lookAt(cf.Position,_lastSilentTargetPos)return oldEncode(self,newCF
+)end return oldEncode(self,cf)end)_state.logger:info(
 [[Utility.Raycast and Utility.EncodeCFrame hooked for Silent Aim.]])end local
 cameraShaker=_getCameraShaker()if cameraShaker and not _state.cameraShakerHooked
 then _state.cameraShakerHooked=true local mt=getmetatable(cameraShaker.Presets)
@@ -525,25 +532,32 @@ mouseLocation=UserInputService:GetMouseLocation()c.Position=mouseLocation c.
 Radius=radius c.Visible=true else local c=circle if c then c.Visible=false end
 end end updateCircle('fovCircle',_state.isFovEnabled,_state.fovRadius,_state.
 fovColor,_state.fovTransparency)updateCircle('silentAimFovCircle',_state.
-isSilentAimFovEnabled,_state.silentAimFovRadius,_state.fovColor,_state.
-fovTransparency)end local function _getTargetState(player)local camera=
+isSilentAimFovEnabled,_state.silentAimFovRadius,_state.silentAimFovColor,_state.
+silentAimFovTransparency)end local function _getTargetState(player)local camera=
 _getCamera()local localPlayer=_getLocalPlayer()if player==localPlayer then
 return false,nil,false,math.huge end if _state.isTeamCheckEnabled and player.
 Team==localPlayer.Team then return false,nil,false,math.huge end local character
 =player.Character if not character then return false,nil,false,math.huge end
 local humanoid=character:FindFirstChildOfClass('Humanoid')if not humanoid or
-humanoid.Health<=0 then return false,nil,false,math.huge end local head=
-character:FindFirstChild('Head')if not head or not head:IsA('BasePart')then
-return false,nil,false,math.huge end local headPart=head if _state.
-isWallCheckEnabled then local origin=camera.CFrame.Position local direction=
-headPart.Position-origin local raycastParams=RaycastParams.new()raycastParams.
+humanoid.Health<=0 then return false,nil,false,math.huge end local targetParts={
+}if _state.isClosestPositionEnabled then for _,partName in ipairs(_state.
+closestPositionWhitelist)do local p=character:FindFirstChild(partName)if p and p
+:IsA('BasePart')then table.insert(targetParts,p)end end else local p=character:
+FindFirstChild(_state.targetPart)or character:FindFirstChild('Head')if p and p:
+IsA('BasePart')then table.insert(targetParts,p)end end if#targetParts==0 then
+return false,nil,false,math.huge end local bestPart=nil local shortestDist=math.
+huge local anyOnScreen=false local mouseLocation=UserInputService:
+GetMouseLocation()for _,part in ipairs(targetParts)do if _state.
+isWallCheckEnabled then local origin=camera.CFrame.Position local direction=part
+.Position-origin local raycastParams=RaycastParams.new()raycastParams.
 FilterDescendantsInstances={(localPlayer.Character),character}raycastParams.
 FilterType=Enum.RaycastFilterType.Exclude local result=Workspace:Raycast(origin,
-direction,raycastParams)if result then return false,nil,false,math.huge end end
-local screenPos,onScreen=camera:WorldToViewportPoint(headPart.Position)if not
-onScreen then return true,headPart,false,math.huge end local mouseLocation=
-UserInputService:GetMouseLocation()local distance=(Vector2.new(screenPos.X,
-screenPos.Y)-mouseLocation).Magnitude return true,headPart,true,distance end
+direction,raycastParams)if result then continue end end local screenPos,onScreen
+=camera:WorldToViewportPoint(part.Position)if not onScreen then if not bestPart
+then bestPart=part end continue end anyOnScreen=true local distance=(Vector2.
+new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if distance<shortestDist
+then shortestDist=distance bestPart=part end end if not bestPart then return
+false,nil,false,math.huge end return true,bestPart,anyOnScreen,shortestDist end
 local function _getBestTarget(radius)local localPlayer=_getLocalPlayer()local
 bestTarget=nil local shortestDistance=radius for _,player in ipairs(Players:
 GetPlayers())do if player==localPlayer then continue end local isValid,headPart,
@@ -562,73 +576,81 @@ targetLostAt=nil _state.target=nil end end local newTarget=_getBestTarget(_state
 .fovRadius)_state.target=newTarget return newTarget end local function
 _resolveSilentTarget()if _state.silentTarget then local dropRadius=_state.
 silentAimFovRadius*CONSTANTS.TARGET_DROP_FOV_MULTIPLIER local isValid,headPart,
-onScreen,distance=_getTargetState(_state.silentTarget)if isValid and headPart
-and onScreen and distance<=dropRadius then _state.silentTargetLostAt=nil return
-_state.silentTarget end if not isValid or not headPart then _state.
+_onScreen,_distance=_getTargetState(_state.silentTarget)if isValid and headPart
+and _onScreen and _distance<=dropRadius then _state.silentTargetLostAt=nil
+return _state.silentTarget end if not isValid or not headPart then _state.
 silentTargetLostAt=nil _state.silentTarget=nil else local now=os.clock()local
 silentTargetLostAt=_state.silentTargetLostAt if not silentTargetLostAt then
 silentTargetLostAt=now _state.silentTargetLostAt=now end if now-(
 silentTargetLostAt)<CONSTANTS.TARGET_DROP_DELAY then return _state.silentTarget
 end _state.silentTargetLostAt=nil _state.silentTarget=nil end end local
 newTarget=_getBestTarget(_state.silentAimFovRadius)_state.silentTarget=newTarget
-return newTarget end local function _aimAt(target,deltaTime)if not target.
-Character then return end local head=target.Character:FindFirstChild('Head')if
-not head or not head:IsA('BasePart')then return end local camera=_getCamera()
-local targetPos=(head).Position local currentCFrame=camera.CFrame local
-lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)if not _state.
-cameraController or not _state.cameraController.SetRotation then local alpha=1
-if not _isMaxSmoothness()then local speed=CONSTANTS.MIN_AIM_SPEED+(1-_state.
-smoothness)*(CONSTANTS.MAX_AIM_SPEED-CONSTANTS.MIN_AIM_SPEED)alpha=1-math.exp(-
-speed*deltaTime)end camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return
-end local x,y,_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y
-)_throttleLog('Aiming...',targetRotation)if _isMaxSmoothness()then _state.
-cameraController:SetRotation(targetRotation)elseif _state.smoothness>0 then
-local currentRot=(_state.cameraController.Rotation)local speed=CONSTANTS.
-MIN_AIM_SPEED+(1-_state.smoothness)*(CONSTANTS.MAX_AIM_SPEED-CONSTANTS.
-MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)local newRot=currentRot:
-Lerp(targetRotation,alpha)_state.cameraController:SetRotation(newRot)else _state
-.cameraController:SetRotation(targetRotation)end end local function _connect()
-_maid:DoCleaning()task.spawn(function()_fetchCameraController(_state.logger)end)
-_setupSilentAim()RunService:BindToRenderStep(CONSTANTS.AIMBOT_RENDER_STEP_NAME,
-Enum.RenderPriority.Camera.Value+1,function(deltaTime)_updateFovCircle()
-_throttleLog('Aimbot Status | Enabled:',_state.isAimbotEnabled,'Silent:',_state.
-isSilentAimEnabled)if _state.isAimbotEnabled then local target=_resolveTarget()
-if target then _applyInputLock(true)_state.logger:info('Target found:',target.
-Name)_aimAt(target,deltaTime)else _applyInputLock(false)end else _state.target=
-nil _applyInputLock(false)end if _state.isSilentAimEnabled then
-_resolveSilentTarget()else _state.silentTarget=nil end end)_maid:GiveTask(
-function()RunService:UnbindFromRenderStep(CONSTANTS.AIMBOT_RENDER_STEP_NAME)end)
-end local function _disconnect()if _state.fovCircle then pcall(function()((
-_state.fovCircle)):Remove()end)_state.fovCircle=nil end if _state.
-silentAimFovCircle then pcall(function()((_state.silentAimFovCircle)):Remove()
-end)_state.silentAimFovCircle=nil end _state.target=nil _state.silentTarget=nil
-_state.targetLostAt=nil _state.silentTargetLostAt=nil _applyInputLock(false)
-_maid:DoCleaning()end function Combat.init(self,client)_state.client=client
-_state.logger=client.Logger _maid=Maid.new()_connect()end function Combat.
-cleanup(self)_state.isAimbotEnabled=false _disconnect()end function Combat.
-setAimbotEnabled(self,isEnabled)if _state.isAimbotEnabled==isEnabled then return
-end _state.logger:info('Set Aimbot Enabled:',isEnabled)_state.isAimbotEnabled=
-isEnabled if not isEnabled then _state.target=nil _state.targetLostAt=nil
-_applyInputLock(false)end end function Combat.setFovEnabled(self,isEnabled)
-_state.isFovEnabled=isEnabled end function Combat.setFovRadius(self,radius)
-_state.fovRadius=radius end function Combat.setFovColor(self,color)_state.
-fovColor=color end function Combat.setFovTransparency(self,transparency)_state.
-fovTransparency=math.clamp(transparency,0,1)end function Combat.
-setTeamCheckEnabled(self,isEnabled)_state.isTeamCheckEnabled=isEnabled end
-function Combat.setSmoothness(self,smoothness)local wasMaxSmoothness=
-_isMaxSmoothness()_state.smoothness=math.clamp(smoothness,0,CONSTANTS.
-MAX_SMOOTHNESS)if wasMaxSmoothness and not _isMaxSmoothness()then
+return newTarget end local function _aimAt(target,bestPart,deltaTime)if not
+target.Character then return end local targetPos=(bestPart).Position local
+camera=_getCamera()local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.
+lookAt(currentCFrame.Position,targetPos)if not _state.cameraController or not
+_state.cameraController.SetRotation then local alpha=1 if not _isMaxSmoothness()
+then local speed=CONSTANTS.MIN_AIM_SPEED+(1-_state.smoothness)*(CONSTANTS.
+MAX_AIM_SPEED-CONSTANTS.MIN_AIM_SPEED)alpha=1-math.exp(-speed*deltaTime)end
+camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return end local x,y,_=
+lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)if
+_isMaxSmoothness()then _state.cameraController:SetRotation(targetRotation)elseif
+_state.smoothness>0 then local currentRot=(_state.cameraController.Rotation)
+local speed=CONSTANTS.MIN_AIM_SPEED+(1-_state.smoothness)*(CONSTANTS.
+MAX_AIM_SPEED-CONSTANTS.MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)
+local newRot=currentRot:Lerp(targetRotation,alpha)_state.cameraController:
+SetRotation(newRot)else _state.cameraController:SetRotation(targetRotation)end
+end local function _connect()_maid:DoCleaning()task.spawn(function()
+_fetchCameraController(_state.logger)end)_setupSilentAim()RunService:
+BindToRenderStep(CONSTANTS.AIMBOT_RENDER_STEP_NAME,Enum.RenderPriority.Camera.
+Value+1,function(deltaTime)_updateFovCircle()if _state.isAimbotEnabled then
+local target=_resolveTarget()if target then local _isValid,_bestPart,
+_anyOnScreen,_shortestDist=_getTargetState(target)if _isValid and _bestPart then
+_applyInputLock(true)_aimAt(target,_bestPart,deltaTime)else _applyInputLock(
+false)end else _applyInputLock(false)end else _state.target=nil _applyInputLock(
+false)end if _state.isSilentAimEnabled then _resolveSilentTarget()else _state.
+silentTarget=nil end end)_maid:GiveTask(function()RunService:
+UnbindFromRenderStep(CONSTANTS.AIMBOT_RENDER_STEP_NAME)end)end local function
+_disconnect()if _state.fovCircle then pcall(function()((_state.fovCircle)):
+Remove()end)_state.fovCircle=nil end if _state.silentAimFovCircle then pcall(
+function()((_state.silentAimFovCircle)):Remove()end)_state.silentAimFovCircle=
+nil end _state.target=nil _state.silentTarget=nil _state.targetLostAt=nil _state
+.silentTargetLostAt=nil _applyInputLock(false)_maid:DoCleaning()end function
+Combat.init(self,client)_state.client=client _state.logger=client.Logger _maid=
+Maid.new()_connect()end function Combat.cleanup(self)_state.isAimbotEnabled=
+false _disconnect()end function Combat.setAimbotEnabled(self,isEnabled)if _state
+.isAimbotEnabled==isEnabled then return end _state.logger:info(
+'Set Aimbot Enabled:',isEnabled)_state.isAimbotEnabled=isEnabled if not
+isEnabled then _state.target=nil _state.targetLostAt=nil _applyInputLock(false)
+end end function Combat.setFovEnabled(self,isEnabled)_state.isFovEnabled=
+isEnabled end function Combat.setFovRadius(self,radius)_state.fovRadius=radius
+end function Combat.setFovColor(self,color)_state.fovColor=color end function
+Combat.setFovTransparency(self,transparency)_state.fovTransparency=math.clamp(
+transparency,0,1)end function Combat.setTeamCheckEnabled(self,isEnabled)_state.
+isTeamCheckEnabled=isEnabled end function Combat.setSmoothness(self,smoothness)
+local wasMaxSmoothness=_isMaxSmoothness()_state.smoothness=math.clamp(smoothness
+,0,CONSTANTS.MAX_SMOOTHNESS)if wasMaxSmoothness and not _isMaxSmoothness()then
 _applyInputLock(false)end end function Combat.setWallCheckEnabled(self,isEnabled
 )_state.isWallCheckEnabled=isEnabled end function Combat.setSilentAimEnabled(
 self,isEnabled)_state.logger:info('Set Silent Aim Enabled:',isEnabled)_state.
 isSilentAimEnabled=isEnabled if not isEnabled then _state.silentTarget=nil
 _state.silentTargetLostAt=nil end end function Combat.setSilentAimFovEnabled(
 self,isEnabled)_state.isSilentAimFovEnabled=isEnabled end function Combat.
-setSilentAimFovRadius(self,radius)_state.silentAimFovRadius=radius end return
-Combat end function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES
-.cache.g if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end
-return v.c end end do local function __modImpl()local RunService=game:
-GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
+setSilentAimFovRadius(self,radius)_state.silentAimFovRadius=radius end function
+Combat.setSilentAimFovColor(self,color)_state.silentAimFovColor=color end
+function Combat.setSilentAimFovTransparency(self,transparency)_state.
+silentAimFovTransparency=math.clamp(transparency,0,1)end function Combat.
+setSilentHitChance(self,chance)_state.silentHitChance=math.clamp(chance,0,100)
+end function Combat.setTargetPart(self,part)_state.targetPart=part end function
+Combat.setManipulationEnabled(self,enabled)_state.isManipulationEnabled=enabled
+end function Combat.setAntiKatanaEnabled(self,enabled)_state.isAntiKatanaEnabled
+=enabled end function Combat.setClosestPositionEnabled(self,enabled)_state.
+isClosestPositionEnabled=enabled end function Combat.setClosestPositionWhitelist
+(self,whitelist)_state.closestPositionWhitelist=whitelist end return Combat end
+function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c
+end end do local function __modImpl()local RunService=game:GetService(
+'RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.b())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -669,51 +691,74 @@ local window=library:CreateWindow({Title='Blossom '.._state.client.Version,
 Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})
 local tabs={combat=window:AddTab('Combat'),visuals=window:AddTab('Visuals'),misc
 =window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local combatGroup
-=tabs.combat:AddLeftGroupbox('Aimbot')local combatAimbotToggle=combatGroup:
-AddToggle('CombatAimbotEnabled',{Text='Enabled',Default=false,Callback=function(
-)_updateControlBindings()end})local combatAimbotKeybind=combatAimbotToggle:
-AddKeyPicker('CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text=
-'Trigger Key',SyncToggleState=false,Callback=function()_updateControlBindings()
-end})combatAimbotKeybind:AddColorPicker('CombatFovColor',{Default=Color3.
-fromRGB(255,255,255),Transparency=0,Title='FOV Color',Callback=function(color,
+=tabs.combat:AddLeftGroupbox('Combat')local silentAimToggle=combatGroup:
+AddToggle('SilentAimEnabled',{Text='Silent Aim',Default=false,Callback=function(
+)_updateControlBindings()end})silentAimToggle:AddKeyPicker('SilentAimKeybind',{
+Default='MouseButton2',NoUI=false,Text='Silent Aim Keybind',SyncToggleState=
+false,Callback=function()_updateControlBindings()end})silentAimToggle:
+AddColorPicker('SilentAimFovColor',{Default=Color3.fromRGB(255,255,255),
+Transparency=0,Title='Silent FOV Color',Callback=function(color,transparency)
+local mod=_state.client.Modules.Combat if mod and mod.setSilentAimFovColor then
+mod:setSilentAimFovColor(color)end if mod and mod.setSilentAimFovTransparency
+then mod:setSilentAimFovTransparency(transparency or 0)end end})combatGroup:
+AddSlider('SilentHitChance',{Text='Silent Hit Chance',Default=100,Min=0,Max=100,
+Rounding=0,Suffix='%',Callback=function(value)local mod=_state.client.Modules.
+Combat if mod and mod.setSilentHitChance then mod:setSilentHitChance(value)end
+end})combatGroup:AddSlider('SilentAimFovRadius',{Text='Silent Aim Radius',
+Default=100,Min=10,Max=800,Rounding=0,Suffix='px',Callback=function(value)local
+mod=_state.client.Modules.Combat if mod and mod.setSilentAimFovRadius then mod:
+setSilentAimFovRadius(value)end end})local combatAimbotToggle=combatGroup:
+AddToggle('CombatAimbotEnabled',{Text='Aimbot',Default=false,Callback=function()
+_updateControlBindings()end})combatAimbotToggle:AddKeyPicker(
+'CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text='Aimbot Keybind',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})
+combatAimbotToggle:AddColorPicker('CombatFovColor',{Default=Color3.fromRGB(255,
+255,255),Transparency=0,Title='Aimbot FOV Color',Callback=function(color,
 transparency)local mod=_state.client.Modules.Combat if mod and mod.setFovColor
 then mod:setFovColor(color)end if mod and mod.setFovTransparency then mod:
-setFovTransparency(transparency or 0)end end})combatGroup:AddToggle(
-'CombatShowFov',{Text='Show FOV',Default=false,Callback=function(state)local mod
-=_state.client.Modules.Combat if mod and mod.setFovEnabled then mod:
-setFovEnabled(state)end end})combatGroup:AddSlider('CombatFovRadius',{Text=
-'FOV Radius',Default=100,Min=10,Max=800,Rounding=0,Callback=function(value)local
-mod=_state.client.Modules.Combat if mod and mod.setFovRadius then mod:
-setFovRadius(value)end end})combatGroup:AddToggle('CombatTeamCheck',{Text=
+setFovTransparency(transparency or 0)end end})combatGroup:AddSlider(
+'CombatSmoothness',{Text='Aimbot Smoothing',Default=0,Min=0,Max=1,Rounding=2,
+Suffix='%',Callback=function(value)local mod=_state.client.Modules.Combat if mod
+and mod.setSmoothness then mod:setSmoothness(value)end end})combatGroup:
+AddSlider('CombatFovRadius',{Text='Aimbot Radius',Default=100,Min=10,Max=800,
+Rounding=0,Suffix='px',Callback=function(value)local mod=_state.client.Modules.
+Combat if mod and mod.setFovRadius then mod:setFovRadius(value)end end})
+combatGroup:AddToggle('CombatManipulation',{Text='Manipulation',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setManipulationEnabled then mod:setManipulationEnabled(state)end end})
+combatGroup:AddToggle('CombatWallCheck',{Text='Visible Only',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setWallCheckEnabled then mod:setWallCheckEnabled(state)end end})combatGroup:
+AddToggle('CombatAntiKatana',{Text='Anti Katana',Default=false,Callback=function
+(state)local mod=_state.client.Modules.Combat if mod and mod.
+setAntiKatanaEnabled then mod:setAntiKatanaEnabled(state)end end})combatGroup:
+AddToggle('CombatClosestPosition',{Text='Closest Position',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setClosestPositionEnabled then mod:setClosestPositionEnabled(state)end end})
+combatGroup:AddDropdown('CombatClosestWhitelist',{Values={'Head','UpperTorso',
+'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg'},
+Default=1,Multi=true,Text='Closest Position Whitelist',Tooltip=
+'Parts to consider for Closest Position',Callback=function(value)local mod=
+_state.client.Modules.Combat if mod and mod.setClosestPositionWhitelist then
+local selectedNames={}for name,enabled in pairs(value)do if enabled then table.
+insert(selectedNames,name)end end mod:setClosestPositionWhitelist(selectedNames)
+end end})combatGroup:AddDropdown('CombatTargetPart',{Values={'Head','UpperTorso'
+,'LowerTorso'},Default=1,Multi=false,Text='Target Part',Tooltip=
+'Static target part when Closest Position is off',Callback=function(value)local
+mod=_state.client.Modules.Combat if mod and mod.setTargetPart then mod:
+setTargetPart(value)end end})combatGroup:AddToggle('CombatTeamCheck',{Text=
 'Team Check',Default=false,Callback=function(state)local mod=_state.client.
 Modules.Combat if mod and mod.setTeamCheckEnabled then mod:setTeamCheckEnabled(
-state)end end})combatGroup:AddSlider('CombatSmoothness',{Text='Smoothness',
-Default=0,Min=0,Max=1,Rounding=2,Callback=function(value)local mod=_state.client
-.Modules.Combat if mod and mod.setSmoothness then mod:setSmoothness(value)end
-end})combatGroup:AddToggle('CombatWallCheck',{Text='Wall Check',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setWallCheckEnabled then mod:setWallCheckEnabled(state)end end})local
-silentAimGroup=tabs.combat:AddRightGroupbox('Silent Aim')local silentAimToggle=
-silentAimGroup:AddToggle('SilentAimEnabled',{Text='Enabled',Default=false,
-Callback=function(state)_updateControlBindings()end})silentAimToggle:
-AddKeyPicker('SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text=
-'Trigger Key',SyncToggleState=false,Callback=function()_updateControlBindings()
-end})silentAimGroup:AddToggle('SilentAimShowFov',{Text='Show FOV',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setSilentAimFovEnabled then mod:setSilentAimFovEnabled(state)end end})
-silentAimGroup:AddSlider('SilentAimFovRadius',{Text='FOV Radius',Default=100,Min
-=10,Max=800,Rounding=0,Callback=function(value)local mod=_state.client.Modules.
-Combat if mod and mod.setSilentAimFovRadius then mod:setSilentAimFovRadius(value
-)end end})local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
-'VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:toggle(
-state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end end})
-espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(state)
-local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then mod:
-setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.new(1
-,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.Modules
-.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}):
-AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+state)end end})local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:
+AddToggle('VisualsToggle',{Text='Visuals (ESP)',Default=false,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:
+toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end
+end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.setShowNames then
+mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor',{Default=Color3.
+new(1,1,1),Title='Text Color',Callback=function(value)local mod=_state.client.
+Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}
+):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
 'Name Outline',Callback=function(value)local mod=_state.client.Modules.Visuals
 if mod and mod.setNameOutlineColor then mod:setNameOutlineColor(value)end end})
 espGroup:AddToggle('ESPWeapon',{Text='Weapon',Default=false,Callback=function(

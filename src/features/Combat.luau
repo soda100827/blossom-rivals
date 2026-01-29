@@ -37,6 +37,14 @@ export type CombatFeature = {
 	setSilentAimEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSilentAimFovEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSilentAimFovRadius: (self: CombatFeature, radius: number) -> (),
+	setSilentAimFovColor: (self: CombatFeature, color: Color3) -> (),
+	setSilentAimFovTransparency: (self: CombatFeature, transparency: number) -> (),
+	setSilentHitChance: (self: CombatFeature, chance: number) -> (),
+	setTargetPart: (self: CombatFeature, part: string) -> (),
+	setManipulationEnabled: (self: CombatFeature, enabled: boolean) -> (),
+	setAntiKatanaEnabled: (self: CombatFeature, enabled: boolean) -> (),
+	setClosestPositionEnabled: (self: CombatFeature, enabled: boolean) -> (),
+	setClosestPositionWhitelist: (self: CombatFeature, whitelist: { string }) -> (),
 }
 
 --// Private state
@@ -54,7 +62,15 @@ local _state: {
 	fovRadius: number,
 	silentAimFovRadius: number,
 	fovColor: Color3,
+	silentAimFovColor: Color3,
 	fovTransparency: number,
+	silentAimFovTransparency: number,
+	silentHitChance: number,
+	targetPart: string,
+	isManipulationEnabled: boolean,
+	isAntiKatanaEnabled: boolean,
+	isClosestPositionEnabled: boolean,
+	closestPositionWhitelist: { string },
 	isTeamCheckEnabled: boolean,
 	isWallCheckEnabled: boolean,
 	smoothness: number,
@@ -78,12 +94,20 @@ local _state: {
 		logger = nil :: any,
 		isAimbotEnabled = false,
 		isSilentAimEnabled = false,
-		isFovEnabled = false,
-		isSilentAimFovEnabled = false,
+		isFovEnabled = true,
+		isSilentAimFovEnabled = true,
 		fovRadius = 100,
 		silentAimFovRadius = 100,
 		fovColor = CONSTANTS.FOV_CIRCLE_COLOR,
+		silentAimFovColor = CONSTANTS.FOV_CIRCLE_COLOR,
 		fovTransparency = 0,
+		silentAimFovTransparency = 0,
+		silentHitChance = 100,
+		targetPart = "Head",
+		isManipulationEnabled = false,
+		isAntiKatanaEnabled = false,
+		isClosestPositionEnabled = false,
+		closestPositionWhitelist = { "Head" },
 		isTeamCheckEnabled = false,
 		isWallCheckEnabled = false,
 		smoothness = 0,
@@ -146,14 +170,6 @@ local function _getCameraShaker(): any
 		return dynamicRequire(cameraShaker)
 	end)
 	return success and result or nil
-end
-
-local _lastLogTime = 0
-local function _throttleLog(...)
-	if os.clock() - _lastLogTime > 2 then
-		_state.logger:info(...)
-		_lastLogTime = os.clock()
-	end
 end
 
 --// Private helpers
@@ -319,39 +335,55 @@ local function _getClosestSilentTarget(): BasePart?
 			continue
 		end
 
-		local targetPart = entity:FindFirstChild("HitboxHead") or entity:FindFirstChild("Head")
-		if not targetPart or not targetPart:IsA("BasePart") then
+		local targetParts = {}
+		if _state.isClosestPositionEnabled then
+			for _, partName in ipairs(_state.closestPositionWhitelist) do
+				local p = entity:FindFirstChild(partName)
+				if p and p:IsA("BasePart") then
+					table.insert(targetParts, p)
+				end
+			end
+		else
+			local p = entity:FindFirstChild(_state.targetPart) or entity:FindFirstChild("Head")
+			if p and p:IsA("BasePart") then
+				table.insert(targetParts, p)
+			end
+		end
+
+		if #targetParts == 0 then
 			continue
 		end
 
-		-- Team check
-		if _state.isTeamCheckEnabled then
-			local player = game:GetService("Players"):GetPlayerFromCharacter(entity :: Model)
-			if player and player.Team == localPlayer.Team then
-				continue
+		for _, targetPart in ipairs(targetParts) do
+			-- Team check
+			if _state.isTeamCheckEnabled then
+				local player = game:GetService("Players"):GetPlayerFromCharacter(entity :: Model)
+				if player and player.Team == localPlayer.Team then
+					continue
+				end
 			end
-		end
 
-		-- Wall check
-		if _state.isWallCheckEnabled then
-			local origin = camera.CFrame.Position
-			local direction = targetPart.Position - origin
-			local raycastParams = RaycastParams.new()
-			raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, entity }
-			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+			-- Wall check
+			if _state.isWallCheckEnabled then
+				local origin = camera.CFrame.Position
+				local direction = targetPart.Position - origin
+				local raycastParams = RaycastParams.new()
+				raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, entity }
+				raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
-			local result = Workspace:Raycast(origin, direction, raycastParams)
-			if result then
-				continue
+				local result = Workspace:Raycast(origin, direction, raycastParams)
+				if result then
+					continue
+				end
 			end
-		end
 
-		local pos, onScreen = camera:WorldToViewportPoint(targetPart.Position)
-		if onScreen then
-			local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
-			if dist < closestDist then
-				closest = targetPart
-				closestDist = dist
+			local pos, onScreen = camera:WorldToViewportPoint(targetPart.Position)
+			if onScreen then
+				local dist = (Vector2.new(pos.X, pos.Y) - screenCenter).Magnitude
+				if dist < closestDist then
+					closest = targetPart
+					closestDist = dist
+				end
 			end
 		end
 	end
@@ -382,6 +414,12 @@ local function _setupSilentAim()
 					and (distance == 400 or distance == 999)
 					and _isGunAction()
 				then
+					-- Hit Chance check
+					if math.random(1, 100) > _state.silentHitChance then
+						_lastSilentTargetPos = nil
+						return oldRaycast(self, origin, target, distance, filter, ...)
+					end
+
 					local targetPart = _getClosestSilentTarget()
 					if targetPart then
 						_lastSilentTargetPos = targetPart.Position
@@ -460,8 +498,8 @@ local function _updateFovCircle()
 		"silentAimFovCircle",
 		_state.isSilentAimFovEnabled,
 		_state.silentAimFovRadius,
-		_state.fovColor,
-		_state.fovTransparency
+		_state.silentAimFovColor,
+		_state.silentAimFovTransparency
 	)
 end
 
@@ -485,33 +523,66 @@ local function _getTargetState(player: Player): (boolean, BasePart?, boolean, nu
 		return false, nil, false, math.huge
 	end
 
-	local head = character:FindFirstChild("Head")
-	if not head or not head:IsA("BasePart") then
-		return false, nil, false, math.huge
-	end
-	local headPart = head :: BasePart
-
-	if _state.isWallCheckEnabled then
-		local origin = camera.CFrame.Position
-		local direction = headPart.Position - origin
-		local raycastParams = RaycastParams.new()
-		raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, character }
-		raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-		local result = Workspace:Raycast(origin, direction, raycastParams)
-		if result then
-			return false, nil, false, math.huge
+	local targetParts = {}
+	if _state.isClosestPositionEnabled then
+		for _, partName in ipairs(_state.closestPositionWhitelist) do
+			local p = character:FindFirstChild(partName)
+			if p and p:IsA("BasePart") then
+				table.insert(targetParts, p)
+			end
+		end
+	else
+		local p = character:FindFirstChild(_state.targetPart) or character:FindFirstChild("Head")
+		if p and p:IsA("BasePart") then
+			table.insert(targetParts, p)
 		end
 	end
 
-	local screenPos, onScreen = camera:WorldToViewportPoint(headPart.Position)
-	if not onScreen then
-		return true, headPart, false, math.huge
+	if #targetParts == 0 then
+		return false, nil, false, math.huge
 	end
 
+	local bestPart = nil
+	local shortestDist = math.huge
+	local anyOnScreen = false
+
 	local mouseLocation = UserInputService:GetMouseLocation()
-	local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
-	return true, headPart, true, distance
+
+	for _, part in ipairs(targetParts) do
+		if _state.isWallCheckEnabled then
+			local origin = camera.CFrame.Position
+			local direction = part.Position - origin
+			local raycastParams = RaycastParams.new()
+			raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, character }
+			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+			local result = Workspace:Raycast(origin, direction, raycastParams)
+			if result then
+				continue
+			end
+		end
+
+		local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
+		if not onScreen then
+			if not bestPart then
+				bestPart = part
+			end
+			continue
+		end
+
+		anyOnScreen = true
+		local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
+		if distance < shortestDist then
+			shortestDist = distance
+			bestPart = part
+		end
+	end
+
+	if not bestPart then
+		return false, nil, false, math.huge
+	end
+
+	return true, bestPart, anyOnScreen, shortestDist
 end
 
 local function _getBestTarget(radius: number): Player?
@@ -575,8 +646,8 @@ end
 local function _resolveSilentTarget(): Player?
 	if _state.silentTarget then
 		local dropRadius = _state.silentAimFovRadius * CONSTANTS.TARGET_DROP_FOV_MULTIPLIER
-		local isValid, headPart, onScreen, distance = _getTargetState(_state.silentTarget)
-		if isValid and headPart and onScreen and distance <= dropRadius then
+		local isValid, headPart, _onScreen, _distance = _getTargetState(_state.silentTarget)
+		if isValid and headPart and _onScreen and _distance <= dropRadius then
 			_state.silentTargetLostAt = nil
 			return _state.silentTarget
 		end
@@ -603,18 +674,13 @@ local function _resolveSilentTarget(): Player?
 	return newTarget
 end
 
-local function _aimAt(target: Player, deltaTime: number)
+local function _aimAt(target: Player, bestPart: BasePart, deltaTime: number)
 	if not target.Character then
 		return
 	end
-	local head = target.Character:FindFirstChild("Head")
-	if not head or not head:IsA("BasePart") then
-		return
-	end
+	local targetPos = (bestPart :: BasePart).Position
 
 	local camera = _getCamera()
-	local targetPos = (head :: BasePart).Position
-
 	-- Calculate LookVector needed
 	local currentCFrame = camera.CFrame
 	local lookAtCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
@@ -639,10 +705,6 @@ local function _aimAt(target: Player, deltaTime: number)
 	-- ToOrientation returns (RX, RY, RZ).
 
 	local targetRotation = Vector2.new(x, y)
-
-	-- Debug once per target switch or low frequency?
-	-- For now, just print if we have logic
-	_throttleLog("Aiming...", targetRotation)
 
 	-- Smoothness
 	if _isMaxSmoothness() then
@@ -672,14 +734,16 @@ local function _connect()
 		function(deltaTime)
 			_updateFovCircle()
 
-			_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Silent:", _state.isSilentAimEnabled)
-
 			if _state.isAimbotEnabled then
 				local target = _resolveTarget()
 				if target then
-					_applyInputLock(true)
-					_state.logger:info("Target found:", target.Name)
-					_aimAt(target, deltaTime)
+					local _isValid, _bestPart, _anyOnScreen, _shortestDist = _getTargetState(target)
+					if _isValid and _bestPart then
+						_applyInputLock(true)
+						_aimAt(target, _bestPart, deltaTime)
+					else
+						_applyInputLock(false)
+					end
 				else
 					_applyInputLock(false)
 				end
@@ -796,6 +860,38 @@ end
 
 function Combat.setSilentAimFovRadius(self: CombatFeature, radius: number): ()
 	_state.silentAimFovRadius = radius
+end
+
+function Combat.setSilentAimFovColor(self: CombatFeature, color: Color3): ()
+	_state.silentAimFovColor = color
+end
+
+function Combat.setSilentAimFovTransparency(self: CombatFeature, transparency: number): ()
+	_state.silentAimFovTransparency = math.clamp(transparency, 0, 1)
+end
+
+function Combat.setSilentHitChance(self: CombatFeature, chance: number): ()
+	_state.silentHitChance = math.clamp(chance, 0, 100)
+end
+
+function Combat.setTargetPart(self: CombatFeature, part: string): ()
+	_state.targetPart = part
+end
+
+function Combat.setManipulationEnabled(self: CombatFeature, enabled: boolean): ()
+	_state.isManipulationEnabled = enabled
+end
+
+function Combat.setAntiKatanaEnabled(self: CombatFeature, enabled: boolean): ()
+	_state.isAntiKatanaEnabled = enabled
+end
+
+function Combat.setClosestPositionEnabled(self: CombatFeature, enabled: boolean): ()
+	_state.isClosestPositionEnabled = enabled
+end
+
+function Combat.setClosestPositionWhitelist(self: CombatFeature, whitelist: { string }): ()
+	_state.closestPositionWhitelist = whitelist
 end
 
 return Combat
