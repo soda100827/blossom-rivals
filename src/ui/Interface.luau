@@ -175,21 +175,21 @@ local function _mount()
 	})
 
 	local tabs = {
-		main = window:AddTab("Main"),
+
 		combat = window:AddTab("Combat"),
 		visuals = window:AddTab("Visuals"),
 		misc = window:AddTab("Misc"),
 		uiSettings = window:AddTab("UI Settings"),
 	}
 
-	local combatGroup = tabs.combat:AddLeftGroupbox("Silent Aimbot")
-	combatGroup:AddToggle("CombatSilentAim", {
-		Text = "Silent Aim",
+	local combatGroup = tabs.combat:AddLeftGroupbox("Aimbot")
+	combatGroup:AddToggle("CombatAimbotEnabled", {
+		Text = "Enabled",
 		Default = false,
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setSilentAimEnabled then
-				mod:setSilentAimEnabled(state)
+			if mod and mod.setAimbotEnabled then
+				mod:setAimbotEnabled(state)
 			end
 		end,
 	})
@@ -226,16 +226,41 @@ local function _mount()
 			end
 		end,
 	})
-	combatGroup:AddSlider("CombatHeadshotChance", {
-		Text = "Headshot Chance",
-		Default = 100,
+	combatGroup:AddSlider("CombatSmoothness", {
+		Text = "Smoothness",
+		Default = 0,
 		Min = 0,
-		Max = 100,
-		Rounding = 0,
+		Max = 1,
+		Rounding = 2,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setHeadshotChance then
-				mod:setHeadshotChance(value)
+			if mod and mod.setSmoothness then
+				mod:setSmoothness(value)
+			end
+		end,
+	})
+	combatGroup:AddToggle("CombatWallCheck", {
+		Text = "Wall Check",
+		Default = false,
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setWallCheckEnabled then
+				mod:setWallCheckEnabled(state)
+			end
+		end,
+	})
+	combatGroup:AddLabel("Trigger Key"):AddKeyPicker("CombatTriggerKey", {
+		Default = "MouseButton2",
+		NoUI = true,
+		Text = "Trigger Key",
+		Callback = function(key)
+			-- This callback usually just updates the state in the library,
+			-- but we might need to pass it to the module if it polls input itself,
+			-- OR the module can read options directly.
+			-- For now we rely on the module checking the key state or library state.
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setTriggerKey then
+				mod:setTriggerKey(key)
 			end
 		end,
 	})

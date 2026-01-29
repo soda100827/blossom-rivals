@@ -5,6 +5,7 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
@@ -20,11 +21,13 @@ local CONSTANTS = {
 export type CombatFeature = {
 	init: (self: CombatFeature, client: any) -> (),
 	cleanup: (self: CombatFeature) -> (),
-	setSilentAimEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setAimbotEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setFovEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setFovRadius: (self: CombatFeature, radius: number) -> (),
 	setTeamCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setHeadshotChance: (self: CombatFeature, chance: number) -> (),
+	setSmoothness: (self: CombatFeature, smoothness: number) -> (),
+	setWallCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setTriggerKey: (self: CombatFeature, key: string | Enum.KeyCode) -> (),
 }
 
 --// Private state
@@ -35,24 +38,32 @@ local _maid = nil :: any
 local _state: {
 	client: any,
 	logger: any,
-	isSilentAimEnabled: boolean,
+	isAimbotEnabled: boolean,
 	isFovEnabled: boolean,
 	fovRadius: number,
 	isTeamCheckEnabled: boolean,
-	headshotChance: number,
+	isWallCheckEnabled: boolean,
+	smoothness: number,
+	triggerKey: any, -- Enum.KeyCode or Enum.UserInputType
 	target: Player?,
 	fovCircle: any?,
+	cameraController: any?,
+	isAiming: boolean,
 } =
 	{
 		client = nil :: any,
 		logger = nil :: any,
-		isSilentAimEnabled = false,
+		isAimbotEnabled = false,
 		isFovEnabled = false,
 		fovRadius = 100,
 		isTeamCheckEnabled = false,
-		headshotChance = 100,
+		isWallCheckEnabled = false,
+		smoothness = 0,
+		triggerKey = Enum.UserInputType.MouseButton2,
 		target = nil,
 		fovCircle = nil,
+		cameraController = nil,
+		isAiming = false,
 	}
 
 --// Private helpers
@@ -81,6 +92,39 @@ local function _getDrawingLib()
 	return lib
 end
 
+local function _fetchCameraController(logger: any)
+	if _state.cameraController then
+		return
+	end
+
+	local playerScripts = _getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return
+	end
+
+	local controllers = playerScripts:WaitForChild("Controllers", 5)
+	if not controllers then
+		return
+	end
+
+	local camControllerScript = controllers:WaitForChild("CameraController", 5)
+	if camControllerScript and camControllerScript:IsA("ModuleScript") then
+		local success, result = pcall(function()
+			return require(camControllerScript)
+		end)
+		if success then
+			_state.cameraController = result
+			if logger then
+				logger:info("CameraController found and required")
+			end
+		else
+			if logger then
+				logger:error("Failed to require CameraController: " .. tostring(result))
+			end
+		end
+	end
+end
+
 local function _updateFovCircle()
 	local lib = _getDrawingLib()
 	if not lib then
@@ -88,7 +132,7 @@ local function _updateFovCircle()
 	end
 
 	local circle = _state.fovCircle
-	if _state.isFovEnabled and _state.isSilentAimEnabled then
+	if _state.isFovEnabled and _state.isAimbotEnabled then
 		if not circle then
 			circle = lib.new("Circle")
 			_state.fovCircle = circle
@@ -150,6 +194,19 @@ local function _getBestTarget(): Player?
 		end
 		local headPart = head :: BasePart
 
+		if _state.isWallCheckEnabled then
+			local origin = camera.CFrame.Position
+			local direction = headPart.Position - origin
+			local raycastParams = RaycastParams.new()
+			raycastParams.FilterDescendantsInstances = { localPlayer.Character, character }
+			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
+
+			local result = Workspace:Raycast(origin, direction, raycastParams)
+			if result then
+				continue -- Obscured
+			end
+		end
+
 		local screenPos, onScreen = camera:WorldToViewportPoint(headPart.Position)
 		if not onScreen then
 			continue
@@ -165,83 +222,118 @@ local function _getBestTarget(): Player?
 	return bestTarget
 end
 
---// Hook Setup
-local function _setupHooks()
-	local g = getfenv(0) :: any
-	if not g.hookmetamethod then
-		if _state.logger then
-			_state.logger:warn("hookmetamethod not found, silent aim will not work.")
-		end
+local function _aimAt(target: Player)
+	if not _state.cameraController then
+		return
+	end
+	if not target.Character then
+		return
+	end
+	local head = target.Character:FindFirstChild("Head")
+	if not head or not head:IsA("BasePart") then
 		return
 	end
 
-	local hookmetamethod = g.hookmetamethod
-	local getnamecallmethod = g.getnamecallmethod
-	local checkcaller = g.checkcaller
-	local newcclosure = g.newcclosure
+	local camera = _getCamera()
+	local targetPos = (head :: BasePart).Position
 
-	local oldNamecall
-	oldNamecall = hookmetamethod(
-		game,
-		"__namecall",
-		newcclosure(function(self, ...)
-			local method = getnamecallmethod()
+	-- Calculate LookVector needed
+	local currentCFrame = camera.CFrame
+	local lookAtCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
 
-			if _state.isSilentAimEnabled and not checkcaller() then
-				local chance = math.random(1, 100)
-				if chance <= _state.headshotChance then
-					if method == "Raycast" and (self == Workspace or tostring(self) == "Workspace") then
-						local args = { ... }
-						if _state.target and _state.target.Character then
-							local head = _state.target.Character:FindFirstChild("Head")
-							if head and head:IsA("BasePart") then
-								local origin = args[1]
-								-- Calculate direction to head
-								local direction = (head.Position - origin).Unit * args[2].Magnitude
-								args[2] = direction
-								return oldNamecall(self, table.unpack(args))
-							end
-						end
-					elseif method == "FindPartOnRay" and (self == Workspace or tostring(self) == "Workspace") then
-						local args = { ... }
-						if _state.target and _state.target.Character then
-							local head = _state.target.Character:FindFirstChild("Head")
-							if head and head:IsA("BasePart") then
-								local ray = args[1]
-								if typeof(ray) == "Ray" then
-									local newRay =
-										Ray.new(ray.Origin, (head.Position - ray.Origin).Unit * ray.Direction.Magnitude)
-									args[1] = newRay
-									return oldNamecall(self, table.unpack(args))
-								end
-							end
-						end
-					end
-				end
+	-- We need to extract the Pitch (X) and Yaw (Y) rotation from this CFrame
+	-- CameraController:SetRotation(Vector2) logic usually calls for X and Y in radians
+	-- But typically Rotation.X is Pitch, Rotation.Y is Yaw
+	local x, y, _ = lookAtCFrame:ToOrientation()
+	-- ToOrientation returns (X, Y, Z) in radians (Pitch, Yaw, Roll)
+	-- Roblox order: Y (Yaw), X (Pitch), Z (Roll) for EulerAngles?
+	-- ToOrientation returns (RX, RY, RZ).
+
+	local targetRotation = Vector2.new(x, y)
+
+	-- Smoothness
+	if _state.smoothness > 0 then
+		local currentRot = _state.cameraController.Rotation :: Vector2
+		local diff = targetRotation - currentRot
+		-- Handle wrap around for Yaw (Y) if needed, but Vector2 math might just work if close
+		-- Simple Lerp
+		local step = (1 - _state.smoothness) -- If smoothness 1, step 0. If 0, step 1.
+		-- Adjusted for frame rate potentially, but standard lerp for now
+		local newRot = currentRot:Lerp(targetRotation, step)
+		_state.cameraController:SetRotation(newRot)
+	else
+		_state.cameraController:SetRotation(targetRotation)
+	end
+end
+
+local function _handleInput(input: InputObject)
+	-- Check trigger key
+	if not _state.triggerKey then
+		return
+	end
+
+	local key = _state.triggerKey
+	local isTrigger = false
+
+	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == key then
+		isTrigger = true
+	elseif input.UserInputType == Enum.UserInputType.MouseButton1 and key == "MouseButton1" then
+		isTrigger = true
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 and key == "MouseButton2" then
+		isTrigger = true
+	end
+
+	if isTrigger then
+		_state.isAiming = (input.UserInputState == Enum.UserInputState.Begin)
+	end
+end
+
+local function _checkKeyDown()
+	-- Polling specific keys if keypicker returns strings
+	if type(_state.triggerKey) == "string" then
+		local keyName = _state.triggerKey
+		if keyName == "MouseButton1" then
+			return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+		elseif keyName == "MouseButton2" then
+			return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+		else
+			local success, keyCode = pcall(function()
+				return Enum.KeyCode[keyName]
+			end)
+			if success and keyCode then
+				return UserInputService:IsKeyDown(keyCode)
 			end
-
-			return oldNamecall(self, ...)
-		end)
-	)
+		end
+	elseif typeof(_state.triggerKey) == "EnumItem" then
+		if _state.triggerKey.EnumType == Enum.KeyCode then
+			return UserInputService:IsKeyDown(_state.triggerKey)
+		elseif _state.triggerKey.EnumType == Enum.UserInputType then
+			return UserInputService:IsMouseButtonPressed(_state.triggerKey)
+		end
+	end
+	return false
 end
 
 local function _connect()
 	_maid:DoCleaning()
+	_fetchCameraController(_state.logger)
 
 	local runConn = RunService.RenderStepped:Connect(function()
-		if _state.isSilentAimEnabled then
-			_updateFovCircle()
-			_state.target = _getBestTarget()
-		else
-			if _state.fovCircle then
-				_updateFovCircle()
-			end -- To hide it
-			_state.target = nil
+		_updateFovCircle()
+
+		if _state.isAimbotEnabled then
+			-- Check if key is held
+			_state.isAiming = _checkKeyDown()
+
+			if _state.isAiming then
+				local target = _getBestTarget()
+				if target then
+					_aimAt(target)
+				end
+			end
 		end
 	end)
 	_maid:GiveTask(runConn)
-
-	_setupHooks()
 end
 
 local function _disconnect()
@@ -260,16 +352,16 @@ function Combat.init(self: CombatFeature, client: any): ()
 	_state.logger = client.Logger
 	_maid = Maid.new()
 	_connect()
-	_state.logger:info("Combat module initialized")
+	_state.logger:info("Combat aimbot module initialized")
 end
 
 function Combat.cleanup(self: CombatFeature): ()
-	_state.isSilentAimEnabled = false
+	_state.isAimbotEnabled = false
 	_disconnect()
 end
 
-function Combat.setSilentAimEnabled(self: CombatFeature, isEnabled: boolean): ()
-	_state.isSilentAimEnabled = isEnabled
+function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
+	_state.isAimbotEnabled = isEnabled
 end
 
 function Combat.setFovEnabled(self: CombatFeature, isEnabled: boolean): ()
@@ -284,8 +376,18 @@ function Combat.setTeamCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 	_state.isTeamCheckEnabled = isEnabled
 end
 
-function Combat.setHeadshotChance(self: CombatFeature, chance: number): ()
-	_state.headshotChance = chance
+function Combat.setSmoothness(self: CombatFeature, smoothness: number): ()
+	_state.smoothness = smoothness
+end
+
+function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
+	_state.isWallCheckEnabled = isEnabled
+end
+
+function Combat.setTriggerKey(self: CombatFeature, key: any): ()
+	-- LinoriaLib sends strings for KeyPickers usually, or EnumItems?
+	-- Adjust based on what we receive.
+	_state.triggerKey = key
 end
 
 return Combat
