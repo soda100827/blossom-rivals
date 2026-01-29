@@ -16,6 +16,9 @@ local CONSTANTS = {
 	FOV_CIRCLE_NUM_SIDES = 64,
 	MIN_AIM_SPEED = 4,
 	MAX_AIM_SPEED = 40,
+	MAX_SMOOTHNESS = 1,
+	TARGET_DROP_DELAY = 0.15,
+	TARGET_DROP_FOV_MULTIPLIER = 1.2,
 	AIMBOT_RENDER_STEP_NAME = "CombatAimbot",
 }
 
@@ -31,7 +34,6 @@ export type CombatFeature = {
 	setTeamCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSmoothness: (self: CombatFeature, smoothness: number) -> (),
 	setWallCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setHardLockEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state
@@ -50,8 +52,8 @@ local _state: {
 	isTeamCheckEnabled: boolean,
 	isWallCheckEnabled: boolean,
 	smoothness: number,
-	isHardLockEnabled: boolean,
 	target: Player?,
+	targetLostAt: number?,
 	fovCircle: any?,
 	cameraController: any?,
 	isInputLocked: boolean,
@@ -69,8 +71,8 @@ local _state: {
 		isTeamCheckEnabled = false,
 		isWallCheckEnabled = false,
 		smoothness = 0,
-		isHardLockEnabled = false,
 		target = nil,
+		targetLostAt = nil,
 		fovCircle = nil,
 		cameraController = nil,
 		isInputLocked = false,
@@ -113,7 +115,7 @@ local function _getDrawingLib()
 end
 
 local function _applyInputLock(isLocked: boolean)
-	if isLocked and not _state.isHardLockEnabled then
+	if isLocked and _state.smoothness < CONSTANTS.MAX_SMOOTHNESS then
 		return
 	end
 	if isLocked == _state.isInputLocked then
@@ -139,6 +141,10 @@ local function _applyInputLock(isLocked: boolean)
 	end
 
 	_state.isInputLocked = isLocked
+end
+
+local function _isMaxSmoothness(): boolean
+	return _state.smoothness >= CONSTANTS.MAX_SMOOTHNESS
 end
 
 local function _fetchCameraController(logger: any)
@@ -211,29 +217,29 @@ local function _updateFovCircle()
 	end
 end
 
-local function _isValidTarget(player: Player): (boolean, BasePart?)
+local function _getTargetState(player: Player): (boolean, BasePart?, boolean, number)
 	local camera = _getCamera()
 	local localPlayer = _getLocalPlayer()
 	if player == localPlayer then
-		return false, nil
+		return false, nil, false, math.huge
 	end
 	if _state.isTeamCheckEnabled and player.Team == localPlayer.Team then
-		return false, nil
+		return false, nil, false, math.huge
 	end
 
 	local character = player.Character
 	if not character then
-		return false, nil
+		return false, nil, false, math.huge
 	end
 
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	if not humanoid or humanoid.Health <= 0 then
-		return false, nil
+		return false, nil, false, math.huge
 	end
 
 	local head = character:FindFirstChild("Head")
 	if not head or not head:IsA("BasePart") then
-		return false, nil
+		return false, nil, false, math.huge
 	end
 	local headPart = head :: BasePart
 
@@ -246,27 +252,22 @@ local function _isValidTarget(player: Player): (boolean, BasePart?)
 
 		local result = Workspace:Raycast(origin, direction, raycastParams)
 		if result then
-			return false, nil
+			return false, nil, false, math.huge
 		end
 	end
 
 	local screenPos, onScreen = camera:WorldToViewportPoint(headPart.Position)
 	if not onScreen then
-		return false, nil
+		return true, headPart, false, math.huge
 	end
 
 	local mouseLocation = UserInputService:GetMouseLocation()
 	local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
-	if distance > _state.fovRadius then
-		return false, nil
-	end
-
-	return true, headPart
+	return true, headPart, true, distance
 end
 
 local function _getBestTarget(): Player?
 	local localPlayer = _getLocalPlayer()
-	local mouseLocation = UserInputService:GetMouseLocation()
 
 	local bestTarget = nil
 	local shortestDistance = _state.fovRadius
@@ -275,19 +276,14 @@ local function _getBestTarget(): Player?
 		if player == localPlayer then
 			continue
 		end
-		local isValid = _isValidTarget(player)
-		if not isValid then
+		local isValid, headPart, onScreen, distance = _getTargetState(player)
+		if not isValid or not headPart or not onScreen then
 			continue
 		end
 
-		local head = player.Character and player.Character:FindFirstChild("Head")
-		if not head or not head:IsA("BasePart") then
+		if distance > _state.fovRadius then
 			continue
 		end
-
-		local camera = _getCamera()
-		local screenPos = camera:WorldToViewportPoint((head :: BasePart).Position)
-		local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
 		if distance < shortestDistance then
 			shortestDistance = distance
 			bestTarget = player
@@ -299,9 +295,26 @@ end
 
 local function _resolveTarget(): Player?
 	if _state.target then
-		local isValid = _isValidTarget(_state.target)
-		if isValid then
+		local dropRadius = _state.fovRadius * CONSTANTS.TARGET_DROP_FOV_MULTIPLIER
+		local isValid, headPart, onScreen, distance = _getTargetState(_state.target)
+		if isValid and headPart and onScreen and distance <= dropRadius then
+			_state.targetLostAt = nil
 			return _state.target
+		end
+
+		if not isValid or not headPart then
+			_state.targetLostAt = nil
+			_state.target = nil
+		else
+			local now = os.clock()
+			if not _state.targetLostAt then
+				_state.targetLostAt = now
+			end
+			if now - _state.targetLostAt < CONSTANTS.TARGET_DROP_DELAY then
+				return _state.target
+			end
+			_state.targetLostAt = nil
+			_state.target = nil
 		end
 	end
 	local newTarget = _getBestTarget()
@@ -327,7 +340,7 @@ local function _aimAt(target: Player, deltaTime: number)
 
 	if not _state.cameraController or not _state.cameraController.SetRotation then
 		local alpha = 1
-		if not _state.isHardLockEnabled then
+		if not _isMaxSmoothness() then
 			local speed = CONSTANTS.MIN_AIM_SPEED
 				+ (1 - _state.smoothness) * (CONSTANTS.MAX_AIM_SPEED - CONSTANTS.MIN_AIM_SPEED)
 			alpha = 1 - math.exp(-speed * deltaTime)
@@ -351,7 +364,7 @@ local function _aimAt(target: Player, deltaTime: number)
 	_throttleLog("Aiming...", targetRotation)
 
 	-- Smoothness
-	if _state.isHardLockEnabled then
+	if _isMaxSmoothness() then
 		_state.cameraController:SetRotation(targetRotation)
 	elseif _state.smoothness > 0 then
 		local currentRot = _state.cameraController.Rotation :: Vector2
@@ -407,6 +420,7 @@ local function _disconnect()
 		_state.fovCircle = nil
 	end
 	_state.target = nil
+	_state.targetLostAt = nil
 	_applyInputLock(false)
 	_maid:DoCleaning()
 end
@@ -432,6 +446,7 @@ function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
 	_state.isAimbotEnabled = isEnabled
 	if not isEnabled then
 		_state.target = nil
+		_state.targetLostAt = nil
 		_applyInputLock(false)
 	end
 end
@@ -457,21 +472,15 @@ function Combat.setTeamCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 end
 
 function Combat.setSmoothness(self: CombatFeature, smoothness: number): ()
-	_state.smoothness = smoothness
+	local wasMaxSmoothness = _isMaxSmoothness()
+	_state.smoothness = math.clamp(smoothness, 0, CONSTANTS.MAX_SMOOTHNESS)
+	if wasMaxSmoothness and not _isMaxSmoothness() then
+		_applyInputLock(false)
+	end
 end
 
 function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 	_state.isWallCheckEnabled = isEnabled
-end
-
-function Combat.setHardLockEnabled(self: CombatFeature, isEnabled: boolean): ()
-	if _state.isHardLockEnabled == isEnabled then
-		return
-	end
-	_state.isHardLockEnabled = isEnabled
-	if not isEnabled then
-		_applyInputLock(false)
-	end
 end
 
 return Combat

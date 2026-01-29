@@ -253,16 +253,6 @@ local function _mount()
 			end
 		end,
 	})
-	combatGroup:AddToggle("CombatHardLock", {
-		Text = "Hard Lock (Disable Input)",
-		Default = false,
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setHardLockEnabled then
-				mod:setHardLockEnabled(state)
-			end
-		end,
-	})
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",
