@@ -201,12 +201,13 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("SilentHitChance", {
-		Text = "Silent Hit Chance:",
+		Text = "Silent Hit Chance",
 		Default = 100,
 		Min = 0,
 		Max = 100,
 		Rounding = 0,
 		Suffix = "%",
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setSilentHitChance then
@@ -216,12 +217,13 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("SilentAimFovRadius", {
-		Text = "Silent Aim Radius:",
+		Text = "Silent Aim Radius",
 		Default = 100,
 		Min = 10,
 		Max = 800,
 		Rounding = 0,
 		Suffix = "px",
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setSilentAimFovRadius then
@@ -263,12 +265,13 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("CombatSmoothness", {
-		Text = "Aimbot Smoothing:",
+		Text = "Aimbot Smoothing",
 		Default = 0,
 		Min = 0,
 		Max = 100,
 		Rounding = 0,
 		Suffix = "%", -- Matches image style
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setSmoothness then
@@ -278,12 +281,13 @@ local function _mount()
 	})
 
 	combatGroup:AddSlider("CombatFovRadius", {
-		Text = "Aimbot Radius:",
+		Text = "Aimbot Radius",
 		Default = 100,
 		Min = 10,
 		Max = 800,
 		Rounding = 0,
 		Suffix = "px",
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setFovRadius then
@@ -651,6 +655,7 @@ local function _mount()
 		Min = 1,
 		Max = 5,
 		Rounding = 1,
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.setSkeletonThickness then
@@ -665,6 +670,7 @@ local function _mount()
 		Min = 10,
 		Max = 24,
 		Rounding = 0,
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.setTextSize then
@@ -679,6 +685,7 @@ local function _mount()
 		Min = 100,
 		Max = 10000,
 		Rounding = 0,
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.setMaxDistance then
@@ -737,6 +744,7 @@ local function _mount()
 		Min = 5,
 		Max = 200,
 		Rounding = 0,
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
 			if mod and mod.setFlySpeed then
@@ -785,6 +793,7 @@ local function _mount()
 		Min = 0,
 		Max = 200,
 		Rounding = 0,
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
 			if mod and mod.setWalkSpeed then
@@ -816,6 +825,7 @@ local function _mount()
 		Min = 0,
 		Max = 200,
 		Rounding = 0,
+		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
 			if mod and mod.setJumpPower then

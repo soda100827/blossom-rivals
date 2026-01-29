@@ -745,39 +745,40 @@ Transparency=0,Title='Silent FOV Color',Callback=function(color,transparency)
 local mod=_state.client.Modules.Combat if mod and mod.setSilentAimFovColor then
 mod:setSilentAimFovColor(color)end if mod and mod.setSilentAimFovTransparency
 then mod:setSilentAimFovTransparency(transparency or 0)end end})combatGroup:
-AddSlider('SilentHitChance',{Text='Silent Hit Chance:',Default=100,Min=0,Max=100
-,Rounding=0,Suffix='%',Callback=function(value)local mod=_state.client.Modules.
-Combat if mod and mod.setSilentHitChance then mod:setSilentHitChance(value)end
-end})combatGroup:AddSlider('SilentAimFovRadius',{Text='Silent Aim Radius:',
-Default=100,Min=10,Max=800,Rounding=0,Suffix='px',Callback=function(value)local
-mod=_state.client.Modules.Combat if mod and mod.setSilentAimFovRadius then mod:
-setSilentAimFovRadius(value)end end})local combatAimbotToggle=combatGroup:
-AddToggle('CombatAimbotEnabled',{Text='Aimbot',Default=false,Callback=function()
-_updateControlBindings()end})combatAimbotToggle:AddKeyPicker(
-'CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text='Aimbot Keybind',
-SyncToggleState=false,Callback=function()_updateControlBindings()end})
-combatAimbotToggle:AddColorPicker('CombatFovColor',{Default=Color3.fromRGB(255,
-255,255),Transparency=0,Title='Aimbot FOV Color',Callback=function(color,
-transparency)local mod=_state.client.Modules.Combat if mod and mod.setFovColor
-then mod:setFovColor(color)end if mod and mod.setFovTransparency then mod:
-setFovTransparency(transparency or 0)end end})combatGroup:AddSlider(
-'CombatSmoothness',{Text='Aimbot Smoothing:',Default=0,Min=0,Max=100,Rounding=0,
-Suffix='%',Callback=function(value)local mod=_state.client.Modules.Combat if mod
-and mod.setSmoothness then mod:setSmoothness((value)/100)end end})combatGroup:
-AddSlider('CombatFovRadius',{Text='Aimbot Radius:',Default=100,Min=10,Max=800,
-Rounding=0,Suffix='px',Callback=function(value)local mod=_state.client.Modules.
-Combat if mod and mod.setFovRadius then mod:setFovRadius(value)end end})
-combatGroup:AddToggle('CombatManipulation',{Text='Manipulation',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setManipulationEnabled then mod:setManipulationEnabled(state)end end})
-combatGroup:AddToggle('CombatWallCheck',{Text='Visible Only',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setWallCheckEnabled then mod:setWallCheckEnabled(state)end end})combatGroup:
-AddToggle('CombatAntiKatana',{Text='Anti Katana',Default=false,Callback=function
+AddSlider('SilentHitChance',{Text='Silent Hit Chance',Default=100,Min=0,Max=100,
+Rounding=0,Suffix='%',Compact=true,Callback=function(value)local mod=_state.
+client.Modules.Combat if mod and mod.setSilentHitChance then mod:
+setSilentHitChance(value)end end})combatGroup:AddSlider('SilentAimFovRadius',{
+Text='Silent Aim Radius',Default=100,Min=10,Max=800,Rounding=0,Suffix='px',
+Compact=true,Callback=function(value)local mod=_state.client.Modules.Combat if
+mod and mod.setSilentAimFovRadius then mod:setSilentAimFovRadius(value)end end})
+local combatAimbotToggle=combatGroup:AddToggle('CombatAimbotEnabled',{Text=
+'Aimbot',Default=false,Callback=function()_updateControlBindings()end})
+combatAimbotToggle:AddKeyPicker('CombatAimbotKeybind',{Default='MouseButton2',
+NoUI=false,Text='Aimbot Keybind',SyncToggleState=false,Callback=function()
+_updateControlBindings()end})combatAimbotToggle:AddColorPicker('CombatFovColor',
+{Default=Color3.fromRGB(255,255,255),Transparency=0,Title='Aimbot FOV Color',
+Callback=function(color,transparency)local mod=_state.client.Modules.Combat if
+mod and mod.setFovColor then mod:setFovColor(color)end if mod and mod.
+setFovTransparency then mod:setFovTransparency(transparency or 0)end end})
+combatGroup:AddSlider('CombatSmoothness',{Text='Aimbot Smoothing',Default=0,Min=
+0,Max=100,Rounding=0,Suffix='%',Compact=true,Callback=function(value)local mod=
+_state.client.Modules.Combat if mod and mod.setSmoothness then mod:
+setSmoothness((value)/100)end end})combatGroup:AddSlider('CombatFovRadius',{Text
+='Aimbot Radius',Default=100,Min=10,Max=800,Rounding=0,Suffix='px',Compact=true,
+Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
+setFovRadius then mod:setFovRadius(value)end end})combatGroup:AddToggle(
+'CombatManipulation',{Text='Manipulation',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Combat if mod and mod.setManipulationEnabled
+then mod:setManipulationEnabled(state)end end})combatGroup:AddToggle(
+'CombatWallCheck',{Text='Visible Only',Default=false,Callback=function(state)
+local mod=_state.client.Modules.Combat if mod and mod.setWallCheckEnabled then
+mod:setWallCheckEnabled(state)end end})combatGroup:AddToggle('CombatAntiKatana',
+{Text='Anti Katana',Default=false,Callback=function(state)local mod=_state.
+client.Modules.Combat if mod and mod.setAntiKatanaEnabled then mod:
+setAntiKatanaEnabled(state)end end})combatGroup:AddToggle(
+'CombatClosestPosition',{Text='Closest Position',Default=false,Callback=function
 (state)local mod=_state.client.Modules.Combat if mod and mod.
-setAntiKatanaEnabled then mod:setAntiKatanaEnabled(state)end end})combatGroup:
-AddToggle('CombatClosestPosition',{Text='Closest Position',Default=false,
-Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
 setClosestPositionEnabled then mod:setClosestPositionEnabled(state)end end})
 combatGroup:AddDropdown('CombatClosestWhitelist',{Values={'Head','UpperTorso',
 'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg'},
@@ -861,64 +862,65 @@ Callback=function(_stateValue)end})espGroup:AddToggle('ESPShowTeammates',{Text=
 'Show Teammates',Default=true,Callback=function(state)local mod=_state.client.
 Modules.Visuals if mod and mod.setTeamCheck then mod:setTeamCheck(not state)end
 end})espGroup:AddSlider('ESPSkeletonThickness',{Text='Skeleton Thickness',
-Default=1,Min=1,Max=5,Rounding=1,Callback=function(value)local mod=_state.client
-.Modules.Visuals if mod and mod.setSkeletonThickness then mod:
+Default=1,Min=1,Max=5,Rounding=1,Compact=true,Callback=function(value)local mod=
+_state.client.Modules.Visuals if mod and mod.setSkeletonThickness then mod:
 setSkeletonThickness(value)end end})espGroup:AddSlider('ESPTextSize',{Text=
-'Text Size',Default=12,Min=10,Max=24,Rounding=0,Callback=function(value)local
-mod=_state.client.Modules.Visuals if mod and mod.setTextSize then mod:
-setTextSize(value)end end})espGroup:AddSlider('ESPMaxDistance',{Text=
-'Max Distance',Default=2000,Min=100,Max=10000,Rounding=0,Callback=function(value
-)local mod=_state.client.Modules.Visuals if mod and mod.setMaxDistance then mod:
-setMaxDistance(value)end end})local menuGroup=tabs.uiSettings:AddLeftGroupbox(
-'Menu')menuGroup:AddButton('Unload',function()library:Unload()end)menuGroup:
-AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text=
-'Menu keybind'})local getfenvAny=getfenv local env=(getfenvAny(0))local
-getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and getgenvFunc().
-Options)or _G.Options if GlobalOptions and GlobalOptions.MenuKeybind then
-library.ToggleKeybind=GlobalOptions.MenuKeybind end themeManager:SetLibrary(
-library)saveManager:SetLibrary(library)saveManager:IgnoreThemeSettings()
-themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
-BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local
-playerGroup=tabs.misc:AddLeftGroupbox('Player')local playerFlyToggle=playerGroup
-:AddToggle('PlayerFly',{Text='Fly',Default=false,Callback=function(state)
-_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
-Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=false,Callback=
-function()_updateControlBindings()end})playerGroup:AddSlider('PlayerFlySpeed',{
-Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Callback=function(value)
-local mod=_state.client.Modules.Player if mod and mod.setFlySpeed then mod:
-setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:AddToggle(
-'PlayerNoclip',{Text='Noclip',Default=false,Callback=function(state)
-_updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
-'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',
-SyncToggleState=false,Callback=function()_updateControlBindings()end})local
-playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
-'Walk Speed',Default=false,Callback=function(state)_updateControlBindings()end})
-playerWalkSpeedToggle:AddKeyPicker('PlayerWalkSpeedKeybind',{Default='T',NoUI=
-false,Text='Walk Speed Keybind',SyncToggleState=false,Callback=function()
-_updateControlBindings()end})playerGroup:AddSlider('PlayerWalkSpeed',{Text=
-'Walk Speed',Default=16,Min=0,Max=200,Rounding=0,Callback=function(value)local
-mod=_state.client.Modules.Player if mod and mod.setWalkSpeed then mod:
-setWalkSpeed(value)end end})local playerJumpPowerToggle=playerGroup:AddToggle(
-'PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,Callback=function(
-state)_updateControlBindings()end})playerJumpPowerToggle:AddKeyPicker(
-'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',
+'Text Size',Default=12,Min=10,Max=24,Rounding=0,Compact=true,Callback=function(
+value)local mod=_state.client.Modules.Visuals if mod and mod.setTextSize then
+mod:setTextSize(value)end end})espGroup:AddSlider('ESPMaxDistance',{Text=
+'Max Distance',Default=2000,Min=100,Max=10000,Rounding=0,Compact=true,Callback=
+function(value)local mod=_state.client.Modules.Visuals if mod and mod.
+setMaxDistance then mod:setMaxDistance(value)end end})local menuGroup=tabs.
+uiSettings:AddLeftGroupbox('Menu')menuGroup:AddButton('Unload',function()library
+:Unload()end)menuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{Default
+='End',NoUI=true,Text='Menu keybind'})local getfenvAny=getfenv local env=(
+getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and
+getgenvFunc().Options)or _G.Options if GlobalOptions and GlobalOptions.
+MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind end
+themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
+IgnoreThemeSettings()themeManager:SetFolder('Blossom')saveManager:SetFolder(
+'Blossom')saveManager:BuildConfigSection(tabs.uiSettings)themeManager:
+ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:AddLeftGroupbox('Player')
+local playerFlyToggle=playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=
+false,Callback=function(state)_updateControlBindings()end})playerFlyToggle:
+AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text='Fly Keybind',
 SyncToggleState=false,Callback=function()_updateControlBindings()end})
-playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=
-200,Rounding=0,Callback=function(value)local mod=_state.client.Modules.Player if
-mod and mod.setJumpPower then mod:setJumpPower(value)end end})_state.
-controlBindings={{toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind'
-,last=nil,setter=function(active)local mod=_state.client.Modules.Combat if mod
-and mod.setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId=
-'PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local
-mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then mod:
-setFlyEnabled(active)end end},{toggleId='PlayerNoclip',keybindId=
-'PlayerNoclipKeybind',last=nil,setter=function(active)local mod=_state.client.
-Modules.Player if mod and mod.setNoclipEnabled then mod:setNoclipEnabled(active)
-end end},{toggleId='PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',
-last=nil,setter=function(active)local mod=_state.client.Modules.Player if mod
-and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{
-toggleId='PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,
-setter=function(active)local mod=_state.client.Modules.Player if mod and mod.
+playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
+200,Rounding=0,Compact=true,Callback=function(value)local mod=_state.client.
+Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(value)end end})
+local playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{Text='Noclip',
+Default=false,Callback=function(state)_updateControlBindings()end})
+playerNoclipToggle:AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,
+Text='Noclip Keybind',SyncToggleState=false,Callback=function()
+_updateControlBindings()end})local playerWalkSpeedToggle=playerGroup:AddToggle(
+'PlayerWalkSpeedEnabled',{Text='Walk Speed',Default=false,Callback=function(
+state)_updateControlBindings()end})playerWalkSpeedToggle:AddKeyPicker(
+'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed Keybind',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})
+playerGroup:AddSlider('PlayerWalkSpeed',{Text='Walk Speed',Default=16,Min=0,Max=
+200,Rounding=0,Compact=true,Callback=function(value)local mod=_state.client.
+Modules.Player if mod and mod.setWalkSpeed then mod:setWalkSpeed(value)end end})
+local playerJumpPowerToggle=playerGroup:AddToggle('PlayerJumpPowerEnabled',{Text
+='Jump Power',Default=false,Callback=function(state)_updateControlBindings()end}
+)playerJumpPowerToggle:AddKeyPicker('PlayerJumpPowerKeybind',{Default='Y',NoUI=
+false,Text='Jump Power Keybind',SyncToggleState=false,Callback=function()
+_updateControlBindings()end})playerGroup:AddSlider('PlayerJumpPower',{Text=
+'Jump Power',Default=50,Min=0,Max=200,Rounding=0,Compact=true,Callback=function(
+value)local mod=_state.client.Modules.Player if mod and mod.setJumpPower then
+mod:setJumpPower(value)end end})_state.controlBindings={{toggleId=
+'CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=function(
+active)local mod=_state.client.Modules.Combat if mod and mod.setAimbotEnabled
+then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly',keybindId=
+'PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.client.
+Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active)end
+end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Player if mod and mod.
+setNoclipEnabled then mod:setNoclipEnabled(active)end end},{toggleId=
+'PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Player if mod and mod.
+setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{toggleId=
+'PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Player if mod and mod.
 setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
 'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
 local mod=_state.client.Modules.Combat if mod and mod.setSilentAimEnabled then
