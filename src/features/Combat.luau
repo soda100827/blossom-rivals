@@ -255,7 +255,7 @@ local function _aimAt(target: Player)
 
 	-- Debug once per target switch or low frequency?
 	-- For now, just print if we have logic
-	-- _state.logger:info("Aiming...", targetRotation)
+	_state.logger:info("Aiming...", targetRotation)
 
 	-- Smoothness
 	if _state.smoothness > 0 then
@@ -336,7 +336,7 @@ local function _connect()
 			if _state.isAiming then
 				local target = _getBestTarget()
 				if target then
-					-- _state.logger:info("Target found:", target.Name)
+					_state.logger:info("Target found:", target.Name)
 					_aimAt(target)
 				end
 			end
