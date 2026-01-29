@@ -112,7 +112,7 @@ local function _getDrawingLib()
 end
 
 local function _applyInputLock(isLocked: boolean)
-	if not _state.isHardLockEnabled then
+	if isLocked and not _state.isHardLockEnabled then
 		return
 	end
 	if isLocked == _state.isInputLocked then

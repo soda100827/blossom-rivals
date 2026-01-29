@@ -417,56 +417,56 @@ return camera end local function _getLocalPlayer()return Players.LocalPlayer end
 local function _getDrawingLib()local getfenvAny=getfenv local g=(getfenvAny(0))
 local lib=g.Drawing if not lib and g.getgenv then lib=g.getgenv().Drawing end if
 not lib then lib=rawget(_G,'Drawing')end return lib end local function
-_applyInputLock(isLocked)if not _state.isHardLockEnabled then return end if
-isLocked==_state.isInputLocked then return end if isLocked then if _state.
-mouseBehavior==nil then _state.mouseBehavior=UserInputService.MouseBehavior end
-if _state.mouseDeltaSensitivity==nil then _state.mouseDeltaSensitivity=
-UserInputService.MouseDeltaSensitivity end UserInputService.MouseBehavior=Enum.
-MouseBehavior.LockCenter UserInputService.MouseDeltaSensitivity=0 else if _state
-.mouseBehavior~=nil then UserInputService.MouseBehavior=_state.mouseBehavior
-_state.mouseBehavior=nil end if _state.mouseDeltaSensitivity~=nil then
-UserInputService.MouseDeltaSensitivity=_state.mouseDeltaSensitivity _state.
-mouseDeltaSensitivity=nil end end _state.isInputLocked=isLocked end
-local function _fetchCameraController(logger)if _state.cameraController then
-return end if logger then logger:info('Fetching start...')end local
-playerScripts=_getLocalPlayer():WaitForChild('PlayerScripts')if not
-playerScripts then return end local controllers=playerScripts:WaitForChild(
-'Controllers')if not controllers then return end local camControllerScript=
-controllers:WaitForChild('CameraController')if camControllerScript and
-camControllerScript:IsA('ModuleScript')then local success,result=pcall(function(
-)return require(camControllerScript)end)if success then _state.cameraController=
-result if logger then logger:info('Success CameraController')end else if logger
-then logger:error('Failed CameraController',result)end end end end
-local function _updateFovCircle()local lib=_getDrawingLib()if not lib then
-return end local circle=_state.fovCircle if _state.isFovEnabled and _state.
-isAimbotEnabled then if not circle then circle=lib.new('Circle')_state.fovCircle
-=circle end local c=circle c.Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides
-=CONSTANTS.FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=_state.fovColor c.
-Transparency=1-_state.fovTransparency local mouseLocation=UserInputService:
-GetMouseLocation()c.Position=mouseLocation c.Radius=_state.fovRadius c.Visible=
-true else local c=circle if c then c.Visible=false end end end local function
-_isValidTarget(player)local camera=_getCamera()local localPlayer=
-_getLocalPlayer()if player==localPlayer then return false,nil end if _state.
-isTeamCheckEnabled and player.Team==localPlayer.Team then return false,nil end
-local character=player.Character if not character then return false,nil end
-local humanoid=character:FindFirstChildOfClass('Humanoid')if not humanoid or
-humanoid.Health<=0 then return false,nil end local head=character:
-FindFirstChild('Head')if not head or not head:IsA('BasePart')then return false,
-nil end local headPart=head if _state.isWallCheckEnabled then local origin=
-camera.CFrame.Position local direction=headPart.Position-origin local
-raycastParams=RaycastParams.new()raycastParams.FilterDescendantsInstances={
-localPlayer.Character,character}raycastParams.FilterType=Enum.RaycastFilterType.
-Exclude local result=Workspace:Raycast(origin,direction,raycastParams)if result
-then return false,nil end end local screenPos,onScreen=camera:
-WorldToViewportPoint(headPart.Position)if not onScreen then return false,nil end
-local mouseLocation=UserInputService:GetMouseLocation()local distance=(Vector2.
-new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if distance>_state.
-fovRadius then return false,nil end return true,headPart end local function
-_getBestTarget()local localPlayer=_getLocalPlayer()local mouseLocation=
-UserInputService:GetMouseLocation()local bestTarget=nil local shortestDistance=
-_state.fovRadius for _,player in ipairs(Players:GetPlayers())do if player==
-localPlayer then continue end local isValid=_isValidTarget(player)if not isValid
-then continue end local head=player.Character and player.Character:
+_applyInputLock(isLocked)if isLocked and not _state.isHardLockEnabled then
+return end if isLocked==_state.isInputLocked then return end if isLocked then if
+_state.mouseBehavior==nil then _state.mouseBehavior=UserInputService.
+MouseBehavior end if _state.mouseDeltaSensitivity==nil then _state.
+mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity end
+UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter UserInputService.
+MouseDeltaSensitivity=0 else if _state.mouseBehavior~=nil then UserInputService.
+MouseBehavior=_state.mouseBehavior _state.mouseBehavior=nil end if _state.
+mouseDeltaSensitivity~=nil then UserInputService.MouseDeltaSensitivity=_state.
+mouseDeltaSensitivity _state.mouseDeltaSensitivity=nil end end _state.
+isInputLocked=isLocked end local function _fetchCameraController(logger)if
+_state.cameraController then return end if logger then logger:info(
+'Fetching start...')end local playerScripts=_getLocalPlayer():WaitForChild(
+'PlayerScripts')if not playerScripts then return end local controllers=
+playerScripts:WaitForChild('Controllers')if not controllers then return end
+local camControllerScript=controllers:WaitForChild('CameraController')if
+camControllerScript and camControllerScript:IsA('ModuleScript')then local
+success,result=pcall(function()return require(camControllerScript)end)if success
+then _state.cameraController=result if logger then logger:info(
+'Success CameraController')end else if logger then logger:error(
+'Failed CameraController',result)end end end end local function _updateFovCircle
+()local lib=_getDrawingLib()if not lib then return end local circle=_state.
+fovCircle if _state.isFovEnabled and _state.isAimbotEnabled then if not circle
+then circle=lib.new('Circle')_state.fovCircle=circle end local c=circle c.
+Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.
+FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=_state.fovColor c.Transparency=1-
+_state.fovTransparency local mouseLocation=UserInputService:GetMouseLocation()c.
+Position=mouseLocation c.Radius=_state.fovRadius c.Visible=true else local c=
+circle if c then c.Visible=false end end end local function _isValidTarget(
+player)local camera=_getCamera()local localPlayer=_getLocalPlayer()if player==
+localPlayer then return false,nil end if _state.isTeamCheckEnabled and player.
+Team==localPlayer.Team then return false,nil end local character=player.
+Character if not character then return false,nil end local humanoid=character:
+FindFirstChildOfClass('Humanoid')if not humanoid or humanoid.Health<=0 then
+return false,nil end local head=character:FindFirstChild('Head')if not head or
+not head:IsA('BasePart')then return false,nil end local headPart=head if _state.
+isWallCheckEnabled then local origin=camera.CFrame.Position local direction=
+headPart.Position-origin local raycastParams=RaycastParams.new()raycastParams.
+FilterDescendantsInstances={localPlayer.Character,character}raycastParams.
+FilterType=Enum.RaycastFilterType.Exclude local result=Workspace:Raycast(origin,
+direction,raycastParams)if result then return false,nil end end local screenPos,
+onScreen=camera:WorldToViewportPoint(headPart.Position)if not onScreen then
+return false,nil end local mouseLocation=UserInputService:GetMouseLocation()
+local distance=(Vector2.new(screenPos.X,screenPos.Y)-mouseLocation).Magnitude if
+distance>_state.fovRadius then return false,nil end return true,headPart end
+local function _getBestTarget()local localPlayer=_getLocalPlayer()local
+mouseLocation=UserInputService:GetMouseLocation()local bestTarget=nil local
+shortestDistance=_state.fovRadius for _,player in ipairs(Players:GetPlayers())do
+if player==localPlayer then continue end local isValid=_isValidTarget(player)if
+not isValid then continue end local head=player.Character and player.Character:
 FindFirstChild('Head')if not head or not head:IsA('BasePart')then continue end
 local camera=_getCamera()local screenPos=camera:WorldToViewportPoint((head).
 Position)local distance=(Vector2.new(screenPos.X,screenPos.Y)-mouseLocation).
