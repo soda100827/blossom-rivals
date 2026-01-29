@@ -99,21 +99,6 @@ local function _getDrawingLib()
 	return lib
 end
 
-local function _getKeybindState(optionId: string): boolean?
-	local getfenvAny = getfenv :: any
-	local env = getfenvAny(0) :: any
-	local getgenvFunc = env.getgenv
-	local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
-	if not options then
-		return nil
-	end
-	local keybind = options[optionId]
-	if keybind and keybind.GetState then
-		return keybind:GetState()
-	end
-	return nil
-end
-
 local function _fetchCameraController(logger: any)
 	if _state.cameraController then
 		return
@@ -298,56 +283,38 @@ local function _aimAt(target: Player)
 	end
 end
 
-local function _handleInput(input: InputObject)
-	-- Check trigger key
-	if not _state.triggerKey then
-		return
-	end
-
+local function _isTriggerInput(input: InputObject): boolean
 	local key = _state.triggerKey
-	local isTrigger = false
-
-	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == key then
-		isTrigger = true
-	elseif input.UserInputType == Enum.UserInputType.MouseButton1 and key == "MouseButton1" then
-		isTrigger = true
-	elseif input.UserInputType == Enum.UserInputType.MouseButton2 and key == "MouseButton2" then
-		isTrigger = true
+	if not key then
+		return false
 	end
 
-	if isTrigger then
-		_state.isAiming = (input.UserInputState == Enum.UserInputState.Begin)
-	end
-end
-
-local function _checkKeyDown()
-	local keybindState = _getKeybindState("CombatTriggerKey")
-	if type(keybindState) == "boolean" then
-		return keybindState
-	end
-	-- Polling specific keys if keypicker returns strings
-	if type(_state.triggerKey) == "string" then
-		local keyName = _state.triggerKey
-		if keyName == "MouseButton1" then
-			return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-		elseif keyName == "MouseButton2" then
-			return UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
-		else
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		if typeof(key) == "EnumItem" and key.EnumType == Enum.KeyCode then
+			return input.KeyCode == key
+		end
+		if type(key) == "string" then
 			local success, keyCode = pcall(function()
-				return Enum.KeyCode[keyName]
+				return Enum.KeyCode[key]
 			end)
 			if success and keyCode then
-				return UserInputService:IsKeyDown(keyCode)
+				return input.KeyCode == keyCode
 			end
 		end
-	elseif typeof(_state.triggerKey) == "EnumItem" then
-		if _state.triggerKey.EnumType == Enum.KeyCode then
-			return UserInputService:IsKeyDown(_state.triggerKey)
-		elseif _state.triggerKey.EnumType == Enum.UserInputType then
-			return UserInputService:IsMouseButtonPressed(_state.triggerKey)
-		end
+	elseif input.UserInputType == Enum.UserInputType.MouseButton1 then
+		return key == "MouseButton1" or (typeof(key) == "EnumItem" and key == Enum.UserInputType.MouseButton1)
+	elseif input.UserInputType == Enum.UserInputType.MouseButton2 then
+		return key == "MouseButton2" or (typeof(key) == "EnumItem" and key == Enum.UserInputType.MouseButton2)
 	end
+
 	return false
+end
+
+local function _onInputChanged(input: InputObject, isPressed: boolean)
+	if not _isTriggerInput(input) then
+		return
+	end
+	_state.isAiming = isPressed
 end
 
 local function _connect()
@@ -356,15 +323,28 @@ local function _connect()
 		_fetchCameraController(_state.logger)
 	end)
 
+	local inputBeganConn = UserInputService.InputBegan:Connect(function(input, processed)
+		if processed and not _isTriggerInput(input) then
+			return
+		end
+		_onInputChanged(input, true)
+	end)
+	_maid:GiveTask(inputBeganConn)
+
+	local inputEndedConn = UserInputService.InputEnded:Connect(function(input, processed)
+		if processed and not _isTriggerInput(input) then
+			return
+		end
+		_onInputChanged(input, false)
+	end)
+	_maid:GiveTask(inputEndedConn)
+
 	local runConn = RunService.RenderStepped:Connect(function()
 		_updateFovCircle()
 
 		_throttleLog("Aimbot Status | Enabled:", _state.isAimbotEnabled, "Key:", _state.isAiming)
 
 		if _state.isAimbotEnabled then
-			-- Check if key is held
-			_state.isAiming = _checkKeyDown()
-
 			if _state.isAiming then
 				local target = _getBestTarget()
 				if target then
