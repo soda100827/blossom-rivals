@@ -25,6 +25,8 @@ export type CombatFeature = {
 	setAimbotEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setFovEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setFovRadius: (self: CombatFeature, radius: number) -> (),
+	setFovColor: (self: CombatFeature, color: Color3) -> (),
+	setFovTransparency: (self: CombatFeature, transparency: number) -> (),
 	setTeamCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSmoothness: (self: CombatFeature, smoothness: number) -> (),
 	setWallCheckEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
@@ -42,6 +44,8 @@ local _state: {
 	isAimbotEnabled: boolean,
 	isFovEnabled: boolean,
 	fovRadius: number,
+	fovColor: Color3,
+	fovTransparency: number,
 	isTeamCheckEnabled: boolean,
 	isWallCheckEnabled: boolean,
 	smoothness: number,
@@ -59,6 +63,8 @@ local _state: {
 		isAimbotEnabled = false,
 		isFovEnabled = false,
 		fovRadius = 100,
+		fovColor = CONSTANTS.FOV_CIRCLE_COLOR,
+		fovTransparency = 0,
 		isTeamCheckEnabled = false,
 		isWallCheckEnabled = false,
 		smoothness = 0,
@@ -191,7 +197,8 @@ local function _updateFovCircle()
 		c.Thickness = CONSTANTS.FOV_CIRCLE_THICKNESS
 		c.NumSides = CONSTANTS.FOV_CIRCLE_NUM_SIDES
 		c.Filled = false
-		c.Color = CONSTANTS.FOV_CIRCLE_COLOR
+		c.Color = _state.fovColor
+		c.Transparency = 1 - _state.fovTransparency
 
 		local mouseLocation = UserInputService:GetMouseLocation()
 		c.Position = mouseLocation
@@ -320,9 +327,12 @@ local function _aimAt(target: Player, deltaTime: number)
 	local lookAtCFrame = CFrame.lookAt(currentCFrame.Position, targetPos)
 
 	if not _state.cameraController or not _state.cameraController.SetRotation then
-		local speed = CONSTANTS.MIN_AIM_SPEED
-			+ (1 - _state.smoothness) * (CONSTANTS.MAX_AIM_SPEED - CONSTANTS.MIN_AIM_SPEED)
-		local alpha = 1 - math.exp(-speed * deltaTime)
+		local alpha = 1
+		if not _state.isHardLockEnabled then
+			local speed = CONSTANTS.MIN_AIM_SPEED
+				+ (1 - _state.smoothness) * (CONSTANTS.MAX_AIM_SPEED - CONSTANTS.MIN_AIM_SPEED)
+			alpha = 1 - math.exp(-speed * deltaTime)
+		end
 		camera.CFrame = currentCFrame:Lerp(lookAtCFrame, alpha)
 		return
 	end
@@ -342,7 +352,9 @@ local function _aimAt(target: Player, deltaTime: number)
 	_state.logger:info("Aiming...", targetRotation)
 
 	-- Smoothness
-	if _state.smoothness > 0 then
+	if _state.isHardLockEnabled then
+		_state.cameraController:SetRotation(targetRotation)
+	elseif _state.smoothness > 0 then
 		local currentRot = _state.cameraController.Rotation :: Vector2
 		local speed = CONSTANTS.MIN_AIM_SPEED
 			+ (1 - _state.smoothness) * (CONSTANTS.MAX_AIM_SPEED - CONSTANTS.MIN_AIM_SPEED)
@@ -421,6 +433,14 @@ end
 
 function Combat.setFovRadius(self: CombatFeature, radius: number): ()
 	_state.fovRadius = radius
+end
+
+function Combat.setFovColor(self: CombatFeature, color: Color3): ()
+	_state.fovColor = color
+end
+
+function Combat.setFovTransparency(self: CombatFeature, transparency: number): ()
+	_state.fovTransparency = math.clamp(transparency, 0, 1)
 end
 
 function Combat.setTeamCheckEnabled(self: CombatFeature, isEnabled: boolean): ()

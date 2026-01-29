@@ -174,13 +174,27 @@ local function _mount()
 			_updateControlBindings()
 		end,
 	})
-	combatAimbotToggle:AddKeyPicker("CombatAimbotKeybind", {
+	local combatAimbotKeybind = combatAimbotToggle:AddKeyPicker("CombatAimbotKeybind", {
 		Default = "MouseButton2",
 		NoUI = false,
 		Text = "Trigger Key",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
+		end,
+	})
+	combatAimbotKeybind:AddColorPicker("CombatFovColor", {
+		Default = Color3.fromRGB(255, 255, 255),
+		Transparency = 0,
+		Title = "FOV Color",
+		Callback = function(color, transparency)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setFovColor then
+				mod:setFovColor(color)
+			end
+			if mod and mod.setFovTransparency then
+				mod:setFovTransparency(transparency or 0)
+			end
 		end,
 	})
 	combatGroup:AddToggle("CombatShowFov", {
