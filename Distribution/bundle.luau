@@ -101,24 +101,25 @@ value=(container:GetAttribute(key))if value~=nil then return value end end
 return nil end local function _readValueObjectTeam(container)for _,key in
 ipairs(TEAM_ATTRIBUTE_KEYS)do local valueObj=container:FindFirstChild(key)if
 valueObj and valueObj:IsA('ValueBase')then return(((valueObj).Value))end end
-return nil end local function _getTeamFromFighter(fighter)if not fighter then
-return nil end local teamValue=fighter.Team or fighter.team or fighter.TeamId or
-fighter.teamId or fighter.TeamID or fighter.teamID or fighter.Side or fighter.
-side if teamValue~=nil then return teamValue end local owner=fighter.Owner or
-fighter.owner or fighter.Player or fighter.player if typeof(owner)=='Instance'
-and owner:IsA('Player')then return TeamUtils.getPlayerTeamId(owner)end return
-nil end local function _getFighterForPlayer(controller,player)if not controller
-then return nil end local getter=controller.getFighter or controller.GetFighter
-or controller.getFighterByPlayer or controller.GetFighterByPlayer or controller.
-getFighterFromPlayer or controller.GetFighterFromPlayer if getter then local ok,
-fighter=pcall(getter,controller,player)if ok and fighter then return fighter end
-end local fighters=controller.Fighters or controller.fighters or controller.
-_fighters or controller.FighterByPlayer or controller.fighterByPlayer if
-fighters then return fighters[player]or fighters[player.UserId]or fighters[
-tostring(player.UserId)]end return nil end function TeamUtils.getPlayerTeamId(
-player)local controller=_getFighterController()local fighter=
+return nil end local function _getTeamFromFighter(fighter,fallbackPlayer)if not
+fighter then return nil end local teamValue=fighter.Team or fighter.team or
+fighter.TeamId or fighter.teamId or fighter.TeamID or fighter.teamID or fighter.
+Side or fighter.side if teamValue~=nil then return teamValue end local owner=
+fighter.Owner or fighter.owner or fighter.Player or fighter.player if typeof(
+owner)=='Instance'and owner:IsA('Player')then if fallbackPlayer and owner==
+fallbackPlayer then return nil end return TeamUtils.getPlayerTeamId(owner)end
+return nil end local function _getFighterForPlayer(controller,player)if not
+controller then return nil end local getter=controller.getFighter or controller.
+GetFighter or controller.getFighterByPlayer or controller.GetFighterByPlayer or
+controller.getFighterFromPlayer or controller.GetFighterFromPlayer if getter
+then local ok,fighter=pcall(getter,controller,player)if ok and fighter then
+return fighter end end local fighters=controller.Fighters or controller.fighters
+or controller._fighters or controller.FighterByPlayer or controller.
+fighterByPlayer if fighters then return fighters[player]or fighters[player.
+UserId]or fighters[tostring(player.UserId)]end return nil end function TeamUtils
+.getPlayerTeamId(player)local controller=_getFighterController()local fighter=
 _getFighterForPlayer(controller,player)local fighterTeam=_getTeamFromFighter(
-fighter)if fighterTeam~=nil then return fighterTeam end local playerAttr=
+fighter,player)if fighterTeam~=nil then return fighterTeam end local playerAttr=
 _readAttributeTeam(player)if playerAttr~=nil then return playerAttr end local
 playerValue=_readValueObjectTeam(player)if playerValue~=nil then return
 playerValue end local character=player.Character if character then local

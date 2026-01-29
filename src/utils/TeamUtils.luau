@@ -81,7 +81,7 @@ local function _readValueObjectTeam(container: Instance): TeamId?
 	return nil
 end
 
-local function _getTeamFromFighter(fighter: any): TeamId?
+local function _getTeamFromFighter(fighter: any, fallbackPlayer: Player?): TeamId?
 	if not fighter then
 		return nil
 	end
@@ -101,6 +101,9 @@ local function _getTeamFromFighter(fighter: any): TeamId?
 
 	local owner = fighter.Owner or fighter.owner or fighter.Player or fighter.player
 	if typeof(owner) == "Instance" and owner:IsA("Player") then
+		if fallbackPlayer and owner == fallbackPlayer then
+			return nil
+		end
 		return TeamUtils.getPlayerTeamId(owner)
 	end
 
@@ -143,7 +146,7 @@ end
 function TeamUtils.getPlayerTeamId(player: Player): TeamId?
 	local controller = _getFighterController()
 	local fighter = _getFighterForPlayer(controller, player)
-	local fighterTeam = _getTeamFromFighter(fighter)
+	local fighterTeam = _getTeamFromFighter(fighter, player)
 	if fighterTeam ~= nil then
 		return fighterTeam
 	end
