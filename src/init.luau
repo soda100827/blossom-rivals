@@ -111,8 +111,8 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 			controller = ReplicatedFirst:WaitForChild("AnalyticsPipelineController", 10)
 		end
 		if controller then
-			(controller :: any).Disabled = true
-			logger:info("AnalyticsPipelineController 비활성화됨.")
+			-- (controller :: any).Disabled = true
+			-- logger:info("AnalyticsPipelineController 비활성화됨.")
 		end
 	end)
 end

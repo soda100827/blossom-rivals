@@ -965,13 +965,12 @@ Signal.new(),stopped=Signal.new()}local _modules={}local function
 _disableAnalyticsPipeline(logger)pcall(function()local controller=
 ReplicatedFirst:FindFirstChild('AnalyticsPipelineController')if not controller
 then controller=ReplicatedFirst:WaitForChild('AnalyticsPipelineController',10)
-end if controller then(controller).Disabled=true logger:info(
-'AnalyticsPipelineController \u{be44}\u{d65c}\u{c131}\u{d654}\u{b428}.')end end)
-end local function _handleTeleportQueue(shouldEnable)if shouldEnable then if
-clear_teleport_queue then clear_teleport_queue()end if queue_on_teleport then
-local silentFlag=_state.isSilent and
-'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''queue_on_teleport(
-([[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):
+end if controller then end end)end local function _handleTeleportQueue(
+shouldEnable)if shouldEnable then if clear_teleport_queue then
+clear_teleport_queue()end if queue_on_teleport then local silentFlag=_state.
+isSilent and'getgenv().BlossomSilent = true; _G.BlossomSilent = true;'or''
+queue_on_teleport((
+[[print("Blossom: Auto-loading..."); %s loadstring(game:HttpGet("%s"))()]]):
 format(silentFlag,BUNDLE_URL))end else if clear_teleport_queue then
 clear_teleport_queue()end end end local function _connect()_maid:DoCleaning()if
 _state.shouldTeleportQueue then _handleTeleportQueue(true)end end local function
