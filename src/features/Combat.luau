@@ -95,6 +95,9 @@ local function _fetchCameraController(logger: any)
 	if _state.cameraController then
 		return
 	end
+	if logger then
+		logger:info("Fetching start...")
+	end
 
 	local playerScripts = _getLocalPlayer():WaitForChild("PlayerScripts")
 	if not playerScripts then
@@ -113,6 +116,13 @@ local function _fetchCameraController(logger: any)
 		end)
 		if success then
 			_state.cameraController = result
+			if logger then
+				logger:info("Success CameraController")
+			end
+		else
+			if logger then
+				logger:error("Failed CameraController", result)
+			end
 		end
 	end
 end
@@ -243,6 +253,10 @@ local function _aimAt(target: Player)
 
 	local targetRotation = Vector2.new(y, x)
 
+	-- Debug once per target switch or low frequency?
+	-- For now, just print if we have logic
+	-- _state.logger:info("Aiming...", targetRotation)
+
 	-- Smoothness
 	if _state.smoothness > 0 then
 		local currentRot = _state.cameraController.Rotation :: Vector2
@@ -322,6 +336,7 @@ local function _connect()
 			if _state.isAiming then
 				local target = _getBestTarget()
 				if target then
+					-- _state.logger:info("Target found:", target.Name)
 					_aimAt(target)
 				end
 			end

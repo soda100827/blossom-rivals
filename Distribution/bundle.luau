@@ -414,14 +414,17 @@ _getLocalPlayer()return Players.LocalPlayer end local function _getDrawingLib()
 local getfenvAny=getfenv local g=(getfenvAny(0))local lib=g.Drawing if not lib
 and g.getgenv then lib=g.getgenv().Drawing end if not lib then lib=rawget(_G,
 'Drawing')end return lib end local function _fetchCameraController(logger)if
-_state.cameraController then return end local playerScripts=_getLocalPlayer():
-WaitForChild('PlayerScripts')if not playerScripts then return end local
-controllers=playerScripts:WaitForChild('Controllers')if not controllers then
-return end local camControllerScript=controllers:WaitForChild('CameraController'
-)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
+_state.cameraController then return end if logger then logger:info(
+'Fetching start...')end local playerScripts=_getLocalPlayer():WaitForChild(
+'PlayerScripts')if not playerScripts then return end local controllers=
+playerScripts:WaitForChild('Controllers')if not controllers then return end
+local camControllerScript=controllers:WaitForChild('CameraController')if
+camControllerScript and camControllerScript:IsA('ModuleScript')then local
 success,result=pcall(function()return require(camControllerScript)end)if success
-then _state.cameraController=result end end end local function _updateFovCircle(
-)local lib=_getDrawingLib()if not lib then return end local circle=_state.
+then _state.cameraController=result if logger then logger:info(
+'Success CameraController')end else if logger then logger:error(
+'Failed CameraController',result)end end end end local function _updateFovCircle
+()local lib=_getDrawingLib()if not lib then return end local circle=_state.
 fovCircle if _state.isFovEnabled and _state.isAimbotEnabled then if not circle
 then circle=lib.new('Circle')_state.fovCircle=circle end local c=circle c.
 Thickness=CONSTANTS.FOV_CIRCLE_THICKNESS c.NumSides=CONSTANTS.
