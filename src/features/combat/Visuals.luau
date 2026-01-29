@@ -16,7 +16,14 @@ local Helpers = require("./Helpers")
 local Visuals = {}
 
 --// Private helpers
-local function _updateCircle(circleId: string, isEnabled: boolean, radius: number, color: Color3, transparency: number)
+local function _updateCircle(
+	circleId: string,
+	isEnabled: boolean,
+	radius: number,
+	color: Color3,
+	transparency: number,
+	mouseLocation: Vector2
+)
 	local lib = Helpers.getDrawingLib()
 	if not lib then
 		return
@@ -36,8 +43,6 @@ local function _updateCircle(circleId: string, isEnabled: boolean, radius: numbe
 		c.Filled = false
 		c.Color = color
 		c.Transparency = math.clamp(transparency, 0, 1)
-
-		local mouseLocation = UserInputService:GetMouseLocation()
 		c.Position = mouseLocation
 		c.Radius = radius
 		c.Visible = true
@@ -51,13 +56,15 @@ end
 
 --// Public API
 function Visuals.updateFovCircle()
-	_updateCircle("fovCircle", State.isFovEnabled, State.fovRadius, State.fovColor, State.fovTransparency)
+	local mouseLocation = UserInputService:GetMouseLocation()
+	_updateCircle("fovCircle", State.isFovEnabled, State.fovRadius, State.fovColor, State.fovTransparency, mouseLocation)
 	_updateCircle(
 		"silentAimFovCircle",
 		State.isSilentAimFovEnabled,
 		State.silentAimFovRadius,
 		State.silentAimFovColor,
-		State.silentAimFovTransparency
+		State.silentAimFovTransparency,
+		mouseLocation
 	)
 end
 

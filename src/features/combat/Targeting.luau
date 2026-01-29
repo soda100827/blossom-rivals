@@ -1,9 +1,10 @@
 --!strict
 
 --// Services
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 
 --// Dependencies (require)
 local State = require("./State")
@@ -17,8 +18,75 @@ local TeamUtils = require("../../utils/TeamUtils")
 
 --// Private state
 local Targeting = {}
+local _raycastParams = RaycastParams.new()
+local _raycastFilter = table.create(2)
+
+_raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
 --// Private helpers
+local function _getBestPartForCharacter(
+	character: Model,
+	camera: Camera,
+	localCharacter: Model?,
+	mouseLocation: Vector2
+): (BasePart?, boolean, number)
+	local bestPart: BasePart? = nil
+	local shortestDistSq = math.huge
+	local anyOnScreen = false
+
+	local origin = camera.CFrame.Position
+
+	local function checkPart(part: Instance)
+		if not part:IsA("BasePart") then
+			return
+		end
+
+		if State.isWallCheckEnabled then
+			_raycastFilter[1] = localCharacter
+			_raycastFilter[2] = character
+			_raycastParams.FilterDescendantsInstances = _raycastFilter
+
+			local direction = part.Position - origin
+			local result = Workspace:Raycast(origin, direction, _raycastParams)
+			if result then
+				return
+			end
+		end
+
+		local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
+		if not onScreen then
+			if not bestPart then
+				bestPart = part
+			end
+			return
+		end
+
+		anyOnScreen = true
+		local dx = screenPos.X - mouseLocation.X
+		local dy = screenPos.Y - mouseLocation.Y
+		local distSq = (dx * dx) + (dy * dy)
+		if distSq < shortestDistSq then
+			shortestDistSq = distSq
+			bestPart = part
+		end
+	end
+
+	if State.isClosestPositionEnabled then
+		for _, partName in ipairs(State.closestPositionWhitelist) do
+			local p = character:FindFirstChild(partName)
+			if p then
+				checkPart(p)
+			end
+		end
+	else
+		local p = character:FindFirstChild(State.targetPart) or character:FindFirstChild("Head")
+		if p then
+			checkPart(p)
+		end
+	end
+
+	return bestPart, anyOnScreen, shortestDistSq
+end
 
 --// Public API
 function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
@@ -41,65 +109,15 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 		return false, nil, false, math.huge
 	end
 
-	local targetParts: { BasePart } = {}
-	if State.isClosestPositionEnabled then
-		for _, partName in ipairs(State.closestPositionWhitelist) do
-			local p = character:FindFirstChild(partName)
-			if p and p:IsA("BasePart") then
-				table.insert(targetParts, p)
-			end
-		end
-	else
-		local p = character:FindFirstChild(State.targetPart) or character:FindFirstChild("Head")
-		if p and p:IsA("BasePart") then
-			table.insert(targetParts, p)
-		end
-	end
-
-	if #targetParts == 0 then
-		return false, nil, false, math.huge
-	end
-
-	local bestPart: BasePart? = nil
-	local shortestDist = math.huge
-	local anyOnScreen = false
-
 	local mouseLocation = UserInputService:GetMouseLocation()
-
-	for _, part in ipairs(targetParts) do
-		if State.isWallCheckEnabled then
-			local origin = camera.CFrame.Position
-			local direction = part.Position - origin
-			local raycastParams = RaycastParams.new()
-			raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, character }
-			raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-			local result = Workspace:Raycast(origin, direction, raycastParams)
-			if result then
-				continue
-			end
-		end
-
-		local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
-		if not onScreen then
-			if not bestPart then
-				bestPart = part
-			end
-			continue
-		end
-
-		anyOnScreen = true
-		local distance = (Vector2.new(screenPos.X, screenPos.Y) - mouseLocation).Magnitude
-		if distance < shortestDist then
-			shortestDist = distance
-			bestPart = part
-		end
-	end
+	local bestPart, anyOnScreen, shortestDistSq =
+		_getBestPartForCharacter(character, camera, localPlayer.Character, mouseLocation)
 
 	if not bestPart then
 		return false, nil, false, math.huge
 	end
 
+	local shortestDist = if shortestDistSq == math.huge then math.huge else math.sqrt(shortestDistSq)
 	return true, bestPart, anyOnScreen, shortestDist
 end
 
@@ -195,14 +213,18 @@ end
 function Targeting.getClosestSilentTarget(): BasePart?
 	local camera = Helpers.getCamera()
 	local localPlayer = Helpers.getLocalPlayer()
-	local collectionService = game:GetService("CollectionService")
 
 	local closest: BasePart? = nil
-	local closestDist = State.silentAimFovRadius
+	local closestDistSq = State.silentAimFovRadius * State.silentAimFovRadius
 	local mouseLocation = UserInputService:GetMouseLocation()
 
-	for _, entity in ipairs(collectionService:GetTagged("Entity")) do
+	for _, entity in ipairs(CollectionService:GetTagged("Entity")) do
 		if entity == localPlayer.Character then
+			continue
+		end
+
+		local player = Players:GetPlayerFromCharacter(entity :: Model)
+		if player and TeamUtils.isSameTeam(player, localPlayer) then
 			continue
 		end
 
@@ -211,54 +233,15 @@ function Targeting.getClosestSilentTarget(): BasePart?
 			continue
 		end
 
-		local targetParts: { BasePart } = {}
-		if State.isClosestPositionEnabled then
-			for _, partName in ipairs(State.closestPositionWhitelist) do
-				local p = entity:FindFirstChild(partName)
-				if p and p:IsA("BasePart") then
-					table.insert(targetParts, p)
-				end
-			end
-		else
-			local p = entity:FindFirstChild(State.targetPart) or entity:FindFirstChild("Head")
-			if p and p:IsA("BasePart") then
-				table.insert(targetParts, p)
-			end
-		end
-
-		if #targetParts == 0 then
+		local bestPart, anyOnScreen, distSq =
+			_getBestPartForCharacter(entity :: Model, camera, localPlayer.Character, mouseLocation)
+		if not anyOnScreen or not bestPart then
 			continue
 		end
 
-		for _, targetPart in ipairs(targetParts) do
-			-- Team check
-			local player = Players:GetPlayerFromCharacter(entity :: Model)
-			if player and TeamUtils.isSameTeam(player, localPlayer) then
-				continue
-			end
-
-			-- Wall check
-			if State.isWallCheckEnabled then
-				local origin = camera.CFrame.Position
-				local direction = targetPart.Position - origin
-				local raycastParams = RaycastParams.new()
-				raycastParams.FilterDescendantsInstances = { localPlayer.Character :: any, entity }
-				raycastParams.FilterType = Enum.RaycastFilterType.Exclude
-
-				local result = Workspace:Raycast(origin, direction, raycastParams)
-				if result then
-					continue
-				end
-			end
-
-			local pos, onScreen = camera:WorldToViewportPoint(targetPart.Position)
-			if onScreen then
-				local dist = (Vector2.new(pos.X, pos.Y) - mouseLocation).Magnitude
-				if dist < closestDist then
-					closest = targetPart
-					closestDist = dist
-				end
-			end
+		if distSq < closestDistSq then
+			closest = bestPart
+			closestDistSq = distSq
 		end
 	end
 	return closest

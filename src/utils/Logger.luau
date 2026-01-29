@@ -1,9 +1,15 @@
+--!strict
+
 --// Services
-local RunService = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+
+--// Dependencies (require)
+local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
 local DEFAULT_SOURCE = "System"
+local RICHTEXT_CHECK_INTERVAL = 0.5
 local COLORS = {
 	Cyan = "33, 161, 163",
 	Green = "0, 255, 0",
@@ -24,30 +30,58 @@ export type LoggerInstance = {
 
 export type LoggerModule = {
 	new: (source: string?) -> LoggerInstance,
+	Destroy: () -> (),
+}
+
+type LoggerState = {
+	lastRichTextCheck: number,
+	isRichTextConnected: boolean,
 }
 
 --// Private state
 local Logger = {}
 Logger.__index = Logger
 
+local _maid = Maid.new()
+local _state: LoggerState = {
+	lastRichTextCheck = 0,
+	isRichTextConnected = false,
+}
+local _signals = {}
+
 --// Private helpers
-local function _enableRichText()
-	-- Continuously ensure RichText is enabled on DevConsole
-	RunService.Heartbeat:Connect(function()
-		pcall(function()
-			local devConsole = CoreGui:FindFirstChild("DevConsoleMaster")
-			if devConsole then
-				for _, label in pairs(devConsole:GetDescendants()) do
-					if label:IsA("TextLabel") and not label.RichText then
-						label.RichText = true
-					end
-				end
+local function _setRichTextOnLabels()
+	pcall(function()
+		local devConsole = CoreGui:FindFirstChild("DevConsoleMaster")
+		if not devConsole then
+			return
+		end
+		for _, label in ipairs(devConsole:GetDescendants()) do
+			if label:IsA("TextLabel") and not label.RichText then
+				label.RichText = true
 			end
-		end)
+		end
 	end)
 end
 
-local function formatMessage(level: string, source: string, ...): string
+local function _connect()
+	if _state.isRichTextConnected then
+		return
+	end
+	_state.isRichTextConnected = true
+
+	local conn = RunService.Heartbeat:Connect(function()
+		local now = os.clock()
+		if now - _state.lastRichTextCheck < RICHTEXT_CHECK_INTERVAL then
+			return
+		end
+		_state.lastRichTextCheck = now
+		_setRichTextOnLabels()
+	end)
+	_maid:GiveTask(conn)
+end
+
+local function _formatMessage(level: string, source: string, ...): string
 	local parts = { ... }
 	for i, value in ipairs(parts) do
 		parts[i] = tostring(value)
@@ -55,9 +89,7 @@ local function formatMessage(level: string, source: string, ...): string
 	local message = table.concat(parts, " ")
 
 	local levelColor = COLORS.White
-	if level == "INFO" then
-		levelColor = COLORS.White
-	elseif level == "SUCCESS" then
+	if level == "SUCCESS" then
 		levelColor = COLORS.Green
 	elseif level == "WARN" then
 		levelColor = COLORS.Yellow
@@ -76,30 +108,32 @@ end
 
 --// Public API
 function Logger.new(source: string?): LoggerInstance
+	_connect()
 	local instance = setmetatable({
 		source = source or DEFAULT_SOURCE,
 	}, Logger)
 	return (instance :: any) :: LoggerInstance
 end
 
+function Logger.Destroy(): ()
+	_maid:DoCleaning()
+	_state.isRichTextConnected = false
+end
+
 function Logger.info(self: LoggerInstance, ...: unknown): ()
-	print(formatMessage("INFO", self.source, ...))
+	print(_formatMessage("INFO", self.source, ...))
 end
 
 function Logger.success(self: LoggerInstance, ...: unknown): ()
-	print(formatMessage("SUCCESS", self.source, ...))
+	print(_formatMessage("SUCCESS", self.source, ...))
 end
 
 function Logger.warn(self: LoggerInstance, ...: unknown): ()
-	warn(formatMessage("WARN", self.source, ...))
+	warn(_formatMessage("WARN", self.source, ...))
 end
 
 function Logger.error(self: LoggerInstance, ...: unknown): ()
-	-- Error usually stops execution or prints stack trace, we format the message part
-	error(formatMessage("ERROR", self.source, ...), 0)
+	error(_formatMessage("ERROR", self.source, ...), 0)
 end
-
--- Initialize the RichText enabler
-task.spawn(_enableRichText)
 
 return Logger
