@@ -270,7 +270,7 @@ function Client.start(self: BlossomClient): ()
 	end
 
 	_connect()
-	_state.logger:success("스크립트 모두 로드 완료.")
+	_state.logger:success("Blossom 로드 완료.")
 	_signals.started:Fire()
 end
 
