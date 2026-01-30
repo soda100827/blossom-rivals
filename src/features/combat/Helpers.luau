@@ -4,6 +4,7 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 --// Dependencies (require)
 local State = require("./State")
@@ -27,8 +28,7 @@ function Helpers.getGlobal(name: string): any
 end
 
 function Helpers.getUtility(): any
-	local replicatedStorage = game:GetService("ReplicatedStorage")
-	local modules = replicatedStorage:WaitForChild("Modules", 5)
+	local modules = ReplicatedStorage:WaitForChild("Modules", 5)
 	if not modules then
 		return nil
 	end
@@ -43,9 +43,24 @@ function Helpers.getUtility(): any
 	return success and result or nil
 end
 
+function Helpers.getGameplayUtility(): any
+	local modules = ReplicatedStorage:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local utility = modules:WaitForChild("GameplayUtility", 5)
+	if not utility then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(utility)
+	end)
+	return success and result or nil
+end
+
 function Helpers.getCameraShaker(): any
-	local localPlayer = game:GetService("Players").LocalPlayer
-	local playerScripts = localPlayer:WaitForChild("PlayerScripts", 5)
+	local playerScripts = Players.LocalPlayer:WaitForChild("PlayerScripts", 5)
 	if not playerScripts then
 		return nil
 	end
@@ -177,6 +192,90 @@ function Helpers.fetchFighterController(logger: any)
 			State.fighterController = result
 		end
 	end
+end
+
+function Helpers.getGunModule(): any
+	local playerScripts = Helpers.getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local itemTypes = modules:WaitForChild("ItemTypes", 5)
+	if not itemTypes then
+		return nil
+	end
+	local gun = itemTypes:WaitForChild("Gun", 5)
+	if not gun then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(gun)
+	end)
+	return success and result or nil
+end
+
+function Helpers.getClientItemModule(): any
+	local playerScripts = Helpers.getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local clientReplicatedClasses = modules:WaitForChild("ClientReplicatedClasses", 5)
+	if not clientReplicatedClasses then
+		return nil
+	end
+	local clientFighter = clientReplicatedClasses:WaitForChild("ClientFighter", 5)
+	if not clientFighter then
+		return nil
+	end
+	local clientItem = clientFighter:WaitForChild("ClientItem", 5)
+	if not clientItem then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(clientItem)
+	end)
+	return success and result or nil
+end
+
+function Helpers.getViewModelModule(): any
+	local playerScripts = Helpers.getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local clientReplicatedClasses = modules:WaitForChild("ClientReplicatedClasses", 5)
+	if not clientReplicatedClasses then
+		return nil
+	end
+	local clientFighter = clientReplicatedClasses:WaitForChild("ClientFighter", 5)
+	if not clientFighter then
+		return nil
+	end
+	local clientItemScript = clientFighter:WaitForChild("ClientItem", 5)
+	if not clientItemScript then
+		return nil
+	end
+	local viewModel = clientItemScript:WaitForChild("ClientViewModel", 5)
+	if not viewModel then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(viewModel)
+	end)
+	return success and result or nil
 end
 
 return Helpers

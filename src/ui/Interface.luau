@@ -415,6 +415,61 @@ local function _mount()
 		end,
 	})
 
+	local gunModsGroup = tabs.combat:AddRightGroupbox("Gun Mods")
+
+	gunModsGroup:AddToggle("GunModsNoRecoil", {
+		Text = "No Recoil",
+		Default = false,
+		Tooltip = "Eliminates weapon recoil.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setNoRecoilEnabled then
+				mod:setNoRecoilEnabled(state)
+			end
+		end,
+	})
+
+	gunModsGroup:AddToggle("GunModsNoSpread", {
+		Text = "No Spread",
+		Default = false,
+		Tooltip = "Eliminates weapon bullet spread.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setNoSpreadEnabled then
+				mod:setNoSpreadEnabled(state)
+			end
+		end,
+	})
+
+	gunModsGroup:AddToggle("GunModsNoMuzzleFlash", {
+		Text = "No Muzzle Flash",
+		Default = false,
+		Tooltip = "Removes the muzzle flash effect when shooting.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setNoMuzzleFlashEnabled then
+				mod:setNoMuzzleFlashEnabled(state)
+			end
+		end,
+	})
+
+	gunModsGroup:AddSlider("GunModsAttackCooldown", {
+		Text = "Attack Cooldown",
+		Default = 100,
+		Min = 1,
+		Max = 100,
+		Rounding = 0,
+		Suffix = "%",
+		Tooltip = "Weapon fire rate cooldown. 1% is near-instant fire rate.",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setAttackCooldownMultiplier then
+				mod:setAttackCooldownMultiplier(value)
+			end
+		end,
+	})
+
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",

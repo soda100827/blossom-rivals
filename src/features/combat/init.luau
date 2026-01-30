@@ -12,6 +12,7 @@ local Targeting = require("./Targeting")
 local Aimbot = require("./Aimbot")
 local Types = require("./Types")
 local SilentAim = require("./SilentAim") :: { setup: () -> () }
+local GunMods = require("./GunMods") :: { setup: () -> () }
 local Visuals = require("./Visuals") :: Types.CombatVisuals
 
 --// Constants
@@ -32,6 +33,7 @@ local function _connect()
 		Helpers.fetchCameraController(State.logger)
 	end)
 	SilentAim.setup()
+	GunMods.setup()
 
 	RunService:BindToRenderStep(
 		Constants.AIMBOT_RENDER_STEP_NAME,
@@ -189,6 +191,22 @@ end
 
 function Combat.setClosestPositionWhitelist(self: CombatFeature, whitelist: { string }): ()
 	State.closestPositionWhitelist = whitelist
+end
+
+function Combat.setNoRecoilEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isNoRecoilEnabled = isEnabled
+end
+
+function Combat.setNoSpreadEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isNoSpreadEnabled = isEnabled
+end
+
+function Combat.setNoMuzzleFlashEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isNoMuzzleFlashEnabled = isEnabled
+end
+
+function Combat.setAttackCooldownMultiplier(self: CombatFeature, multiplier: number): ()
+	State.attackCooldownMultiplier = multiplier
 end
 
 return Combat

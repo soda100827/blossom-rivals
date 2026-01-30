@@ -28,6 +28,10 @@ export type CombatState = {
 	closestPositionWhitelist: { string },
 	isWallCheckEnabled: boolean,
 	smoothness: number,
+	isNoRecoilEnabled: boolean,
+	isNoSpreadEnabled: boolean,
+	isNoMuzzleFlashEnabled: boolean,
+	attackCooldownMultiplier: number,
 	target: Player?,
 	silentTarget: Player?,
 	targetLostAt: number?,
@@ -39,6 +43,7 @@ export type CombatState = {
 	remoteHooked: boolean,
 	utilityHooked: boolean,
 	cameraShakerHooked: boolean,
+	gunModsHooked: boolean,
 	isInputLocked: boolean,
 	mouseBehavior: Enum.MouseBehavior?,
 	mouseDeltaSensitivity: number?,
@@ -69,6 +74,10 @@ export type CombatFeature = {
 	setAntiKatanaEnabled: (self: CombatFeature, enabled: boolean) -> (),
 	setClosestPositionEnabled: (self: CombatFeature, enabled: boolean) -> (),
 	setClosestPositionWhitelist: (self: CombatFeature, whitelist: { string }) -> (),
+	setNoRecoilEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setNoSpreadEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setNoMuzzleFlashEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setAttackCooldownMultiplier: (self: CombatFeature, multiplier: number) -> (),
 }
 
 --// Private state
