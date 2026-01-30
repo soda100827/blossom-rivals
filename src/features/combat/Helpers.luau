@@ -278,4 +278,21 @@ function Helpers.getViewModelModule(): any
 	return success and result or nil
 end
 
+function Helpers.getReplicatedClassModule(): any
+	local replicatedStorage = game:GetService("ReplicatedStorage")
+	local modules = replicatedStorage:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local replicatedClass = modules:WaitForChild("ReplicatedClass", 5)
+	if not replicatedClass then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(replicatedClass)
+	end)
+	return success and result or nil
+end
+
 return Helpers
