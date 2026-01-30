@@ -39,11 +39,6 @@ export type CombatState = {
 	isMeleeAuraEnabled: boolean,
 	isTeleportAuraEnabled: boolean,
 	meleeAuraReach: number,
-	isRageBotEnabled: boolean,
-	isSwapWeaponOnReloadEnabled: boolean,
-	isTargetStrafeEnabled: boolean,
-	isRageBotPrimaryEnabled: boolean,
-	isRageBotSecondaryEnabled: boolean,
 	-- Internal
 	forcingAim: boolean?,
 	target: Player?,
@@ -99,11 +94,6 @@ export type CombatFeature = {
 	setMeleeAuraEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setTeleportAuraEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setMeleeAuraReach: (self: CombatFeature, reach: number) -> (),
-	setRageBotEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setSwapWeaponOnReloadEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setTargetStrafeEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setRageBotPrimaryEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setRageBotSecondaryEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state

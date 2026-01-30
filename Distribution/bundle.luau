@@ -354,10 +354,8 @@ isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
 isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
 100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
 isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
-isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,meleeAuraReach=100,
-isRageBotEnabled=false,isSwapWeaponOnReloadEnabled=false,isTargetStrafeEnabled=
-false,isRageBotPrimaryEnabled=true,isRageBotSecondaryEnabled=true,target=nil,
-silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
+isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,meleeAuraReach=100,target=
+nil,silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
 silentAimFovCircle=nil,cameraController=nil,fighterController=nil,remoteHooked=
 false,utilityHooked=false,cameraShakerHooked=false,gunModsHooked=false,
 isInputLocked=false,mouseBehavior=nil,mouseDeltaSensitivity=nil}return State end
@@ -885,49 +883,36 @@ localPlayer)then continue end local hum=entity:FindFirstChildOfClass('Humanoid')
 if not hum or hum.Health<=0 then continue end local bestPart,anyOnScreen,distSq=
 _getBestPartForCharacter(entity,camera,localPlayer.Character,mouseLocation)if
 not anyOnScreen or not bestPart then continue end if distSq<closestDistSq then
-closest=bestPart closestDistSq=distSq end end return closest end function
-Targeting.getClosestTargetGlobal()local camera=Helpers.getCamera()local
-localPlayer=Helpers.getLocalPlayer()local closest=nil local shortestDist=math.
-huge local mouseLocation=UserInputService:GetMouseLocation()for _,player in
-ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
-TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
-isInSameDuel(localPlayer,player)then continue end local character=player.
-Character if not character then continue end local hum=character:
-FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
-if character:FindFirstChildOfClass('ForceField')then continue end local root=(
-character:FindFirstChild('HumanoidRootPart'))if not root then continue end local
-dist=(camera.CFrame.Position-root.Position).Magnitude if dist<shortestDist then
-local bestPart=character:FindFirstChild('Head')or root if bestPart then closest=
-bestPart shortestDist=dist end end end return closest end return Targeting end
-function __DARKLUA_BUNDLE_MODULES.v()local v=__DARKLUA_BUNDLE_MODULES.cache.v if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c
+closest=bestPart closestDistSq=distSq end end return closest end return
+Targeting end function __DARKLUA_BUNDLE_MODULES.v()local v=
+__DARKLUA_BUNDLE_MODULES.cache.v if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end do local function
+__modImpl()local State=__DARKLUA_BUNDLE_MODULES.l()local Constants=
+__DARKLUA_BUNDLE_MODULES.k()local Helpers=__DARKLUA_BUNDLE_MODULES.m()local
+Aimbot={}function Aimbot.aimAt(target,bestPart,deltaTime)if not target.Character
+then return end local targetPos=(bestPart).Position local camera=Helpers.
+getCamera()local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(
+currentCFrame.Position,targetPos)if not State.cameraController or not State.
+cameraController.SetRotation then local alpha=1 if not Helpers.isMaxSmoothness()
+then local speed=Constants.MIN_AIM_SPEED+(1-State.smoothness)*(Constants.
+MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)alpha=1-math.exp(-speed*deltaTime)end
+camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return end local x,y,_=
+lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)if Helpers.
+isMaxSmoothness()then State.cameraController:SetRotation(targetRotation)elseif
+State.smoothness>0 then local currentRot=(State.cameraController.Rotation)local
+speed=Constants.MIN_AIM_SPEED+(1-State.smoothness)*(Constants.MAX_AIM_SPEED-
+Constants.MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)local newRot=
+currentRot:Lerp(targetRotation,alpha)State.cameraController:SetRotation(newRot)
+else State.cameraController:SetRotation(targetRotation)end end return Aimbot end
+function __DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c
 end end do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.l()
-local Constants=__DARKLUA_BUNDLE_MODULES.k()local Helpers=
-__DARKLUA_BUNDLE_MODULES.m()local Aimbot={}function Aimbot.aimAt(target,bestPart
-,deltaTime)if not target.Character then return end local targetPos=(bestPart).
-Position local camera=Helpers.getCamera()local currentCFrame=camera.CFrame local
-lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)if not State.
-cameraController or not State.cameraController.SetRotation then local alpha=1 if
-not Helpers.isMaxSmoothness()then local speed=Constants.MIN_AIM_SPEED+(1-State.
-smoothness)*(Constants.MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)alpha=1-math.exp(-
-speed*deltaTime)end camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return
-end local x,y,_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y
-)if Helpers.isMaxSmoothness()then State.cameraController:SetRotation(
-targetRotation)elseif State.smoothness>0 then local currentRot=(State.
-cameraController.Rotation)local speed=Constants.MIN_AIM_SPEED+(1-State.
-smoothness)*(Constants.MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)local alpha=1-math.
-exp(-speed*deltaTime)local newRot=currentRot:Lerp(targetRotation,alpha)State.
-cameraController:SetRotation(newRot)else State.cameraController:SetRotation(
-targetRotation)end end return Aimbot end function __DARKLUA_BUNDLE_MODULES.w()
-local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end do local function
-__modImpl()local State=__DARKLUA_BUNDLE_MODULES.l()local Helpers=
-__DARKLUA_BUNDLE_MODULES.m()local Targeting=__DARKLUA_BUNDLE_MODULES.v()local
-SilentAim={}local _lastSilentTargetPos=nil local _lastSilentOrigin=nil function
-SilentAim.isGunAction()local debugGlobal=Helpers.getGlobal('debug')local
-traceback=debugGlobal and debugGlobal.traceback or debug.traceback local stack=
-traceback()return(stack:find('StartShooting')or stack:find(
-'GetEntitiesFromRaycast')or stack:find('_LocalTracers')or stack:find(
+local Helpers=__DARKLUA_BUNDLE_MODULES.m()local Targeting=
+__DARKLUA_BUNDLE_MODULES.v()local SilentAim={}local _lastSilentTargetPos=nil
+local _lastSilentOrigin=nil function SilentAim.isGunAction()local debugGlobal=
+Helpers.getGlobal('debug')local traceback=debugGlobal and debugGlobal.traceback
+or debug.traceback local stack=traceback()return(stack:find('StartShooting')or
+stack:find('GetEntitiesFromRaycast')or stack:find('_LocalTracers')or stack:find(
 '_ImpactMarker'))~=nil end function SilentAim.setup()local hookfunction=Helpers.
 getGlobal('hookfunction')or Helpers.getGlobal('replaceclosure')local checkcaller
 =Helpers.getGlobal('checkcaller')or function()return false end local newcclosure
@@ -939,13 +924,11 @@ hookfunction then State.logger:warn(
 spawn(function()local utility=Helpers.getUtility()if utility and not State.
 utilityHooked then State.utilityHooked=true local oldRaycast oldRaycast=Helpers.
 safeHook(utility,'Raycast',function(self,origin,target,distance,filter,...)if
-not State.isSilentAimEnabled and not State.isRageBotEnabled then return
-oldRaycast(self,origin,target,distance,filter,...)end if not checkcaller()and(
-distance==400 or distance==999)and SilentAim.isGunAction()then if not State.
-isRageBotEnabled and math.random(1,100)>State.silentHitChance then
+not State.isSilentAimEnabled then return oldRaycast(self,origin,target,distance,
+filter,...)end if not checkcaller()and(distance==400 or distance==999)and
+SilentAim.isGunAction()then if math.random(1,100)>State.silentHitChance then
 _lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
-...)end local targetPart=if State.isRageBotEnabled then Targeting.
-getClosestTargetGlobal()else Targeting.getClosestSilentTarget()local localChar=
+...)end local targetPart=Targeting.getClosestSilentTarget()local localChar=
 Helpers.getLocalPlayer().Character if targetPart and localChar and not
 targetPart:IsDescendantOf(localChar)then local newOrigin=origin
 _lastSilentTargetPos=targetPart.Position _lastSilentOrigin=newOrigin return
@@ -1001,55 +984,54 @@ _oldShootCooldowns[infoStr..'_Quick']=info.QuickShotSpread end local origShoot=
 _oldShootCooldowns[infoStr..'_Shoot']local origBurst=_oldShootCooldowns[infoStr
 ..'_Burst']local origSpread=_oldShootCooldowns[infoStr..'_Spread']local
 origAimML=_oldShootCooldowns[infoStr..'_AimML']local origQuick=
-_oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled or State.
-isRageBotEnabled then info.ShootSpread=0 info.AimSpreadMultiplier=0 if info.
-QuickShotSpread then info.QuickShotSpread=0 end State.forcingAim=true end if
-State.isRageBotEnabled then info.ShootCooldown=0 if info.ShootBurstCooldown then
-info.ShootBurstCooldown=0 end elseif State.attackCooldownMultiplier<100 then
-info.ShootCooldown=origShoot*(State.attackCooldownMultiplier/100)if info.
-ShootBurstCooldown then info.ShootBurstCooldown=origBurst*(State.
-attackCooldownMultiplier/100)end end local returns={oldStartShooting(self,...)}
-State.forcingAim=false info.ShootCooldown=origShoot if info.ShootBurstCooldown
-then info.ShootBurstCooldown=origBurst end info.ShootSpread=origSpread info.
-AimSpreadMultiplier=origAimML if info.QuickShotSpread then info.QuickShotSpread=
-origQuick end if State.isNoSpreadEnabled and#returns>=4 then returns[4]=true end
-return unpack(returns)end,State.logger)end State.gunModsHooked=true end)end
-return GunMods end function __DARKLUA_BUNDLE_MODULES.y()local v=
-__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local _Workspace=game:
-GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.l()local _Targeting=
-__DARKLUA_BUNDLE_MODULES.v()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local
-Helpers=__DARKLUA_BUNDLE_MODULES.m()local MeleeMods={}local function
-_getDistance(p1,p2)return(p1-p2).Magnitude end local function _getNearbyEnemies(
-)local localPlayer=Helpers.getLocalPlayer()local localCharacter=localPlayer.
-Character if not localCharacter then return{}end local localRoot=(localCharacter
-:FindFirstChild('HumanoidRootPart'))if not localRoot then return{}end local
-enemies={}for _,player in ipairs(Players:GetPlayers())do if player==localPlayer
-then continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end
-if not TeamUtils.isInSameDuel(localPlayer,player)then continue end local
-character=player.Character if not character then continue end local root=(
-character:FindFirstChild('HumanoidRootPart'))local hum=character:
-FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
-continue end table.insert(enemies,player)end return enemies end function
-MeleeMods.setup()local checkcaller=Helpers.getGlobal('checkcaller')or function()
-return false end task.spawn(function()local meleeMod=Helpers.getMeleeModule()if
-meleeMod then local oldStartShooting oldStartShooting=Helpers.safeHook(meleeMod,
-'StartShooting',function(self,...)if not checkcaller()then local info=(self).
-Info if State.isMeleeAuraEnabled then(self)._attack_cooldown=0(self).
-_equip_cooldown=0 end local originalCooldown=info.AttackCooldown info.
-AttackCooldown=originalCooldown*(State.meleeAttackCooldownMultiplier/100)local
-originalReach=info.AttackReach if State.isMeleeAuraEnabled then info.AttackReach
-=State.meleeAuraReach end local result=table.pack(oldStartShooting(self,...))
-info.AttackCooldown=originalCooldown info.AttackReach=originalReach return table
-.unpack(result)end return oldStartShooting(self,...)end,State.logger)local
-oldCanQuickAttack oldCanQuickAttack=Helpers.safeHook(meleeMod,'CanQuickAttack',
-function(self,...)if not checkcaller()and State.isMeleeAuraEnabled then return
-true end return oldCanQuickAttack(self,...)end,State.logger)end local
-itemModules=Helpers.getItemModules()if itemModules then local hookfunction=
-Helpers.getGlobal('hookfunction')or Helpers.getGlobal('replaceclosure')local
-newcclosure=Helpers.getGlobal('newcclosure')or function(f)return f end if not
-hookfunction then State.logger:warn(
+_oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled then info.
+ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
+QuickShotSpread=0 end State.forcingAim=true end if State.
+attackCooldownMultiplier<100 then info.ShootCooldown=origShoot*(State.
+attackCooldownMultiplier/100)if info.ShootBurstCooldown then info.
+ShootBurstCooldown=origBurst*(State.attackCooldownMultiplier/100)end end local
+returns={oldStartShooting(self,...)}State.forcingAim=false info.ShootCooldown=
+origShoot if info.ShootBurstCooldown then info.ShootBurstCooldown=origBurst end
+info.ShootSpread=origSpread info.AimSpreadMultiplier=origAimML if info.
+QuickShotSpread then info.QuickShotSpread=origQuick end if State.
+isNoSpreadEnabled and#returns>=4 then returns[4]=true end return unpack(returns)
+end,State.logger)end State.gunModsHooked=true end)end return GunMods end
+function __DARKLUA_BUNDLE_MODULES.y()local v=__DARKLUA_BUNDLE_MODULES.cache.y if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c
+end end do local function __modImpl()local Players=game:GetService('Players')
+local _Workspace=game:GetService('Workspace')local State=
+__DARKLUA_BUNDLE_MODULES.l()local _Targeting=__DARKLUA_BUNDLE_MODULES.v()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.m()
+local MeleeMods={}local function _getDistance(p1,p2)return(p1-p2).Magnitude end
+local function _getNearbyEnemies()local localPlayer=Helpers.getLocalPlayer()
+local localCharacter=localPlayer.Character if not localCharacter then return{}
+end local localRoot=(localCharacter:FindFirstChild('HumanoidRootPart'))if not
+localRoot then return{}end local enemies={}for _,player in ipairs(Players:
+GetPlayers())do if player==localPlayer then continue end if TeamUtils.
+isSameTeam(player,localPlayer)then continue end if not TeamUtils.isInSameDuel(
+localPlayer,player)then continue end local character=player.Character if not
+character then continue end local root=(character:FindFirstChild(
+'HumanoidRootPart'))local hum=character:FindFirstChildOfClass('Humanoid')if not
+root or not hum or hum.Health<=0 then continue end table.insert(enemies,player)
+end return enemies end function MeleeMods.setup()local checkcaller=Helpers.
+getGlobal('checkcaller')or function()return false end task.spawn(function()local
+meleeMod=Helpers.getMeleeModule()if meleeMod then local oldStartShooting
+oldStartShooting=Helpers.safeHook(meleeMod,'StartShooting',function(self,...)if
+not checkcaller()then local info=(self).Info if State.isMeleeAuraEnabled then(
+self)._attack_cooldown=0(self)._equip_cooldown=0 end local originalCooldown=info
+.AttackCooldown info.AttackCooldown=originalCooldown*(State.
+meleeAttackCooldownMultiplier/100)local originalReach=info.AttackReach if State.
+isMeleeAuraEnabled then info.AttackReach=State.meleeAuraReach end local result=
+table.pack(oldStartShooting(self,...))info.AttackCooldown=originalCooldown info.
+AttackReach=originalReach return table.unpack(result)end return
+oldStartShooting(self,...)end,State.logger)local oldCanQuickAttack
+oldCanQuickAttack=Helpers.safeHook(meleeMod,'CanQuickAttack',function(self,...)
+if not checkcaller()and State.isMeleeAuraEnabled then return true end return
+oldCanQuickAttack(self,...)end,State.logger)end local itemModules=Helpers.
+getItemModules()if itemModules then local hookfunction=Helpers.getGlobal(
+'hookfunction')or Helpers.getGlobal('replaceclosure')local newcclosure=Helpers.
+getGlobal('newcclosure')or function(f)return f end if not hookfunction then
+State.logger:warn(
 [[hookfunction not found for item skills, skill cooldowns will not work.]])
 return end local itemsToHook={'Katana','Scythe','BowieKnife'}for _,itemName in
 ipairs(itemsToHook)do local itemScript=itemModules:FindFirstChild(itemName)if
@@ -1105,122 +1087,59 @@ isSilentAimFovEnabled,State.silentAimFovRadius,State.silentAimFovColor,State.
 silentAimFovTransparency,mouseLocation)end return Visuals end function
 __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-Workspace=game:GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.l()
-local Helpers=__DARKLUA_BUNDLE_MODULES.m()local TeamUtils=
-__DARKLUA_BUNDLE_MODULES.e()local RageBot={}local _originalCFrame=nil local
-_isRaging=false local _lastShootTime=0 local _lastSwapTime=0 local function
-_getDistance(p1,p2)return(p1-p2).Magnitude end local function _getNearbyEnemies(
-)local localPlayer=Helpers.getLocalPlayer()local localCharacter=localPlayer.
-Character if not localCharacter then return{}end local enemies={}for _,player in
-ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
-TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
-isInSameDuel(localPlayer,player)then continue end local character=player.
-Character if not character then continue end local root=(character:
-FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
-'Humanoid')if not root or not hum or hum.Health<=0 then continue end table.
-insert(enemies,player)end return enemies end local function _safeCall(func,...)
-local setidentity=Helpers.getGlobal('setthreadidentity')or Helpers.getGlobal(
-'setthreadcontext')or Helpers.getGlobal('set_thread_identity')local oldIdentity
-if setidentity then pcall(function()local getidentity=Helpers.getGlobal(
-'getthreadidentity')or Helpers.getGlobal('getthreadcontext')if getidentity then
-oldIdentity=getidentity()end setidentity(2)end)end local returns=table.pack(
-pcall(func,...))if setidentity and oldIdentity then pcall(setidentity,
-oldIdentity)end return table.unpack(returns)end function RageBot.setup()task.
-spawn(function()while true do local localPlayer=Helpers.getLocalPlayer()local
-character=localPlayer.Character if State.isRageBotEnabled and character and
-TeamUtils.isInDuel(localPlayer)then if character:FindFirstChildOfClass(
-'ForceField')then if _isRaging and _originalCFrame then local localRoot=(
-character:FindFirstChild('HumanoidRootPart'))if localRoot then localRoot.CFrame=
-_originalCFrame end _isRaging=false _originalCFrame=nil end task.wait(0.1)
-continue end Helpers.fetchFighterController(State.logger)local localFighter=
-State.fighterController and State.fighterController.LocalFighter if localFighter
-then local enemies=_getNearbyEnemies()local localRoot=(character:FindFirstChild(
-'HumanoidRootPart'))if localRoot and#enemies>0 then if not _isRaging then
-_originalCFrame=localRoot.CFrame _isRaging=true end table.sort(enemies,function(
-a,b)local charA=a.Character local charB=b.Character if not charA or not charB
-then return false end local rootA=(charA:FindFirstChild('HumanoidRootPart'))
-local rootB=(charB:FindFirstChild('HumanoidRootPart'))if not rootA or not rootB
-then return false end return _getDistance(localRoot.Position,rootA.Position)<
-_getDistance(localRoot.Position,rootB.Position)end)local target=enemies[1]local
-targetChar=target.Character local targetRoot=(targetChar:FindFirstChild(
-'HumanoidRootPart'))if targetRoot then if State.isTargetStrafeEnabled then local
-t=os.clock()*30 strafeOffset=Vector3.new(math.sin(t)*10,5+math.cos(t*1.5)*5,math
-.cos(t)*10)else strafeOffset=Vector3.new(0,3,0)end localRoot.CFrame=targetRoot.
-CFrame*CFrame.new(0,0,1)+strafeOffset local equipped=localFighter.EquippedItem
-local isReloading=false if equipped and equipped.Info and equipped.Info.IsGun
-then isReloading=equipped._reloading or equipped.Reloading or(equipped._clip==0)
-end if State.isSwapWeaponOnReloadEnabled and isReloading and os.clock()-
-_lastSwapTime>0.5 then local targetSlot=0 if State.isRageBotSecondaryEnabled and
-localFighter.EquippedSlot==1 then targetSlot=2 elseif State.
-isRageBotPrimaryEnabled and localFighter.EquippedSlot==2 then targetSlot=1 end
-if targetSlot~=0 then _lastSwapTime=os.clock()pcall(function()localFighter:
-EquipItem(targetSlot)end)task.wait(0.1)equipped=localFighter.EquippedItem end
-end if equipped then local now=os.clock()if now-_lastShootTime>0.05 then
-_lastShootTime=now if equipped.Input then _safeCall(equipped.Input,equipped,
-'StartShooting')end if equipped.StartShooting then _safeCall(equipped.
-StartShooting,equipped)end end end end else if _isRaging and _originalCFrame and
-localRoot then localRoot.CFrame=_originalCFrame _isRaging=false _originalCFrame=
-nil end end end else if _isRaging and _originalCFrame and character then local
-localRoot=(character:FindFirstChild('HumanoidRootPart'))if localRoot then
-localRoot.CFrame=_originalCFrame end _isRaging=false _originalCFrame=nil end end
-task.wait(0.01)end end)end return RageBot end function __DARKLUA_BUNDLE_MODULES.
-B()local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end do local function
-__modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.l()local
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.l()local
 Constants=__DARKLUA_BUNDLE_MODULES.k()local Helpers=__DARKLUA_BUNDLE_MODULES.m()
 local Targeting=__DARKLUA_BUNDLE_MODULES.v()local Aimbot=
 __DARKLUA_BUNDLE_MODULES.w()local Types=__DARKLUA_BUNDLE_MODULES.j()local
 SilentAim=(__DARKLUA_BUNDLE_MODULES.x())local GunMods=(__DARKLUA_BUNDLE_MODULES.
 y())local MeleeMods=(__DARKLUA_BUNDLE_MODULES.z())local Visuals=(
-__DARKLUA_BUNDLE_MODULES.A())local RageBot=(__DARKLUA_BUNDLE_MODULES.B())local
-Combat={}Combat.__index=Combat local _maid=nil local function _connect()_maid:
-DoCleaning()task.spawn(function()Helpers.fetchCameraController(State.logger)end)
-SilentAim.setup()GunMods.setup()MeleeMods.setup()RageBot.setup()RunService:
-BindToRenderStep(Constants.AIMBOT_RENDER_STEP_NAME,Enum.RenderPriority.Camera.
-Value+1,function(deltaTime)Visuals.updateFovCircle()if State.isAimbotEnabled
-then local target=Targeting.resolveTarget()if target then local _isValid,
-_bestPart,_anyOnScreen,_shortestDist=Targeting.getTargetState(target)if _isValid
-and _bestPart then Helpers.applyInputLock(true)Aimbot.aimAt(target,_bestPart,
-deltaTime)else Helpers.applyInputLock(false)end else Helpers.applyInputLock(
-false)end else State.target=nil Helpers.applyInputLock(false)end if State.
-isSilentAimEnabled then Targeting.resolveSilentTarget()else State.silentTarget=
-nil end end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(Constants.
-AIMBOT_RENDER_STEP_NAME)end)end local function _disconnect()if State.fovCircle
-then pcall(function()((State.fovCircle)):Remove()end)State.fovCircle=nil end if
-State.silentAimFovCircle then pcall(function()((State.silentAimFovCircle)):
-Remove()end)State.silentAimFovCircle=nil end State.target=nil State.silentTarget
-=nil State.targetLostAt=nil State.silentTargetLostAt=nil Helpers.applyInputLock(
-false)_maid:DoCleaning()end function Combat.init(self,client)State.client=client
-State.logger=client.Logger _maid=Maid.new()_connect()end function Combat.cleanup
-(self)State.isAimbotEnabled=false _disconnect()end function Combat.
-setAimbotEnabled(self,isEnabled)if State.isAimbotEnabled==isEnabled then return
-end State.isAimbotEnabled=isEnabled if not isEnabled then State.target=nil State
-.targetLostAt=nil Helpers.applyInputLock(false)end end function Combat.
-setFovEnabled(self,isEnabled)State.isFovEnabled=isEnabled end function Combat.
-setFovRadius(self,radius)State.fovRadius=radius end function Combat.setFovColor(
-self,color)State.fovColor=color end function Combat.setFovTransparency(self,
-transparency)State.fovTransparency=math.clamp(transparency,0,1)end function
-Combat.setSmoothness(self,smoothness)local wasMaxSmoothness=Helpers.
-isMaxSmoothness()State.smoothness=math.clamp(smoothness,0,Constants.
-MAX_SMOOTHNESS)if wasMaxSmoothness and not Helpers.isMaxSmoothness()then Helpers
-.applyInputLock(false)end end function Combat.setWallCheckEnabled(self,isEnabled
-)State.isWallCheckEnabled=isEnabled end function Combat.setSilentAimEnabled(self
-,isEnabled)State.isSilentAimEnabled=isEnabled if not isEnabled then State.
-silentTarget=nil State.silentTargetLostAt=nil end end function Combat.
-setSilentAimFovEnabled(self,isEnabled)State.isSilentAimFovEnabled=isEnabled end
-function Combat.setSilentAimFovRadius(self,radius)State.silentAimFovRadius=
-radius end function Combat.setSilentAimFovColor(self,color)State.
-silentAimFovColor=color end function Combat.setSilentAimFovTransparency(self,
-transparency)State.silentAimFovTransparency=math.clamp(transparency,0,1)end
-function Combat.setSilentHitChance(self,chance)State.silentHitChance=math.clamp(
-chance,0,100)end function Combat.setTargetPart(self,part)State.targetPart=part
-end function Combat.setManipulationEnabled(self,enabled)State.
-isManipulationEnabled=enabled end function Combat.setAntiKatanaEnabled(self,
-enabled)State.isAntiKatanaEnabled=enabled end function Combat.
-setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=enabled
-end function Combat.setClosestPositionWhitelist(self,whitelist)State.
+__DARKLUA_BUNDLE_MODULES.A())local Combat={}Combat.__index=Combat local _maid=
+nil local function _connect()_maid:DoCleaning()task.spawn(function()Helpers.
+fetchCameraController(State.logger)end)SilentAim.setup()GunMods.setup()MeleeMods
+.setup()RunService:BindToRenderStep(Constants.AIMBOT_RENDER_STEP_NAME,Enum.
+RenderPriority.Camera.Value+1,function(deltaTime)Visuals.updateFovCircle()if
+State.isAimbotEnabled then local target=Targeting.resolveTarget()if target then
+local _isValid,_bestPart,_anyOnScreen,_shortestDist=Targeting.getTargetState(
+target)if _isValid and _bestPart then Helpers.applyInputLock(true)Aimbot.aimAt(
+target,_bestPart,deltaTime)else Helpers.applyInputLock(false)end else Helpers.
+applyInputLock(false)end else State.target=nil Helpers.applyInputLock(false)end
+if State.isSilentAimEnabled then Targeting.resolveSilentTarget()else State.
+silentTarget=nil end end)_maid:GiveTask(function()RunService:
+UnbindFromRenderStep(Constants.AIMBOT_RENDER_STEP_NAME)end)end local function
+_disconnect()if State.fovCircle then pcall(function()((State.fovCircle)):Remove(
+)end)State.fovCircle=nil end if State.silentAimFovCircle then pcall(function()((
+State.silentAimFovCircle)):Remove()end)State.silentAimFovCircle=nil end State.
+target=nil State.silentTarget=nil State.targetLostAt=nil State.
+silentTargetLostAt=nil Helpers.applyInputLock(false)_maid:DoCleaning()end
+function Combat.init(self,client)State.client=client State.logger=client.Logger
+_maid=Maid.new()_connect()end function Combat.cleanup(self)State.isAimbotEnabled
+=false _disconnect()end function Combat.setAimbotEnabled(self,isEnabled)if State
+.isAimbotEnabled==isEnabled then return end State.isAimbotEnabled=isEnabled if
+not isEnabled then State.target=nil State.targetLostAt=nil Helpers.
+applyInputLock(false)end end function Combat.setFovEnabled(self,isEnabled)State.
+isFovEnabled=isEnabled end function Combat.setFovRadius(self,radius)State.
+fovRadius=radius end function Combat.setFovColor(self,color)State.fovColor=color
+end function Combat.setFovTransparency(self,transparency)State.fovTransparency=
+math.clamp(transparency,0,1)end function Combat.setSmoothness(self,smoothness)
+local wasMaxSmoothness=Helpers.isMaxSmoothness()State.smoothness=math.clamp(
+smoothness,0,Constants.MAX_SMOOTHNESS)if wasMaxSmoothness and not Helpers.
+isMaxSmoothness()then Helpers.applyInputLock(false)end end function Combat.
+setWallCheckEnabled(self,isEnabled)State.isWallCheckEnabled=isEnabled end
+function Combat.setSilentAimEnabled(self,isEnabled)State.isSilentAimEnabled=
+isEnabled if not isEnabled then State.silentTarget=nil State.silentTargetLostAt=
+nil end end function Combat.setSilentAimFovEnabled(self,isEnabled)State.
+isSilentAimFovEnabled=isEnabled end function Combat.setSilentAimFovRadius(self,
+radius)State.silentAimFovRadius=radius end function Combat.setSilentAimFovColor(
+self,color)State.silentAimFovColor=color end function Combat.
+setSilentAimFovTransparency(self,transparency)State.silentAimFovTransparency=
+math.clamp(transparency,0,1)end function Combat.setSilentHitChance(self,chance)
+State.silentHitChance=math.clamp(chance,0,100)end function Combat.setTargetPart(
+self,part)State.targetPart=part end function Combat.setManipulationEnabled(self,
+enabled)State.isManipulationEnabled=enabled end function Combat.
+setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=enabled end function
+Combat.setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=
+enabled end function Combat.setClosestPositionWhitelist(self,whitelist)State.
 closestPositionWhitelist=whitelist end function Combat.setNoRecoilEnabled(self,
 isEnabled)State.isNoRecoilEnabled=isEnabled end function Combat.
 setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end function
@@ -1236,18 +1155,11 @@ State.meleeSkillCooldownMultiplier=multiplier end function Combat.
 setMeleeAuraEnabled(self,isEnabled)State.isMeleeAuraEnabled=isEnabled end
 function Combat.setTeleportAuraEnabled(self,isEnabled)State.
 isTeleportAuraEnabled=isEnabled end function Combat.setMeleeAuraReach(self,reach
-)State.meleeAuraReach=reach end function Combat.setRageBotEnabled(self,isEnabled
-)State.isRageBotEnabled=isEnabled end function Combat.
-setSwapWeaponOnReloadEnabled(self,isEnabled)State.isSwapWeaponOnReloadEnabled=
-isEnabled end function Combat.setTargetStrafeEnabled(self,isEnabled)State.
-isTargetStrafeEnabled=isEnabled end function Combat.setRageBotPrimaryEnabled(
-self,isEnabled)State.isRageBotPrimaryEnabled=isEnabled end function Combat.
-setRageBotSecondaryEnabled(self,isEnabled)State.isRageBotSecondaryEnabled=
-isEnabled end return Combat end function __DARKLUA_BUNDLE_MODULES.C()local v=
-__DARKLUA_BUNDLE_MODULES.cache.C if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end do local function
-__modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local REPO_URL=
+)State.meleeAuraReach=reach end return Combat end function
+__DARKLUA_BUNDLE_MODULES.B()local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -1398,39 +1310,18 @@ Rounding=0,Suffix='%',Tooltip=
 'Weapon fire rate cooldown. 1% is near-instant fire rate.',Compact=true,Callback
 =function(value)local mod=_state.client.Modules.Combat if mod and mod.
 setAttackCooldownMultiplier then mod:setAttackCooldownMultiplier(value)end end})
-local rageBotGroup=tabs.combat:AddRightGroupbox('Rage Bot')local rageBotToggle=
-rageBotGroup:AddToggle('RageBotEnabled',{Text='Rage Bot',Default=false,Tooltip=
-'Automatically move to and eliminate enemies.',Callback=function()
-_updateControlBindings()end})rageBotToggle:AddKeyPicker('RageBotKeybind',{
-Default='None',NoUI=false,Text='Rage Bot Keybind',SyncToggleState=false,Callback
-=function()_updateControlBindings()end})rageBotGroup:AddToggle(
-'RageBotSwapOnReload',{Text='Swap Weapon On Reload',Default=false,Tooltip=
-[[Automatically swap weapons when current weapon is reloading.]],Callback=
-function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setSwapWeaponOnReloadEnabled then mod:setSwapWeaponOnReloadEnabled(state)end end
-})rageBotGroup:AddToggle('RageBotTargetStrafe',{Text='Target Strafe',Default=
-false,Tooltip='Fast movement around the target to avoid being hit.',Callback=
-function(state)local mod=_state.client.Modules.Combat if mod and mod.
-setTargetStrafeEnabled then mod:setTargetStrafeEnabled(state)end end})
-rageBotGroup:AddToggle('RageBotPrimaryEnabled',{Text='Use Primary',Default=true,
-Tooltip='Allow Rage Bot to use primary weapon (Slot 1).',Callback=function(state
-)local mod=_state.client.Modules.Combat if mod and mod.setRageBotPrimaryEnabled
-then mod:setRageBotPrimaryEnabled(state)end end})rageBotGroup:AddToggle(
-'RageBotSecondaryEnabled',{Text='Use Secondary',Default=true,Tooltip=
-'Allow Rage Bot to use secondary weapon (Slot 2).',Callback=function(state)local
-mod=_state.client.Modules.Combat if mod and mod.setRageBotSecondaryEnabled then
-mod:setRageBotSecondaryEnabled(state)end end})local espGroup=tabs.visuals:
-AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',
-Default=false,Tooltip='Master toggle for all ESP visuals.',Callback=function(
-state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:
-toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end
-end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Tooltip=
-'Show player names.',Callback=function(state)local mod=_state.client.Modules.
-Visuals if mod and mod.setShowNames then mod:setShowNames(state)end end}):
-AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',
-Tooltip='Color for ESP name text.',Callback=function(value)local mod=_state.
-client.Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)
-end end}):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
+'VisualsToggle',{Text='Visuals (ESP)',Default=false,Tooltip=
+'Master toggle for all ESP visuals.',Callback=function(state)local mod=_state.
+client.Modules.Visuals if mod and mod.toggle then mod:toggle(state)end if mod
+and mod.setEspEnabled then mod:setEspEnabled(state)end end})espGroup:AddToggle(
+'ESPNames',{Text='Name',Default=true,Tooltip='Show player names.',Callback=
+function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+setShowNames then mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor'
+,{Default=Color3.new(1,1,1),Title='Text Color',Tooltip=
+'Color for ESP name text.',Callback=function(value)local mod=_state.client.
+Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}
+):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
 'Name Outline',Tooltip='Outline color for ESP names.',Callback=function(value)
 local mod=_state.client.Modules.Visuals if mod and mod.setNameOutlineColor then
 mod:setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text=
@@ -1607,22 +1498,19 @@ function(active)local mod=_state.client.Modules.Player if mod and mod.
 setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
 'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
 local mod=_state.client.Modules.Combat if mod and mod.setSilentAimEnabled then
-mod:setSilentAimEnabled(active)end end},{toggleId='RageBotEnabled',keybindId=
-'RageBotKeybind',last=nil,setter=function(active)local mod=_state.client.Modules
-.Combat if mod and mod.setRageBotEnabled then mod:setRageBotEnabled(active)end
-end}}_updateControlBindings()local miscGroup=tabs.misc:AddLeftGroupbox(
-'Auto Load')miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,
-Tooltip='Auto-load Blossom after teleport.',Callback=function(enabled)_state.
-client:setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
-'Silent Mode',Default=false,Tooltip=
+mod:setSilentAimEnabled(active)end end}}_updateControlBindings()local miscGroup=
+tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:AddToggle('TeleportQueue',{Text=
+'Auto Load',Default=false,Tooltip='Auto-load Blossom after teleport.',Callback=
+function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
+AddToggle('SilentMode',{Text='Silent Mode',Default=false,Tooltip=
 'Mutes UI notifications and auto-opens silently.',Callback=function(enabled)
 _setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
 _runAutoload(library,saveManager,false)end function Interface.init(self,client)
 _state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()
 _mount()end function Interface.cleanup(self)_maid:DoCleaning()if _state.library
 then _state.library:Unload()end _state.isMounted=false end return Interface end
-function __DARKLUA_BUNDLE_MODULES.D()local v=__DARKLUA_BUNDLE_MODULES.cache.D if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.C()local v=__DARKLUA_BUNDLE_MODULES.cache.C if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c
 end end end local ReplicatedFirst=game:GetService('ReplicatedFirst')local
 Players=game:GetService('Players')local RunService=game:GetService('RunService')
 local Logger=__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()
@@ -1637,8 +1525,8 @@ clear_teleport_queue=getGlobal('clear_teleport_queue')or getGlobal(
 getloadedmodules=getGlobal('getloadedmodules')or function()return nil end local
 MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.o())},{name='Player',
 loader=(__DARKLUA_BUNDLE_MODULES.u())},{name='Combat',loader=(
-__DARKLUA_BUNDLE_MODULES.C())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.D())}}local Client={}Client.__index=Client local _maid=
+__DARKLUA_BUNDLE_MODULES.B())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.C())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
 BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
 Signal.new(),stopped=Signal.new()}local _modules={}local function

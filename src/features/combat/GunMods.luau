@@ -118,7 +118,7 @@ function GunMods.setup()
 				local origQuick = _oldShootCooldowns[infoStr .. "_Quick"]
 
 				-- Apply Modifications
-				if State.isNoSpreadEnabled or State.isRageBotEnabled then
+				if State.isNoSpreadEnabled then
 					info.ShootSpread = 0
 					info.AimSpreadMultiplier = 0
 					if info.QuickShotSpread then
@@ -128,12 +128,7 @@ function GunMods.setup()
 					State.forcingAim = true
 				end
 
-				if State.isRageBotEnabled then
-					info.ShootCooldown = 0
-					if info.ShootBurstCooldown then
-						info.ShootBurstCooldown = 0
-					end
-				elseif State.attackCooldownMultiplier < 100 then
+				if State.attackCooldownMultiplier < 100 then
 					info.ShootCooldown = origShoot * (State.attackCooldownMultiplier / 100)
 					if info.ShootBurstCooldown then
 						info.ShootBurstCooldown = origBurst * (State.attackCooldownMultiplier / 100)

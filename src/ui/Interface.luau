@@ -547,74 +547,6 @@ local function _mount()
 		end,
 	})
 
-	local rageBotGroup = tabs.combat:AddRightGroupbox("Rage Bot")
-
-	local rageBotToggle = rageBotGroup:AddToggle("RageBotEnabled", {
-		Text = "Rage Bot",
-		Default = false,
-		Tooltip = "Automatically move to and eliminate enemies.",
-		Callback = function()
-			_updateControlBindings()
-		end,
-	})
-	rageBotToggle:AddKeyPicker("RageBotKeybind", {
-		Default = "None",
-		NoUI = false,
-		Text = "Rage Bot Keybind",
-		SyncToggleState = false,
-		Callback = function()
-			_updateControlBindings()
-		end,
-	})
-
-	rageBotGroup:AddToggle("RageBotSwapOnReload", {
-		Text = "Swap Weapon On Reload",
-		Default = false,
-		Tooltip = "Automatically swap weapons when current weapon is reloading.",
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setSwapWeaponOnReloadEnabled then
-				mod:setSwapWeaponOnReloadEnabled(state)
-			end
-		end,
-	})
-
-	rageBotGroup:AddToggle("RageBotTargetStrafe", {
-		Text = "Target Strafe",
-		Default = false,
-		Tooltip = "Fast movement around the target to avoid being hit.",
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setTargetStrafeEnabled then
-				mod:setTargetStrafeEnabled(state)
-			end
-		end,
-	})
-
-	rageBotGroup:AddToggle("RageBotPrimaryEnabled", {
-		Text = "Use Primary",
-		Default = true,
-		Tooltip = "Allow Rage Bot to use primary weapon (Slot 1).",
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setRageBotPrimaryEnabled then
-				mod:setRageBotPrimaryEnabled(state)
-			end
-		end,
-	})
-
-	rageBotGroup:AddToggle("RageBotSecondaryEnabled", {
-		Text = "Use Secondary",
-		Default = true,
-		Tooltip = "Allow Rage Bot to use secondary weapon (Slot 2).",
-		Callback = function(state)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setRageBotSecondaryEnabled then
-				mod:setRageBotSecondaryEnabled(state)
-			end
-		end,
-	})
-
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",
@@ -1272,17 +1204,6 @@ local function _mount()
 				local mod = _state.client.Modules.Combat
 				if mod and mod.setSilentAimEnabled then
 					mod:setSilentAimEnabled(active)
-				end
-			end,
-		},
-		{
-			toggleId = "RageBotEnabled",
-			keybindId = "RageBotKeybind",
-			last = nil,
-			setter = function(active)
-				local mod = _state.client.Modules.Combat
-				if mod and mod.setRageBotEnabled then
-					mod:setRageBotEnabled(active)
 				end
 			end,
 		},

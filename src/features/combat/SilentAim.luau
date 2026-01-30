@@ -60,20 +60,18 @@ function SilentAim.setup()
 			local oldRaycast
 			oldRaycast = Helpers.safeHook(utility, "Raycast", function(self, origin, target, distance, filter, ...)
 				-- Optimization: Check enabled first
-				if not State.isSilentAimEnabled and not State.isRageBotEnabled then
+				if not State.isSilentAimEnabled then
 					return oldRaycast(self, origin, target, distance, filter, ...)
 				end
 
 				if not checkcaller() and (distance == 400 or distance == 999) and SilentAim.isGunAction() then
 					-- Hit Chance check
-					if not State.isRageBotEnabled and math.random(1, 100) > State.silentHitChance then
+					if math.random(1, 100) > State.silentHitChance then
 						_lastSilentTargetPos = nil
 						return oldRaycast(self, origin, target, distance, filter, ...)
 					end
 
-					local targetPart = if State.isRageBotEnabled
-						then Targeting.getClosestTargetGlobal()
-						else Targeting.getClosestSilentTarget()
+					local targetPart = Targeting.getClosestSilentTarget()
 					local localChar = Helpers.getLocalPlayer().Character
 					if targetPart and localChar and not targetPart:IsDescendantOf(localChar) then
 						local newOrigin = origin
