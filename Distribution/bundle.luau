@@ -1159,51 +1159,115 @@ isTeleportAuraEnabled=isEnabled end function Combat.setMeleeAuraReach(self,reach
 __DARKLUA_BUNDLE_MODULES.B()local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end
 do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.a())local REPO_URL=
-[[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
-Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
-,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
-controlBindings=nil}local _signals={}local function _updateControlBindings()if
-not _state.controlBindings then return end local getfenvAny=getfenv local env=(
-getfenvAny(0))local getgenvFunc=env.getgenv local toggles=(getgenvFunc and
-getgenvFunc().Toggles)or _G.Toggles local options=(getgenvFunc and getgenvFunc()
-.Options)or _G.Options if not toggles or not options then end for _,control in
-ipairs(_state.controlBindings)do local toggle=toggles and toggles[control.
-toggleId]local gate=toggle and toggle.Value==true local active=false if gate
-then local keybind=options and options[control.keybindId]if keybind and keybind.
-GetState then active=keybind:GetState()else active=false end end if control.last
-~=active then control.last=active control.setter(active)end end end
-local function _httpGet(url)return(game):HttpGet(url)end local function
-_loadRemote(path,logger)local source=_httpGet(REPO_URL..path)local chunk,err=
-loadstring(source)if not chunk then if logger then logger:error(
-'UI load failed:',err)end error('UI load failed: '..tostring(err))end return
-chunk()end local function _setNotifyMuted(library,shouldMute)if shouldMute then
-library.Notify=library.Notify or function()end library._blossomNotify=library.
-_blossomNotify or library.Notify library.Notify=function()end return end if
-library._blossomNotify then library.Notify=library._blossomNotify end end
-local function _getLibraryVisible(library)if type(library.Opened)=='boolean'then
-return library.Opened end if type(library.Visible)=='boolean'then return library
-.Visible end if type(library.IsOpen)=='boolean'then return library.IsOpen end
-return true end local function _runAutoload(library,saveManager,isSilent)local
-wasVisible=_getLibraryVisible(library)if isSilent then _setNotifyMuted(library,
-true)if wasVisible then pcall(function()library:Toggle()end)end end pcall(
-function()saveManager:LoadAutoloadConfig()end)if isSilent then if wasVisible
-then pcall(function()library:Toggle()end)end _setNotifyMuted(library,false)end
-end local function _connect()_maid:DoCleaning()local updateConn=RunService.
-RenderStepped:Connect(function()_updateControlBindings()end)_maid:GiveTask(
+Stats=game:GetService('Stats')local Maid=(__DARKLUA_BUNDLE_MODULES.a())local
+REPO_URL=[[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
+local WATERMARK_TEMPLATE='Blossom | %d fps | %d ms'local
+WATERMARK_UPDATE_INTERVAL=1 local Interface={}Interface.__index=Interface local
+_maid=nil local _state={client=nil,logger=nil,library=nil,themeManager=nil,
+saveManager=nil,isMounted=false,controlBindings=nil,watermark={lastSample=0,
+frameCount=0}}local _signals={}local function _getLinoriaGlobals()local
+getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
+toggles=(getgenvFunc and getgenvFunc().Toggles)or _G.Toggles local options=(
+getgenvFunc and getgenvFunc().Options)or _G.Options return toggles,options end
+local function _getPingMs()local pingMs=0 local success,value=pcall(function()
+local stat=Stats.Network.ServerStatsItem['Data Ping']return stat:GetValue()end)
+if success and type(value)=='number'then pingMs=math.floor(value+0.5)end return
+pingMs end local function _setKeybindListVisible(isVisible)local library=_state.
+library if not library then return end local keybindFrame=library.KeybindFrame
+if keybindFrame then keybindFrame.Visible=isVisible end end local function
+_setWatermarkVisible(isVisible)local library=_state.library if not library or
+not library.SetWatermarkVisibility then return end library:
+SetWatermarkVisibility(isVisible)end local function _syncUiVisibility()local
+toggles=_getLinoriaGlobals()if not toggles then return end local keybindsToggle=
+toggles.UIShowKeybindList if keybindsToggle then _setKeybindListVisible(
+keybindsToggle.Value==true)end local watermarkToggle=toggles.UIShowWatermark if
+watermarkToggle then _setWatermarkVisible(watermarkToggle.Value==true)end end
+local function _updateWatermark()local library=_state.library if not library or
+not library.SetWatermark then return end local toggles=_getLinoriaGlobals()local
+isVisible=true if toggles and toggles.UIShowWatermark then isVisible=toggles.
+UIShowWatermark.Value==true end if not isVisible then return end local watermark
+=_state.watermark watermark.frameCount+=1 local now=os.clock()if watermark.
+lastSample<=0 then watermark.lastSample=now return end if(now-watermark.
+lastSample)<WATERMARK_UPDATE_INTERVAL then return end local fps=math.floor(
+watermark.frameCount/(now-watermark.lastSample))watermark.frameCount=0 watermark
+.lastSample=now library:SetWatermark(string.format(WATERMARK_TEMPLATE,fps,
+_getPingMs()))end local function _updateControlBindings()if not _state.
+controlBindings then return end local toggles,options=_getLinoriaGlobals()if not
+toggles or not options then end for _,control in ipairs(_state.controlBindings)
+do local toggle=toggles and toggles[control.toggleId]local gate=toggle and
+toggle.Value==true local active=false if gate then local keybind=options and
+options[control.keybindId]if keybind and keybind.GetState then active=keybind:
+GetState()else active=false end end if control.last~=active then control.last=
+active control.setter(active)end end end local function
+_installSaveManagerExtensions(saveManager)if saveManager.
+_blossomBuildConfigSection then return end saveManager.
+_blossomBuildConfigSection=saveManager.BuildConfigSection saveManager.
+BuildConfigSection=function(self,tab)assert(self.Library,
+'Must set SaveManager.Library')local section=tab:AddRightGroupbox(
+'Configuration')section:AddInput('SaveManager_ConfigName',{Text='Config name'})
+section:AddDropdown('SaveManager_ConfigList',{Text='Config list',Values=self:
+RefreshConfigList(),AllowNull=true})section:AddDivider()local _,options=
+_getLinoriaGlobals()section:AddButton('Create config',function()if not options
+then return end local name=options.SaveManager_ConfigName.Value if name:gsub(' '
+,'')==''then return self.Library:Notify('Invalid config name (empty)',2)end
+local success,err=self:Save(name)if not success then return self.Library:Notify(
+'Failed to save config: '..err)end self.Library:Notify(string.format(
+'Created config %q',name))options.SaveManager_ConfigList:SetValues(self:
+RefreshConfigList())options.SaveManager_ConfigList:SetValue(nil)end):AddButton(
+'Load config',function()if not options then return end local name=options.
+SaveManager_ConfigList.Value local success,err=self:Load(name)if not success
+then return self.Library:Notify('Failed to load config: '..err)end self.Library:
+Notify(string.format('Loaded config %q',name))end)section:AddButton(
+'Overwrite config',function()if not options then return end local name=options.
+SaveManager_ConfigList.Value local success,err=self:Save(name)if not success
+then return self.Library:Notify('Failed to overwrite config: '..err)end self.
+Library:Notify(string.format('Overwrote config %q',name))end)section:AddButton(
+'Refresh list',function()if not options then return end options.
+SaveManager_ConfigList:SetValues(self:RefreshConfigList())options.
+SaveManager_ConfigList:SetValue(nil)end)section:AddButton('Set as autoload',
+function()if not options then return end local name=options.
+SaveManager_ConfigList.Value writefile(self.Folder..'/settings/autoload.txt',
+name)self.AutoloadLabel:SetText('Current autoload config: '..name)self.Library:
+Notify(string.format('Set %q to auto load',name))end):AddButton(
+'Remove autoload',function()local path=self.Folder..'/settings/autoload.txt'if
+isfile(path)then pcall(delfile,path)end self.AutoloadLabel:SetText(
+'Current autoload config: none')self.Library:Notify('Cleared autoload config')
+end)self.AutoloadLabel=section:AddLabel('Current autoload config: none',true)if
+isfile(self.Folder..'/settings/autoload.txt')then local name=readfile(self.
+Folder..'/settings/autoload.txt')self.AutoloadLabel:SetText(
+'Current autoload config: '..name)end self:SetIgnoreIndexes({
+'SaveManager_ConfigList','SaveManager_ConfigName'})end end local function
+_httpGet(url)return(game):HttpGet(url)end local function _loadRemote(path,logger
+)local source=_httpGet(REPO_URL..path)local chunk,err=loadstring(source)if not
+chunk then if logger then logger:error('UI load failed:',err)end error(
+'UI load failed: '..tostring(err))end return chunk()end local function
+_setNotifyMuted(library,shouldMute)if shouldMute then library.Notify=library.
+Notify or function()end library._blossomNotify=library._blossomNotify or library
+.Notify library.Notify=function()end return end if library._blossomNotify then
+library.Notify=library._blossomNotify end end local function _getLibraryVisible(
+library)if type(library.Opened)=='boolean'then return library.Opened end if
+type(library.Visible)=='boolean'then return library.Visible end if type(library.
+IsOpen)=='boolean'then return library.IsOpen end return true end local function
+_runAutoload(library,saveManager,isSilent)local wasVisible=_getLibraryVisible(
+library)if isSilent then _setNotifyMuted(library,true)if wasVisible then pcall(
+function()library:Toggle()end)end end pcall(function()saveManager:
+LoadAutoloadConfig()end)if isSilent then if wasVisible then pcall(function()
+library:Toggle()end)end _setNotifyMuted(library,false)end end local function
+_connect()_maid:DoCleaning()local updateConn=RunService.RenderStepped:Connect(
+function()_updateControlBindings()_updateWatermark()end)_maid:GiveTask(
 updateConn)end local function _mount()if _state.isMounted then return end _state
 .isMounted=true local logger=_state.logger local library=_loadRemote(
 'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
 logger)local saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.
 library=library _state.themeManager=themeManager _state.saveManager=saveManager
-if library and library.AccentColor~=nil then library.AccentColor=Color3.fromRGB(
-255,105,180)end local window=library:CreateWindow({Title='Blossom '.._state.
-client.Version,Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,
-MenuFadeTime=0.2})local tabs={combat=window:AddTab('Combat'),visuals=window:
-AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab(
-'UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox('Combat')local
-silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text='Silent Aim',
-Default=false,Tooltip=
+_installSaveManagerExtensions(saveManager)if library and library.AccentColor~=
+nil then library.AccentColor=Color3.fromRGB(255,105,180)end local window=library
+:CreateWindow({Title='Blossom '.._state.client.Version,Center=true,AutoShow=not
+_state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:
+AddTab('Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),
+uiSettings=window:AddTab('UI Settings')}local combatGroup=tabs.combat:
+AddLeftGroupbox('Combat')local silentAimToggle=combatGroup:AddToggle(
+'SilentAimEnabled',{Text='Silent Aim',Default=false,Tooltip=
 [[Redirects shots toward the closest valid target within your silent FOV.]],
 Callback=function()_updateControlBindings()end})silentAimToggle:AddKeyPicker(
 'SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text='Silent Aim Keybind',
@@ -1415,27 +1479,33 @@ _state.client.Modules.Visuals if mod and mod.setTextSize then mod:setTextSize(
 value)end end})local menuGroup=tabs.uiSettings:AddLeftGroupbox('Menu')menuGroup:
 AddButton('Unload',function()library:Unload()end)menuGroup:AddLabel('Menu bind')
 :AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})local
-getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
-GlobalOptions=(getgenvFunc and getgenvFunc().Options)or _G.Options if
-GlobalOptions and GlobalOptions.MenuKeybind then library.ToggleKeybind=
-GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
-SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
-'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
-uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:
-AddLeftGroupbox('Player')local exploitsGroup=tabs.misc:AddRightGroupbox(
-'Exploits')local playerFlyToggle=playerGroup:AddToggle('PlayerFly',{Text='Fly',
-Default=false,Tooltip='Toggle flight mode.',Callback=function(state)
-_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
-Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=false,Callback=
-function()_updateControlBindings()end})playerGroup:AddSlider('PlayerFlySpeed',{
-Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Tooltip=
-'Movement speed while flying.',Compact=true,Callback=function(value)local mod=
-_state.client.Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(
-value)end end})local playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{
-Text='Noclip',Default=false,Tooltip='Disable collisions for your character.',
-Callback=function(state)_updateControlBindings()end})playerNoclipToggle:
-AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind'
-,SyncToggleState=false,Callback=function()_updateControlBindings()end})local
+interfaceGroup=tabs.uiSettings:AddRightGroupbox('Interface')interfaceGroup:
+AddToggle('UIShowKeybindList',{Text='Keybind List',Default=true,Tooltip=
+'Shows the keybind list panel.',Callback=function(isVisible)
+_setKeybindListVisible(isVisible)end})interfaceGroup:AddToggle('UIShowWatermark'
+,{Text='Watermark',Default=true,Tooltip='Shows the watermark display.',Callback=
+function(isVisible)_setWatermarkVisible(isVisible)end})local getfenvAny=getfenv
+local env=(getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(
+getgenvFunc and getgenvFunc().Options)or _G.Options if GlobalOptions and
+GlobalOptions.MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind
+end themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
+IgnoreThemeSettings()themeManager:SetFolder('Blossom')saveManager:SetFolder(
+'Blossom')saveManager:BuildConfigSection(tabs.uiSettings)themeManager:
+ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:AddLeftGroupbox('Player')
+local exploitsGroup=tabs.misc:AddRightGroupbox('Exploits')local playerFlyToggle=
+playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=false,Tooltip=
+'Toggle flight mode.',Callback=function(state)_updateControlBindings()end})
+playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text=
+'Fly Keybind',SyncToggleState=false,Callback=function()_updateControlBindings()
+end})playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,
+Max=200,Rounding=0,Tooltip='Movement speed while flying.',Compact=true,Callback=
+function(value)local mod=_state.client.Modules.Player if mod and mod.setFlySpeed
+then mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:
+AddToggle('PlayerNoclip',{Text='Noclip',Default=false,Tooltip=
+'Disable collisions for your character.',Callback=function(state)
+_updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
+'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})local
 playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
 'Walk Speed',Default=false,Tooltip='Toggle custom walk speed.',Callback=function
 (state)_updateControlBindings()end})playerWalkSpeedToggle:AddKeyPicker(
@@ -1505,16 +1575,17 @@ function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
 AddToggle('SilentMode',{Text='Silent Mode',Default=false,Tooltip=
 'Mutes UI notifications and auto-opens silently.',Callback=function(enabled)
 _setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
-_runAutoload(library,saveManager,false)end function Interface.init(self,client)
-_state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()
-_mount()end function Interface.cleanup(self)_maid:DoCleaning()if _state.library
-then _state.library:Unload()end _state.isMounted=false end return Interface end
-function __DARKLUA_BUNDLE_MODULES.C()local v=__DARKLUA_BUNDLE_MODULES.cache.C if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c
-end end end local ReplicatedFirst=game:GetService('ReplicatedFirst')local
-Players=game:GetService('Players')local RunService=game:GetService('RunService')
-local Logger=__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()
-local Signal=__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
+_runAutoload(library,saveManager,false)_syncUiVisibility()end function Interface
+.init(self,client)_state.client=client _state.logger=client.Logger _maid=Maid.
+new()_connect()_mount()end function Interface.cleanup(self)_maid:DoCleaning()if
+_state.library then _state.library:Unload()end _state.isMounted=false end return
+Interface end function __DARKLUA_BUNDLE_MODULES.C()local v=
+__DARKLUA_BUNDLE_MODULES.cache.C if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end end local
+ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
+'Players')local RunService=game:GetService('RunService')local Logger=
+__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()local Signal=
+__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
 local CLIENT_MODULE_NAME='Client'local getfenvAny=getfenv local env=(getfenvAny(
 0))local genv=(env.getgenv and env.getgenv())or env local function getGlobal(k)

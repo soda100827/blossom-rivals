@@ -2,12 +2,15 @@
 
 --// Services
 local RunService = game:GetService("RunService")
+local Stats = game:GetService("Stats")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 
 --// Constants
 local REPO_URL = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
+local WATERMARK_TEMPLATE = "Blossom | %d fps | %d ms"
+local WATERMARK_UPDATE_INTERVAL = 1
 
 --// Types
 export type Interface = {
@@ -28,19 +31,108 @@ local _state = {
 	saveManager = nil :: any,
 	isMounted = false,
 	controlBindings = nil :: any,
+	watermark = {
+		lastSample = 0,
+		frameCount = 0,
+	},
 }
 local _signals = {}
 
 --// Private helpers
-local function _updateControlBindings()
-	if not _state.controlBindings then
-		return
-	end
+local function _getLinoriaGlobals(): (any, any)
 	local getfenvAny = getfenv :: any
 	local env = getfenvAny(0) :: any
 	local getgenvFunc = env.getgenv
 	local toggles = (getgenvFunc and getgenvFunc().Toggles) or _G.Toggles
 	local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
+	return toggles, options
+end
+
+local function _getPingMs(): number
+	local pingMs = 0
+	local success, value = pcall(function()
+		local stat = Stats.Network.ServerStatsItem["Data Ping"]
+		return stat:GetValue()
+	end)
+	if success and type(value) == "number" then
+		pingMs = math.floor(value + 0.5)
+	end
+	return pingMs
+end
+
+local function _setKeybindListVisible(isVisible: boolean)
+	local library = _state.library
+	if not library then
+		return
+	end
+	local keybindFrame = library.KeybindFrame
+	if keybindFrame then
+		keybindFrame.Visible = isVisible
+	end
+end
+
+local function _setWatermarkVisible(isVisible: boolean)
+	local library = _state.library
+	if not library or not library.SetWatermarkVisibility then
+		return
+	end
+	library:SetWatermarkVisibility(isVisible)
+end
+
+local function _syncUiVisibility()
+	local toggles = _getLinoriaGlobals()
+	if not toggles then
+		return
+	end
+	local keybindsToggle = toggles.UIShowKeybindList
+	if keybindsToggle then
+		_setKeybindListVisible(keybindsToggle.Value == true)
+	end
+	local watermarkToggle = toggles.UIShowWatermark
+	if watermarkToggle then
+		_setWatermarkVisible(watermarkToggle.Value == true)
+	end
+end
+
+local function _updateWatermark()
+	local library = _state.library
+	if not library or not library.SetWatermark then
+		return
+	end
+
+	local toggles = _getLinoriaGlobals()
+	local isVisible = true
+	if toggles and toggles.UIShowWatermark then
+		isVisible = toggles.UIShowWatermark.Value == true
+	end
+	if not isVisible then
+		return
+	end
+
+	local watermark = _state.watermark
+	watermark.frameCount += 1
+
+	local now = os.clock()
+	if watermark.lastSample <= 0 then
+		watermark.lastSample = now
+		return
+	end
+	if (now - watermark.lastSample) < WATERMARK_UPDATE_INTERVAL then
+		return
+	end
+
+	local fps = math.floor(watermark.frameCount / (now - watermark.lastSample))
+	watermark.frameCount = 0
+	watermark.lastSample = now
+
+	library:SetWatermark(string.format(WATERMARK_TEMPLATE, fps, _getPingMs()))
+end
+
+local function _updateControlBindings()
+	if not _state.controlBindings then
+		return
+	end
+	local toggles, options = _getLinoriaGlobals()
 	if not toggles or not options then
 	end
 	for _, control in ipairs(_state.controlBindings) do
@@ -61,6 +153,112 @@ local function _updateControlBindings()
 		end
 	end
 end
+
+local function _installSaveManagerExtensions(saveManager: any)
+	if saveManager._blossomBuildConfigSection then
+		return
+	end
+
+	saveManager._blossomBuildConfigSection = saveManager.BuildConfigSection
+	saveManager.BuildConfigSection = function(self, tab)
+		assert(self.Library, "Must set SaveManager.Library")
+
+		local section = tab:AddRightGroupbox("Configuration")
+
+		section:AddInput("SaveManager_ConfigName", { Text = "Config name" })
+		section:AddDropdown("SaveManager_ConfigList", {
+			Text = "Config list",
+			Values = self:RefreshConfigList(),
+			AllowNull = true,
+		})
+
+		section:AddDivider()
+
+		local _, options = _getLinoriaGlobals()
+
+		section:AddButton("Create config", function()
+			if not options then
+				return
+			end
+			local name = options.SaveManager_ConfigName.Value
+
+			if name:gsub(" ", "") == "" then
+				return self.Library:Notify("Invalid config name (empty)", 2)
+			end
+
+			local success, err = self:Save(name)
+			if not success then
+				return self.Library:Notify("Failed to save config: " .. err)
+			end
+
+			self.Library:Notify(string.format("Created config %q", name))
+
+			options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+			options.SaveManager_ConfigList:SetValue(nil)
+		end):AddButton("Load config", function()
+			if not options then
+				return
+			end
+			local name = options.SaveManager_ConfigList.Value
+
+			local success, err = self:Load(name)
+			if not success then
+				return self.Library:Notify("Failed to load config: " .. err)
+			end
+
+			self.Library:Notify(string.format("Loaded config %q", name))
+		end)
+
+		section:AddButton("Overwrite config", function()
+			if not options then
+				return
+			end
+			local name = options.SaveManager_ConfigList.Value
+
+			local success, err = self:Save(name)
+			if not success then
+				return self.Library:Notify("Failed to overwrite config: " .. err)
+			end
+
+			self.Library:Notify(string.format("Overwrote config %q", name))
+		end)
+
+		section:AddButton("Refresh list", function()
+			if not options then
+				return
+			end
+			options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+			options.SaveManager_ConfigList:SetValue(nil)
+		end)
+
+		section:AddButton("Set as autoload", function()
+			if not options then
+				return
+			end
+			local name = options.SaveManager_ConfigList.Value
+			writefile(self.Folder .. "/settings/autoload.txt", name)
+			self.AutoloadLabel:SetText("Current autoload config: " .. name)
+			self.Library:Notify(string.format("Set %q to auto load", name))
+		end):AddButton("Remove autoload", function()
+			local path = self.Folder .. "/settings/autoload.txt"
+			if isfile(path) then
+				pcall(delfile, path)
+			end
+			self.AutoloadLabel:SetText("Current autoload config: none")
+			self.Library:Notify("Cleared autoload config")
+		end)
+
+		self.AutoloadLabel = section:AddLabel("Current autoload config: none", true)
+
+		if isfile(self.Folder .. "/settings/autoload.txt") then
+			local name = readfile(self.Folder .. "/settings/autoload.txt")
+			self.AutoloadLabel:SetText("Current autoload config: " .. name)
+		end
+
+		self:SetIgnoreIndexes({ "SaveManager_ConfigList", "SaveManager_ConfigName" })
+	end
+end
+
 local function _httpGet(url: string): string
 	return (game :: any):HttpGet(url)
 end
@@ -132,6 +330,7 @@ local function _connect()
 
 	local updateConn = RunService.RenderStepped:Connect(function()
 		_updateControlBindings()
+		_updateWatermark()
 	end)
 	_maid:GiveTask(updateConn)
 end
@@ -150,6 +349,8 @@ local function _mount()
 	_state.library = library
 	_state.themeManager = themeManager
 	_state.saveManager = saveManager
+
+	_installSaveManagerExtensions(saveManager)
 
 	if library and library.AccentColor ~= nil then
 		library.AccentColor = Color3.fromRGB(255, 105, 180)
@@ -906,6 +1107,25 @@ local function _mount()
 		NoUI = true,
 		Text = "Menu keybind",
 	})
+
+	local interfaceGroup = tabs.uiSettings:AddRightGroupbox("Interface")
+	interfaceGroup:AddToggle("UIShowKeybindList", {
+		Text = "Keybind List",
+		Default = true,
+		Tooltip = "Shows the keybind list panel.",
+		Callback = function(isVisible)
+			_setKeybindListVisible(isVisible)
+		end,
+	})
+	interfaceGroup:AddToggle("UIShowWatermark", {
+		Text = "Watermark",
+		Default = true,
+		Tooltip = "Shows the watermark display.",
+		Callback = function(isVisible)
+			_setWatermarkVisible(isVisible)
+		end,
+	})
+
 	-- LinoriaLib exports Options to the global environment
 	local getfenvAny = getfenv :: any
 	local env = getfenvAny(0) :: any
@@ -1231,6 +1451,7 @@ local function _mount()
 	})
 
 	_runAutoload(library, saveManager, false)
+	_syncUiVisibility()
 end
 
 --// Public API
