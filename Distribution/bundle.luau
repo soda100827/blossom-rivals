@@ -1192,31 +1192,33 @@ lastSample<=0 then watermark.lastSample=now return end if(now-watermark.
 lastSample)<WATERMARK_UPDATE_INTERVAL then return end local fps=math.floor(
 watermark.frameCount/(now-watermark.lastSample))watermark.frameCount=0 watermark
 .lastSample=now library:SetWatermark(string.format(WATERMARK_TEMPLATE,fps,
-_getPingMs()))end local function _extractKeybindName(text)local name=text:match(
-'^%[[^%]]+%]%s*(.-)%s*%([^%)]*%)$')if name and name~=''then return name end
-return text end local function _getKeybindListMode()local _,options=
-_getLinoriaGlobals()if not options then return'All'end local option=options.
-UIKeybindListMode if option and option.Value then return option.Value end return
-'All'end local function _updateKeybindList()local library=_state.library if not
-library or not library.KeybindContainer or not library.KeybindFrame then return
-end local toggles=_getLinoriaGlobals()local mode=_getKeybindListMode()local
-ySize=0 local xSize=0 for _,label in next,library.KeybindContainer:GetChildren()
-do if label:IsA('TextLabel')then local name=_extractKeybindName(label.Text)if
-name~=''then label.Text=name end local isVisible=true if mode=='Active'then
-isVisible=label.TextColor3==library.AccentColor elseif mode=='Toggle'then local
-toggleId=_state.keybindToggleMap[name]local toggle=toggles and toggleId and
-toggles[toggleId]isVisible=toggle and toggle.Value==true or false end label.
-Visible=isVisible if isVisible then ySize+=18 if label.TextBounds.X>xSize then
-xSize=label.TextBounds.X end end end end library.KeybindFrame.Size=UDim2.new(0,
-math.max(xSize+10,210),0,ySize+23)end local function _updateControlBindings()if
-not _state.controlBindings then return end local toggles,options=
-_getLinoriaGlobals()if not toggles or not options then end for _,control in
-ipairs(_state.controlBindings)do local toggle=toggles and toggles[control.
-toggleId]local gate=toggle and toggle.Value==true local active=false if gate
-then local keybind=options and options[control.keybindId]if keybind and keybind.
-GetState then active=keybind:GetState()else active=false end end if control.last
-~=active then control.last=active control.setter(active)end end end
-local function _installSaveManagerExtensions(saveManager)if saveManager.
+_getPingMs()))end local function _extractKeybindParts(text)local key,name,mode=
+text:match('^%[([^%]]+)%]%s*(.-)%s*%(([^%)]*)%)$')if key and name and mode then
+return key,name,mode end return nil,nil,nil end local function
+_getKeybindListMode()local _,options=_getLinoriaGlobals()if not options then
+return'All'end local option=options.UIKeybindListMode if option and option.Value
+then return option.Value end return'All'end local function _updateKeybindList()
+local library=_state.library if not library or not library.KeybindContainer or
+not library.KeybindFrame then return end local toggles=_getLinoriaGlobals()local
+mode=_getKeybindListMode()local ySize=0 local xSize=0 for _,label in next,
+library.KeybindContainer:GetChildren()do if label:IsA('TextLabel')then local key
+,name,modeText=_extractKeybindParts(label.Text)if key and name and modeText then
+label.Text=string.format('[%s] %s (%s)',key,name,modeText)end local isVisible=
+true if mode=='Active'then isVisible=label.TextColor3==library.AccentColor
+elseif mode=='Toggle'then local mapName=name or label.Text local toggleId=_state
+.keybindToggleMap[mapName]local toggle=toggles and toggleId and toggles[toggleId
+]isVisible=toggle and toggle.Value==true or false end label.Visible=isVisible if
+isVisible then ySize+=18 if label.TextBounds.X>xSize then xSize=label.TextBounds
+.X end end end end library.KeybindFrame.Size=UDim2.new(0,math.max(xSize+10,210),
+0,ySize+23)end local function _updateControlBindings()if not _state.
+controlBindings then return end local toggles,options=_getLinoriaGlobals()if not
+toggles or not options then end for _,control in ipairs(_state.controlBindings)
+do local toggle=toggles and toggles[control.toggleId]local gate=toggle and
+toggle.Value==true local active=false if gate then local keybind=options and
+options[control.keybindId]if keybind and keybind.GetState then active=keybind:
+GetState()else active=false end end if control.last~=active then control.last=
+active control.setter(active)end end end local function
+_installSaveManagerExtensions(saveManager)if saveManager.
 _blossomBuildConfigSection then return end saveManager.
 _blossomBuildConfigSection=saveManager.BuildConfigSection saveManager.
 BuildConfigSection=function(self,tab)assert(self.Library,

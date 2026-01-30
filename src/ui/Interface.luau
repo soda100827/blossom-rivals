@@ -129,12 +129,12 @@ local function _updateWatermark()
 	library:SetWatermark(string.format(WATERMARK_TEMPLATE, fps, _getPingMs()))
 end
 
-local function _extractKeybindName(text: string): string
-	local name = text:match("^%[[^%]]+%]%s*(.-)%s*%([^%)]*%)$")
-	if name and name ~= "" then
-		return name
+local function _extractKeybindParts(text: string): (string?, string?, string?)
+	local key, name, mode = text:match("^%[([^%]]+)%]%s*(.-)%s*%(([^%)]*)%)$")
+	if key and name and mode then
+		return key, name, mode
 	end
-	return text
+	return nil, nil, nil
 end
 
 local function _getKeybindListMode(): string
@@ -162,16 +162,17 @@ local function _updateKeybindList()
 
 	for _, label in next, library.KeybindContainer:GetChildren() do
 		if label:IsA("TextLabel") then
-			local name = _extractKeybindName(label.Text)
-			if name ~= "" then
-				label.Text = name
+			local key, name, modeText = _extractKeybindParts(label.Text)
+			if key and name and modeText then
+				label.Text = string.format("[%s] %s (%s)", key, name, modeText)
 			end
 
 			local isVisible = true
 			if mode == "Active" then
 				isVisible = label.TextColor3 == library.AccentColor
 			elseif mode == "Toggle" then
-				local toggleId = _state.keybindToggleMap[name]
+				local mapName = name or label.Text
+				local toggleId = _state.keybindToggleMap[mapName]
 				local toggle = toggles and toggleId and toggles[toggleId]
 				isVisible = toggle and toggle.Value == true or false
 			end
