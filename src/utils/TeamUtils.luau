@@ -6,6 +6,7 @@ local Players = game:GetService("Players")
 --// Dependencies (require)
 
 --// Constants
+local FIGHTER_CONTROLLER_SEARCH_INTERVAL = 1
 local TEAM_ATTRIBUTE_KEYS = {
 	"TeamID",
 	"TeamId",
@@ -27,18 +28,23 @@ TeamUtils.__index = TeamUtils
 local _maid = nil :: any
 local _state = {
 	isDebugEnabled = false,
+	lastControllerSearchAt = 0,
 }
 local _signals = {}
 
 local _fighterController = nil :: any -- any: controller shape is dynamic.
-local _searchedController = false
 
 --// Private helpers
 local function _getFighterController(): any
-	if _searchedController then
+	if _fighterController then
 		return _fighterController
 	end
-	_searchedController = true
+
+	local now = os.clock()
+	if now - _state.lastControllerSearchAt < FIGHTER_CONTROLLER_SEARCH_INTERVAL then
+		return nil
+	end
+	_state.lastControllerSearchAt = now
 
 	local localPlayer = Players.LocalPlayer
 	if not localPlayer then
