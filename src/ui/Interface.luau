@@ -176,6 +176,7 @@ local function _mount()
 	local silentAimToggle = combatGroup:AddToggle("SilentAimEnabled", {
 		Text = "Silent Aim",
 		Default = false,
+		Tooltip = "Redirects shots toward the closest valid target within your silent FOV.",
 		Callback = function()
 			_updateControlBindings()
 		end,
@@ -193,6 +194,7 @@ local function _mount()
 		Default = Color3.fromRGB(255, 255, 255),
 		Transparency = 0,
 		Title = "Silent FOV Color",
+		Tooltip = "Color of the Silent Aim FOV circle.",
 		Callback = function(color, transparency)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setSilentAimFovColor then
@@ -211,6 +213,7 @@ local function _mount()
 		Max = 100,
 		Rounding = 0,
 		Suffix = "%",
+		Tooltip = "Chance for Silent Aim to redirect a shot.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
@@ -227,6 +230,7 @@ local function _mount()
 		Max = 800,
 		Rounding = 0,
 		Suffix = "px",
+		Tooltip = "Silent Aim activation radius in pixels.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
@@ -240,6 +244,7 @@ local function _mount()
 	local combatAimbotToggle = combatGroup:AddToggle("CombatAimbotEnabled", {
 		Text = "Aimbot",
 		Default = false,
+		Tooltip = "Automatically aims at the best target.",
 		Callback = function()
 			_updateControlBindings()
 		end,
@@ -257,6 +262,7 @@ local function _mount()
 		Default = Color3.fromRGB(255, 255, 255),
 		Transparency = 0,
 		Title = "Aimbot FOV Color",
+		Tooltip = "Color of the Aimbot FOV circle.",
 		Callback = function(color, transparency)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setFovColor then
@@ -275,6 +281,7 @@ local function _mount()
 		Max = 100,
 		Rounding = 0,
 		Suffix = "%", -- Matches image style
+		Tooltip = "Higher values feel smoother but slower to lock.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
@@ -291,6 +298,7 @@ local function _mount()
 		Max = 800,
 		Rounding = 0,
 		Suffix = "px",
+		Tooltip = "Aimbot activation radius in pixels.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
@@ -304,6 +312,7 @@ local function _mount()
 	combatGroup:AddToggle("CombatManipulation", {
 		Text = "Manipulation",
 		Default = false,
+		Tooltip = "Enables manipulation-related combat features.",
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setManipulationEnabled then
@@ -315,6 +324,7 @@ local function _mount()
 	combatGroup:AddToggle("CombatWallCheck", {
 		Text = "Visible Only",
 		Default = false,
+		Tooltip = "Only target enemies you can see (raycast).",
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setWallCheckEnabled then
@@ -326,6 +336,7 @@ local function _mount()
 	combatGroup:AddToggle("CombatAntiKatana", {
 		Text = "Anti Katana",
 		Default = false,
+		Tooltip = "Mitigates katana-related attacks.",
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setAntiKatanaEnabled then
@@ -337,6 +348,7 @@ local function _mount()
 	combatGroup:AddToggle("CombatClosestPosition", {
 		Text = "Closest Position",
 		Default = true,
+		Tooltip = "Choose the closest body part in the whitelist.",
 		Callback = function(state)
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setClosestPositionEnabled then
@@ -407,6 +419,7 @@ local function _mount()
 	espGroup:AddToggle("VisualsToggle", {
 		Text = "Visuals (ESP)",
 		Default = false,
+		Tooltip = "Master toggle for all ESP visuals.",
 		Callback = function(state)
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.toggle then
@@ -422,6 +435,7 @@ local function _mount()
 		:AddToggle("ESPNames", {
 			Text = "Name",
 			Default = true,
+			Tooltip = "Show player names.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowNames then
@@ -432,6 +446,7 @@ local function _mount()
 		:AddColorPicker("ESPTextColor", {
 			Default = Color3.new(1, 1, 1),
 			Title = "Text Color",
+			Tooltip = "Color for ESP name text.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setTextColor then
@@ -442,6 +457,7 @@ local function _mount()
 		:AddColorPicker("ESPNameOutlineColor", {
 			Default = Color3.new(0, 0, 0),
 			Title = "Name Outline",
+			Tooltip = "Outline color for ESP names.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setNameOutlineColor then
@@ -454,6 +470,7 @@ local function _mount()
 		:AddToggle("ESPWeapon", {
 			Text = "Weapon",
 			Default = false,
+			Tooltip = "Show equipped weapon name.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowWeapon then
@@ -464,6 +481,7 @@ local function _mount()
 		:AddColorPicker("ESPWeaponColor", {
 			Default = Color3.new(1, 1, 1),
 			Title = "Weapon Color",
+			Tooltip = "Color for weapon text.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setWeaponColor then
@@ -474,6 +492,7 @@ local function _mount()
 		:AddColorPicker("ESPWeaponOutlineColor", {
 			Default = Color3.new(0, 0, 0),
 			Title = "Weapon Outline",
+			Tooltip = "Outline color for weapon text.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setWeaponOutlineColor then
@@ -486,6 +505,7 @@ local function _mount()
 		:AddToggle("ESPDistance", {
 			Text = "Distance",
 			Default = false,
+			Tooltip = "Show distance to target.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowDistance then
@@ -496,6 +516,7 @@ local function _mount()
 		:AddColorPicker("ESPDistanceColor", {
 			Default = Color3.new(1, 1, 1),
 			Title = "Distance Color",
+			Tooltip = "Color for distance text.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setDistanceColor then
@@ -506,6 +527,7 @@ local function _mount()
 		:AddColorPicker("ESPDistanceOutlineColor", {
 			Default = Color3.new(0, 0, 0),
 			Title = "Distance Outline",
+			Tooltip = "Outline color for distance text.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setDistanceOutlineColor then
@@ -518,6 +540,7 @@ local function _mount()
 		:AddToggle("ESPBoxes", {
 			Text = "Box",
 			Default = true,
+			Tooltip = "Draw a box around targets.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowBoxes then
@@ -528,6 +551,7 @@ local function _mount()
 		:AddColorPicker("ESPBoxColor", {
 			Default = Color3.new(1, 1, 1),
 			Title = "Box Color",
+			Tooltip = "Color of the ESP box.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setBoxColor then
@@ -538,6 +562,7 @@ local function _mount()
 		:AddColorPicker("ESPBoxOutlineColor", {
 			Default = Color3.new(0, 0, 0),
 			Title = "Box Outline",
+			Tooltip = "Outline color of the ESP box.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setBoxOutlineColor then
@@ -550,6 +575,7 @@ local function _mount()
 		:AddToggle("ESPSkeleton", {
 			Text = "Skeleton",
 			Default = false,
+			Tooltip = "Draw a skeleton over targets.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowSkeleton then
@@ -560,6 +586,7 @@ local function _mount()
 		:AddColorPicker("ESPSkeletonColor", {
 			Default = Color3.new(1, 1, 1),
 			Title = "Skeleton Color",
+			Tooltip = "Color of skeleton lines.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setSkeletonColor then
@@ -570,6 +597,7 @@ local function _mount()
 		:AddColorPicker("ESPSkeletonOutlineColor", {
 			Default = Color3.new(0, 0, 0),
 			Title = "Skeleton Outline",
+			Tooltip = "Outline color for skeleton lines.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setSkeletonOutlineColor then
@@ -582,6 +610,7 @@ local function _mount()
 		:AddToggle("ESPHealthbar", {
 			Text = "Healthbar",
 			Default = false,
+			Tooltip = "Show target healthbar.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowHealthbar then
@@ -592,6 +621,7 @@ local function _mount()
 		:AddColorPicker("ESPHealthbarColor", {
 			Default = Color3.new(0, 1, 0),
 			Title = "Health Color",
+			Tooltip = "Color of health fill.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setHealthbarColor then
@@ -602,6 +632,7 @@ local function _mount()
 		:AddColorPicker("ESPHealthbarOutlineColor", {
 			Default = Color3.new(0, 0, 0),
 			Title = "Outline Color",
+			Tooltip = "Outline color for the healthbar.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setHealthbarOutlineColor then
@@ -614,6 +645,7 @@ local function _mount()
 		:AddToggle("ESPHighlight", {
 			Text = "Highlight",
 			Default = false,
+			Tooltip = "Add a Highlight instance to targets.",
 			Callback = function(state)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setShowHighlight then
@@ -624,6 +656,7 @@ local function _mount()
 		:AddColorPicker("ESPHighlightFill", {
 			Default = Color3.new(1, 0, 0),
 			Title = "Fill Color",
+			Tooltip = "Fill color for Highlight.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setHighlightFill then
@@ -634,6 +667,7 @@ local function _mount()
 		:AddColorPicker("ESPHighlightOutline", {
 			Default = Color3.new(1, 1, 1),
 			Title = "Outline Color",
+			Tooltip = "Outline color for Highlight.",
 			Callback = function(value)
 				local mod = _state.client.Modules.Visuals
 				if mod and mod.setHighlightOutline then
@@ -645,12 +679,14 @@ local function _mount()
 	espGroup:AddToggle("ESPBetterBounds", {
 		Text = "Better Bounds",
 		Default = false,
+		Tooltip = "Reserved for future bounds improvements.",
 		Callback = function(_stateValue) end,
 	})
 
 	espGroup:AddToggle("ESPShowTeammates", {
 		Text = "Show Teammates",
 		Default = true,
+		Tooltip = "Show ESP on teammates.",
 		Callback = function(state)
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.setShowTeammates then
@@ -665,6 +701,7 @@ local function _mount()
 		Min = 1,
 		Max = 5,
 		Rounding = 1,
+		Tooltip = "Thickness of skeleton lines.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Visuals
@@ -680,6 +717,7 @@ local function _mount()
 		Min = 10,
 		Max = 24,
 		Rounding = 0,
+		Tooltip = "Size of ESP text.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Visuals
@@ -719,6 +757,7 @@ local function _mount()
 	local playerFlyToggle = playerGroup:AddToggle("PlayerFly", {
 		Text = "Fly",
 		Default = false,
+		Tooltip = "Toggle flight mode.",
 		Callback = function(state)
 			_updateControlBindings()
 		end,
@@ -739,6 +778,7 @@ local function _mount()
 		Min = 5,
 		Max = 200,
 		Rounding = 0,
+		Tooltip = "Movement speed while flying.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
@@ -751,6 +791,7 @@ local function _mount()
 	local playerNoclipToggle = playerGroup:AddToggle("PlayerNoclip", {
 		Text = "Noclip",
 		Default = false,
+		Tooltip = "Disable collisions for your character.",
 		Callback = function(state)
 			_updateControlBindings()
 		end,
@@ -768,6 +809,7 @@ local function _mount()
 	local playerWalkSpeedToggle = playerGroup:AddToggle("PlayerWalkSpeedEnabled", {
 		Text = "Walk Speed",
 		Default = false,
+		Tooltip = "Toggle custom walk speed.",
 		Callback = function(state)
 			_updateControlBindings()
 		end,
@@ -788,6 +830,7 @@ local function _mount()
 		Min = 0,
 		Max = 200,
 		Rounding = 0,
+		Tooltip = "Your character walk speed.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
@@ -800,6 +843,7 @@ local function _mount()
 	local playerJumpPowerToggle = playerGroup:AddToggle("PlayerJumpPowerEnabled", {
 		Text = "Jump Power",
 		Default = false,
+		Tooltip = "Toggle custom jump power.",
 		Callback = function(state)
 			_updateControlBindings()
 		end,
@@ -820,6 +864,7 @@ local function _mount()
 		Min = 0,
 		Max = 200,
 		Rounding = 0,
+		Tooltip = "Your character jump power.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
@@ -903,6 +948,7 @@ local function _mount()
 	miscGroup:AddToggle("TeleportQueue", {
 		Text = "Auto Load",
 		Default = false,
+		Tooltip = "Auto-load Blossom after teleport.",
 		Callback = function(enabled)
 			_state.client:setTeleportQueue(enabled)
 		end,
@@ -911,6 +957,7 @@ local function _mount()
 	miscGroup:AddToggle("SilentMode", {
 		Text = "Silent Mode",
 		Default = false,
+		Tooltip = "Mutes UI notifications and auto-opens silently.",
 		Callback = function(enabled)
 			_setNotifyMuted(library, enabled)
 			_state.client:setSilent(enabled)
