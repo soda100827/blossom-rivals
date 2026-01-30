@@ -41,16 +41,18 @@ function PlayerMods.setup()
 			end)
 		end
 
-		local setControlsRemote = Helpers.getSetControlsRemote()
-		if setControlsRemote then
-			local oldFireServer
-			oldFireServer = hookfunction(setControlsRemote.FireServer, function(self, device)
-				if not checkcaller() and State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" then
-					device = State.spoofDevice
+		-- Spoof Device periodic sender
+		task.spawn(function()
+			local setControlsRemote = Helpers.getSetControlsRemote()
+			while true do
+				if State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" and setControlsRemote then
+					pcall(function()
+						setControlsRemote:FireServer(State.spoofDevice)
+					end)
 				end
-				return oldFireServer(self, device)
-			end)
-		end
+				task.wait(1)
+			end
+		end)
 
 		local flashedMod = Helpers.getFlashedModule()
 		if flashedMod then

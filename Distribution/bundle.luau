@@ -481,33 +481,33 @@ function()local replicatedClassMod=Helpers.getReplicatedClassModule()if
 replicatedClassMod then local oldGet oldGet=hookfunction(replicatedClassMod.Get,
 function(self,key)if not checkcaller()then if key=='SlidingSpeedMax'and State.
 isSlideBoostEnabled then return 3*State.slideBoostMultiplier end end return
-oldGet(self,key)end)end local setControlsRemote=Helpers.getSetControlsRemote()if
-setControlsRemote then local oldFireServer oldFireServer=hookfunction(
-setControlsRemote.FireServer,function(self,device)if not checkcaller()and State.
-isSpoofDeviceEnabled and State.spoofDevice~='None'then device=State.spoofDevice
-end return oldFireServer(self,device)end)end local flashedMod=Helpers.
-getFlashedModule()if flashedMod then local oldAttemptToFlash oldAttemptToFlash=
-hookfunction(flashedMod.AttemptToFlash,function(self,...)if not checkcaller()and
-State.isAntiFlashEnabled then return end return oldAttemptToFlash(self,...)end)
-local oldFlash oldFlash=hookfunction(flashedMod.Flash,function(self,...)if not
-checkcaller()and State.isAntiFlashEnabled then return end return oldFlash(self,
-...)end)end task.spawn(function()local mechanicsController=Helpers.
-getMechanicsController()while true do if State.isSoundSpammerEnabled and
-mechanicsController then pcall(function()mechanicsController:PlayMechanicsSound(
-State.soundSpammerType)end)end task.wait(0.1)end end)end)end return PlayerMods
-end function __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.
-o if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v
-.c end end do local function __modImpl()local Players=game:GetService('Players')
-local RunService=game:GetService('RunService')local UserInputService=game:
-GetService('UserInputService')local Workspace=game:GetService('Workspace')local
-Maid=(__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()
-local State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()
-local PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=
-Player local _maid=nil local _signals={}local function _connect()_maid:
-DoCleaning()local function bindCharacter()if State.characterMaid then State.
-characterMaid:DoCleaning()end State.characterMaid=Maid.new()local humanoid=State
-.humanoid local rootPart=State.rootPart if humanoid and rootPart then local
-stateConn=humanoid.StateChanged:Connect(function(_,newState)if not State.
+oldGet(self,key)end)end task.spawn(function()local setControlsRemote=Helpers.
+getSetControlsRemote()while true do if State.isSpoofDeviceEnabled and State.
+spoofDevice~='None'and setControlsRemote then pcall(function()setControlsRemote:
+FireServer(State.spoofDevice)end)end task.wait(1)end end)local flashedMod=
+Helpers.getFlashedModule()if flashedMod then local oldAttemptToFlash
+oldAttemptToFlash=hookfunction(flashedMod.AttemptToFlash,function(self,...)if
+not checkcaller()and State.isAntiFlashEnabled then return end return
+oldAttemptToFlash(self,...)end)local oldFlash oldFlash=hookfunction(flashedMod.
+Flash,function(self,...)if not checkcaller()and State.isAntiFlashEnabled then
+return end return oldFlash(self,...)end)end task.spawn(function()local
+mechanicsController=Helpers.getMechanicsController()while true do if State.
+isSoundSpammerEnabled and mechanicsController then pcall(function()
+mechanicsController:PlayMechanicsSound(State.soundSpammerType)end)end task.wait(
+0.1)end end)end)end return PlayerMods end function __DARKLUA_BUNDLE_MODULES.o()
+local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end do local function
+__modImpl()local Players=game:GetService('Players')local RunService=game:
+GetService('RunService')local UserInputService=game:GetService(
+'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
+__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()local
+State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()local
+PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=Player
+local _maid=nil local _signals={}local function _connect()_maid:DoCleaning()
+local function bindCharacter()if State.characterMaid then State.characterMaid:
+DoCleaning()end State.characterMaid=Maid.new()local humanoid=State.humanoid
+local rootPart=State.rootPart if humanoid and rootPart then local stateConn=
+humanoid.StateChanged:Connect(function(_,newState)if not State.
 isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.Jumping
 then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=State.
 jumpPowerValue if current.Y<jumpVelocity then rootPart.AssemblyLinearVelocity=
