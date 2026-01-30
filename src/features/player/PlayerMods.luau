@@ -64,7 +64,7 @@ function PlayerMods.setup()
 						playSoundRemote:FireServer(State.soundSpammerType)
 					end)
 				end
-				task.wait(0.05) -- Faster spam
+				task.wait(0.5) -- Adjusted for server debounce
 			end
 		end)
 

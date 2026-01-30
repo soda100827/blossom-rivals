@@ -495,7 +495,7 @@ spoofDevice setControlsRemote:FireServer(device)end return oldSetControls(self,
 device)end)end task.spawn(function()local playSoundRemote=Helpers.
 getPlayMechanicsSoundRemote()while true do if State.isSoundSpammerEnabled and
 playSoundRemote then pcall(function()playSoundRemote:FireServer(State.
-soundSpammerType)end)end task.wait(0.05)end end)local flashedMod=Helpers.
+soundSpammerType)end)end task.wait(0.5)end end)local flashedMod=Helpers.
 getFlashedModule()if flashedMod then local oldAttemptToFlash oldAttemptToFlash=
 hookfunction(flashedMod.AttemptToFlash,function(self,...)if not checkcaller()and
 State.isAntiFlashEnabled then return end return oldAttemptToFlash(self,...)end)
