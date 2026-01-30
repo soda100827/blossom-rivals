@@ -6,11 +6,11 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
-local Logger = require("src/shared/Logger")
-local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid")
-local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
-local ExecutorUtils = require("src/shared/ExecutorUtils")
-local ModuleRegistry = require("src/core/ModuleRegistry")
+local Logger = require("../shared/Logger")
+local Maid = require("../../Packages/_Index/soda100827_maid@0.4.0/maid")
+local Signal = require("../../Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
+local ExecutorUtils = require("../shared/ExecutorUtils")
+local ModuleRegistry = require("./ModuleRegistry")
 
 --// Constants
 local BUNDLE_URL = "https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/build/loader.luau"
@@ -54,6 +54,7 @@ export type LoggerInstance = {
 
 export type LoggerModule = {
 	new: (source: string?) -> LoggerInstance,
+	Destroy: (() -> ())?,
 }
 
 export type Module = {
@@ -85,6 +86,8 @@ local Client = {}
 Client.__index = Client
 
 local _maid = Maid.new()
+local _loggerModule = (Logger :: any) :: LoggerModule
+local _initialLogger = _loggerModule.new("Blossom")
 local _state: {
 	isRunning: boolean,
 	shouldTeleportQueue: boolean,
@@ -94,14 +97,13 @@ local _state: {
 	isRunning = false,
 	shouldTeleportQueue = false,
 	isSilent = getGlobal("BlossomSilent") or false,
-	logger = nil :: any,
+	logger = _initialLogger,
 }
 local _signals: { started: Signal, stopped: Signal } = {
 	started = Signal.new(),
 	stopped = Signal.new(),
 }
 local _modules: { [string]: Module } = {}
-local _loggerModule = (Logger :: any) :: LoggerModule
 
 --// Private helpers
 local function _disableAnalyticsPipeline(logger: LoggerInstance)
@@ -170,7 +172,7 @@ local function _checkExecutorSupport(logger: LoggerInstance)
 	end
 
 	for name in pairs(missing) do
-		if logger and logger.warnUnsupported then
+		if logger.warnUnsupported then
 			logger:warnUnsupported(name)
 		else
 			logger:warn(
@@ -361,7 +363,7 @@ end
 
 local client = (setmetatable({}, Client) :: any) :: BlossomClient
 client.Version = "1.0.0"
-client.Logger = _loggerModule.new("Blossom")
+client.Logger = _initialLogger
 client.Modules = _modules
 client.Started = _signals.started
 client.Stopped = _signals.stopped
