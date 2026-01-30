@@ -67,16 +67,29 @@ function SilentAim.setup()
 					end
 
 					local targetPart = Targeting.getClosestSilentTarget()
-					if targetPart and not targetPart:IsDescendantOf(Helpers.getLocalPlayer().Character) then
+					local localChar = Helpers.getLocalPlayer().Character
+					if targetPart and localChar and not targetPart:IsDescendantOf(localChar) then
 						local newOrigin = origin
 						if State.isManipulationEnabled then
-							-- Magic Bullet: Spawn bullet extremely close (0.5 studs) to target to bypass sanity checks
-							newOrigin = targetPart.Position + Vector3.new(0, 0.5, 0)
+							-- Magic Bullet: Spawn bullet slightly above target (1 stud) to be outside hitbox
+							-- Combined with filter, this ensures we shoot THROUGH the target into the floor.
+							newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
+
+							-- Debug Logging
+							print(
+								string.format(
+									"[MagicBullet] TgtPos: %s | Origin: %s",
+									tostring(targetPart.Position),
+									tostring(newOrigin)
+								)
+							)
 
 							-- CRITICAL: Add target to filter to force "penetration" logic.
-							-- The ray will ignore the target and hit the floor, matching the working script behavior.
 							if type(filter) == "table" then
 								table.insert(filter, targetPart.Parent)
+								print("[MagicBullet] Added target to filter")
+							else
+								warn("[MagicBullet] Filter is not a table: " .. typeof(filter))
 							end
 						end
 
