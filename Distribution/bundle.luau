@@ -875,67 +875,72 @@ checkcaller()and State.isNoMuzzleFlashEnabled then return end return
 oldMuzzleFlash(self,...)end,State.logger)end local replicatedClassMod=Helpers.
 getReplicatedClassModule()if replicatedClassMod then local oldGet oldGet=Helpers
 .safeHook(replicatedClassMod,'Get',function(self,key)if not checkcaller()and
-State.isNoSpreadEnabled and key=='IsAiming'then return true end return oldGet(
-self,key)end,State.logger)end local gunMod=Helpers.getGunModule()if gunMod then
-local oldStartShooting oldStartShooting=Helpers.safeHook(gunMod,'StartShooting',
-function(self,...)if checkcaller()then return oldStartShooting(self,...)end
-local info=self.Info local infoStr=tostring(info)if not _oldShootCooldowns[
-infoStr..'_Shoot']then _oldShootCooldowns[infoStr..'_Shoot']=info.ShootCooldown
-end if not _oldShootCooldowns[infoStr..'_Burst']then _oldShootCooldowns[infoStr
-..'_Burst']=info.ShootBurstCooldown end if not _oldShootCooldowns[infoStr..
-'_Spread']then _oldShootCooldowns[infoStr..'_Spread']=info.ShootSpread end if
-not _oldShootCooldowns[infoStr..'_AimML']then _oldShootCooldowns[infoStr..
-'_AimML']=info.AimSpreadMultiplier end if not _oldShootCooldowns[infoStr..
-'_Quick']then _oldShootCooldowns[infoStr..'_Quick']=info.QuickShotSpread end
-local origShoot=_oldShootCooldowns[infoStr..'_Shoot']local origBurst=
-_oldShootCooldowns[infoStr..'_Burst']local origSpread=_oldShootCooldowns[infoStr
-..'_Spread']local origAimML=_oldShootCooldowns[infoStr..'_AimML']local origQuick
-=_oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled then info.
+State.isNoSpreadEnabled and key=='IsAiming'and State.forcingAim then return true
+end return oldGet(self,key)end,State.logger)end local gunMod=Helpers.
+getGunModule()if gunMod then local oldIsFullyAiming oldIsFullyAiming=Helpers.
+safeHook(gunMod,'IsFullyAiming',function(self,...)if not checkcaller()and State.
+isNoSpreadEnabled and State.forcingAim then return true end return
+oldIsFullyAiming(self,...)end,State.logger)local oldStartShooting
+oldStartShooting=Helpers.safeHook(gunMod,'StartShooting',function(self,...)if
+checkcaller()then return oldStartShooting(self,...)end local info=self.Info
+local infoStr=tostring(info)if not _oldShootCooldowns[infoStr..'_Shoot']then
+_oldShootCooldowns[infoStr..'_Shoot']=info.ShootCooldown end if not
+_oldShootCooldowns[infoStr..'_Burst']then _oldShootCooldowns[infoStr..'_Burst']=
+info.ShootBurstCooldown end if not _oldShootCooldowns[infoStr..'_Spread']then
+_oldShootCooldowns[infoStr..'_Spread']=info.ShootSpread end if not
+_oldShootCooldowns[infoStr..'_AimML']then _oldShootCooldowns[infoStr..'_AimML']=
+info.AimSpreadMultiplier end if not _oldShootCooldowns[infoStr..'_Quick']then
+_oldShootCooldowns[infoStr..'_Quick']=info.QuickShotSpread end local origShoot=
+_oldShootCooldowns[infoStr..'_Shoot']local origBurst=_oldShootCooldowns[infoStr
+..'_Burst']local origSpread=_oldShootCooldowns[infoStr..'_Spread']local
+origAimML=_oldShootCooldowns[infoStr..'_AimML']local origQuick=
+_oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled then info.
 ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
-QuickShotSpread=0 end end if State.attackCooldownMultiplier<100 then info.
-ShootCooldown=origShoot*(State.attackCooldownMultiplier/100)if info.
-ShootBurstCooldown then info.ShootBurstCooldown=origBurst*(State.
-attackCooldownMultiplier/100)end end local returns={oldStartShooting(self,...)}
-info.ShootCooldown=origShoot if info.ShootBurstCooldown then info.
-ShootBurstCooldown=origBurst end info.ShootSpread=origSpread info.
-AimSpreadMultiplier=origAimML if info.QuickShotSpread then info.QuickShotSpread=
-origQuick end if State.isNoSpreadEnabled and#returns>=4 then returns[4]=true end
-return unpack(returns)end,State.logger)end State.gunModsHooked=true end)end
-return GunMods end function __DARKLUA_BUNDLE_MODULES.x()local v=
-__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local _Workspace=game:
-GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.s()local _Targeting=
-__DARKLUA_BUNDLE_MODULES.u()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local
-Helpers=__DARKLUA_BUNDLE_MODULES.t()local MeleeMods={}local function
-_getDistance(p1,p2)return(p1-p2).Magnitude end local function _getNearbyEnemies(
-)local localPlayer=Helpers.getLocalPlayer()local localCharacter=localPlayer.
-Character if not localCharacter then return{}end local localRoot=(localCharacter
-:FindFirstChild('HumanoidRootPart'))if not localRoot then return{}end local
-enemies={}for _,player in ipairs(Players:GetPlayers())do if player==localPlayer
-then continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end
-local character=player.Character if not character then continue end local root=(
-character:FindFirstChild('HumanoidRootPart'))local hum=character:
-FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
-continue end table.insert(enemies,player)end return enemies end function
-MeleeMods.setup()local checkcaller=Helpers.getGlobal('checkcaller')or function()
-return false end task.spawn(function()local meleeMod=Helpers.getMeleeModule()if
-meleeMod then local oldStartShooting oldStartShooting=Helpers.safeHook(meleeMod,
-'StartShooting',function(self,...)if not checkcaller()then local info=(self).
-Info if State.isMeleeAuraEnabled then(self)._attack_cooldown=0(self).
-_equip_cooldown=0 end local originalCooldown=info.AttackCooldown info.
-AttackCooldown=originalCooldown*(State.meleeAttackCooldownMultiplier/100)local
-originalReach=info.AttackReach if State.isMeleeAuraEnabled then info.AttackReach
-=State.meleeAuraReach end local result=table.pack(oldStartShooting(self,...))
-info.AttackCooldown=originalCooldown info.AttackReach=originalReach return table
-.unpack(result)end return oldStartShooting(self,...)end,State.logger)local
-oldCanQuickAttack oldCanQuickAttack=Helpers.safeHook(meleeMod,'CanQuickAttack',
-function(self,...)if not checkcaller()and State.isMeleeAuraEnabled then return
-true end return oldCanQuickAttack(self,...)end,State.logger)end local
-itemModules=Helpers.getItemModules()if itemModules then local hookfunction=
-Helpers.getGlobal('hookfunction')or Helpers.getGlobal('replaceclosure')local
-newcclosure=Helpers.getGlobal('newcclosure')or function(f)return f end if not
-hookfunction then State.logger:warn(
+QuickShotSpread=0 end State.forcingAim=true end if State.
+attackCooldownMultiplier<100 then info.ShootCooldown=origShoot*(State.
+attackCooldownMultiplier/100)if info.ShootBurstCooldown then info.
+ShootBurstCooldown=origBurst*(State.attackCooldownMultiplier/100)end end local
+returns={oldStartShooting(self,...)}State.forcingAim=false info.ShootCooldown=
+origShoot if info.ShootBurstCooldown then info.ShootBurstCooldown=origBurst end
+info.ShootSpread=origSpread info.AimSpreadMultiplier=origAimML if info.
+QuickShotSpread then info.QuickShotSpread=origQuick end if State.
+isNoSpreadEnabled and#returns>=4 then returns[4]=true end return unpack(returns)
+end,State.logger)end State.gunModsHooked=true end)end return GunMods end
+function __DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c
+end end do local function __modImpl()local Players=game:GetService('Players')
+local _Workspace=game:GetService('Workspace')local State=
+__DARKLUA_BUNDLE_MODULES.s()local _Targeting=__DARKLUA_BUNDLE_MODULES.u()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.t()
+local MeleeMods={}local function _getDistance(p1,p2)return(p1-p2).Magnitude end
+local function _getNearbyEnemies()local localPlayer=Helpers.getLocalPlayer()
+local localCharacter=localPlayer.Character if not localCharacter then return{}
+end local localRoot=(localCharacter:FindFirstChild('HumanoidRootPart'))if not
+localRoot then return{}end local enemies={}for _,player in ipairs(Players:
+GetPlayers())do if player==localPlayer then continue end if TeamUtils.
+isSameTeam(player,localPlayer)then continue end local character=player.Character
+if not character then continue end local root=(character:FindFirstChild(
+'HumanoidRootPart'))local hum=character:FindFirstChildOfClass('Humanoid')if not
+root or not hum or hum.Health<=0 then continue end table.insert(enemies,player)
+end return enemies end function MeleeMods.setup()local checkcaller=Helpers.
+getGlobal('checkcaller')or function()return false end task.spawn(function()local
+meleeMod=Helpers.getMeleeModule()if meleeMod then local oldStartShooting
+oldStartShooting=Helpers.safeHook(meleeMod,'StartShooting',function(self,...)if
+not checkcaller()then local info=(self).Info if State.isMeleeAuraEnabled then(
+self)._attack_cooldown=0(self)._equip_cooldown=0 end local originalCooldown=info
+.AttackCooldown info.AttackCooldown=originalCooldown*(State.
+meleeAttackCooldownMultiplier/100)local originalReach=info.AttackReach if State.
+isMeleeAuraEnabled then info.AttackReach=State.meleeAuraReach end local result=
+table.pack(oldStartShooting(self,...))info.AttackCooldown=originalCooldown info.
+AttackReach=originalReach return table.unpack(result)end return
+oldStartShooting(self,...)end,State.logger)local oldCanQuickAttack
+oldCanQuickAttack=Helpers.safeHook(meleeMod,'CanQuickAttack',function(self,...)
+if not checkcaller()and State.isMeleeAuraEnabled then return true end return
+oldCanQuickAttack(self,...)end,State.logger)end local itemModules=Helpers.
+getItemModules()if itemModules then local hookfunction=Helpers.getGlobal(
+'hookfunction')or Helpers.getGlobal('replaceclosure')local newcclosure=Helpers.
+getGlobal('newcclosure')or function(f)return f end if not hookfunction then
+State.logger:warn(
 [[hookfunction not found for item skills, skill cooldowns will not work.]])
 return end local itemsToHook={'Katana','Scythe','BowieKnife'}for _,itemName in
 ipairs(itemsToHook)do local itemScript=itemModules:FindFirstChild(itemName)if

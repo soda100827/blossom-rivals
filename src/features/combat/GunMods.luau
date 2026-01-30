@@ -64,11 +64,8 @@ function GunMods.setup()
 		if replicatedClassMod then
 			local oldGet
 			oldGet = Helpers.safeHook(replicatedClassMod, "Get", function(self, key)
-				-- Only spoof IsAiming for spread calculations, allow real value for UI/Camera if possible?
-				-- Actually if we hook Get, it affects everything reading it.
-				-- But usually Camera logic reads from its own state or uses IsAiming for FOV.
-				-- Let's try returning true. If this breaks Zoom again, we will need to detect CALLER.
-				if not checkcaller() and State.isNoSpreadEnabled and key == "IsAiming" then
+				-- Only spoof IsAiming execution of StartShooting to allow NoSpread without locking camera
+				if not checkcaller() and State.isNoSpreadEnabled and key == "IsAiming" and State.forcingAim then
 					return true
 				end
 				return oldGet(self, key)
@@ -78,6 +75,15 @@ function GunMods.setup()
 		-- 5. Gun Action hooks (Fire Rate & Packet Manipulation)
 		local gunMod = Helpers.getGunModule()
 		if gunMod then
+			-- Helper hook for IsFullyAiming to support StartShooting logic
+			local oldIsFullyAiming
+			oldIsFullyAiming = Helpers.safeHook(gunMod, "IsFullyAiming", function(self, ...)
+				if not checkcaller() and State.isNoSpreadEnabled and State.forcingAim then
+					return true
+				end
+				return oldIsFullyAiming(self, ...)
+			end, State.logger)
+
 			local oldStartShooting
 			oldStartShooting = Helpers.safeHook(gunMod, "StartShooting", function(self, ...)
 				if checkcaller() then
@@ -118,6 +124,8 @@ function GunMods.setup()
 					if info.QuickShotSpread then
 						info.QuickShotSpread = 0
 					end
+					-- Enable Scoped Aim Spoofing
+					State.forcingAim = true
 				end
 
 				if State.attackCooldownMultiplier < 100 then
@@ -129,6 +137,9 @@ function GunMods.setup()
 
 				-- Call Original
 				local returns = { oldStartShooting(self, ...) }
+
+				-- Disable Scoped Aim Spoofing
+				State.forcingAim = false
 
 				-- Restore Originals Immediately
 				info.ShootCooldown = origShoot

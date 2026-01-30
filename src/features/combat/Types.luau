@@ -39,6 +39,8 @@ export type CombatState = {
 	isMeleeAuraEnabled: boolean,
 	isTeleportAuraEnabled: boolean,
 	meleeAuraReach: number,
+	-- Internal
+	forcingAim: boolean?,
 	target: Player?,
 	silentTarget: Player?,
 	targetLostAt: number?,
