@@ -851,28 +851,29 @@ filter,...)end if not checkcaller()and(distance==400 or distance==999)and
 SilentAim.isGunAction()then if math.random(1,100)>State.silentHitChance then
 _lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
 ...)end local targetPart=Targeting.getClosestSilentTarget()if targetPart then
-local newOrigin=origin if State.isManipulationEnabled then newOrigin=targetPart.
-Position+Vector3.new(0,3,0)end _lastSilentTargetPos=targetPart.Position
-_lastSilentOrigin=newOrigin return oldRaycast(self,newOrigin,targetPart.Position
-,distance,filter,...)end end _lastSilentTargetPos=nil _lastSilentOrigin=nil
-return oldRaycast(self,origin,target,distance,filter,...)end,State.logger)local
-oldEncode oldEncode=Helpers.safeHook(utility,'EncodeCFrame',function(self,cf)if
-not checkcaller()and State.isSilentAimEnabled and _lastSilentTargetPos and
-SilentAim.isGunAction()then local originPos=cf.Position if State.
-isManipulationEnabled and _lastSilentOrigin then originPos=_lastSilentOrigin end
-local newCF=CFrame.lookAt(originPos,_lastSilentTargetPos)return oldEncode(self,
-newCF)end return oldEncode(self,cf)end,State.logger)end local cameraShaker=
-Helpers.getCameraShaker()if cameraShaker and not State.cameraShakerHooked then
-State.cameraShakerHooked=true local mt=getmetatable(cameraShaker.Presets)if mt
-and mt.__index then local oldIdx=mt.__index mt.__index=newcclosure(function(t,k)
-if State.isSilentAimEnabled and(k=='StartShooting'or k=='')then return nil end
-return oldIdx(t,k)end)end end end)end return SilentAim end function
-__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
-do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.s()local
-Helpers=__DARKLUA_BUNDLE_MODULES.t()local GunMods={}local _oldShootCooldowns={}
-function GunMods.setup()local checkcaller=Helpers.getGlobal('checkcaller')or
-function()return false end task.spawn(function()local clientItemMod=Helpers.
+local newOrigin=origin local newDistance=distance if State.isManipulationEnabled
+then newOrigin=targetPart.Position+Vector3.new(0,5,0)newDistance=7 end
+_lastSilentTargetPos=targetPart.Position _lastSilentOrigin=newOrigin return
+oldRaycast(self,newOrigin,targetPart.Position,newDistance,filter,...)end end
+_lastSilentTargetPos=nil _lastSilentOrigin=nil return oldRaycast(self,origin,
+target,distance,filter,...)end,State.logger)local oldEncode oldEncode=Helpers.
+safeHook(utility,'EncodeCFrame',function(self,cf)if not checkcaller()and State.
+isSilentAimEnabled and _lastSilentTargetPos and SilentAim.isGunAction()then
+local originPos=cf.Position if State.isManipulationEnabled and _lastSilentOrigin
+then originPos=_lastSilentOrigin end local newCF=CFrame.lookAt(originPos,
+_lastSilentTargetPos)return oldEncode(self,newCF)end return oldEncode(self,cf)
+end,State.logger)end local cameraShaker=Helpers.getCameraShaker()if cameraShaker
+and not State.cameraShakerHooked then State.cameraShakerHooked=true local mt=
+getmetatable(cameraShaker.Presets)if mt and mt.__index then local oldIdx=mt.
+__index mt.__index=newcclosure(function(t,k)if State.isSilentAimEnabled and(k==
+'StartShooting'or k=='')then return nil end return oldIdx(t,k)end)end end end)
+end return SilentAim end function __DARKLUA_BUNDLE_MODULES.w()local v=
+__DARKLUA_BUNDLE_MODULES.cache.w if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end do local function
+__modImpl()local State=__DARKLUA_BUNDLE_MODULES.s()local Helpers=
+__DARKLUA_BUNDLE_MODULES.t()local GunMods={}local _oldShootCooldowns={}function
+GunMods.setup()local checkcaller=Helpers.getGlobal('checkcaller')or function()
+return false end task.spawn(function()local clientItemMod=Helpers.
 getClientItemModule()if clientItemMod and not State.gunModsHooked then local
 oldRecoil oldRecoil=Helpers.safeHook(clientItemMod,'_Recoil',function(self,
 multiplier)if not checkcaller()and State.isNoRecoilEnabled then return end

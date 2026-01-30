@@ -69,14 +69,15 @@ function SilentAim.setup()
 					local targetPart = Targeting.getClosestSilentTarget()
 					if targetPart then
 						local newOrigin = origin
+						local newDistance = distance
 						if State.isManipulationEnabled then
-							-- Magic Bullet: Spawn bullet above target to bypass walls (Classic Magic Bullet)
-							newOrigin = targetPart.Position + Vector3.new(0, 3, 0)
+							newOrigin = targetPart.Position + Vector3.new(0, 5, 0)
+							newDistance = 7
 						end
 
 						_lastSilentTargetPos = targetPart.Position
 						_lastSilentOrigin = newOrigin
-						return oldRaycast(self, newOrigin, targetPart.Position, distance, filter, ...)
+						return oldRaycast(self, newOrigin, targetPart.Position, newDistance, filter, ...)
 					end
 				end
 				_lastSilentTargetPos = nil
