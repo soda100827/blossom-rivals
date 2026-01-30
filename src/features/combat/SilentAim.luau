@@ -72,6 +72,12 @@ function SilentAim.setup()
 						if State.isManipulationEnabled then
 							-- Magic Bullet: Spawn bullet extremely close (0.5 studs) to target to bypass sanity checks
 							newOrigin = targetPart.Position + Vector3.new(0, 0.5, 0)
+
+							-- CRITICAL: Add target to filter to force "penetration" logic.
+							-- The ray will ignore the target and hit the floor, matching the working script behavior.
+							if type(filter) == "table" then
+								table.insert(filter, targetPart.Parent)
+							end
 						end
 
 						_lastSilentTargetPos = targetPart.Position
