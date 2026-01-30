@@ -47,6 +47,8 @@ function SilentAim.setup()
 		return
 	end
 
+	print("[DEBUG] Silent Aim Module Loaded - v2 (Magic Bullet Fix)")
+
 	task.spawn(function()
 		local utility = Helpers.getUtility()
 		if utility and not State.utilityHooked then

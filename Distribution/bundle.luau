@@ -842,13 +842,14 @@ getGlobal('hookfunction')or Helpers.getGlobal('replaceclosure')local checkcaller
 =Helpers.getGlobal('checkcaller')or function()return false end local newcclosure
 =Helpers.getGlobal('newcclosure')or function(f)return f end if not hookfunction
 then State.logger:warn(
-'hookfunction not found, Perfect Silent Aim will not work.')return end task.
-spawn(function()local utility=Helpers.getUtility()if utility and not State.
-utilityHooked then State.utilityHooked=true local oldRaycast oldRaycast=Helpers.
-safeHook(utility,'Raycast',function(self,origin,target,distance,filter,...)if
-not State.isSilentAimEnabled then return oldRaycast(self,origin,target,distance,
-filter,...)end if not checkcaller()and(distance==400 or distance==999)and
-SilentAim.isGunAction()then if math.random(1,100)>State.silentHitChance then
+'hookfunction not found, Perfect Silent Aim will not work.')return end print(
+'[DEBUG] Silent Aim Module Loaded - v2 (Magic Bullet Fix)')task.spawn(function()
+local utility=Helpers.getUtility()if utility and not State.utilityHooked then
+State.utilityHooked=true local oldRaycast oldRaycast=Helpers.safeHook(utility,
+'Raycast',function(self,origin,target,distance,filter,...)if not State.
+isSilentAimEnabled then return oldRaycast(self,origin,target,distance,filter,...
+)end if not checkcaller()and(distance==400 or distance==999)and SilentAim.
+isGunAction()then if math.random(1,100)>State.silentHitChance then
 _lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
 ...)end local targetPart=Targeting.getClosestSilentTarget()local localChar=
 Helpers.getLocalPlayer().Character if targetPart and localChar and not
