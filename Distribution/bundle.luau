@@ -467,13 +467,18 @@ function()local dynamicRequire=require return dynamicRequire(mechanicsController
 replicatedStorage:WaitForChild('Remotes',5)if not remotes then return nil end
 local replication=remotes:WaitForChild('Replication',5)if not replication then
 return nil end local fighter=replication:WaitForChild('Fighter',5)if not fighter
-then return nil end return fighter:WaitForChild('SetControls',5)end return
-Helpers end function __DARKLUA_BUNDLE_MODULES.n()local v=
-__DARKLUA_BUNDLE_MODULES.cache.n if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end do local function
-__modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers=
-__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup()local
-hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
+then return nil end return fighter:WaitForChild('SetControls',5)end function
+Helpers.getPlayMechanicsSoundRemote()local replicatedStorage=game:GetService(
+'ReplicatedStorage')local remotes=replicatedStorage:WaitForChild('Remotes',5)if
+not remotes then return nil end local replication=remotes:WaitForChild(
+'Replication',5)if not replication then return nil end local fighter=replication
+:WaitForChild('Fighter',5)if not fighter then return nil end return fighter:
+WaitForChild('PlayMechanicsSound',5)end return Helpers end function
+__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
+do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local
+Helpers=__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup
+()local hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
 'replaceclosure')local checkcaller=Helpers.getGlobal('checkcaller')or function()
 return false end if not hookfunction then State.logger:warn(
 'hookfunction not found, Player Mods will not work.')return end task.spawn(
@@ -481,20 +486,22 @@ function()local replicatedClassMod=Helpers.getReplicatedClassModule()if
 replicatedClassMod then local oldGet oldGet=hookfunction(replicatedClassMod.Get,
 function(self,key)if not checkcaller()then if key=='SlidingSpeedMax'and State.
 isSlideBoostEnabled then return 3*State.slideBoostMultiplier end end return
-oldGet(self,key)end)end task.spawn(function()local setControlsRemote=Helpers.
-getSetControlsRemote()while true do if State.isSpoofDeviceEnabled and State.
-spoofDevice~='None'and setControlsRemote then pcall(function()setControlsRemote:
-FireServer(State.spoofDevice)end)end task.wait(1)end end)local flashedMod=
-Helpers.getFlashedModule()if flashedMod then local oldAttemptToFlash
-oldAttemptToFlash=hookfunction(flashedMod.AttemptToFlash,function(self,...)if
-not checkcaller()and State.isAntiFlashEnabled then return end return
-oldAttemptToFlash(self,...)end)local oldFlash oldFlash=hookfunction(flashedMod.
-Flash,function(self,...)if not checkcaller()and State.isAntiFlashEnabled then
-return end return oldFlash(self,...)end)end task.spawn(function()local
-mechanicsController=Helpers.getMechanicsController()while true do if State.
-isSoundSpammerEnabled and mechanicsController then pcall(function()
-mechanicsController:PlayMechanicsSound(State.soundSpammerType)end)end task.wait(
-0.1)end end)end)end return PlayerMods end function __DARKLUA_BUNDLE_MODULES.o()
+oldGet(self,key)end)end local controlsController=Helpers.getControlsController()
+local setControlsRemote=Helpers.getSetControlsRemote()if controlsController and
+setControlsRemote then local oldSetControls oldSetControls=hookfunction(
+controlsController.SetControls,function(self,device)if not checkcaller()and
+State.isSpoofDeviceEnabled and State.spoofDevice~='None'then device=State.
+spoofDevice setControlsRemote:FireServer(device)end return oldSetControls(self,
+device)end)end task.spawn(function()local playSoundRemote=Helpers.
+getPlayMechanicsSoundRemote()while true do if State.isSoundSpammerEnabled and
+playSoundRemote then pcall(function()playSoundRemote:FireServer(State.
+soundSpammerType)end)end task.wait(0.05)end end)local flashedMod=Helpers.
+getFlashedModule()if flashedMod then local oldAttemptToFlash oldAttemptToFlash=
+hookfunction(flashedMod.AttemptToFlash,function(self,...)if not checkcaller()and
+State.isAntiFlashEnabled then return end return oldAttemptToFlash(self,...)end)
+local oldFlash oldFlash=hookfunction(flashedMod.Flash,function(self,...)if not
+checkcaller()and State.isAntiFlashEnabled then return end return oldFlash(self,
+...)end)end end)end return PlayerMods end function __DARKLUA_BUNDLE_MODULES.o()
 local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:

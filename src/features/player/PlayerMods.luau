@@ -41,16 +41,30 @@ function PlayerMods.setup()
 			end)
 		end
 
-		-- Spoof Device periodic sender
+		local controlsController = Helpers.getControlsController()
+		local setControlsRemote = Helpers.getSetControlsRemote()
+		if controlsController and setControlsRemote then
+			local oldSetControls
+			oldSetControls = hookfunction(controlsController.SetControls, function(self, device)
+				if not checkcaller() and State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" then
+					device = State.spoofDevice
+					-- If the game is trying to set a real device, we override and send our spoofed one
+					setControlsRemote:FireServer(device)
+				end
+				return oldSetControls(self, device)
+			end)
+		end
+
+		-- Sound Spammer using Remote Event
 		task.spawn(function()
-			local setControlsRemote = Helpers.getSetControlsRemote()
+			local playSoundRemote = Helpers.getPlayMechanicsSoundRemote()
 			while true do
-				if State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" and setControlsRemote then
+				if State.isSoundSpammerEnabled and playSoundRemote then
 					pcall(function()
-						setControlsRemote:FireServer(State.spoofDevice)
+						playSoundRemote:FireServer(State.soundSpammerType)
 					end)
 				end
-				task.wait(1)
+				task.wait(0.05) -- Faster spam
 			end
 		end)
 
@@ -72,19 +86,6 @@ function PlayerMods.setup()
 				return oldFlash(self, ...)
 			end)
 		end
-
-		-- Sound Spammer
-		task.spawn(function()
-			local mechanicsController = Helpers.getMechanicsController()
-			while true do
-				if State.isSoundSpammerEnabled and mechanicsController then
-					pcall(function()
-						mechanicsController:PlayMechanicsSound(State.soundSpammerType)
-					end)
-				end
-				task.wait(0.1)
-			end
-		end)
 	end)
 end
 
