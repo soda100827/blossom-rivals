@@ -112,6 +112,11 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 		return false, nil, false, math.huge
 	end
 
+	-- Check for ForceField (Spawn Protection)
+	if character:FindFirstChildOfClass("ForceField") then
+		return false, nil, false, math.huge
+	end
+
 	local mouseLocation = UserInputService:GetMouseLocation()
 	local bestPart, anyOnScreen, shortestDistSq =
 		_getBestPartForCharacter(character, camera, localPlayer.Character, mouseLocation)
@@ -252,6 +257,54 @@ function Targeting.getClosestSilentTarget(): BasePart?
 		if distSq < closestDistSq then
 			closest = bestPart
 			closestDistSq = distSq
+		end
+	end
+	return closest
+end
+
+function Targeting.getClosestTargetGlobal(): BasePart?
+	local camera = Helpers.getCamera()
+	local localPlayer = Helpers.getLocalPlayer()
+
+	local closest: BasePart? = nil
+	local shortestDist = math.huge
+	local mouseLocation = UserInputService:GetMouseLocation()
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player == localPlayer then
+			continue
+		end
+		if TeamUtils.isSameTeam(player, localPlayer) then
+			continue
+		end
+
+		local character = player.Character
+		if not character then
+			continue
+		end
+		local hum = character:FindFirstChildOfClass("Humanoid")
+		if not hum or hum.Health <= 0 then
+			continue
+		end
+
+		-- Check for ForceField
+		if character:FindFirstChildOfClass("ForceField") then
+			continue
+		end
+
+		local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		if not root then
+			continue
+		end
+
+		-- Since it's RageBot, we don't care about screen position, just world distance
+		local dist = (camera.CFrame.Position - root.Position).Magnitude
+		if dist < shortestDist then
+			local bestPart = character:FindFirstChild("Head") or root
+			if bestPart then
+				closest = bestPart :: BasePart
+				shortestDist = dist
+			end
 		end
 	end
 	return closest

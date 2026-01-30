@@ -88,6 +88,20 @@ function RageBot.setup()
 			local character = localPlayer.Character
 
 			if State.isRageBotEnabled and character and TeamUtils.isInDuel(localPlayer) then
+				-- Don't rage if local player has a ForceField (round hasn't started or just spawned)
+				if character:FindFirstChildOfClass("ForceField") then
+					if _isRaging and _originalCFrame then
+						local localRoot = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+						if localRoot then
+							localRoot.CFrame = _originalCFrame
+						end
+						_isRaging = false
+						_originalCFrame = nil
+					end
+					task.wait(0.1)
+					continue
+				end
+
 				Helpers.fetchFighterController(State.logger)
 				local localFighter = State.fighterController and State.fighterController.LocalFighter
 
@@ -122,19 +136,17 @@ function RageBot.setup()
 						local targetRoot = targetChar:FindFirstChild("HumanoidRootPart") :: BasePart?
 
 						if targetRoot then
-							-- Target Strafe Logic
-							local strafeOffset = Vector3.new(0, 0, 0)
 							if State.isTargetStrafeEnabled then
-								local t = os.clock() * 20
+								local t = os.clock() * 30
 								strafeOffset =
-									Vector3.new(math.sin(t) * 15, 10 + math.cos(t * 1.5) * 10, math.cos(t) * 15)
+									Vector3.new(math.sin(t) * 10, 5 + math.cos(t * 1.5) * 5, math.cos(t) * 10)
 							else
-								-- Default hover if strafe is off
-								strafeOffset = Vector3.new(0, 15, 0)
+								-- Stick almost directly on target
+								strafeOffset = Vector3.new(0, 3, 0)
 							end
 
-							-- Move to target
-							localRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 5) + strafeOffset
+							-- Move to target (Stick extremely close)
+							localRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1) + strafeOffset
 
 							-- Attack logic
 							local equipped = localFighter.EquippedItem
