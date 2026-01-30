@@ -853,11 +853,16 @@ _lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
 ...)end local targetPart=Targeting.getClosestSilentTarget()local localChar=
 Helpers.getLocalPlayer().Character if targetPart and localChar and not
 targetPart:IsDescendantOf(localChar)then local newOrigin=origin if State.
-isManipulationEnabled then newOrigin=targetPart.Position+Vector3.new(0,1,0)
-print(string.format('[MagicBullet] TgtPos: %s | Origin: %s',tostring(targetPart.
-Position),tostring(newOrigin)))if type(filter)=='table'then table.insert(filter,
-targetPart.Parent)print('[MagicBullet] Added target to filter')else warn(
-'[MagicBullet] Filter is not a table: '..typeof(filter))end end
+isManipulationEnabled then newOrigin=targetPart.Position+Vector3.new(0,1,0)local
+direction=(targetPart.Position-newOrigin).Unit local extendedTarget=newOrigin+(
+direction*100)print(string.format(
+'[MagicBullet] Origin: %s | Dir: %s | ExtendedTgt: %s',tostring(newOrigin),
+tostring(direction),tostring(extendedTarget)))if type(filter)=='table'then table
+.insert(filter,targetPart)table.insert(filter,targetPart.Parent)print(
+'[MagicBullet] Added Target & Parent to filter: '..tostring(targetPart))else
+warn('[MagicBullet] Filter is not a table: '..typeof(filter))end
+_lastSilentTargetPos=targetPart.Position _lastSilentOrigin=newOrigin return
+oldRaycast(self,newOrigin,extendedTarget,distance,filter,...)end
 _lastSilentTargetPos=targetPart.Position _lastSilentOrigin=newOrigin return
 oldRaycast(self,newOrigin,targetPart.Position,distance,filter,...)end end
 _lastSilentTargetPos=nil _lastSilentOrigin=nil return oldRaycast(self,origin,

@@ -72,25 +72,37 @@ function SilentAim.setup()
 						local newOrigin = origin
 						if State.isManipulationEnabled then
 							-- Magic Bullet: Spawn bullet slightly above target (1 stud) to be outside hitbox
-							-- Combined with filter, this ensures we shoot THROUGH the target into the floor.
 							newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
+
+							-- Extend the target position downwards to ensure the ray doesn't stop AT the target center
+							-- but continues through it to hit the floor/map.
+							local direction = (targetPart.Position - newOrigin).Unit
+							local extendedTarget = newOrigin + (direction * 100) -- Shoot 100 studs through
 
 							-- Debug Logging
 							print(
 								string.format(
-									"[MagicBullet] TgtPos: %s | Origin: %s",
-									tostring(targetPart.Position),
-									tostring(newOrigin)
+									"[MagicBullet] Origin: %s | Dir: %s | ExtendedTgt: %s",
+									tostring(newOrigin),
+									tostring(direction),
+									tostring(extendedTarget)
 								)
 							)
 
 							-- CRITICAL: Add target to filter to force "penetration" logic.
+							-- We add BOTH the specific part and the character model to be safe.
 							if type(filter) == "table" then
+								table.insert(filter, targetPart)
 								table.insert(filter, targetPart.Parent)
-								print("[MagicBullet] Added target to filter")
+								print("[MagicBullet] Added Target & Parent to filter: " .. tostring(targetPart))
 							else
 								warn("[MagicBullet] Filter is not a table: " .. typeof(filter))
 							end
+
+							-- Update return to use extendedTarget
+							_lastSilentTargetPos = targetPart.Position
+							_lastSilentOrigin = newOrigin
+							return oldRaycast(self, newOrigin, extendedTarget, distance, filter, ...)
 						end
 
 						_lastSilentTargetPos = targetPart.Position
