@@ -70,17 +70,8 @@ function SilentAim.setup()
 					if targetPart then
 						local newOrigin = origin
 						if State.isManipulationEnabled then
-							-- Magic Bullet: Rayback calculation
-							local camera = Helpers.getCamera()
-							if camera then
-								local camPos = camera.CFrame.Position
-								local dir = (targetPart.Position - camPos).Unit
-								-- Start 5 studs away from target, approaching from camera direction
-								newOrigin = targetPart.Position - (dir * 5)
-							else
-								-- Fallback
-								newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
-							end
+							-- Magic Bullet: Spawn bullet above target to bypass walls (Classic Magic Bullet)
+							newOrigin = targetPart.Position + Vector3.new(0, 3, 0)
 						end
 
 						_lastSilentTargetPos = targetPart.Position
