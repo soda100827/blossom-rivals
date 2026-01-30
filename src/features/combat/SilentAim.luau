@@ -70,8 +70,8 @@ function SilentAim.setup()
 					if targetPart and not targetPart:IsDescendantOf(Helpers.getLocalPlayer().Character) then
 						local newOrigin = origin
 						if State.isManipulationEnabled then
-							-- Magic Bullet: Spawn bullet extremely close (1 stud) to target for reliable wall penetration
-							newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
+							-- Magic Bullet: Spawn bullet extremely close (0.5 studs) to target to bypass sanity checks
+							newOrigin = targetPart.Position + Vector3.new(0, 0.5, 0)
 						end
 
 						_lastSilentTargetPos = targetPart.Position

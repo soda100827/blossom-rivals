@@ -853,7 +853,7 @@ _lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
 ...)end local targetPart=Targeting.getClosestSilentTarget()if targetPart and not
 targetPart:IsDescendantOf(Helpers.getLocalPlayer().Character)then local
 newOrigin=origin if State.isManipulationEnabled then newOrigin=targetPart.
-Position+Vector3.new(0,1,0)end _lastSilentTargetPos=targetPart.Position
+Position+Vector3.new(0,0.5,0)end _lastSilentTargetPos=targetPart.Position
 _lastSilentOrigin=newOrigin return oldRaycast(self,newOrigin,targetPart.Position
 ,distance,filter,...)end end _lastSilentTargetPos=nil _lastSilentOrigin=nil
 return oldRaycast(self,origin,target,distance,filter,...)end,State.logger)local
