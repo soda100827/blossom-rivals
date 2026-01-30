@@ -737,61 +737,74 @@ isSilentAimEnabled and(k=='StartShooting'or k=='')then return nil end return
 oldIdx(t,k)end end end end)end return SilentAim end function
 __DARKLUA_BUNDLE_MODULES.v()local v=__DARKLUA_BUNDLE_MODULES.cache.v if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end
-do local function __modImpl()local RunService=game:GetService('RunService')local
-State=__DARKLUA_BUNDLE_MODULES.r()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
-local GunMods={}local _oldShootCooldowns={}function GunMods.setup()local
-hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
-'replaceclosure')local checkcaller=Helpers.getGlobal('checkcaller')or function()
-return false end if not hookfunction then State.logger:warn(
-'hookfunction not found, Gun Mods will not work.')return end task.spawn(function
-()local clientItemMod=Helpers.getClientItemModule()if clientItemMod and not
-State.gunModsHooked then local oldRecoil oldRecoil=hookfunction(clientItemMod.
-_Recoil,function(self,multiplier)if not checkcaller()and State.isNoRecoilEnabled
-then return end return oldRecoil(self,multiplier)end)end local gameplayUtility=
-Helpers.getGameplayUtility()if gameplayUtility then local oldGetSpread
-oldGetSpread=hookfunction(gameplayUtility.GetSpread,function(self,...)if not
-checkcaller()and State.isNoSpreadEnabled then return CFrame.identity end return
-oldGetSpread(self,...)end)end local viewModelMod=Helpers.getViewModelModule()if
-viewModelMod then local oldMuzzleFlash oldMuzzleFlash=hookfunction(viewModelMod.
-MuzzleFlash,function(self,...)if not checkcaller()and State.
-isNoMuzzleFlashEnabled then return end return oldMuzzleFlash(self,...)end)end
-local gunMod=Helpers.getGunModule()if gunMod then local oldStartShooting
+do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.r()local
+Helpers=__DARKLUA_BUNDLE_MODULES.s()local GunMods={}local _oldShootCooldowns={}
+function GunMods.setup()local hookfunction=Helpers.getGlobal('hookfunction')or
+Helpers.getGlobal('replaceclosure')local checkcaller=Helpers.getGlobal(
+'checkcaller')or function()return false end if not hookfunction then State.
+logger:warn('hookfunction not found, Gun Mods will not work.')return end task.
+spawn(function()local clientItemMod=Helpers.getClientItemModule()if
+clientItemMod and not State.gunModsHooked then local oldRecoil oldRecoil=
+hookfunction(clientItemMod._Recoil,function(self,multiplier)if not checkcaller()
+and State.isNoRecoilEnabled then return end return oldRecoil(self,multiplier)end
+)end local gameplayUtility=Helpers.getGameplayUtility()if gameplayUtility then
+local oldGetSpread oldGetSpread=hookfunction(gameplayUtility.GetSpread,function(
+self,...)if not checkcaller()and State.isNoSpreadEnabled then return CFrame.
+identity end return oldGetSpread(self,...)end)end local viewModelMod=Helpers.
+getViewModelModule()if viewModelMod then local oldMuzzleFlash oldMuzzleFlash=
+hookfunction(viewModelMod.MuzzleFlash,function(self,...)if not checkcaller()and
+State.isNoMuzzleFlashEnabled then return end return oldMuzzleFlash(self,...)end)
+end local gunMod=Helpers.getGunModule()if gunMod then local oldStartShooting
 oldStartShooting=hookfunction(gunMod.StartShooting,function(self,...)if not
-checkcaller()and State.attackCooldownMultiplier<100 then if not
+checkcaller()then if State.isNoSpreadEnabled then if not _oldShootCooldowns[
+tostring(self.Info)..'_Spread']then _oldShootCooldowns[tostring(self.Info)..
+'_Spread']=self.Info.ShootSpread _oldShootCooldowns[tostring(self.Info)..
+'_AimML']=self.Info.AimSpreadMultiplier end self.Info.ShootSpread=0 self.Info.
+AimSpreadMultiplier=0 if self.Info.QuickShotSpread then if not
+_oldShootCooldowns[tostring(self.Info)..'_Quick']then _oldShootCooldowns[
+tostring(self.Info)..'_Quick']=self.Info.QuickShotSpread end self.Info.
+QuickShotSpread=0 end elseif _oldShootCooldowns[tostring(self.Info)..'_Spread']
+then self.Info.ShootSpread=_oldShootCooldowns[tostring(self.Info)..'_Spread']
+self.Info.AimSpreadMultiplier=_oldShootCooldowns[tostring(self.Info)..'_AimML']
+if self.Info.QuickShotSpread and _oldShootCooldowns[tostring(self.Info)..
+'_Quick']then self.Info.QuickShotSpread=_oldShootCooldowns[tostring(self.Info)..
+'_Quick']end end if State.attackCooldownMultiplier<100 then if not
 _oldShootCooldowns[self.Info]then _oldShootCooldowns[self.Info]=self.Info.
 ShootCooldown end self.Info.ShootCooldown=_oldShootCooldowns[self.Info]*(State.
 attackCooldownMultiplier/100)if self.Info.ShootBurstCooldown then if not
 _oldShootCooldowns[self.Info.ShootBurstCooldown]then _oldShootCooldowns[self.
 Info.ShootBurstCooldown]=self.Info.ShootBurstCooldown end self.Info.
 ShootBurstCooldown=_oldShootCooldowns[self.Info.ShootBurstCooldown]*(State.
-attackCooldownMultiplier/100)end elseif not checkcaller()and _oldShootCooldowns[
-self.Info]then self.Info.ShootCooldown=_oldShootCooldowns[self.Info]if self.Info
-.ShootBurstCooldown and _oldShootCooldowns[self.Info.ShootBurstCooldown]then
-self.Info.ShootBurstCooldown=_oldShootCooldowns[self.Info.ShootBurstCooldown]end
-end return oldStartShooting(self,...)end)end State.gunModsHooked=true end)end
-return GunMods end function __DARKLUA_BUNDLE_MODULES.w()local v=
-__DARKLUA_BUNDLE_MODULES.cache.w if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end do local function
-__modImpl()local UserInputService=game:GetService('UserInputService')local State
-=__DARKLUA_BUNDLE_MODULES.r()local Constants=__DARKLUA_BUNDLE_MODULES.q()local
-Helpers=__DARKLUA_BUNDLE_MODULES.s()local Visuals={}local function _updateCircle
-(circleId,isEnabled,radius,color,transparency,mouseLocation)local lib=Helpers.
-getDrawingLib()if not lib then return end local stateAny=State local circle=
-stateAny[circleId]if isEnabled then if not circle then circle=lib.new('Circle')
-stateAny[circleId]=circle end local c=circle c.Thickness=Constants.
-FOV_CIRCLE_THICKNESS c.NumSides=Constants.FOV_CIRCLE_NUM_SIDES c.Filled=false c.
-Color=color c.Transparency=math.clamp(transparency,0,1)c.ZIndex=2 c.Position=
-mouseLocation c.Radius=radius c.Visible=true else local c=circle if c then c.
-Visible=false end end end function Visuals.updateFovCircle()local mouseLocation=
-UserInputService:GetMouseLocation()_updateCircle('fovCircle',State.isFovEnabled,
-State.fovRadius,State.fovColor,State.fovTransparency,mouseLocation)
-_updateCircle('silentAimFovCircle',State.isSilentAimFovEnabled,State.
-silentAimFovRadius,State.silentAimFovColor,State.silentAimFovTransparency,
-mouseLocation)end return Visuals end function __DARKLUA_BUNDLE_MODULES.x()local
-v=__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
-__modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.r()local
+attackCooldownMultiplier/100)end elseif _oldShootCooldowns[self.Info]then self.
+Info.ShootCooldown=_oldShootCooldowns[self.Info]if self.Info.ShootBurstCooldown
+and _oldShootCooldowns[self.Info.ShootBurstCooldown]then self.Info.
+ShootBurstCooldown=_oldShootCooldowns[self.Info.ShootBurstCooldown]end end end
+return oldStartShooting(self,...)end)local oldIsFullyAiming oldIsFullyAiming=
+hookfunction(gunMod.IsFullyAiming,function(self,...)if not checkcaller()and
+State.isNoSpreadEnabled then return true end return oldIsFullyAiming(self,...)
+end)end State.gunModsHooked=true end)end return GunMods end function
+__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
+do local function __modImpl()local UserInputService=game:GetService(
+'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.r()local Constants=
+__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()local
+Visuals={}local function _updateCircle(circleId,isEnabled,radius,color,
+transparency,mouseLocation)local lib=Helpers.getDrawingLib()if not lib then
+return end local stateAny=State local circle=stateAny[circleId]if isEnabled then
+if not circle then circle=lib.new('Circle')stateAny[circleId]=circle end local c
+=circle c.Thickness=Constants.FOV_CIRCLE_THICKNESS c.NumSides=Constants.
+FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=color c.Transparency=math.clamp(
+transparency,0,1)c.ZIndex=2 c.Position=mouseLocation c.Radius=radius c.Visible=
+true else local c=circle if c then c.Visible=false end end end function Visuals.
+updateFovCircle()local mouseLocation=UserInputService:GetMouseLocation()
+_updateCircle('fovCircle',State.isFovEnabled,State.fovRadius,State.fovColor,
+State.fovTransparency,mouseLocation)_updateCircle('silentAimFovCircle',State.
+isSilentAimFovEnabled,State.silentAimFovRadius,State.silentAimFovColor,State.
+silentAimFovTransparency,mouseLocation)end return Visuals end function
+__DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.r()local
 Constants=__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
 local Targeting=__DARKLUA_BUNDLE_MODULES.t()local Aimbot=
 __DARKLUA_BUNDLE_MODULES.u()local Types=__DARKLUA_BUNDLE_MODULES.p()local

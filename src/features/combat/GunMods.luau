@@ -1,7 +1,6 @@
 --!strict
 
 --// Services
-local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
 local State = require("./State")
@@ -66,37 +65,65 @@ function GunMods.setup()
 			end)
 		end
 
-		-- 4. Attack Cooldown (Gun.StartShooting cooldown modification)
-		-- Since we can't easily hook the 'tick()' check inside the function without more advanced tools,
-		-- we can try to modify the 'Info.ShootCooldown' of the gun when it's equipped.
-		-- Or hook 'StartShooting' and modify the cooldown value it uses.
+		-- 4. Attack Cooldown & Spread Info Modification
 		local gunMod = Helpers.getGunModule()
 		if gunMod then
 			local oldStartShooting
 			oldStartShooting = hookfunction(gunMod.StartShooting, function(self, ...)
-				if not checkcaller() and State.attackCooldownMultiplier < 100 then
-					if not _oldShootCooldowns[self.Info] then
-						_oldShootCooldowns[self.Info] = self.Info.ShootCooldown
-					end
-					-- Apply multiplier (e.g., 1% means 0.01 multiplier)
-					self.Info.ShootCooldown = _oldShootCooldowns[self.Info] * (State.attackCooldownMultiplier / 100)
-
-					-- Also handle burst/quickshot if needed
-					if self.Info.ShootBurstCooldown then
-						if not _oldShootCooldowns[self.Info.ShootBurstCooldown] then
-							_oldShootCooldowns[self.Info.ShootBurstCooldown] = self.Info.ShootBurstCooldown
+				if not checkcaller() then
+					-- No Spread: Modify Info properties
+					if State.isNoSpreadEnabled then
+						if not _oldShootCooldowns[tostring(self.Info) .. "_Spread"] then
+							_oldShootCooldowns[tostring(self.Info) .. "_Spread"] = self.Info.ShootSpread
+							_oldShootCooldowns[tostring(self.Info) .. "_AimML"] = self.Info.AimSpreadMultiplier
 						end
-						self.Info.ShootBurstCooldown = _oldShootCooldowns[self.Info.ShootBurstCooldown]
-							* (State.attackCooldownMultiplier / 100)
+						self.Info.ShootSpread = 0
+						self.Info.AimSpreadMultiplier = 0
+						if self.Info.QuickShotSpread then
+							if not _oldShootCooldowns[tostring(self.Info) .. "_Quick"] then
+								_oldShootCooldowns[tostring(self.Info) .. "_Quick"] = self.Info.QuickShotSpread
+							end
+							self.Info.QuickShotSpread = 0
+						end
+					elseif _oldShootCooldowns[tostring(self.Info) .. "_Spread"] then
+						self.Info.ShootSpread = _oldShootCooldowns[tostring(self.Info) .. "_Spread"]
+						self.Info.AimSpreadMultiplier = _oldShootCooldowns[tostring(self.Info) .. "_AimML"]
+						if self.Info.QuickShotSpread and _oldShootCooldowns[tostring(self.Info) .. "_Quick"] then
+							self.Info.QuickShotSpread = _oldShootCooldowns[tostring(self.Info) .. "_Quick"]
+						end
 					end
-				elseif not checkcaller() and _oldShootCooldowns[self.Info] then
-					-- Reset if multiplier is 100%
-					self.Info.ShootCooldown = _oldShootCooldowns[self.Info]
-					if self.Info.ShootBurstCooldown and _oldShootCooldowns[self.Info.ShootBurstCooldown] then
-						self.Info.ShootBurstCooldown = _oldShootCooldowns[self.Info.ShootBurstCooldown]
+
+					-- Attack Cooldown
+					if State.attackCooldownMultiplier < 100 then
+						if not _oldShootCooldowns[self.Info] then
+							_oldShootCooldowns[self.Info] = self.Info.ShootCooldown
+						end
+						self.Info.ShootCooldown = _oldShootCooldowns[self.Info] * (State.attackCooldownMultiplier / 100)
+
+						if self.Info.ShootBurstCooldown then
+							if not _oldShootCooldowns[self.Info.ShootBurstCooldown] then
+								_oldShootCooldowns[self.Info.ShootBurstCooldown] = self.Info.ShootBurstCooldown
+							end
+							self.Info.ShootBurstCooldown = _oldShootCooldowns[self.Info.ShootBurstCooldown]
+								* (State.attackCooldownMultiplier / 100)
+						end
+					elseif _oldShootCooldowns[self.Info] then
+						self.Info.ShootCooldown = _oldShootCooldowns[self.Info]
+						if self.Info.ShootBurstCooldown and _oldShootCooldowns[self.Info.ShootBurstCooldown] then
+							self.Info.ShootBurstCooldown = _oldShootCooldowns[self.Info.ShootBurstCooldown]
+						end
 					end
 				end
 				return oldStartShooting(self, ...)
+			end)
+
+			-- No Spread: Hook IsFullyAiming to trick the server into thinking we are aiming (less spread)
+			local oldIsFullyAiming
+			oldIsFullyAiming = hookfunction(gunMod.IsFullyAiming, function(self, ...)
+				if not checkcaller() and State.isNoSpreadEnabled then
+					return true
+				end
+				return oldIsFullyAiming(self, ...)
 			end)
 		end
 
