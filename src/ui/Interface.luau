@@ -467,19 +467,19 @@ local function _mount()
 		end,
 	})
 
-	meleeModsGroup:AddSlider("MeleeModsAuraRadius", {
-		Text = "Aura Radius",
-		Default = 20,
-		Min = 5,
-		Max = 50,
+	meleeModsGroup:AddSlider("MeleeModsReach", {
+		Text = "Melee Reach",
+		Default = 100,
+		Min = 10,
+		Max = 500,
 		Rounding = 0,
 		Suffix = " studs",
-		Tooltip = "Radius for Melee Aura.",
+		Tooltip = "Hit distance for Melee Aura. Higher value increases reach.",
 		Compact = true,
 		Callback = function(value)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setMeleeAuraRadius then
-				mod:setMeleeAuraRadius(value)
+			if mod and mod.setMeleeAuraReach then
+				mod:setMeleeAuraReach(value)
 			end
 		end,
 	})
@@ -492,23 +492,6 @@ local function _mount()
 			local mod = _state.client.Modules.Combat
 			if mod and mod.setTeleportAuraEnabled then
 				mod:setTeleportAuraEnabled(state)
-			end
-		end,
-	})
-
-	meleeModsGroup:AddSlider("MeleeModsTeleportRadius", {
-		Text = "Teleport Radius",
-		Default = 50,
-		Min = 5,
-		Max = 200,
-		Rounding = 0,
-		Suffix = " studs",
-		Tooltip = "Radius for Teleport Aura.",
-		Compact = true,
-		Callback = function(value)
-			local mod = _state.client.Modules.Combat
-			if mod and mod.setTeleportAuraRadius then
-				mod:setTeleportAuraRadius(value)
 			end
 		end,
 	})

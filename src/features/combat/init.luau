@@ -235,12 +235,8 @@ function Combat.setTeleportAuraEnabled(self: CombatFeature, isEnabled: boolean):
 	State.isTeleportAuraEnabled = isEnabled
 end
 
-function Combat.setMeleeAuraRadius(self: CombatFeature, radius: number): ()
-	State.meleeAuraRadius = radius
-end
-
-function Combat.setTeleportAuraRadius(self: CombatFeature, radius: number): ()
-	State.teleportAuraRadius = radius
+function Combat.setMeleeAuraReach(self: CombatFeature, reach: number): ()
+	State.meleeAuraReach = reach
 end
 
 return Combat

@@ -22,7 +22,7 @@ local function _getDistance(p1: Vector3, p2: Vector3): number
 	return (p1 - p2).Magnitude
 end
 
-local function _getNearbyEnemies(radius: number): { Player }
+local function _getNearbyEnemies(): { Player }
 	local localPlayer = Helpers.getLocalPlayer()
 	local localCharacter = localPlayer.Character
 	if not localCharacter then
@@ -52,10 +52,7 @@ local function _getNearbyEnemies(radius: number): { Player }
 			continue
 		end
 
-		local dist = _getDistance(localRoot.Position, root.Position)
-		if dist <= radius then
-			table.insert(enemies, player)
-		end
+		table.insert(enemies, player)
 	end
 	return enemies
 end
@@ -78,14 +75,41 @@ function MeleeMods.setup()
 			local oldStartShooting
 			oldStartShooting = hookfunction(meleeMod.StartShooting, function(self, ...)
 				if not checkcaller() then
-					-- self.Info is usually shared, so we temporarily override it or modify it
-					local originalCooldown: number = self.Info.AttackCooldown
-					self.Info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
+					local info = (self :: any).Info
+
+					-- No cooldown during Aura
+					if State.isMeleeAuraEnabled then
+						(self :: any)._attack_cooldown = 0
+						(self :: any)._equip_cooldown = 0
+					end
+
+					-- Apply Multiplier
+					local originalCooldown: number = info.AttackCooldown
+					info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
+
+					-- Reach manipulation (Always apply reach during Aura)
+					local originalReach = info.AttackReach
+					if State.isMeleeAuraEnabled then
+						info.AttackReach = State.meleeAuraReach -- Configurable reach
+					end
+
 					local result = table.pack(oldStartShooting(self, ...))
-					self.Info.AttackCooldown = originalCooldown
+
+					-- Restore
+					info.AttackCooldown = originalCooldown
+					info.AttackReach = originalReach
+
 					return table.unpack(result)
 				end
 				return oldStartShooting(self, ...)
+			end)
+
+			local oldCanQuickAttack
+			oldCanQuickAttack = hookfunction(meleeMod.CanQuickAttack, function(self, ...)
+				if not checkcaller() and State.isMeleeAuraEnabled then
+					return true
+				end
+				return oldCanQuickAttack(self, ...)
 			end)
 		end
 
@@ -103,21 +127,20 @@ function MeleeMods.setup()
 							local oldStartAiming
 							oldStartAiming = hookfunction(itemMod.StartAiming, function(self, ...)
 								if not checkcaller() then
-									-- Find potentially multiple cooldown fields
+									local info = (self :: any).Info
 									local cooldownFields = { "DeflectCooldown", "DashCooldown", "InvisCooldown" }
 									local originals: { [string]: number } = {}
 									for _, field in ipairs(cooldownFields) do
-										if self.Info[field] then
-											originals[field] = self.Info[field]
-											self.Info[field] = originals[field]
-												* (State.meleeSkillCooldownMultiplier / 100)
+										if info[field] then
+											originals[field] = info[field]
+											info[field] = originals[field] * (State.meleeSkillCooldownMultiplier / 100)
 										end
 									end
 
 									local result = table.pack(oldStartAiming(self, ...))
 
 									for field, val in pairs(originals) do
-										self.Info[field] = val
+										info[field] = val
 									end
 									return table.unpack(result)
 								end
@@ -135,9 +158,12 @@ function MeleeMods.setup()
 		while true do
 			local localPlayer = Helpers.getLocalPlayer()
 			local character = localPlayer.Character
-			if character and (State.isMeleeAuraEnabled or State.isTeleportAuraEnabled) then
-				local radius = math.max(State.meleeAuraRadius, State.teleportAuraRadius)
-				local enemies = _getNearbyEnemies(radius)
+
+			Helpers.fetchFighterController(State.logger)
+			local localFighter = State.fighterController and State.fighterController.LocalFighter
+
+			if character and localFighter and (State.isMeleeAuraEnabled or State.isTeleportAuraEnabled) then
+				local enemies = _getNearbyEnemies()
 
 				-- Sort by distance
 				local localRoot = character:FindFirstChild("HumanoidRootPart") :: BasePart?
@@ -165,25 +191,28 @@ function MeleeMods.setup()
 						local targetRoot = targetChar:FindFirstChild("HumanoidRootPart") :: BasePart?
 						if targetRoot then
 							-- Teleport logic
-							if
-								State.isTeleportAuraEnabled
-								and _getDistance(localRoot.Position, targetRoot.Position)
-									<= State.teleportAuraRadius
-							then
-								localRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3) -- Teleport slightly behind
+							if State.isTeleportAuraEnabled then
+								localRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.5) -- Teleport close behind
 							end
 
 							-- Attack logic
-							if
-								State.isMeleeAuraEnabled
-								and _getDistance(localRoot.Position, targetRoot.Position) <= State.meleeAuraRadius
-							then
-								-- Trigger melee attack
-								Helpers.fetchFighterController(State.logger)
-								if State.fighterController and State.fighterController.LocalFighter then
-									local item = State.fighterController.LocalFighter.EquippedItem
-									if item and item.StartShooting and not item.Info.IsGun then
-										item:Input("StartShooting")
+							if State.isMeleeAuraEnabled then
+								-- Force equip melee (Slot 3)
+								local equipped = localFighter.EquippedItem
+								if not equipped or (equipped.Info and equipped.Info.IsGun) then
+									pcall(function()
+										if localFighter.EquipItem then
+											localFighter:EquipItem(3)
+										end
+									end)
+								end
+
+								-- Trigger attack
+								equipped = localFighter.EquippedItem
+								if equipped and (equipped.Info and not equipped.Info.IsGun) then
+									-- Re-fetch and check if we can attack
+									if equipped.StartShooting then
+										equipped:Input("StartShooting")
 									end
 								end
 							end
@@ -191,7 +220,7 @@ function MeleeMods.setup()
 					end
 				end
 			end
-			task.wait(0.1)
+			task.wait(if State.isMeleeAuraEnabled or State.isTeleportAuraEnabled then 0.01 else 0.1)
 		end
 	end)
 end
