@@ -13,6 +13,7 @@ local State = require("../State")
 
 --// Private state
 local Helpers = {}
+local _cachedNoclipParts = {} :: { BasePart }
 
 --// Private helpers
 
@@ -116,7 +117,14 @@ function Helpers.applyNoclip()
 	if not character then
 		return
 	end
-	for _, part in ipairs(character:GetDescendants()) do
+	if #_cachedNoclipParts == 0 then
+		for _, part in ipairs(character:GetDescendants()) do
+			if part:IsA("BasePart") then
+				table.insert(_cachedNoclipParts, part)
+			end
+		end
+	end
+	for _, part in ipairs(_cachedNoclipParts) do
 		if part:IsA("BasePart") then
 			if State.noclipParts[part] == nil then
 				State.noclipParts[part] = part.CanCollide
@@ -127,6 +135,7 @@ function Helpers.applyNoclip()
 end
 
 function Helpers.restoreNoclip()
+	_cachedNoclipParts = {}
 	for part, original in pairs(State.noclipParts) do
 		if part and part.Parent then
 			part.CanCollide = original
@@ -175,6 +184,7 @@ end
 function Helpers.onCharacterAdded(character: Model)
 	Helpers.resetInput()
 	Helpers.setCharacter(character)
+	_cachedNoclipParts = {}
 	if State.isFlyEnabled then
 		Helpers.applyFlyState()
 	end

@@ -14,6 +14,7 @@ local Helpers = require("../Utils/Helpers")
 
 --// Private state
 local PlayerMods = {}
+local _lastSoundSpam = 0
 
 --// Private helpers
 
@@ -67,11 +68,15 @@ function PlayerMods.setup(maid: any)
 			local playSoundRemote = Helpers.getPlayMechanicsSoundRemote()
 			while isRunning do
 				if State.isSoundSpammerEnabled and playSoundRemote then
-					pcall(function()
-						playSoundRemote:FireServer(State.soundSpammerType)
-					end)
+					local now = os.clock()
+					if now - _lastSoundSpam >= 0.5 then
+						_lastSoundSpam = now
+						pcall(function()
+							playSoundRemote:FireServer(State.soundSpammerType)
+						end)
+					end
 				end
-				task.wait(0.5) -- Adjusted for server debounce
+				task.wait(0.1)
 			end
 		end)
 

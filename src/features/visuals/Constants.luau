@@ -5,6 +5,10 @@
 --// Dependencies (require)
 
 --// Constants
+local ESP_RENDER_INTERVAL = 1 / 30
+local ESP_SKELETON_INTERVAL = 1 / 15
+
+local ESP_TEXT_INTERVAL = 1 / 5
 
 --// Types
 
@@ -58,6 +62,9 @@ local Constants = {
 		{ "RightUpperArm", "RightLowerArm" },
 		{ "RightLowerArm", "RightHand" },
 	},
+	ESP_RENDER_INTERVAL = ESP_RENDER_INTERVAL,
+	ESP_SKELETON_INTERVAL = ESP_SKELETON_INTERVAL,
+	ESP_TEXT_INTERVAL = ESP_TEXT_INTERVAL,
 }
 
 --// Private helpers

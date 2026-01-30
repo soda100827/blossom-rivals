@@ -19,6 +19,9 @@ local State: Types.VisualsState = {
   highlights = {},
   settings = table.clone(Constants.DEFAULT_SETTINGS),
   overrideCheck = nil,
+  wasEspEnabled = false,
+  lastSkeletonUpdate = 0,
+  lastTextUpdate = 0,
 }
 
 --// Private helpers

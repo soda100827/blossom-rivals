@@ -10,6 +10,7 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 --// Constants
 local DEFAULT_SOURCE = "System"
 local RICHTEXT_CHECK_INTERVAL = 0.5
+local RICHTEXT_MAX_EMPTY_CHECKS = 6
 local PREFIX_LABEL = "Blossm"
 local COLORS = {
 	Cyan = "33, 161, 163",
@@ -49,6 +50,7 @@ local _state: LoggerState = {
 	lastRichTextCheck = 0,
 	isRichTextConnected = false,
 }
+local _emptyChecks = 0
 local _signals = {}
 
 --// Private helpers
@@ -56,8 +58,10 @@ local function _setRichTextOnLabels()
 	pcall(function()
 		local devConsole = CoreGui:FindFirstChild("DevConsoleMaster")
 		if not devConsole then
+			_emptyChecks += 1
 			return
 		end
+		_emptyChecks = 0
 		for _, label in ipairs(devConsole:GetDescendants()) do
 			if label:IsA("TextLabel") and not label.RichText then
 				label.RichText = true
@@ -79,6 +83,11 @@ local function _connect()
 		end
 		_state.lastRichTextCheck = now
 		_setRichTextOnLabels()
+		if _emptyChecks >= RICHTEXT_MAX_EMPTY_CHECKS then
+			_maid:DoCleaning()
+			_state.isRichTextConnected = false
+			_emptyChecks = 0
+		end
 	end)
 	_maid:GiveTask(conn)
 end

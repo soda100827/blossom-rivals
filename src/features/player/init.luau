@@ -15,6 +15,7 @@ local Types = require("./Types")
 local PlayerMods = require("./Systems/PlayerMods")
 
 --// Constants
+local NOCLIP_UPDATE_INTERVAL = 0.1
 
 --// Types
 type PlayerFeature = Types.PlayerFeature
@@ -25,6 +26,9 @@ Player.__index = Player
 
 local _maid = nil :: any
 local _signals = {}
+local _lastNoclipUpdate = 0
+local _hasRenderLoop = false
+local _hasSteppedLoop = false
 
 --// Private helpers
 local function _connect()
@@ -138,13 +142,19 @@ local function _connect()
 		end
 	end)
 	_maid:GiveTask(renderConn)
+	_hasRenderLoop = true
 
 	local steppedConn = RunService.Stepped:Connect(function()
 		if State.isNoclipEnabled then
-			Helpers.applyNoclip()
+			local now = os.clock()
+			if now - _lastNoclipUpdate >= NOCLIP_UPDATE_INTERVAL then
+				_lastNoclipUpdate = now
+				Helpers.applyNoclip()
+			end
 		end
 	end)
 	_maid:GiveTask(steppedConn)
+	_hasSteppedLoop = true
 end
 
 --// Public API

@@ -214,10 +214,23 @@ function Helpers.updateHighlight(player: Player, character: Instance)
 end
 
 function Helpers.render()
-	if not State.settings.isEspEnabled then
-		Helpers.clearAll()
+	local settings = State.settings
+	local overrideCheck = State.overrideCheck
+	if overrideCheck and not overrideCheck() then
+		if State.wasEspEnabled then
+			Helpers.clearAll()
+			State.wasEspEnabled = false
+		end
 		return
 	end
+	if not settings.isEspEnabled then
+		if State.wasEspEnabled then
+			Helpers.clearAll()
+			State.wasEspEnabled = false
+		end
+		return
+	end
+	State.wasEspEnabled = true
 
 	local camera = PlayerUtils.getCamera()
 	local localPlayer = Players.LocalPlayer
@@ -225,8 +238,21 @@ function Helpers.render()
 		return
 	end
 	if not TeamUtils.isInDuel(localPlayer) then
-		Helpers.clearAll()
+		if State.wasEspEnabled then
+			Helpers.clearAll()
+			State.wasEspEnabled = false
+		end
 		return
+	end
+
+	local now = os.clock()
+	local shouldUpdateSkeleton = now - State.lastSkeletonUpdate >= Constants.ESP_SKELETON_INTERVAL
+	if shouldUpdateSkeleton then
+		State.lastSkeletonUpdate = now
+	end
+	local shouldUpdateText = now - State.lastTextUpdate >= Constants.ESP_TEXT_INTERVAL
+	if shouldUpdateText then
+		State.lastTextUpdate = now
 	end
 
 	for _, player in ipairs(Players:GetPlayers()) do
@@ -248,7 +274,7 @@ function Helpers.render()
 			continue
 		end
 
-		if not State.settings.shouldShowTeammates and TeamUtils.isSameTeam(player, localPlayer) then
+		if not settings.shouldShowTeammates and TeamUtils.isSameTeam(player, localPlayer) then
 			Helpers.removePlayer(player)
 			continue
 		end
@@ -279,18 +305,18 @@ function Helpers.render()
 		local boxPos = Vector2.new(rootPos.X - width / 2, rootPos.Y - height / 2)
 		local boxSize = Vector2.new(width, height)
 
-		if State.settings.shouldShowBoxes then
+		if settings.shouldShowBoxes then
 			group.boxOutline.Size = boxSize
 			group.boxOutline.Position = boxPos
-			group.boxOutline.Color = State.settings.boxOutlineColor
-			group.boxOutline.Thickness = State.settings.boxThickness + 2
+			group.boxOutline.Color = settings.boxOutlineColor
+			group.boxOutline.Thickness = settings.boxThickness + 2
 			group.boxOutline.Visible = true
 			group.boxOutline.ZIndex = 1
 
 			group.box.Size = boxSize
 			group.box.Position = boxPos
-			group.box.Color = State.settings.boxColor
-			group.box.Thickness = State.settings.boxThickness
+			group.box.Color = settings.boxColor
+			group.box.Thickness = settings.boxThickness
 			group.box.Visible = true
 			group.box.ZIndex = 2
 		else
@@ -298,19 +324,19 @@ function Helpers.render()
 			group.boxOutline.Visible = false
 		end
 
-		if State.settings.shouldShowHealthbar then
+		if settings.shouldShowHealthbar then
 			local healthPerc = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
 			local barHeight = height * healthPerc
 			group.healthbarOutline.Size = Vector2.new(4, height + 2)
 			group.healthbarOutline.Position = Vector2.new(boxPos.X - 6, boxPos.Y - 1)
-			group.healthbarOutline.Color = State.settings.healthbarOutlineColor
+			group.healthbarOutline.Color = settings.healthbarOutlineColor
 			group.healthbarOutline.Filled = true
 			group.healthbarOutline.Visible = true
 			group.healthbarOutline.ZIndex = 1
 
 			group.healthbar.Size = Vector2.new(2, barHeight)
 			group.healthbar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
-			group.healthbar.Color = State.settings.healthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
+			group.healthbar.Color = settings.healthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
 			group.healthbar.Filled = true
 			group.healthbar.Visible = true
 			group.healthbar.ZIndex = 2
@@ -319,52 +345,56 @@ function Helpers.render()
 			group.healthbarOutline.Visible = false
 		end
 
-		local textOffset = 0
-		if State.settings.shouldShowNames then
-			group.name.Text = player.DisplayName or player.Name
-			group.name.Size = State.settings.textSize
-			group.name.Color = State.settings.textColor
-			group.name.Outline = State.settings.shouldOutline
-			group.name.OutlineColor = State.settings.nameOutlineColor
-			group.name.Position = Vector2.new(rootPos.X, boxPos.Y - State.settings.textSize - 2)
-			group.name.Visible = true
-		else
-			group.name.Visible = false
-		end
+		if shouldUpdateText then
+			local textOffset = 0
+			if settings.shouldShowNames then
+				group.name.Text = player.DisplayName or player.Name
+				group.name.Size = settings.textSize
+				group.name.Color = settings.textColor
+				group.name.Outline = settings.shouldOutline
+				group.name.OutlineColor = settings.nameOutlineColor
+				group.name.Position = Vector2.new(rootPos.X, boxPos.Y - settings.textSize - 2)
+				group.name.Visible = true
+			else
+				group.name.Visible = false
+			end
 
-		if State.settings.shouldShowWeapon then
-			local tool = character:FindFirstChildOfClass("Tool")
-			if tool then
-				group.weapon.Text = tool.Name
-				group.weapon.Size = State.settings.textSize
-				group.weapon.Color = State.settings.weaponColor
-				group.weapon.Outline = State.settings.shouldOutline
-				group.weapon.OutlineColor = State.settings.weaponOutlineColor
-				group.weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
-				group.weapon.Visible = true
-				textOffset += State.settings.textSize
+			if settings.shouldShowWeapon then
+				local tool = character:FindFirstChildOfClass("Tool")
+				if tool then
+					group.weapon.Text = tool.Name
+					group.weapon.Size = settings.textSize
+					group.weapon.Color = settings.weaponColor
+					group.weapon.Outline = settings.shouldOutline
+					group.weapon.OutlineColor = settings.weaponOutlineColor
+					group.weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
+					group.weapon.Visible = true
+					textOffset += settings.textSize
+				else
+					group.weapon.Visible = false
+				end
 			else
 				group.weapon.Visible = false
 			end
-		else
-			group.weapon.Visible = false
+
+			if settings.shouldShowDistance then
+				group.distance.Text = tostring(math.floor(distance)) .. " studs"
+				group.distance.Size = settings.textSize
+				group.distance.Color = settings.distanceColor
+				group.distance.Outline = settings.shouldOutline
+				group.distance.OutlineColor = settings.distanceOutlineColor
+				group.distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
+				group.distance.Visible = true
+				textOffset += settings.textSize
+			else
+				group.distance.Visible = false
+			end
 		end
 
-		if State.settings.shouldShowDistance then
-			group.distance.Text = tostring(math.floor(distance)) .. " studs"
-			group.distance.Size = State.settings.textSize
-			group.distance.Color = State.settings.distanceColor
-			group.distance.Outline = State.settings.shouldOutline
-			group.distance.OutlineColor = State.settings.distanceOutlineColor
-			group.distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
-			group.distance.Visible = true
-			textOffset += State.settings.textSize
-		else
-			group.distance.Visible = false
-		end
-
-		if State.settings.shouldShowSkeleton then
-			_updateSkeleton(group.skeleton, group.skeletonOutline, character)
+		if settings.shouldShowSkeleton then
+			if shouldUpdateSkeleton then
+				_updateSkeleton(group.skeleton, group.skeletonOutline, character)
+			end
 		else
 			for _, line in pairs(group.skeleton) do
 				line.Visible = false

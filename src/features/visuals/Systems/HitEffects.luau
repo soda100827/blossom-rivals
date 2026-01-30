@@ -15,6 +15,9 @@ local combatHelpers = require("../../combat/Utils/Helpers")
 --// Private state
 local HitEffects = {}
 local _maid: any = nil
+local _lastUiCleanup = 0
+local _cachedPlayerGui = nil :: PlayerGui?
+local _cachedHitmarker = nil :: Instance?
 
 --// Private helpers
 local function _playHitSound()
@@ -118,33 +121,50 @@ function HitEffects.setup(maid: any)
 
 		-- 3. Local Hurt Effect (Local red screen overlays)
 		local hurtEffectConn = RunService.Heartbeat:Connect(function()
-			if State.settings.isNoHurtEffectEnabled then
-				local player = Players.LocalPlayer
-				if player then
-					local playerGui = player:FindFirstChild("PlayerGui")
-					if playerGui then
-						-- Known Rivals damage indicators/overlays
-						local names = { "DamageOverlay", "HurtOverlay", "BloodOverlay", "PainOverlay", "FlashbangGui" }
-						for _, name in ipairs(names) do
-							local ui = playerGui:FindFirstChild(name, true)
-							if ui and ui:IsA("GuiObject") then
-								ui.Visible = false
-							end
-						end
+			if not State.settings.isNoHurtEffectEnabled then
+				return
+			end
+			local now = os.clock()
+			if now - _lastUiCleanup < 0.25 then
+				return
+			end
+			_lastUiCleanup = now
 
-						-- Also find the Hitmarker UI parts and force their color to white
-						-- Based on Hitmarker.lua: Dot, TL, TR, BR, BL
-						local mouseGui = playerGui:FindFirstChild("MouseGui", true)
-							or playerGui:FindFirstChild("MainGui", true)
-						if mouseGui then
-							local hitmarker = mouseGui:FindFirstChild("Hitmarker", true)
-							if hitmarker then
-								for _, child in ipairs(hitmarker:GetChildren()) do
-									if child:IsA("ImageLabel") then
-										child.ImageColor3 = Color3.new(1, 1, 1) -- Force white
-									end
-								end
-							end
+			local player = Players.LocalPlayer
+			if not player then
+				return
+			end
+			local playerGui = _cachedPlayerGui
+			if not playerGui or not playerGui.Parent then
+				playerGui = player:FindFirstChild("PlayerGui")
+				_cachedPlayerGui = playerGui
+			end
+			if not playerGui then
+				return
+			end
+
+			-- Known Rivals damage indicators/overlays
+			local names = { "DamageOverlay", "HurtOverlay", "BloodOverlay", "PainOverlay", "FlashbangGui" }
+			for _, name in ipairs(names) do
+				local ui = playerGui:FindFirstChild(name, true)
+				if ui and ui:IsA("GuiObject") then
+					ui.Visible = false
+				end
+			end
+
+			-- Also find the Hitmarker UI parts and force their color to white
+			local mouseGui = playerGui:FindFirstChild("MouseGui", true)
+				or playerGui:FindFirstChild("MainGui", true)
+			if mouseGui then
+				local hitmarker = _cachedHitmarker
+				if not hitmarker or not hitmarker.Parent then
+					hitmarker = mouseGui:FindFirstChild("Hitmarker", true)
+					_cachedHitmarker = hitmarker
+				end
+				if hitmarker then
+					for _, child in ipairs(hitmarker:GetChildren()) do
+						if child:IsA("ImageLabel") then
+							child.ImageColor3 = Color3.new(1, 1, 1)
 						end
 					end
 				end

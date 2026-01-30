@@ -6,10 +6,13 @@
 
 --// Constants
 
+local TARGETING_UPDATE_INTERVAL = 1 / 30
+
 --// Types
 
 --// Private state
 local Constants = {
+	TARGETING_UPDATE_INTERVAL = TARGETING_UPDATE_INTERVAL,
 	FOV_CIRCLE_COLOR = Color3.fromRGB(255, 255, 255),
 	FOV_CIRCLE_THICKNESS = 1,
 	FOV_CIRCLE_NUM_SIDES = 64,

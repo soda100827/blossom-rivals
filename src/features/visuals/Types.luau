@@ -48,6 +48,9 @@ export type VisualsState = {
 	highlights: { [Player]: Highlight? },
 	settings: VisualsSettings,
 	overrideCheck: (() -> boolean)?,
+	wasEspEnabled: boolean,
+	lastSkeletonUpdate: number,
+	lastTextUpdate: number,
 }
 
 export type VisualsFeature = {

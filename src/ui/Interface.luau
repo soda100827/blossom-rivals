@@ -6,15 +6,17 @@ local Stats = game:GetService("Stats")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
-local CombatTab = require("./Interface/CombatTab")
-local VisualsTab = require("./Interface/VisualsTab")
-local UiSettingsTab = require("./Interface/UiSettingsTab")
-local MiscTab = require("./Interface/MiscTab")
+local CombatTab = require("./Interface/Tabs/CombatTab")
+local VisualsTab = require("./Interface/Tabs/VisualsTab")
+local UiSettingsTab = require("./Interface/Tabs/UiSettingsTab")
+local MiscTab = require("./Interface/Tabs/MiscTab")
 
 --// Constants
 local REPO_URL = "https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/"
 local WATERMARK_TEMPLATE = "Blossom | %d fps | %d ms"
 local WATERMARK_UPDATE_INTERVAL = 1
+local KEYBIND_LIST_UPDATE_INTERVAL = 0.2
+local CONTROL_BINDINGS_UPDATE_INTERVAL = 0.05
 
 --// Types
 export type Interface = {
@@ -39,6 +41,8 @@ local _state = {
 		lastSample = 0,
 		frameCount = 0,
 	},
+	lastKeybindListUpdate = 0,
+	lastControlBindingsUpdate = 0,
 	keybindToggleMap = {},
 }
 local _signals = {}
@@ -428,9 +432,16 @@ local function _connect()
 	_maid:DoCleaning()
 
 	local updateConn = RunService.RenderStepped:Connect(function()
-		_updateControlBindings()
+		local now = os.clock()
+		if now - _state.lastControlBindingsUpdate >= CONTROL_BINDINGS_UPDATE_INTERVAL then
+			_state.lastControlBindingsUpdate = now
+			_updateControlBindings()
+		end
 		_updateWatermark()
-		_updateKeybindList()
+		if now - _state.lastKeybindListUpdate >= KEYBIND_LIST_UPDATE_INTERVAL then
+			_state.lastKeybindListUpdate = now
+			_updateKeybindList()
+		end
 	end)
 	_maid:GiveTask(updateConn)
 end

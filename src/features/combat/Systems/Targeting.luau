@@ -20,6 +20,9 @@ local TeamUtils = require("../../../shared/TeamUtils")
 local Targeting = {}
 local _raycastParams = RaycastParams.new()
 local _raycastFilter = table.create(2)
+local _cachedMouseLocation = Vector2.zero
+local _cachedCamera = nil :: Camera?
+local _lastUpdate = 0
 
 _raycastParams.FilterType = Enum.RaycastFilterType.Exclude
 
@@ -41,6 +44,14 @@ local function _getBestPartForCharacter(
 			return
 		end
 
+		local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
+		if not onScreen then
+			if not bestPart then
+				bestPart = part
+			end
+			return
+		end
+
 		if State.isWallCheckEnabled and not State.isManipulationEnabled then
 			_raycastFilter[1] = localCharacter
 			_raycastFilter[2] = character
@@ -51,14 +62,6 @@ local function _getBestPartForCharacter(
 			if result then
 				return
 			end
-		end
-
-		local screenPos, onScreen = camera:WorldToViewportPoint(part.Position)
-		if not onScreen then
-			if not bestPart then
-				bestPart = part
-			end
-			return
 		end
 
 		anyOnScreen = true
@@ -88,10 +91,12 @@ local function _getBestPartForCharacter(
 	return bestPart, anyOnScreen, shortestDistSq
 end
 
---// Public API
-function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
-	local camera = PlayerUtils.getCamera()
-	local localPlayer = PlayerUtils.getLocalPlayer()
+local function _getTargetStateWithMouse(
+	localPlayer: Player,
+	player: Player,
+	camera: Camera,
+	mouseLocation: Vector2
+): (boolean, BasePart?, boolean, number)
 	if player == localPlayer then
 		return false, nil, false, math.huge
 	end
@@ -117,7 +122,6 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 		return false, nil, false, math.huge
 	end
 
-	local mouseLocation = UserInputService:GetMouseLocation()
 	local bestPart, anyOnScreen, shortestDistSq =
 		_getBestPartForCharacter(character, camera, localPlayer.Character, mouseLocation)
 
@@ -129,8 +133,23 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 	return true, bestPart, anyOnScreen, shortestDist
 end
 
-function Targeting.getBestTarget(radius: number): Player?
+--// Public API
+function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
+	_refreshCaches()
+	local camera = _getCamera()
 	local localPlayer = PlayerUtils.getLocalPlayer()
+	local mouseLocation = _getMouseLocation()
+	return _getTargetStateWithMouse(localPlayer, player, camera, mouseLocation)
+end
+
+function Targeting.getBestTarget(radius: number): Player?
+	_refreshCaches()
+	local localPlayer = PlayerUtils.getLocalPlayer()
+	if not TeamUtils.isInDuel(localPlayer) then
+		return nil
+	end
+	local camera = _getCamera()
+	local mouseLocation = _getMouseLocation()
 
 	local bestTarget: Player? = nil
 	local shortestDistance = radius
@@ -139,7 +158,8 @@ function Targeting.getBestTarget(radius: number): Player?
 		if player == localPlayer then
 			continue
 		end
-		local isValid, headPart, onScreen, distance = Targeting.getTargetState(player)
+		local isValid, headPart, onScreen, distance =
+			_getTargetStateWithMouse(localPlayer, player, camera, mouseLocation)
 		if not isValid or not headPart or not onScreen then
 			continue
 		end
@@ -159,7 +179,12 @@ end
 function Targeting.resolveTarget(): Player?
 	if State.target then
 		local dropRadius = State.fovRadius * Constants.TARGET_DROP_FOV_MULTIPLIER
-		local isValid, headPart, onScreen, distance = Targeting.getTargetState(State.target)
+		_refreshCaches()
+		local camera = _getCamera()
+		local localPlayer = PlayerUtils.getLocalPlayer()
+		local mouseLocation = _getMouseLocation()
+		local isValid, headPart, onScreen, distance =
+			_getTargetStateWithMouse(localPlayer, State.target, camera, mouseLocation)
 		if isValid and headPart and onScreen and distance <= dropRadius then
 			State.targetLostAt = nil
 			return State.target
@@ -190,7 +215,12 @@ end
 function Targeting.resolveSilentTarget(): Player?
 	if State.silentTarget then
 		local dropRadius = State.silentAimFovRadius * Constants.TARGET_DROP_FOV_MULTIPLIER
-		local isValid, headPart, onScreen, distance = Targeting.getTargetState(State.silentTarget)
+		_refreshCaches()
+		local camera = _getCamera()
+		local localPlayer = PlayerUtils.getLocalPlayer()
+		local mouseLocation = _getMouseLocation()
+		local isValid, headPart, onScreen, distance =
+			_getTargetStateWithMouse(localPlayer, State.silentTarget, camera, mouseLocation)
 		if isValid and headPart and onScreen and distance <= dropRadius then
 			State.silentTargetLostAt = nil
 			return State.silentTarget
@@ -219,7 +249,8 @@ function Targeting.resolveSilentTarget(): Player?
 end
 
 function Targeting.getClosestSilentTarget(): BasePart?
-	local camera = PlayerUtils.getCamera()
+	_refreshCaches()
+	local camera = _getCamera()
 	local localPlayer = PlayerUtils.getLocalPlayer()
 
 	if not TeamUtils.isInDuel(localPlayer) then
@@ -228,7 +259,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 
 	local closest: BasePart? = nil
 	local closestDistSq = State.silentAimFovRadius * State.silentAimFovRadius
-	local mouseLocation = UserInputService:GetMouseLocation()
+	local mouseLocation = _getMouseLocation()
 
 	for _, entity in ipairs(CollectionService:GetTagged("Entity")) do
 		if entity == localPlayer.Character or entity.Name == localPlayer.Name then
@@ -263,3 +294,20 @@ function Targeting.getClosestSilentTarget(): BasePart?
 end
 
 return Targeting
+local function _refreshCaches()
+	local now = os.clock()
+	if now - _lastUpdate < Constants.TARGETING_UPDATE_INTERVAL then
+		return
+	end
+	_lastUpdate = now
+	_cachedMouseLocation = UserInputService:GetMouseLocation()
+	_cachedCamera = PlayerUtils.getCamera()
+end
+
+local function _getMouseLocation(): Vector2
+	return _cachedMouseLocation
+end
+
+local function _getCamera(): Camera
+	return (_cachedCamera or PlayerUtils.getCamera()) :: Camera
+end

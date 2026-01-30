@@ -238,6 +238,7 @@ local function _waitForClientLoaded()
 	until controllersFolder
 	local folder = controllersFolder :: Instance
 
+	local startTime = os.clock()
 	while true do
 		local allLoaded = true
 		local loaded = getloadedmodules()
@@ -269,6 +270,9 @@ local function _waitForClientLoaded()
 		end
 
 		if allLoaded then
+			break
+		end
+		if os.clock() - startTime > 15 then
 			break
 		end
 		task.wait(0.5)

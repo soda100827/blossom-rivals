@@ -13,6 +13,7 @@ local Types = require("./Types")
 local HitEffects = require("./Systems/HitEffects")
 
 --// Constants
+local ESP_RENDER_INTERVAL = Constants.ESP_RENDER_INTERVAL
 
 --// Types
 type VisualsFeature = Types.VisualsFeature
@@ -23,6 +24,7 @@ Visuals.__index = Visuals
 
 local _maid = nil :: any
 local _signals = {}
+local _lastRender = 0
 
 --// Private helpers
 local function _connect()
@@ -33,6 +35,11 @@ local function _connect()
 	_maid:GiveTask(removeConn)
 
 	local renderConn = RunService.RenderStepped:Connect(function()
+		local now = os.clock()
+		if now - _lastRender < ESP_RENDER_INTERVAL then
+			return
+		end
+		_lastRender = now
 		Helpers.render()
 	end)
 	_maid:GiveTask(renderConn)

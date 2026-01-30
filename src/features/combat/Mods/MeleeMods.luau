@@ -8,34 +8,45 @@ local _Workspace = game:GetService("Workspace")
 local State = require("../State")
 local _Targeting = require("../Systems/Targeting")
 local TeamUtils = require("../../../shared/TeamUtils")
+local PlayerUtils = require("../../../shared/PlayerUtils")
 local ExecutorUtils = require("../../../shared/ExecutorUtils")
 local HookUtils = require("../../../shared/HookUtils")
 local Helpers = require("../Utils/Helpers")
 
 --// Constants
+local AURA_UPDATE_INTERVAL = 0.03
+local AURA_IDLE_INTERVAL = 0.15
 
 --// Types
 
 --// Private state
 local MeleeMods = {}
+local _cachedLocalPlayer = nil :: Player?
+local _cachedLocalRoot = nil :: BasePart?
+local _lastLocalCacheUpdate = 0
+local _lastFighterFetch = 0
 
 --// Private helpers
 local function _getDistance(p1: Vector3, p2: Vector3): number
 	return (p1 - p2).Magnitude
 end
 
-local function _getNearbyEnemies(): { Player }
+local function _refreshLocalCache()
+	local now = os.clock()
+	if now - _lastLocalCacheUpdate < 0.25 then
+		return
+	end
+	_lastLocalCacheUpdate = now
 	local localPlayer = PlayerUtils.getLocalPlayer()
-	local localCharacter = localPlayer.Character
-	if not localCharacter then
-		return {}
-	end
-	local localRoot = localCharacter:FindFirstChild("HumanoidRootPart") :: BasePart?
-	if not localRoot then
-		return {}
-	end
+	_cachedLocalPlayer = localPlayer
+	local character = localPlayer and localPlayer.Character
+	_cachedLocalRoot = character and (character:FindFirstChild("HumanoidRootPart") :: BasePart?) or nil
+end
 
-	local enemies = {}
+local function _getClosestEnemy(localPlayer: Player, localRoot: BasePart): (Player?, BasePart?)
+	local closestPlayer: Player? = nil
+	local closestRoot: BasePart? = nil
+	local closestDist = math.huge
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player == localPlayer then
 			continue
@@ -57,9 +68,14 @@ local function _getNearbyEnemies(): { Player }
 			continue
 		end
 
-		table.insert(enemies, player)
+		local dist = _getDistance(localRoot.Position, root.Position)
+		if dist < closestDist then
+			closestDist = dist
+			closestPlayer = player
+			closestRoot = root
+		end
 	end
-	return enemies
+	return closestPlayer, closestRoot
 end
 
 --// Public API
@@ -167,71 +183,53 @@ function MeleeMods.setup(maid: any)
 	-- Aura Loop
 	task.spawn(function()
 		while isRunning do
-			local localPlayer = PlayerUtils.getLocalPlayer()
-			local character = localPlayer.Character
+			_refreshLocalCache()
+			local localPlayer = _cachedLocalPlayer
+			local localRoot = _cachedLocalRoot
+			local character = localPlayer and localPlayer.Character
 
-			Helpers.fetchFighterController(State.logger)
+			local now = os.clock()
+			if now - _lastFighterFetch >= 0.25 then
+				_lastFighterFetch = now
+				Helpers.fetchFighterController(State.logger)
+			end
 			local localFighter = State.fighterController and State.fighterController.LocalFighter
 
-			if character and localFighter and (State.isMeleeAuraEnabled or State.isTeleportAuraEnabled) then
-				local enemies = _getNearbyEnemies()
+			if
+				localPlayer
+				and localRoot
+				and character
+				and localFighter
+				and (State.isMeleeAuraEnabled or State.isTeleportAuraEnabled)
+			then
+				local target, targetRoot = _getClosestEnemy(localPlayer, localRoot)
+				if target and targetRoot then
+					-- Teleport logic
+					if State.isTeleportAuraEnabled then
+						localRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.5)
+					end
 
-				-- Sort by distance
-				local localRoot = character:FindFirstChild("HumanoidRootPart") :: BasePart?
-				if localRoot then
-					table.sort(enemies, function(a, b)
-						local charA = a.Character
-						local charB = b.Character
-						if not charA or not charB then
-							return false
-						end
-						local rootA = charA:FindFirstChild("HumanoidRootPart") :: BasePart?
-						local rootB = charB:FindFirstChild("HumanoidRootPart") :: BasePart?
-						if not rootA or not rootB then
-							return false
-						end
-
-						local distA = _getDistance(localRoot.Position, rootA.Position)
-						local distB = _getDistance(localRoot.Position, rootB.Position)
-						return distA < distB
-					end)
-
-					local target = enemies[1]
-					local targetChar = target and target.Character
-					if target and targetChar then
-						local targetRoot = targetChar:FindFirstChild("HumanoidRootPart") :: BasePart?
-						if targetRoot then
-							-- Teleport logic
-							if State.isTeleportAuraEnabled then
-								localRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 1.5) -- Teleport close behind
-							end
-
-							-- Attack logic
-							if State.isMeleeAuraEnabled then
-								-- Force equip melee (Slot 3)
-								local equipped = localFighter.EquippedItem
-								if not equipped or (equipped.Info and equipped.Info.IsGun) then
-									pcall(function()
-										if localFighter.EquipItem then
-											localFighter:EquipItem(3)
-										end
-									end)
+					-- Attack logic
+					if State.isMeleeAuraEnabled then
+						local equipped = localFighter.EquippedItem
+						if not equipped or (equipped.Info and equipped.Info.IsGun) then
+							pcall(function()
+								if localFighter.EquipItem then
+									localFighter:EquipItem(3)
 								end
+							end)
+						end
 
-								-- Trigger attack
-								equipped = localFighter.EquippedItem
-								if equipped and (equipped.Info and not equipped.Info.IsGun) then
-									-- Re-fetch and check if we can attack
-									if equipped.StartShooting then
-										equipped:Input("StartShooting")
-									end
-								end
+						equipped = localFighter.EquippedItem
+						if equipped and (equipped.Info and not equipped.Info.IsGun) then
+							if equipped.StartShooting then
+								equipped:Input("StartShooting")
 							end
 						end
 					end
 				end
 			end
-			task.wait(if State.isMeleeAuraEnabled or State.isTeleportAuraEnabled then 0.01 else 0.1)
+			task.wait(if State.isMeleeAuraEnabled or State.isTeleportAuraEnabled then AURA_UPDATE_INTERVAL else AURA_IDLE_INTERVAL)
 		end
 	end)
 end
