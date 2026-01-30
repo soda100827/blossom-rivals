@@ -67,8 +67,13 @@ function SilentAim.setup()
 
 					local targetPart = Targeting.getClosestSilentTarget()
 					if targetPart then
+						local newOrigin = origin
+						if State.isManipulationEnabled then
+							-- Magic Bullet: Teleport bullet origin close to target
+							newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
+						end
 						_lastSilentTargetPos = targetPart.Position
-						return oldRaycast(self, origin, targetPart.Position, distance, filter, ...)
+						return oldRaycast(self, newOrigin, targetPart.Position, distance, filter, ...)
 					end
 				end
 				_lastSilentTargetPos = nil

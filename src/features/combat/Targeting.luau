@@ -41,7 +41,7 @@ local function _getBestPartForCharacter(
 			return
 		end
 
-		if State.isWallCheckEnabled then
+		if State.isWallCheckEnabled and not State.isManipulationEnabled then
 			_raycastFilter[1] = localCharacter
 			_raycastFilter[2] = character
 			_raycastParams.FilterDescendantsInstances = _raycastFilter
