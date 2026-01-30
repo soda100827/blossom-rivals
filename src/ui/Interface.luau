@@ -35,6 +35,7 @@ local _state = {
 		lastSample = 0,
 		frameCount = 0,
 	},
+	keybindToggleMap = {},
 }
 local _signals = {}
 
@@ -126,6 +127,67 @@ local function _updateWatermark()
 	watermark.lastSample = now
 
 	library:SetWatermark(string.format(WATERMARK_TEMPLATE, fps, _getPingMs()))
+end
+
+local function _extractKeybindName(text: string): string
+	local name = text:match("^%[[^%]]+%]%s*(.-)%s*%([^%)]*%)$")
+	if name and name ~= "" then
+		return name
+	end
+	return text
+end
+
+local function _getKeybindListMode(): string
+	local _, options = _getLinoriaGlobals()
+	if not options then
+		return "All"
+	end
+	local option = options.UIKeybindListMode
+	if option and option.Value then
+		return option.Value
+	end
+	return "All"
+end
+
+local function _updateKeybindList()
+	local library = _state.library
+	if not library or not library.KeybindContainer or not library.KeybindFrame then
+		return
+	end
+
+	local toggles = _getLinoriaGlobals()
+	local mode = _getKeybindListMode()
+	local ySize = 0
+	local xSize = 0
+
+	for _, label in next, library.KeybindContainer:GetChildren() do
+		if label:IsA("TextLabel") then
+			local name = _extractKeybindName(label.Text)
+			if name ~= "" then
+				label.Text = name
+			end
+
+			local isVisible = true
+			if mode == "Active" then
+				isVisible = label.TextColor3 == library.AccentColor
+			elseif mode == "Toggle" then
+				local toggleId = _state.keybindToggleMap[name]
+				local toggle = toggles and toggleId and toggles[toggleId]
+				isVisible = toggle and toggle.Value == true or false
+			end
+
+			label.Visible = isVisible
+
+			if isVisible then
+				ySize += 18
+				if label.TextBounds.X > xSize then
+					xSize = label.TextBounds.X
+				end
+			end
+		end
+	end
+
+	library.KeybindFrame.Size = UDim2.new(0, math.max(xSize + 10, 210), 0, ySize + 23)
 end
 
 local function _updateControlBindings()
@@ -331,6 +393,7 @@ local function _connect()
 	local updateConn = RunService.RenderStepped:Connect(function()
 		_updateControlBindings()
 		_updateWatermark()
+		_updateKeybindList()
 	end)
 	_maid:GiveTask(updateConn)
 end
@@ -385,7 +448,7 @@ local function _mount()
 	silentAimToggle:AddKeyPicker("SilentAimKeybind", {
 		Default = "MouseButton2",
 		NoUI = false,
-		Text = "Silent Aim Keybind",
+		Text = "Silent Aim",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
@@ -453,7 +516,7 @@ local function _mount()
 	combatAimbotToggle:AddKeyPicker("CombatAimbotKeybind", {
 		Default = "MouseButton2",
 		NoUI = false,
-		Text = "Aimbot Keybind",
+		Text = "Aimbot",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
@@ -1125,6 +1188,16 @@ local function _mount()
 			_setWatermarkVisible(isVisible)
 		end,
 	})
+	interfaceGroup:AddDropdown("UIKeybindListMode", {
+		Values = { "Active", "Toggle", "All" },
+		Default = "Active",
+		Multi = false,
+		Text = "Keybind Mode",
+		Tooltip = "Filter for the keybind list.",
+		Callback = function()
+			_updateKeybindList()
+		end,
+	})
 
 	-- LinoriaLib exports Options to the global environment
 	local getfenvAny = getfenv :: any
@@ -1157,7 +1230,7 @@ local function _mount()
 	playerFlyToggle:AddKeyPicker("PlayerFlyKeybind", {
 		Default = "F",
 		NoUI = false,
-		Text = "Fly Keybind",
+		Text = "Fly",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
@@ -1191,7 +1264,7 @@ local function _mount()
 	playerNoclipToggle:AddKeyPicker("PlayerNoclipKeybind", {
 		Default = "N",
 		NoUI = false,
-		Text = "Noclip Keybind",
+		Text = "Noclip",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
@@ -1209,7 +1282,7 @@ local function _mount()
 	playerWalkSpeedToggle:AddKeyPicker("PlayerWalkSpeedKeybind", {
 		Default = "T",
 		NoUI = false,
-		Text = "Walk Speed Keybind",
+		Text = "Walk Speed",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
@@ -1243,7 +1316,7 @@ local function _mount()
 	playerJumpPowerToggle:AddKeyPicker("PlayerJumpPowerKeybind", {
 		Default = "Y",
 		NoUI = false,
-		Text = "Jump Power Keybind",
+		Text = "Jump Power",
 		SyncToggleState = false,
 		Callback = function()
 			_updateControlBindings()
@@ -1359,6 +1432,15 @@ local function _mount()
 			end
 		end,
 	})
+
+	_state.keybindToggleMap = {
+		["Silent Aim"] = "SilentAimEnabled",
+		["Aimbot"] = "CombatAimbotEnabled",
+		["Fly"] = "PlayerFly",
+		["Noclip"] = "PlayerNoclip",
+		["Walk Speed"] = "PlayerWalkSpeedEnabled",
+		["Jump Power"] = "PlayerJumpPowerEnabled",
+	}
 
 	_state.controlBindings = {
 		{

@@ -1165,41 +1165,58 @@ local WATERMARK_TEMPLATE='Blossom | %d fps | %d ms'local
 WATERMARK_UPDATE_INTERVAL=1 local Interface={}Interface.__index=Interface local
 _maid=nil local _state={client=nil,logger=nil,library=nil,themeManager=nil,
 saveManager=nil,isMounted=false,controlBindings=nil,watermark={lastSample=0,
-frameCount=0}}local _signals={}local function _getLinoriaGlobals()local
-getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
-toggles=(getgenvFunc and getgenvFunc().Toggles)or _G.Toggles local options=(
-getgenvFunc and getgenvFunc().Options)or _G.Options return toggles,options end
-local function _getPingMs()local pingMs=0 local success,value=pcall(function()
-local stat=Stats.Network.ServerStatsItem['Data Ping']return stat:GetValue()end)
-if success and type(value)=='number'then pingMs=math.floor(value+0.5)end return
-pingMs end local function _setKeybindListVisible(isVisible)local library=_state.
-library if not library then return end local keybindFrame=library.KeybindFrame
-if keybindFrame then keybindFrame.Visible=isVisible end end local function
-_setWatermarkVisible(isVisible)local library=_state.library if not library or
-not library.SetWatermarkVisibility then return end library:
-SetWatermarkVisibility(isVisible)end local function _syncUiVisibility()local
-toggles=_getLinoriaGlobals()if not toggles then return end local keybindsToggle=
-toggles.UIShowKeybindList if keybindsToggle then _setKeybindListVisible(
-keybindsToggle.Value==true)end local watermarkToggle=toggles.UIShowWatermark if
-watermarkToggle then _setWatermarkVisible(watermarkToggle.Value==true)end end
-local function _updateWatermark()local library=_state.library if not library or
-not library.SetWatermark then return end local toggles=_getLinoriaGlobals()local
-isVisible=true if toggles and toggles.UIShowWatermark then isVisible=toggles.
+frameCount=0},keybindToggleMap={}}local _signals={}local function
+_getLinoriaGlobals()local getfenvAny=getfenv local env=(getfenvAny(0))local
+getgenvFunc=env.getgenv local toggles=(getgenvFunc and getgenvFunc().Toggles)or
+_G.Toggles local options=(getgenvFunc and getgenvFunc().Options)or _G.Options
+return toggles,options end local function _getPingMs()local pingMs=0 local
+success,value=pcall(function()local stat=Stats.Network.ServerStatsItem[
+'Data Ping']return stat:GetValue()end)if success and type(value)=='number'then
+pingMs=math.floor(value+0.5)end return pingMs end local function
+_setKeybindListVisible(isVisible)local library=_state.library if not library
+then return end local keybindFrame=library.KeybindFrame if keybindFrame then
+keybindFrame.Visible=isVisible end end local function _setWatermarkVisible(
+isVisible)local library=_state.library if not library or not library.
+SetWatermarkVisibility then return end library:SetWatermarkVisibility(isVisible)
+end local function _syncUiVisibility()local toggles=_getLinoriaGlobals()if not
+toggles then return end local keybindsToggle=toggles.UIShowKeybindList if
+keybindsToggle then _setKeybindListVisible(keybindsToggle.Value==true)end local
+watermarkToggle=toggles.UIShowWatermark if watermarkToggle then
+_setWatermarkVisible(watermarkToggle.Value==true)end end local function
+_updateWatermark()local library=_state.library if not library or not library.
+SetWatermark then return end local toggles=_getLinoriaGlobals()local isVisible=
+true if toggles and toggles.UIShowWatermark then isVisible=toggles.
 UIShowWatermark.Value==true end if not isVisible then return end local watermark
 =_state.watermark watermark.frameCount+=1 local now=os.clock()if watermark.
 lastSample<=0 then watermark.lastSample=now return end if(now-watermark.
 lastSample)<WATERMARK_UPDATE_INTERVAL then return end local fps=math.floor(
 watermark.frameCount/(now-watermark.lastSample))watermark.frameCount=0 watermark
 .lastSample=now library:SetWatermark(string.format(WATERMARK_TEMPLATE,fps,
-_getPingMs()))end local function _updateControlBindings()if not _state.
-controlBindings then return end local toggles,options=_getLinoriaGlobals()if not
-toggles or not options then end for _,control in ipairs(_state.controlBindings)
-do local toggle=toggles and toggles[control.toggleId]local gate=toggle and
-toggle.Value==true local active=false if gate then local keybind=options and
-options[control.keybindId]if keybind and keybind.GetState then active=keybind:
-GetState()else active=false end end if control.last~=active then control.last=
-active control.setter(active)end end end local function
-_installSaveManagerExtensions(saveManager)if saveManager.
+_getPingMs()))end local function _extractKeybindName(text)local name=text:match(
+'^%[[^%]]+%]%s*(.-)%s*%([^%)]*%)$')if name and name~=''then return name end
+return text end local function _getKeybindListMode()local _,options=
+_getLinoriaGlobals()if not options then return'All'end local option=options.
+UIKeybindListMode if option and option.Value then return option.Value end return
+'All'end local function _updateKeybindList()local library=_state.library if not
+library or not library.KeybindContainer or not library.KeybindFrame then return
+end local toggles=_getLinoriaGlobals()local mode=_getKeybindListMode()local
+ySize=0 local xSize=0 for _,label in next,library.KeybindContainer:GetChildren()
+do if label:IsA('TextLabel')then local name=_extractKeybindName(label.Text)if
+name~=''then label.Text=name end local isVisible=true if mode=='Active'then
+isVisible=label.TextColor3==library.AccentColor elseif mode=='Toggle'then local
+toggleId=_state.keybindToggleMap[name]local toggle=toggles and toggleId and
+toggles[toggleId]isVisible=toggle and toggle.Value==true or false end label.
+Visible=isVisible if isVisible then ySize+=18 if label.TextBounds.X>xSize then
+xSize=label.TextBounds.X end end end end library.KeybindFrame.Size=UDim2.new(0,
+math.max(xSize+10,210),0,ySize+23)end local function _updateControlBindings()if
+not _state.controlBindings then return end local toggles,options=
+_getLinoriaGlobals()if not toggles or not options then end for _,control in
+ipairs(_state.controlBindings)do local toggle=toggles and toggles[control.
+toggleId]local gate=toggle and toggle.Value==true local active=false if gate
+then local keybind=options and options[control.keybindId]if keybind and keybind.
+GetState then active=keybind:GetState()else active=false end end if control.last
+~=active then control.last=active control.setter(active)end end end
+local function _installSaveManagerExtensions(saveManager)if saveManager.
 _blossomBuildConfigSection then return end saveManager.
 _blossomBuildConfigSection=saveManager.BuildConfigSection saveManager.
 BuildConfigSection=function(self,tab)assert(self.Library,
@@ -1254,23 +1271,24 @@ function()library:Toggle()end)end end pcall(function()saveManager:
 LoadAutoloadConfig()end)if isSilent then if wasVisible then pcall(function()
 library:Toggle()end)end _setNotifyMuted(library,false)end end local function
 _connect()_maid:DoCleaning()local updateConn=RunService.RenderStepped:Connect(
-function()_updateControlBindings()_updateWatermark()end)_maid:GiveTask(
-updateConn)end local function _mount()if _state.isMounted then return end _state
-.isMounted=true local logger=_state.logger local library=_loadRemote(
-'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
-logger)local saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.
-library=library _state.themeManager=themeManager _state.saveManager=saveManager
-_installSaveManagerExtensions(saveManager)if library and library.AccentColor~=
-nil then library.AccentColor=Color3.fromRGB(255,105,180)end local window=library
-:CreateWindow({Title='Blossom '.._state.client.Version,Center=true,AutoShow=not
-_state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:
-AddTab('Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),
-uiSettings=window:AddTab('UI Settings')}local combatGroup=tabs.combat:
-AddLeftGroupbox('Combat')local silentAimToggle=combatGroup:AddToggle(
-'SilentAimEnabled',{Text='Silent Aim',Default=false,Tooltip=
+function()_updateControlBindings()_updateWatermark()_updateKeybindList()end)
+_maid:GiveTask(updateConn)end local function _mount()if _state.isMounted then
+return end _state.isMounted=true local logger=_state.logger local library=
+_loadRemote('Library.lua',logger)local themeManager=_loadRemote(
+'addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
+'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
+themeManager _state.saveManager=saveManager _installSaveManagerExtensions(
+saveManager)if library and library.AccentColor~=nil then library.AccentColor=
+Color3.fromRGB(255,105,180)end local window=library:CreateWindow({Title=
+'Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
+IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:AddTab(
+'Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings
+=window:AddTab('UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox(
+'Combat')local silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text=
+'Silent Aim',Default=false,Tooltip=
 [[Redirects shots toward the closest valid target within your silent FOV.]],
 Callback=function()_updateControlBindings()end})silentAimToggle:AddKeyPicker(
-'SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text='Silent Aim Keybind',
+'SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text='Silent Aim',
 SyncToggleState=false,Callback=function()_updateControlBindings()end})
 silentAimToggle:AddColorPicker('SilentAimFovColor',{Default=Color3.fromRGB(255,
 255,255),Transparency=0,Title='Silent FOV Color',Tooltip=
@@ -1290,7 +1308,7 @@ mod:setSilentAimFovRadius(value)end end})local combatAimbotToggle=combatGroup:
 AddToggle('CombatAimbotEnabled',{Text='Aimbot',Default=false,Tooltip=
 'Automatically aims at the best target.',Callback=function()
 _updateControlBindings()end})combatAimbotToggle:AddKeyPicker(
-'CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text='Aimbot Keybind',
+'CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text='Aimbot',
 SyncToggleState=false,Callback=function()_updateControlBindings()end})
 combatAimbotToggle:AddColorPicker('CombatFovColor',{Default=Color3.fromRGB(255,
 255,255),Transparency=0,Title='Aimbot FOV Color',Tooltip=
@@ -1484,11 +1502,14 @@ AddToggle('UIShowKeybindList',{Text='Keybind List',Default=true,Tooltip=
 'Shows the keybind list panel.',Callback=function(isVisible)
 _setKeybindListVisible(isVisible)end})interfaceGroup:AddToggle('UIShowWatermark'
 ,{Text='Watermark',Default=true,Tooltip='Shows the watermark display.',Callback=
-function(isVisible)_setWatermarkVisible(isVisible)end})local getfenvAny=getfenv
-local env=(getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(
-getgenvFunc and getgenvFunc().Options)or _G.Options if GlobalOptions and
-GlobalOptions.MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind
-end themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
+function(isVisible)_setWatermarkVisible(isVisible)end})interfaceGroup:
+AddDropdown('UIKeybindListMode',{Values={'Active','Toggle','All'},Default=
+'Active',Multi=false,Text='Keybind Mode',Tooltip='Filter for the keybind list.',
+Callback=function()_updateKeybindList()end})local getfenvAny=getfenv local env=(
+getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and
+getgenvFunc().Options)or _G.Options if GlobalOptions and GlobalOptions.
+MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind end
+themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
 IgnoreThemeSettings()themeManager:SetFolder('Blossom')saveManager:SetFolder(
 'Blossom')saveManager:BuildConfigSection(tabs.uiSettings)themeManager:
 ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:AddLeftGroupbox('Player')
@@ -1496,20 +1517,20 @@ local exploitsGroup=tabs.misc:AddRightGroupbox('Exploits')local playerFlyToggle=
 playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=false,Tooltip=
 'Toggle flight mode.',Callback=function(state)_updateControlBindings()end})
 playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text=
-'Fly Keybind',SyncToggleState=false,Callback=function()_updateControlBindings()
-end})playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,
-Max=200,Rounding=0,Tooltip='Movement speed while flying.',Compact=true,Callback=
+'Fly',SyncToggleState=false,Callback=function()_updateControlBindings()end})
+playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
+200,Rounding=0,Tooltip='Movement speed while flying.',Compact=true,Callback=
 function(value)local mod=_state.client.Modules.Player if mod and mod.setFlySpeed
 then mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:
 AddToggle('PlayerNoclip',{Text='Noclip',Default=false,Tooltip=
 'Disable collisions for your character.',Callback=function(state)
 _updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
-'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',
-SyncToggleState=false,Callback=function()_updateControlBindings()end})local
+'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip',SyncToggleState=
+false,Callback=function()_updateControlBindings()end})local
 playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
 'Walk Speed',Default=false,Tooltip='Toggle custom walk speed.',Callback=function
 (state)_updateControlBindings()end})playerWalkSpeedToggle:AddKeyPicker(
-'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed Keybind',
+'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed',
 SyncToggleState=false,Callback=function()_updateControlBindings()end})
 playerGroup:AddSlider('PlayerWalkSpeed',{Text='Walk Speed',Default=16,Min=0,Max=
 200,Rounding=0,Tooltip='Your character walk speed.',Compact=true,Callback=
@@ -1518,7 +1539,7 @@ setWalkSpeed then mod:setWalkSpeed(value)end end})local playerJumpPowerToggle=
 playerGroup:AddToggle('PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,
 Tooltip='Toggle custom jump power.',Callback=function(state)
 _updateControlBindings()end})playerJumpPowerToggle:AddKeyPicker(
-'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',
+'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power',
 SyncToggleState=false,Callback=function()_updateControlBindings()end})
 playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=
 200,Rounding=0,Tooltip='Your character jump power.',Compact=true,Callback=
@@ -1551,10 +1572,13 @@ setSoundSpammerEnabled(state)end end})exploitsGroup:AddDropdown(
 'PlayerSoundSpammerType',{Values={'DoubleJump','Slide'},Default=1,Multi=false,
 Text='Sound',Tooltip='The sound to spam.',Callback=function(value)local mod=
 _state.client.Modules.Player if mod and mod.setSoundSpammerType then mod:
-setSoundSpammerType(value)end end})_state.controlBindings={{toggleId=
-'CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=function(
-active)local mod=_state.client.Modules.Combat if mod and mod.setAimbotEnabled
-then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly',keybindId=
+setSoundSpammerType(value)end end})_state.keybindToggleMap={['Silent Aim']=
+'SilentAimEnabled',['Aimbot']='CombatAimbotEnabled',['Fly']='PlayerFly',[
+'Noclip']='PlayerNoclip',['Walk Speed']='PlayerWalkSpeedEnabled',['Jump Power']=
+'PlayerJumpPowerEnabled'}_state.controlBindings={{toggleId='CombatAimbotEnabled'
+,keybindId='CombatAimbotKeybind',last=nil,setter=function(active)local mod=
+_state.client.Modules.Combat if mod and mod.setAimbotEnabled then mod:
+setAimbotEnabled(active)end end},{toggleId='PlayerFly',keybindId=
 'PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.client.
 Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active)end
 end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,setter=
