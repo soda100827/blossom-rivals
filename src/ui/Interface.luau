@@ -239,38 +239,40 @@ local function _installSaveManagerExtensions(saveManager: any)
 
 		local _, options = _getLinoriaGlobals()
 
-		section:AddButton("Create config", function()
-			if not options then
-				return
-			end
-			local name = options.SaveManager_ConfigName.Value
+		section
+			:AddButton("Create config", function()
+				if not options then
+					return
+				end
+				local name = options.SaveManager_ConfigName.Value
 
-			if name:gsub(" ", "") == "" then
-				return self.Library:Notify("Invalid config name (empty)", 2)
-			end
+				if name:gsub(" ", "") == "" then
+					return self.Library:Notify("Invalid config name (empty)", 2)
+				end
 
-			local success, err = self:Save(name)
-			if not success then
-				return self.Library:Notify("Failed to save config: " .. err)
-			end
+				local success, err = self:Save(name)
+				if not success then
+					return self.Library:Notify("Failed to save config: " .. err)
+				end
 
-			self.Library:Notify(string.format("Created config %q", name))
+				self.Library:Notify(string.format("Created config %q", name))
 
-			options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
-			options.SaveManager_ConfigList:SetValue(nil)
-		end):AddButton("Load config", function()
-			if not options then
-				return
-			end
-			local name = options.SaveManager_ConfigList.Value
+				options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
+				options.SaveManager_ConfigList:SetValue(nil)
+			end)
+			:AddButton("Load config", function()
+				if not options then
+					return
+				end
+				local name = options.SaveManager_ConfigList.Value
 
-			local success, err = self:Load(name)
-			if not success then
-				return self.Library:Notify("Failed to load config: " .. err)
-			end
+				local success, err = self:Load(name)
+				if not success then
+					return self.Library:Notify("Failed to load config: " .. err)
+				end
 
-			self.Library:Notify(string.format("Loaded config %q", name))
-		end)
+				self.Library:Notify(string.format("Loaded config %q", name))
+			end)
 
 		section:AddButton("Overwrite config", function()
 			if not options then
@@ -294,22 +296,24 @@ local function _installSaveManagerExtensions(saveManager: any)
 			options.SaveManager_ConfigList:SetValue(nil)
 		end)
 
-		section:AddButton("Set as autoload", function()
-			if not options then
-				return
-			end
-			local name = options.SaveManager_ConfigList.Value
-			writefile(self.Folder .. "/settings/autoload.txt", name)
-			self.AutoloadLabel:SetText("Current autoload config: " .. name)
-			self.Library:Notify(string.format("Set %q to auto load", name))
-		end):AddButton("Remove autoload", function()
-			local path = self.Folder .. "/settings/autoload.txt"
-			if isfile(path) then
-				pcall(delfile, path)
-			end
-			self.AutoloadLabel:SetText("Current autoload config: none")
-			self.Library:Notify("Cleared autoload config")
-		end)
+		section
+			:AddButton("Set as autoload", function()
+				if not options then
+					return
+				end
+				local name = options.SaveManager_ConfigList.Value
+				writefile(self.Folder .. "/settings/autoload.txt", name)
+				self.AutoloadLabel:SetText("Current autoload config: " .. name)
+				self.Library:Notify(string.format("Set %q to auto load", name))
+			end)
+			:AddButton("Remove autoload", function()
+				local path = self.Folder .. "/settings/autoload.txt"
+				if isfile(path) then
+					pcall(delfile, path)
+				end
+				self.AutoloadLabel:SetText("Current autoload config: none")
+				self.Library:Notify("Cleared autoload config")
+			end)
 
 		self.AutoloadLabel = section:AddLabel("Current autoload config: none", true)
 
@@ -415,10 +419,6 @@ local function _mount()
 	_state.saveManager = saveManager
 
 	_installSaveManagerExtensions(saveManager)
-
-	if library and library.AccentColor ~= nil then
-		library.AccentColor = Color3.fromRGB(255, 105, 180)
-	end
 
 	local window = library:CreateWindow({
 		Title = "Blossom " .. _state.client.Version,

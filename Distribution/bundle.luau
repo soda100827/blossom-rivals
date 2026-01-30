@@ -1280,14 +1280,13 @@ _loadRemote('Library.lua',logger)local themeManager=_loadRemote(
 'addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
 'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
 themeManager _state.saveManager=saveManager _installSaveManagerExtensions(
-saveManager)if library and library.AccentColor~=nil then library.AccentColor=
-Color3.fromRGB(255,105,180)end local window=library:CreateWindow({Title=
-'Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
-IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:AddTab(
-'Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings
-=window:AddTab('UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox(
-'Combat')local silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text=
-'Silent Aim',Default=false,Tooltip=
+saveManager)local window=library:CreateWindow({Title='Blossom '.._state.client.
+Version,Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,
+MenuFadeTime=0.2})local tabs={combat=window:AddTab('Combat'),visuals=window:
+AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab(
+'UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox('Combat')local
+silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text='Silent Aim',
+Default=false,Tooltip=
 [[Redirects shots toward the closest valid target within your silent FOV.]],
 Callback=function()_updateControlBindings()end})silentAimToggle:AddKeyPicker(
 'SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text='Silent Aim',
