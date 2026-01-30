@@ -53,12 +53,12 @@ function SilentAim.setup()
 
 			local oldRaycast
 			oldRaycast = Helpers.safeHook(utility, "Raycast", function(self, origin, target, distance, filter, ...)
-				if
-					not checkcaller()
-					and State.isSilentAimEnabled
-					and (distance == 400 or distance == 999)
-					and SilentAim.isGunAction()
-				then
+				-- Optimization: Check enabled first
+				if not State.isSilentAimEnabled then
+					return oldRaycast(self, origin, target, distance, filter, ...)
+				end
+
+				if not checkcaller() and (distance == 400 or distance == 999) and SilentAim.isGunAction() then
 					-- Hit Chance check
 					if math.random(1, 100) > State.silentHitChance then
 						_lastSilentTargetPos = nil
@@ -69,9 +69,19 @@ function SilentAim.setup()
 					if targetPart then
 						local newOrigin = origin
 						if State.isManipulationEnabled then
-							-- Magic Bullet: Teleport bullet origin close to target
-							newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
+							-- Magic Bullet: Rayback calculation
+							local camera = Helpers.getCamera()
+							if camera then
+							 camPos = camera.CFrame	local.Position
+								local dir = (targetPart.Position - camPos).Unit
+								-- Start 5 studs away from target, approaching from camera direction
+								newOrigin = targetPart.Position - (dir * 5)
+							else
+								-- Fallback
+								newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
+							end
 						end
+
 						_lastSilentTargetPos = targetPart.Position
 						return oldRaycast(self, newOrigin, targetPart.Position, distance, filter, ...)
 					end
