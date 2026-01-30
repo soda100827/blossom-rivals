@@ -43,6 +43,9 @@ local State: Types.PlayerState = {
 	isSlideBoostEnabled = false,
 	slideBoostMultiplier = 1,
 	spoofDevice = "None",
+	isAntiFlashEnabled = false,
+	isSoundSpammerEnabled = false,
+	soundSpammerType = "DoubleJump",
 }
 
 --// Private helpers

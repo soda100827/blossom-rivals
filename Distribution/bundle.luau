@@ -367,33 +367,35 @@ jumpPowerValue=50,flySpeed=Constants.DEFAULT_FLY_SPEED,defaultWalkSpeed=nil,
 defaultJumpPower=nil,defaultJumpHeight=nil,defaultUseJumpPower=nil,
 defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},characterMaid=nil,
 input={forward=0,back=0,left=0,right=0,up=0,down=0},isSlideBoostEnabled=false,
-slideBoostMultiplier=1,spoofDevice='None'}return State end function
-__DARKLUA_BUNDLE_MODULES.m()local v=__DARKLUA_BUNDLE_MODULES.cache.m if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-Workspace=game:GetService('Workspace')local Constants=__DARKLUA_BUNDLE_MODULES.
-k()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers={}function Helpers.
-getLocalPlayer()return Players.LocalPlayer end function Helpers.resetInput()
-State.input={forward=0,back=0,left=0,right=0,up=0,down=0}end function Helpers.
-cacheDefaults(humanoid)State.defaultWalkSpeed=humanoid.WalkSpeed State.
-defaultUseJumpPower=humanoid.UseJumpPower if humanoid.UseJumpPower then State.
-defaultJumpPower=humanoid.JumpPower State.defaultJumpHeight=nil else State.
-defaultJumpPower=nil State.defaultJumpHeight=humanoid.JumpHeight end State.
-defaultAutoRotate=humanoid.AutoRotate State.defaultPlatformStand=humanoid.
-PlatformStand end function Helpers.applyWalkSpeed()local humanoid=State.humanoid
-if not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
-WalkSpeed=State.defaultWalkSpeed end end function Helpers.applyJumpPower()return
-end function Helpers.restoreMovementDefaults()local humanoid=State.humanoid if
-not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
-WalkSpeed=State.defaultWalkSpeed end if State.defaultUseJumpPower~=nil then
-humanoid.UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower
-then if State.defaultJumpPower~=nil then humanoid.JumpPower=State.
-defaultJumpPower end else if State.defaultJumpHeight~=nil then humanoid.
-JumpHeight=State.defaultJumpHeight end end if State.defaultAutoRotate~=nil then
-humanoid.AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=
-nil then humanoid.PlatformStand=State.defaultPlatformStand end end function
-Helpers.setCharacter(character)State.character=character State.humanoid=nil
-State.rootPart=nil if not character then return end local humanoid=character:
+slideBoostMultiplier=1,spoofDevice='None',isAntiFlashEnabled=false,
+isSoundSpammerEnabled=false,soundSpammerType='DoubleJump'}return State end
+function __DARKLUA_BUNDLE_MODULES.m()local v=__DARKLUA_BUNDLE_MODULES.cache.m if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c
+end end do local function __modImpl()local Players=game:GetService('Players')
+local Workspace=game:GetService('Workspace')local Constants=
+__DARKLUA_BUNDLE_MODULES.k()local State=__DARKLUA_BUNDLE_MODULES.m()local
+Helpers={}function Helpers.getLocalPlayer()return Players.LocalPlayer end
+function Helpers.resetInput()State.input={forward=0,back=0,left=0,right=0,up=0,
+down=0}end function Helpers.cacheDefaults(humanoid)State.defaultWalkSpeed=
+humanoid.WalkSpeed State.defaultUseJumpPower=humanoid.UseJumpPower if humanoid.
+UseJumpPower then State.defaultJumpPower=humanoid.JumpPower State.
+defaultJumpHeight=nil else State.defaultJumpPower=nil State.defaultJumpHeight=
+humanoid.JumpHeight end State.defaultAutoRotate=humanoid.AutoRotate State.
+defaultPlatformStand=humanoid.PlatformStand end function Helpers.applyWalkSpeed(
+)local humanoid=State.humanoid if not humanoid then return end if State.
+defaultWalkSpeed~=nil then humanoid.WalkSpeed=State.defaultWalkSpeed end end
+function Helpers.applyJumpPower()return end function Helpers.
+restoreMovementDefaults()local humanoid=State.humanoid if not humanoid then
+return end if State.defaultWalkSpeed~=nil then humanoid.WalkSpeed=State.
+defaultWalkSpeed end if State.defaultUseJumpPower~=nil then humanoid.
+UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower then if
+State.defaultJumpPower~=nil then humanoid.JumpPower=State.defaultJumpPower end
+else if State.defaultJumpHeight~=nil then humanoid.JumpHeight=State.
+defaultJumpHeight end end if State.defaultAutoRotate~=nil then humanoid.
+AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=nil then
+humanoid.PlatformStand=State.defaultPlatformStand end end function Helpers.
+setCharacter(character)State.character=character State.humanoid=nil State.
+rootPart=nil if not character then return end local humanoid=character:
 FindFirstChildOfClass('Humanoid')if not humanoid then humanoid=(character:
 WaitForChild('Humanoid',5))end local rootPart=character:FindFirstChild(
 'HumanoidRootPart')if not rootPart then rootPart=character:WaitForChild(
@@ -441,7 +443,26 @@ playerScripts:WaitForChild('Controllers',5)if not controllers then return nil
 end local controlsController=controllers:WaitForChild('ControlsController',5)if
 not controlsController then return nil end local success,result=pcall(function()
 local dynamicRequire=require return dynamicRequire(controlsController)end)return
-success and result or nil end return Helpers end function
+success and result or nil end function Helpers.getFlashedModule()local player=
+Helpers.getLocalPlayer()if not player then return nil end local playerScripts=
+player:WaitForChild('PlayerScripts',5)if not playerScripts then return nil end
+local modules=playerScripts:WaitForChild('Modules',5)if not modules then return
+nil end local clientReplicatedClasses=modules:WaitForChild(
+'ClientReplicatedClasses',5)if not clientReplicatedClasses then return nil end
+local clientFighter=clientReplicatedClasses:WaitForChild('ClientFighter',5)if
+not clientFighter then return nil end local fighterInterface=clientFighter:
+WaitForChild('FighterInterface',5)if not fighterInterface then return nil end
+local flashed=fighterInterface:WaitForChild('Flashed',5)if not flashed then
+return nil end local success,result=pcall(function()local dynamicRequire=require
+return dynamicRequire(flashed)end)return success and result or nil end function
+Helpers.getMechanicsController()local player=Helpers.getLocalPlayer()if not
+player then return nil end local playerScripts=player:WaitForChild(
+'PlayerScripts',5)if not playerScripts then return nil end local controllers=
+playerScripts:WaitForChild('Controllers',5)if not controllers then return nil
+end local mechanicsController=controllers:WaitForChild('MechanicsController',5)
+if not mechanicsController then return nil end local success,result=pcall(
+function()local dynamicRequire=require return dynamicRequire(mechanicsController
+)end)return success and result or nil end return Helpers end function
 __DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
 do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local
@@ -462,20 +483,29 @@ oldSetControls(self,device)end)task.spawn(function()while true do if State.
 spoofDevice~='None'then if controlsController.CurrentControls~=State.spoofDevice
 then controlsController.CurrentControls=State.spoofDevice if controlsController.
 ControlsChanged then controlsController.ControlsChanged:Fire()end end end task.
-wait(0.5)end end)end end)end return PlayerMods end function
-__DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-RunService=game:GetService('RunService')local UserInputService=game:GetService(
-'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()local
-State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()local
-PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=Player
-local _maid=nil local _signals={}local function _connect()_maid:DoCleaning()
-local function bindCharacter()if State.characterMaid then State.characterMaid:
-DoCleaning()end State.characterMaid=Maid.new()local humanoid=State.humanoid
-local rootPart=State.rootPart if humanoid and rootPart then local stateConn=
-humanoid.StateChanged:Connect(function(_,newState)if not State.
+wait(0.5)end end)end local flashedMod=Helpers.getFlashedModule()if flashedMod
+then local oldAttemptToFlash oldAttemptToFlash=hookfunction(flashedMod.
+AttemptToFlash,function(self,...)if not checkcaller()and State.
+isAntiFlashEnabled then return end return oldAttemptToFlash(self,...)end)local
+oldFlash oldFlash=hookfunction(flashedMod.Flash,function(self,...)if not
+checkcaller()and State.isAntiFlashEnabled then return end return oldFlash(self,
+...)end)end task.spawn(function()local mechanicsController=Helpers.
+getMechanicsController()while true do if State.isSoundSpammerEnabled and
+mechanicsController then pcall(function()mechanicsController:PlayMechanicsSound(
+State.soundSpammerType)end)end task.wait(0.1)end end)end)end return PlayerMods
+end function __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.
+o if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v
+.c end end do local function __modImpl()local Players=game:GetService('Players')
+local RunService=game:GetService('RunService')local UserInputService=game:
+GetService('UserInputService')local Workspace=game:GetService('Workspace')local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()
+local State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()
+local PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=
+Player local _maid=nil local _signals={}local function _connect()_maid:
+DoCleaning()local function bindCharacter()if State.characterMaid then State.
+characterMaid:DoCleaning()end State.characterMaid=Maid.new()local humanoid=State
+.humanoid local rootPart=State.rootPart if humanoid and rootPart then local
+stateConn=humanoid.StateChanged:Connect(function(_,newState)if not State.
 isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.Jumping
 then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=State.
 jumpPowerValue if current.Y<jumpVelocity then rootPart.AssemblyLinearVelocity=
@@ -532,7 +562,11 @@ isSlideBoostEnabled=isEnabled end function Player.setSlideBoostMultiplier(self,
 multiplier)State.slideBoostMultiplier=multiplier end function Player.
 setSpoofDevice(self,device)State.spoofDevice=device local controlsController=
 Helpers.getControlsController()if controlsController and device~='None'then
-controlsController:SetControls(device)end end return Player end function
+controlsController:SetControls(device)end end function Player.
+setAntiFlashEnabled(self,isEnabled)State.isAntiFlashEnabled=isEnabled end
+function Player.setSoundSpammerEnabled(self,isEnabled)State.
+isSoundSpammerEnabled=isEnabled end function Player.setSoundSpammerType(self,
+soundType)State.soundSpammerType=soundType end return Player end function
 __DARKLUA_BUNDLE_MODULES.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c end end
 do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.q()
@@ -1139,9 +1173,10 @@ GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
 SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
 'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
 uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:
-AddLeftGroupbox('Player')local playerFlyToggle=playerGroup:AddToggle('PlayerFly'
-,{Text='Fly',Default=false,Tooltip='Toggle flight mode.',Callback=function(state
-)_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
+AddLeftGroupbox('Player')local exploitsGroup=tabs.misc:AddRightGroupbox(
+'Exploits')local playerFlyToggle=playerGroup:AddToggle('PlayerFly',{Text='Fly',
+Default=false,Tooltip='Toggle flight mode.',Callback=function(state)
+_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
 Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=false,Callback=
 function()_updateControlBindings()end})playerGroup:AddSlider('PlayerFlySpeed',{
 Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Tooltip=
@@ -1169,27 +1204,38 @@ SyncToggleState=false,Callback=function()_updateControlBindings()end})
 playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=
 200,Rounding=0,Tooltip='Your character jump power.',Compact=true,Callback=
 function(value)local mod=_state.client.Modules.Player if mod and mod.
-setJumpPower then mod:setJumpPower(value)end end})playerGroup:AddToggle(
-'PlayerSlideBoost',{Text='Slide Boost',Default=false,Tooltip=
-'Boosts your sliding speed.',Callback=function(state)local mod=_state.client.
-Modules.Player if mod and mod.setSlideBoostEnabled then mod:
-setSlideBoostEnabled(state)end end})playerGroup:AddSlider(
-'PlayerSlideBoostMultiplier',{Text='Slide Boost Multiplier',Default=1,Min=1,Max=
-10,Rounding=1,Suffix='x',Tooltip='Multiplier for sliding speed.',Compact=true,
+setJumpPower then mod:setJumpPower(value)end end})exploitsGroup:AddToggle(
+'PlayerAntiFlash',{Text='Anti Flashbang',Default=false,Tooltip=
+'Prevents you from being blinded by flashbangs.',Callback=function(state)local
+mod=_state.client.Modules.Player if mod and mod.setAntiFlashEnabled then mod:
+setAntiFlashEnabled(state)end end})exploitsGroup:AddToggle('PlayerSlideBoost',{
+Text='Slide Boost',Default=false,Tooltip='Boosts your sliding speed.',Callback=
+function(state)local mod=_state.client.Modules.Player if mod and mod.
+setSlideBoostEnabled then mod:setSlideBoostEnabled(state)end end})exploitsGroup:
+AddSlider('PlayerSlideBoostMultiplier',{Text='Slide Boost Multiplier',Default=1,
+Min=1,Max=10,Rounding=1,Suffix='x',Tooltip='Multiplier for sliding speed.',
+Compact=true,Callback=function(value)local mod=_state.client.Modules.Player if
+mod and mod.setSlideBoostMultiplier then mod:setSlideBoostMultiplier(value)end
+end})exploitsGroup:AddDropdown('PlayerSpoofDevice',{Values={'None','Touch',
+'Gamepad','VR','MouseKeyboard'},Default=1,Multi=false,Text='Spoof Device',
+Tooltip=[[Tricks the game into thinking you are on a different device.]],
 Callback=function(value)local mod=_state.client.Modules.Player if mod and mod.
-setSlideBoostMultiplier then mod:setSlideBoostMultiplier(value)end end})
-playerGroup:AddDropdown('PlayerSpoofDevice',{Values={'None','Touch','Gamepad',
-'VR','MouseKeyboard'},Default=1,Multi=false,Text='Spoof Device',Tooltip=
-[[Tricks the game into thinking you are on a different device.]],Callback=
-function(value)local mod=_state.client.Modules.Player if mod and mod.
-setSpoofDevice then mod:setSpoofDevice(value)end end})_state.controlBindings={{
-toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=
-function(active)local mod=_state.client.Modules.Combat if mod and mod.
-setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly'
-,keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.
-client.Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active
-)end end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,
-setter=function(active)local mod=_state.client.Modules.Player if mod and mod.
+setSpoofDevice then mod:setSpoofDevice(value)end end})exploitsGroup:AddToggle(
+'PlayerSoundSpammer',{Text='Sound Spammer',Default=false,Tooltip=
+'Spams mechanics sounds to other players.',Callback=function(state)local mod=
+_state.client.Modules.Player if mod and mod.setSoundSpammerEnabled then mod:
+setSoundSpammerEnabled(state)end end})exploitsGroup:AddDropdown(
+'PlayerSoundSpammerType',{Values={'DoubleJump','Slide'},Default=1,Multi=false,
+Text='Sound Type',Tooltip='The sound to spam.',Callback=function(value)local mod
+=_state.client.Modules.Player if mod and mod.setSoundSpammerType then mod:
+setSoundSpammerType(value)end end})_state.controlBindings={{toggleId=
+'CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=function(
+active)local mod=_state.client.Modules.Combat if mod and mod.setAimbotEnabled
+then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly',keybindId=
+'PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.client.
+Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active)end
+end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Player if mod and mod.
 setNoclipEnabled then mod:setNoclipEnabled(active)end end},{toggleId=
 'PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',last=nil,setter=
 function(active)local mod=_state.client.Modules.Player if mod and mod.

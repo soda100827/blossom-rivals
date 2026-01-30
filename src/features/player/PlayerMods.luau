@@ -66,6 +66,38 @@ function PlayerMods.setup()
 				end
 			end)
 		end
+
+		local flashedMod = Helpers.getFlashedModule()
+		if flashedMod then
+			local oldAttemptToFlash
+			oldAttemptToFlash = hookfunction(flashedMod.AttemptToFlash, function(self, ...)
+				if not checkcaller() and State.isAntiFlashEnabled then
+					return
+				end
+				return oldAttemptToFlash(self, ...)
+			end)
+
+			local oldFlash
+			oldFlash = hookfunction(flashedMod.Flash, function(self, ...)
+				if not checkcaller() and State.isAntiFlashEnabled then
+					return
+				end
+				return oldFlash(self, ...)
+			end)
+		end
+
+		-- Sound Spammer
+		task.spawn(function()
+			local mechanicsController = Helpers.getMechanicsController()
+			while true do
+				if State.isSoundSpammerEnabled and mechanicsController then
+					pcall(function()
+						mechanicsController:PlayMechanicsSound(State.soundSpammerType)
+					end)
+				end
+				task.wait(0.1)
+			end
+		end)
 	end)
 end
 

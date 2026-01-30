@@ -258,4 +258,64 @@ function Helpers.getControlsController(): any
 	return success and result or nil
 end
 
+function Helpers.getFlashedModule(): any
+	local player = Helpers.getLocalPlayer()
+	if not player then
+		return nil
+	end
+	local playerScripts = player:WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local clientReplicatedClasses = modules:WaitForChild("ClientReplicatedClasses", 5)
+	if not clientReplicatedClasses then
+		return nil
+	end
+	local clientFighter = clientReplicatedClasses:WaitForChild("ClientFighter", 5)
+	if not clientFighter then
+		return nil
+	end
+	local fighterInterface = clientFighter:WaitForChild("FighterInterface", 5)
+	if not fighterInterface then
+		return nil
+	end
+	local flashed = fighterInterface:WaitForChild("Flashed", 5)
+	if not flashed then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(flashed)
+	end)
+	return success and result or nil
+end
+
+function Helpers.getMechanicsController(): any
+	local player = Helpers.getLocalPlayer()
+	if not player then
+		return nil
+	end
+	local playerScripts = player:WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local controllers = playerScripts:WaitForChild("Controllers", 5)
+	if not controllers then
+		return nil
+	end
+	local mechanicsController = controllers:WaitForChild("MechanicsController", 5)
+	if not mechanicsController then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(mechanicsController)
+	end)
+	return success and result or nil
+end
+
 return Helpers

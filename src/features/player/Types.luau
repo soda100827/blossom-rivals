@@ -41,6 +41,9 @@ export type PlayerState = {
 	isSlideBoostEnabled: boolean,
 	slideBoostMultiplier: number,
 	spoofDevice: string,
+	isAntiFlashEnabled: boolean,
+	isSoundSpammerEnabled: boolean,
+	soundSpammerType: string,
 }
 
 export type PlayerFeature = {
@@ -56,6 +59,9 @@ export type PlayerFeature = {
 	setSlideBoostEnabled: (self: PlayerFeature, isEnabled: boolean) -> (),
 	setSlideBoostMultiplier: (self: PlayerFeature, multiplier: number) -> (),
 	setSpoofDevice: (self: PlayerFeature, device: string) -> (),
+	setAntiFlashEnabled: (self: PlayerFeature, isEnabled: boolean) -> (),
+	setSoundSpammerEnabled: (self: PlayerFeature, isEnabled: boolean) -> (),
+	setSoundSpammerType: (self: PlayerFeature, soundType: string) -> (),
 }
 
 --// Private state

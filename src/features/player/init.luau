@@ -233,4 +233,16 @@ function Player.setSpoofDevice(self: PlayerFeature, device: string): ()
 	end
 end
 
+function Player.setAntiFlashEnabled(self: PlayerFeature, isEnabled: boolean): ()
+	State.isAntiFlashEnabled = isEnabled
+end
+
+function Player.setSoundSpammerEnabled(self: PlayerFeature, isEnabled: boolean): ()
+	State.isSoundSpammerEnabled = isEnabled
+end
+
+function Player.setSoundSpammerType(self: PlayerFeature, soundType: string): ()
+	State.soundSpammerType = soundType
+end
+
 return Player

@@ -809,6 +809,8 @@ local function _mount()
 	themeManager:ApplyToTab(tabs.uiSettings)
 
 	local playerGroup = tabs.misc:AddLeftGroupbox("Player")
+	local exploitsGroup = tabs.misc:AddRightGroupbox("Exploits")
+
 	local playerFlyToggle = playerGroup:AddToggle("PlayerFly", {
 		Text = "Fly",
 		Default = false,
@@ -929,7 +931,20 @@ local function _mount()
 		end,
 	})
 
-	playerGroup:AddToggle("PlayerSlideBoost", {
+	-- Exploits Group
+	exploitsGroup:AddToggle("PlayerAntiFlash", {
+		Text = "Anti Flashbang",
+		Default = false,
+		Tooltip = "Prevents you from being blinded by flashbangs.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setAntiFlashEnabled then
+				mod:setAntiFlashEnabled(state)
+			end
+		end,
+	})
+
+	exploitsGroup:AddToggle("PlayerSlideBoost", {
 		Text = "Slide Boost",
 		Default = false,
 		Tooltip = "Boosts your sliding speed.",
@@ -941,7 +956,7 @@ local function _mount()
 		end,
 	})
 
-	playerGroup:AddSlider("PlayerSlideBoostMultiplier", {
+	exploitsGroup:AddSlider("PlayerSlideBoostMultiplier", {
 		Text = "Slide Boost Multiplier",
 		Default = 1,
 		Min = 1,
@@ -958,7 +973,7 @@ local function _mount()
 		end,
 	})
 
-	playerGroup:AddDropdown("PlayerSpoofDevice", {
+	exploitsGroup:AddDropdown("PlayerSpoofDevice", {
 		Values = { "None", "Touch", "Gamepad", "VR", "MouseKeyboard" },
 		Default = 1,
 		Multi = false,
@@ -968,6 +983,32 @@ local function _mount()
 			local mod = _state.client.Modules.Player
 			if mod and mod.setSpoofDevice then
 				mod:setSpoofDevice(value)
+			end
+		end,
+	})
+
+	exploitsGroup:AddToggle("PlayerSoundSpammer", {
+		Text = "Sound Spammer",
+		Default = false,
+		Tooltip = "Spams mechanics sounds to other players.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setSoundSpammerEnabled then
+				mod:setSoundSpammerEnabled(state)
+			end
+		end,
+	})
+
+	exploitsGroup:AddDropdown("PlayerSoundSpammerType", {
+		Values = { "DoubleJump", "Slide" },
+		Default = 1,
+		Multi = false,
+		Text = "Sound Type",
+		Tooltip = "The sound to spam.",
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setSoundSpammerType then
+				mod:setSoundSpammerType(value)
 			end
 		end,
 	})
