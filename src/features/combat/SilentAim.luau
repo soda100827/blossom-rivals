@@ -47,7 +47,10 @@ function SilentAim.setup()
 		return
 	end
 
-	print("[DEBUG] Silent Aim Module Loaded - v2 (Magic Bullet Fix)")
+	if not hookfunction then
+		State.logger:warn("hookfunction not found, Perfect Silent Aim will not work.")
+		return
+	end
 
 	task.spawn(function()
 		local utility = Helpers.getUtility()
@@ -82,21 +85,15 @@ function SilentAim.setup()
 							local extendedTarget = newOrigin + (direction * 100) -- Shoot 100 studs through
 
 							-- Debug Logging
-							print(
-								string.format(
-									"[MagicBullet] Origin: %s | Dir: %s | ExtendedTgt: %s",
-									tostring(newOrigin),
-									tostring(direction),
-									tostring(extendedTarget)
-								)
-							)
+							-- print(string.format("[MagicBullet] Origin: %s | Dir: %s | ExtendedTgt: %s",
+							-- 	tostring(newOrigin), tostring(direction), tostring(extendedTarget)))
 
 							-- CRITICAL: Add target to filter to force "penetration" logic.
 							-- We add BOTH the specific part and the character model to be safe.
 							if type(filter) == "table" then
 								table.insert(filter, targetPart)
 								table.insert(filter, targetPart.Parent)
-								print("[MagicBullet] Added Target & Parent to filter: " .. tostring(targetPart))
+								-- print("[MagicBullet] Added Target & Parent to filter: " .. tostring(targetPart))
 							else
 								warn("[MagicBullet] Filter is not a table: " .. typeof(filter))
 							end
