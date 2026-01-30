@@ -126,9 +126,6 @@ function Helpers.fetchCameraController(logger: any)
 	if State.cameraController then
 		return
 	end
-	if logger then
-		logger:info("Fetching start...")
-	end
 
 	local playerScripts = Helpers.getLocalPlayer():WaitForChild("PlayerScripts")
 	if not playerScripts then
@@ -148,9 +145,6 @@ function Helpers.fetchCameraController(logger: any)
 		end)
 		if success then
 			State.cameraController = result
-			if logger then
-				logger:info("Success CameraController")
-			end
 		else
 			if logger then
 				logger:error("Failed CameraController", result)

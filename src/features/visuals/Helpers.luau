@@ -244,9 +244,18 @@ function Helpers.render()
   if not localPlayer then
     return
   end
+  if not TeamUtils.isInDuel(localPlayer) then
+    Helpers.clearAll()
+    return
+  end
 
   for _, player in ipairs(Players:GetPlayers()) do
     if player == localPlayer or (localPlayer.Character and player.Character == localPlayer.Character) then
+      continue
+    end
+
+    if not TeamUtils.isInDuel(player) then
+      Helpers.removePlayer(player)
       continue
     end
 

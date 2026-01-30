@@ -6,7 +6,6 @@ local Players = game:GetService("Players")
 --// Dependencies (require)
 
 --// Constants
-local FIGHTER_CONTROLLER_SEARCH_INTERVAL = 1
 local TEAM_ATTRIBUTE_KEYS = {
 	"TeamID",
 	"TeamId",
@@ -18,7 +17,9 @@ export type TeamId = string | number | Instance | BrickColor | Color3
 export type TeamUtils = {
 	getPlayerTeamId: (player: Player) -> TeamId?,
 	isSameTeam: (playerA: Player, playerB: Player) -> boolean,
+	isInDuel: (player: Player) -> boolean,
 	setDebugEnabled: (isEnabled: boolean) -> (),
+	setTeamSource: (source: string?) -> (),
 }
 
 --// Private state
@@ -28,7 +29,7 @@ TeamUtils.__index = TeamUtils
 local _maid = nil :: any
 local _state = {
 	isDebugEnabled = false,
-	lastControllerSearchAt = 0,
+	teamSource = nil :: string?,
 }
 local _signals = {}
 
@@ -39,12 +40,6 @@ local function _getFighterController(): any
 	if _fighterController then
 		return _fighterController
 	end
-
-	local now = os.clock()
-	if now - _state.lastControllerSearchAt < FIGHTER_CONTROLLER_SEARCH_INTERVAL then
-		return nil
-	end
-	_state.lastControllerSearchAt = now
 
 	local localPlayer = Players.LocalPlayer
 	if not localPlayer then
@@ -91,13 +86,6 @@ local function _readValueObjectTeam(container: Instance): TeamId?
 		if valueObj and valueObj:IsA("ValueBase") then
 			return (valueObj :: any).Value :: TeamId? -- any: ValueBase.Value is not typed in Luau.
 		end
-	end
-	return nil
-end
-
-local function _getTeamFromPlayerProperties(player: Player): TeamId?
-	if player.Team then
-		return player.Team
 	end
 	return nil
 end
@@ -217,6 +205,27 @@ local function _getTeamFromFighter(fighter: any, fallbackPlayer: Player?): TeamI
 	return nil
 end
 
+local function _getFighterIsInDuel(fighter: any): boolean
+	if not fighter then
+		return false
+	end
+
+	local getFn = fighter.Get
+	if getFn then
+		local ok, isInDuel = pcall(getFn, fighter, "IsInDuel")
+		if ok and isInDuel ~= nil then
+			return isInDuel == true
+		end
+	end
+
+	local value = fighter.IsInDuel or fighter.isInDuel
+	if value ~= nil then
+		return value == true
+	end
+
+	return false
+end
+
 local function _getFighterForPlayer(controller: any, player: Player): any
 	if not controller then
 		return nil
@@ -253,6 +262,26 @@ end
 function TeamUtils.getPlayerTeamId(player: Player): TeamId?
 	local controller = _getFighterController()
 	local fighter = _getFighterForPlayer(controller, player)
+	local source = _state.teamSource
+
+	if source == "fighter" then
+		local fighterTeam = _getTeamFromFighter(fighter, player)
+		_debugLog(player, "fighter", fighterTeam)
+		return fighterTeam
+	end
+
+	if source == "player-attr" then
+		local playerAttr = _readAttributeTeam(player)
+		_debugLog(player, "player-attr", playerAttr)
+		return playerAttr
+	end
+
+	if source == "player-value" then
+		local playerValue = _readValueObjectTeam(player)
+		_debugLog(player, "player-value", playerValue)
+		return playerValue
+	end
+
 	local fighterTeam = _getTeamFromFighter(fighter, player)
 	if fighterTeam ~= nil then
 		_debugLog(player, "fighter", fighterTeam)
@@ -265,31 +294,10 @@ function TeamUtils.getPlayerTeamId(player: Player): TeamId?
 		return playerAttr
 	end
 
-	local playerPropertyTeam = _getTeamFromPlayerProperties(player)
-	if playerPropertyTeam ~= nil then
-		_debugLog(player, "player-team", playerPropertyTeam)
-		return playerPropertyTeam
-	end
-
 	local playerValue = _readValueObjectTeam(player)
 	if playerValue ~= nil then
 		_debugLog(player, "player-value", playerValue)
 		return playerValue
-	end
-
-	local character = player.Character
-	if character then
-		local characterAttr = _readAttributeTeam(character)
-		if characterAttr ~= nil then
-			_debugLog(player, "character-attr", characterAttr)
-			return characterAttr
-		end
-
-		local characterValue = _readValueObjectTeam(character)
-		if characterValue ~= nil then
-			_debugLog(player, "character-value", characterValue)
-			return characterValue
-		end
 	end
 
 	return nil
@@ -313,8 +321,18 @@ function TeamUtils.isSameTeam(playerA: Player, playerB: Player): boolean
 	return _areTeamsEqual(teamA, teamB)
 end
 
+function TeamUtils.isInDuel(player: Player): boolean
+	local controller = _getFighterController()
+	local fighter = _getFighterForPlayer(controller, player)
+	return _getFighterIsInDuel(fighter)
+end
+
 function TeamUtils.setDebugEnabled(isEnabled: boolean): ()
 	_state.isDebugEnabled = isEnabled
+end
+
+function TeamUtils.setTeamSource(source: string?): ()
+	_state.teamSource = source
 end
 
 return TeamUtils

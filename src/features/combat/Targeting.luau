@@ -95,6 +95,9 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 	if player == localPlayer then
 		return false, nil, false, math.huge
 	end
+	if not TeamUtils.isInDuel(localPlayer) or not TeamUtils.isInDuel(player) then
+		return false, nil, false, math.huge
+	end
 	if TeamUtils.isSameTeam(player, localPlayer) then
 		return false, nil, false, math.huge
 	end
@@ -214,6 +217,10 @@ function Targeting.getClosestSilentTarget(): BasePart?
 	local camera = Helpers.getCamera()
 	local localPlayer = Helpers.getLocalPlayer()
 
+	if not TeamUtils.isInDuel(localPlayer) then
+		return nil
+	end
+
 	local closest: BasePart? = nil
 	local closestDistSq = State.silentAimFovRadius * State.silentAimFovRadius
 	local mouseLocation = UserInputService:GetMouseLocation()
@@ -224,6 +231,9 @@ function Targeting.getClosestSilentTarget(): BasePart?
 		end
 
 		local player = Players:GetPlayerFromCharacter(entity :: Model)
+		if player and not TeamUtils.isInDuel(player) then
+			continue
+		end
 		if player and TeamUtils.isSameTeam(player, localPlayer) then
 			continue
 		end

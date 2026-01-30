@@ -107,7 +107,6 @@ function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
 	if State.isAimbotEnabled == isEnabled then
 		return
 	end
-	State.logger:info("Set Aimbot Enabled:", isEnabled)
 	State.isAimbotEnabled = isEnabled
 	if not isEnabled then
 		State.target = nil
@@ -145,7 +144,6 @@ function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 end
 
 function Combat.setSilentAimEnabled(self: CombatFeature, isEnabled: boolean): ()
-	State.logger:info("Set Silent Aim Enabled:", isEnabled)
 	State.isSilentAimEnabled = isEnabled
 	if not isEnabled then
 		State.silentTarget = nil

@@ -9,6 +9,7 @@ local RunService = game:GetService("RunService")
 local Logger = require("src/utils/Logger")
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid")
 local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
+local TeamUtils = require("src/utils/TeamUtils")
 
 --// Constants
 local BUNDLE_URL =
@@ -291,6 +292,9 @@ function Client.start(self: BlossomClient): ()
 
 	_disableAnalyticsPipeline(_state.logger)
 	_state.logger:info("Blossom 초기화 시작됨.")
+	local teamSource = genv.BlossomTeamSource or env.BlossomTeamSource or "fighter"
+	TeamUtils.setTeamSource(teamSource)
+	TeamUtils.setDebugEnabled(true)
 	_waitForClientLoaded()
 
 	for _, entry in ipairs(MODULES) do
