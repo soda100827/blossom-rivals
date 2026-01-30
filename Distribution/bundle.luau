@@ -147,11 +147,11 @@ end end do local function __modImpl()local Constants={DEFAULT_SETTINGS={
 isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false,
 shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
 shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,
-maxDistance=2000,boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),
-weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),skeletonColor=
-Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.
-new(0,0,0),nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,
-0),distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
+boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,
+1,1),distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),
+healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),
+nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),
+distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
 skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
 highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
 12,shouldOutline=true},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
@@ -249,26 +249,26 @@ TeamUtils.isSameTeam(player,localPlayer)then Helpers.removePlayer(player)
 continue end local group=Helpers.ensurePlayerDrawings(player)if not group then
 continue end local rootPart=root local distance=(rootPart.Position-camera.CFrame
 .Position).Magnitude local _,onScreen=camera:WorldToViewportPoint(rootPart.
-Position)if not onScreen or distance>State.settings.maxDistance then
-_setGroupVisible(group,false)local highlight=State.highlights[player]if
-highlight then highlight.Enabled=false end continue end Helpers.updateHighlight(
-player,character)local rootPos=camera:WorldToViewportPoint(rootPart.Position)
-local legPos=camera:WorldToViewportPoint(rootPart.Position-Vector3.new(0,3,0))
-local headPos=camera:WorldToViewportPoint(rootPart.Position+Vector3.new(0,2,0))
-local height=math.abs(headPos.Y-legPos.Y)*1.5 local width=height*0.6 local
-boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-height/2)local boxSize=Vector2.
-new(width,height)if State.settings.shouldShowBoxes then group.boxOutline.Size=
-boxSize group.boxOutline.Position=boxPos group.boxOutline.Color=State.settings.
-boxOutlineColor group.boxOutline.Thickness=State.settings.boxThickness+2 group.
-boxOutline.Visible=true group.boxOutline.ZIndex=1 group.box.Size=boxSize group.
-box.Position=boxPos group.box.Color=State.settings.boxColor group.box.Thickness=
-State.settings.boxThickness group.box.Visible=true group.box.ZIndex=2 else group
-.box.Visible=false group.boxOutline.Visible=false end if State.settings.
-shouldShowHealthbar then local healthPerc=math.clamp(humanoid.Health/humanoid.
-MaxHealth,0,1)local barHeight=height*healthPerc group.healthbarOutline.Size=
-Vector2.new(4,height+2)group.healthbarOutline.Position=Vector2.new(boxPos.X-6,
-boxPos.Y-1)group.healthbarOutline.Color=State.settings.healthbarOutlineColor
-group.healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
+Position)if not onScreen then _setGroupVisible(group,false)local highlight=State
+.highlights[player]if highlight then highlight.Enabled=false end continue end
+Helpers.updateHighlight(player,character)local rootPos=camera:
+WorldToViewportPoint(rootPart.Position)local legPos=camera:WorldToViewportPoint(
+rootPart.Position-Vector3.new(0,3,0))local headPos=camera:WorldToViewportPoint(
+rootPart.Position+Vector3.new(0,2,0))local height=math.abs(headPos.Y-legPos.Y)*
+1.5 local width=height*0.6 local boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-
+height/2)local boxSize=Vector2.new(width,height)if State.settings.
+shouldShowBoxes then group.boxOutline.Size=boxSize group.boxOutline.Position=
+boxPos group.boxOutline.Color=State.settings.boxOutlineColor group.boxOutline.
+Thickness=State.settings.boxThickness+2 group.boxOutline.Visible=true group.
+boxOutline.ZIndex=1 group.box.Size=boxSize group.box.Position=boxPos group.box.
+Color=State.settings.boxColor group.box.Thickness=State.settings.boxThickness
+group.box.Visible=true group.box.ZIndex=2 else group.box.Visible=false group.
+boxOutline.Visible=false end if State.settings.shouldShowHealthbar then local
+healthPerc=math.clamp(humanoid.Health/humanoid.MaxHealth,0,1)local barHeight=
+height*healthPerc group.healthbarOutline.Size=Vector2.new(4,height+2)group.
+healthbarOutline.Position=Vector2.new(boxPos.X-6,boxPos.Y-1)group.
+healthbarOutline.Color=State.settings.healthbarOutlineColor group.
+healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
 healthbarOutline.ZIndex=1 group.healthbar.Size=Vector2.new(2,barHeight)group.
 healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-barHeight))group.
 healthbar.Color=State.settings.healthbarColor:Lerp(Color3.new(1,0,0),1-
@@ -326,7 +326,6 @@ shouldShowHealthbar=shouldShow end function Visuals.setShowHighlight(self,
 shouldShow)State.settings.shouldShowHighlight=shouldShow if not shouldShow then
 Helpers.clearHighlights()end end function Visuals.setShowTeammates(self,
 shouldShow)State.settings.shouldShowTeammates=shouldShow end function Visuals.
-setMaxDistance(self,value)State.settings.maxDistance=value end function Visuals.
 setBoxColor(self,color)State.settings.boxColor=color end function Visuals.
 setTextColor(self,color)State.settings.textColor=color end function Visuals.
 setWeaponColor(self,color)State.settings.weaponColor=color end function Visuals.
@@ -816,54 +815,55 @@ updateConn)end local function _mount()if _state.isMounted then return end _state
 'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
 logger)local saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.
 library=library _state.themeManager=themeManager _state.saveManager=saveManager
-local window=library:CreateWindow({Title='Blossom '.._state.client.Version,
-Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})
-local tabs={combat=window:AddTab('Combat'),visuals=window:AddTab('Visuals'),misc
-=window:AddTab('Misc'),uiSettings=window:AddTab('UI Settings')}local combatGroup
-=tabs.combat:AddLeftGroupbox('Combat')local silentAimToggle=combatGroup:
-AddToggle('SilentAimEnabled',{Text='Silent Aim',Default=false,Callback=function(
-)_updateControlBindings()end})silentAimToggle:AddKeyPicker('SilentAimKeybind',{
-Default='MouseButton2',NoUI=false,Text='Silent Aim Keybind',SyncToggleState=
-false,Callback=function()_updateControlBindings()end})silentAimToggle:
-AddColorPicker('SilentAimFovColor',{Default=Color3.fromRGB(255,255,255),
-Transparency=0,Title='Silent FOV Color',Callback=function(color,transparency)
-local mod=_state.client.Modules.Combat if mod and mod.setSilentAimFovColor then
-mod:setSilentAimFovColor(color)end if mod and mod.setSilentAimFovTransparency
-then mod:setSilentAimFovTransparency(transparency or 0)end end})combatGroup:
-AddSlider('SilentHitChance',{Text='Silent Hit Chance',Default=100,Min=0,Max=100,
-Rounding=0,Suffix='%',Compact=true,Callback=function(value)local mod=_state.
-client.Modules.Combat if mod and mod.setSilentHitChance then mod:
-setSilentHitChance(value)end end})combatGroup:AddSlider('SilentAimFovRadius',{
-Text='Silent Aim Radius',Default=100,Min=10,Max=800,Rounding=0,Suffix='px',
-Compact=true,Callback=function(value)local mod=_state.client.Modules.Combat if
-mod and mod.setSilentAimFovRadius then mod:setSilentAimFovRadius(value)end end})
-local combatAimbotToggle=combatGroup:AddToggle('CombatAimbotEnabled',{Text=
-'Aimbot',Default=false,Callback=function()_updateControlBindings()end})
-combatAimbotToggle:AddKeyPicker('CombatAimbotKeybind',{Default='MouseButton2',
-NoUI=false,Text='Aimbot Keybind',SyncToggleState=false,Callback=function()
-_updateControlBindings()end})combatAimbotToggle:AddColorPicker('CombatFovColor',
-{Default=Color3.fromRGB(255,255,255),Transparency=0,Title='Aimbot FOV Color',
+if library and library.AccentColor~=nil then library.AccentColor=Color3.fromRGB(
+255,105,180)end local window=library:CreateWindow({Title='Blossom '.._state.
+client.Version,Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,
+MenuFadeTime=0.2})local tabs={combat=window:AddTab('Combat'),visuals=window:
+AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab(
+'UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox('Combat')local
+silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text='Silent Aim',
+Default=false,Callback=function()_updateControlBindings()end})silentAimToggle:
+AddKeyPicker('SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text=
+'Silent Aim Keybind',SyncToggleState=false,Callback=function()
+_updateControlBindings()end})silentAimToggle:AddColorPicker('SilentAimFovColor',
+{Default=Color3.fromRGB(255,255,255),Transparency=0,Title='Silent FOV Color',
 Callback=function(color,transparency)local mod=_state.client.Modules.Combat if
-mod and mod.setFovColor then mod:setFovColor(color)end if mod and mod.
-setFovTransparency then mod:setFovTransparency(transparency or 0)end end})
-combatGroup:AddSlider('CombatSmoothness',{Text='Aimbot Smoothing',Default=0,Min=
-0,Max=100,Rounding=0,Suffix='%',Compact=true,Callback=function(value)local mod=
-_state.client.Modules.Combat if mod and mod.setSmoothness then mod:
-setSmoothness((value)/100)end end})combatGroup:AddSlider('CombatFovRadius',{Text
-='Aimbot Radius',Default=100,Min=10,Max=800,Rounding=0,Suffix='px',Compact=true,
-Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
-setFovRadius then mod:setFovRadius(value)end end})combatGroup:AddToggle(
-'CombatManipulation',{Text='Manipulation',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Combat if mod and mod.setManipulationEnabled
-then mod:setManipulationEnabled(state)end end})combatGroup:AddToggle(
-'CombatWallCheck',{Text='Visible Only',Default=false,Callback=function(state)
-local mod=_state.client.Modules.Combat if mod and mod.setWallCheckEnabled then
-mod:setWallCheckEnabled(state)end end})combatGroup:AddToggle('CombatAntiKatana',
-{Text='Anti Katana',Default=false,Callback=function(state)local mod=_state.
-client.Modules.Combat if mod and mod.setAntiKatanaEnabled then mod:
-setAntiKatanaEnabled(state)end end})combatGroup:AddToggle(
-'CombatClosestPosition',{Text='Closest Position',Default=true,Callback=function(
-state)local mod=_state.client.Modules.Combat if mod and mod.
+mod and mod.setSilentAimFovColor then mod:setSilentAimFovColor(color)end if mod
+and mod.setSilentAimFovTransparency then mod:setSilentAimFovTransparency(
+transparency or 0)end end})combatGroup:AddSlider('SilentHitChance',{Text=
+'Silent Hit Chance',Default=100,Min=0,Max=100,Rounding=0,Suffix='%',Compact=true
+,Callback=function(value)local mod=_state.client.Modules.Combat if mod and mod.
+setSilentHitChance then mod:setSilentHitChance(value)end end})combatGroup:
+AddSlider('SilentAimFovRadius',{Text='Silent Aim Radius',Default=100,Min=10,Max=
+800,Rounding=0,Suffix='px',Compact=true,Callback=function(value)local mod=_state
+.client.Modules.Combat if mod and mod.setSilentAimFovRadius then mod:
+setSilentAimFovRadius(value)end end})local combatAimbotToggle=combatGroup:
+AddToggle('CombatAimbotEnabled',{Text='Aimbot',Default=false,Callback=function()
+_updateControlBindings()end})combatAimbotToggle:AddKeyPicker(
+'CombatAimbotKeybind',{Default='MouseButton2',NoUI=false,Text='Aimbot Keybind',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})
+combatAimbotToggle:AddColorPicker('CombatFovColor',{Default=Color3.fromRGB(255,
+255,255),Transparency=0,Title='Aimbot FOV Color',Callback=function(color,
+transparency)local mod=_state.client.Modules.Combat if mod and mod.setFovColor
+then mod:setFovColor(color)end if mod and mod.setFovTransparency then mod:
+setFovTransparency(transparency or 0)end end})combatGroup:AddSlider(
+'CombatSmoothness',{Text='Aimbot Smoothing',Default=0,Min=0,Max=100,Rounding=0,
+Suffix='%',Compact=true,Callback=function(value)local mod=_state.client.Modules.
+Combat if mod and mod.setSmoothness then mod:setSmoothness((value)/100)end end})
+combatGroup:AddSlider('CombatFovRadius',{Text='Aimbot Radius',Default=100,Min=10
+,Max=800,Rounding=0,Suffix='px',Compact=true,Callback=function(value)local mod=
+_state.client.Modules.Combat if mod and mod.setFovRadius then mod:setFovRadius(
+value)end end})combatGroup:AddToggle('CombatManipulation',{Text='Manipulation',
+Default=false,Callback=function(state)local mod=_state.client.Modules.Combat if
+mod and mod.setManipulationEnabled then mod:setManipulationEnabled(state)end end
+})combatGroup:AddToggle('CombatWallCheck',{Text='Visible Only',Default=false,
+Callback=function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setWallCheckEnabled then mod:setWallCheckEnabled(state)end end})combatGroup:
+AddToggle('CombatAntiKatana',{Text='Anti Katana',Default=false,Callback=function
+(state)local mod=_state.client.Modules.Combat if mod and mod.
+setAntiKatanaEnabled then mod:setAntiKatanaEnabled(state)end end})combatGroup:
+AddToggle('CombatClosestPosition',{Text='Closest Position',Default=true,Callback
+=function(state)local mod=_state.client.Modules.Combat if mod and mod.
 setClosestPositionEnabled then mod:setClosestPositionEnabled(state)end end})
 combatGroup:AddDropdown('CombatClosestWhitelist',{Values={'Head','UpperTorso',
 'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg'},
@@ -874,7 +874,8 @@ mod=_state.client.Modules.Combat if mod and mod.setClosestPositionWhitelist then
 local selectedNames={}for name,enabled in pairs(value)do if enabled then table.
 insert(selectedNames,name)end end mod:setClosestPositionWhitelist(selectedNames)
 end end})combatGroup:AddDropdown('CombatTargetPart',{Values={'Head','UpperTorso'
-,'LowerTorso'},Default=1,Multi=false,Text='Target Part',Tooltip=
+,'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg'},
+Default=1,Multi=false,Text='Target Part',Tooltip=
 'Static target part when Closest Position is off',Callback=function(value)local
 mod=_state.client.Modules.Combat if mod and mod.setTargetPart then mod:
 setTargetPart(value)end end})local espGroup=tabs.visuals:AddLeftGroupbox('ESP')
@@ -951,79 +952,75 @@ _state.client.Modules.Visuals if mod and mod.setSkeletonThickness then mod:
 setSkeletonThickness(value)end end})espGroup:AddSlider('ESPTextSize',{Text=
 'Text Size',Default=12,Min=10,Max=24,Rounding=0,Compact=true,Callback=function(
 value)local mod=_state.client.Modules.Visuals if mod and mod.setTextSize then
-mod:setTextSize(value)end end})espGroup:AddSlider('ESPMaxDistance',{Text=
-'Max Distance',Default=2000,Min=100,Max=10000,Rounding=0,Compact=true,Callback=
-function(value)local mod=_state.client.Modules.Visuals if mod and mod.
-setMaxDistance then mod:setMaxDistance(value)end end})local menuGroup=tabs.
-uiSettings:AddLeftGroupbox('Menu')menuGroup:AddButton('Unload',function()library
-:Unload()end)menuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{Default
-='End',NoUI=true,Text='Menu keybind'})local getfenvAny=getfenv local env=(
-getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and
-getgenvFunc().Options)or _G.Options if GlobalOptions and GlobalOptions.
-MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind end
-themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
-IgnoreThemeSettings()themeManager:SetFolder('Blossom')saveManager:SetFolder(
-'Blossom')saveManager:BuildConfigSection(tabs.uiSettings)themeManager:
-ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:AddLeftGroupbox('Player')
-local playerFlyToggle=playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=
-false,Callback=function(state)_updateControlBindings()end})playerFlyToggle:
-AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text='Fly Keybind',
+mod:setTextSize(value)end end})local menuGroup=tabs.uiSettings:AddLeftGroupbox(
+'Menu')menuGroup:AddButton('Unload',function()library:Unload()end)menuGroup:
+AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text=
+'Menu keybind'})local getfenvAny=getfenv local env=(getfenvAny(0))local
+getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and getgenvFunc().
+Options)or _G.Options if GlobalOptions and GlobalOptions.MenuKeybind then
+library.ToggleKeybind=GlobalOptions.MenuKeybind end themeManager:SetLibrary(
+library)saveManager:SetLibrary(library)saveManager:IgnoreThemeSettings()
+themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
+BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local
+playerGroup=tabs.misc:AddLeftGroupbox('Player')local playerFlyToggle=playerGroup
+:AddToggle('PlayerFly',{Text='Fly',Default=false,Callback=function(state)
+_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
+Default='F',NoUI=false,Text='Fly Keybind',SyncToggleState=false,Callback=
+function()_updateControlBindings()end})playerGroup:AddSlider('PlayerFlySpeed',{
+Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Compact=true,Callback=
+function(value)local mod=_state.client.Modules.Player if mod and mod.setFlySpeed
+then mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:
+AddToggle('PlayerNoclip',{Text='Noclip',Default=false,Callback=function(state)
+_updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
+'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip Keybind',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})local
+playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
+'Walk Speed',Default=false,Callback=function(state)_updateControlBindings()end})
+playerWalkSpeedToggle:AddKeyPicker('PlayerWalkSpeedKeybind',{Default='T',NoUI=
+false,Text='Walk Speed Keybind',SyncToggleState=false,Callback=function()
+_updateControlBindings()end})playerGroup:AddSlider('PlayerWalkSpeed',{Text=
+'Walk Speed',Default=16,Min=0,Max=200,Rounding=0,Compact=true,Callback=function(
+value)local mod=_state.client.Modules.Player if mod and mod.setWalkSpeed then
+mod:setWalkSpeed(value)end end})local playerJumpPowerToggle=playerGroup:
+AddToggle('PlayerJumpPowerEnabled',{Text='Jump Power',Default=false,Callback=
+function(state)_updateControlBindings()end})playerJumpPowerToggle:AddKeyPicker(
+'PlayerJumpPowerKeybind',{Default='Y',NoUI=false,Text='Jump Power Keybind',
 SyncToggleState=false,Callback=function()_updateControlBindings()end})
-playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
+playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=
 200,Rounding=0,Compact=true,Callback=function(value)local mod=_state.client.
-Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(value)end end})
-local playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{Text='Noclip',
-Default=false,Callback=function(state)_updateControlBindings()end})
-playerNoclipToggle:AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,
-Text='Noclip Keybind',SyncToggleState=false,Callback=function()
-_updateControlBindings()end})local playerWalkSpeedToggle=playerGroup:AddToggle(
-'PlayerWalkSpeedEnabled',{Text='Walk Speed',Default=false,Callback=function(
-state)_updateControlBindings()end})playerWalkSpeedToggle:AddKeyPicker(
-'PlayerWalkSpeedKeybind',{Default='T',NoUI=false,Text='Walk Speed Keybind',
-SyncToggleState=false,Callback=function()_updateControlBindings()end})
-playerGroup:AddSlider('PlayerWalkSpeed',{Text='Walk Speed',Default=16,Min=0,Max=
-200,Rounding=0,Compact=true,Callback=function(value)local mod=_state.client.
-Modules.Player if mod and mod.setWalkSpeed then mod:setWalkSpeed(value)end end})
-local playerJumpPowerToggle=playerGroup:AddToggle('PlayerJumpPowerEnabled',{Text
-='Jump Power',Default=false,Callback=function(state)_updateControlBindings()end}
-)playerJumpPowerToggle:AddKeyPicker('PlayerJumpPowerKeybind',{Default='Y',NoUI=
-false,Text='Jump Power Keybind',SyncToggleState=false,Callback=function()
-_updateControlBindings()end})playerGroup:AddSlider('PlayerJumpPower',{Text=
-'Jump Power',Default=50,Min=0,Max=200,Rounding=0,Compact=true,Callback=function(
-value)local mod=_state.client.Modules.Player if mod and mod.setJumpPower then
-mod:setJumpPower(value)end end})_state.controlBindings={{toggleId=
-'CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=function(
-active)local mod=_state.client.Modules.Combat if mod and mod.setAimbotEnabled
-then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly',keybindId=
-'PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.client.
-Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active)end
-end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,setter=
+Modules.Player if mod and mod.setJumpPower then mod:setJumpPower(value)end end})
+_state.controlBindings={{toggleId='CombatAimbotEnabled',keybindId=
+'CombatAimbotKeybind',last=nil,setter=function(active)local mod=_state.client.
+Modules.Combat if mod and mod.setAimbotEnabled then mod:setAimbotEnabled(active)
+end end},{toggleId='PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=
 function(active)local mod=_state.client.Modules.Player if mod and mod.
-setNoclipEnabled then mod:setNoclipEnabled(active)end end},{toggleId=
-'PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',last=nil,setter=
-function(active)local mod=_state.client.Modules.Player if mod and mod.
-setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{toggleId=
-'PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,setter=
-function(active)local mod=_state.client.Modules.Player if mod and mod.
-setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
-'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
-local mod=_state.client.Modules.Combat if mod and mod.setSilentAimEnabled then
-mod:setSilentAimEnabled(active)end end}}_updateControlBindings()local miscGroup=
-tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:AddToggle('TeleportQueue',{Text=
-'Auto Load',Default=false,Callback=function(enabled)_state.client:
-setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
-'Silent Mode',Default=false,Callback=function(enabled)_setNotifyMuted(library,
-enabled)_state.client:setSilent(enabled)end})_runAutoload(library,saveManager,
-false)end function Interface.init(self,client)_state.client=client _state.logger
-=client.Logger _maid=Maid.new()_connect()_mount()end function Interface.cleanup(
-self)_maid:DoCleaning()if _state.library then _state.library:Unload()end _state.
-isMounted=false end return Interface end function __DARKLUA_BUNDLE_MODULES.y()
-local v=__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end end local
-ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:GetService(
-'Players')local RunService=game:GetService('RunService')local Logger=
-__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()local Signal=
-__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
+setFlyEnabled then mod:setFlyEnabled(active)end end},{toggleId='PlayerNoclip',
+keybindId='PlayerNoclipKeybind',last=nil,setter=function(active)local mod=_state
+.client.Modules.Player if mod and mod.setNoclipEnabled then mod:
+setNoclipEnabled(active)end end},{toggleId='PlayerWalkSpeedEnabled',keybindId=
+'PlayerWalkSpeedKeybind',last=nil,setter=function(active)local mod=_state.client
+.Modules.Player if mod and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(
+active)end end},{toggleId='PlayerJumpPowerEnabled',keybindId=
+'PlayerJumpPowerKeybind',last=nil,setter=function(active)local mod=_state.client
+.Modules.Player if mod and mod.setJumpPowerEnabled then mod:setJumpPowerEnabled(
+active)end end},{toggleId='SilentAimEnabled',keybindId='SilentAimKeybind',last=
+nil,setter=function(active)local mod=_state.client.Modules.Combat if mod and mod
+.setSilentAimEnabled then mod:setSilentAimEnabled(active)end end}}
+_updateControlBindings()local miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')
+miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,Callback=
+function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
+AddToggle('SilentMode',{Text='Silent Mode',Default=false,Callback=function(
+enabled)_setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
+_runAutoload(library,saveManager,false)end function Interface.init(self,client)
+_state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()
+_mount()end function Interface.cleanup(self)_maid:DoCleaning()if _state.library
+then _state.library:Unload()end _state.isMounted=false end return Interface end
+function __DARKLUA_BUNDLE_MODULES.y()local v=__DARKLUA_BUNDLE_MODULES.cache.y if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c
+end end end local ReplicatedFirst=game:GetService('ReplicatedFirst')local
+Players=game:GetService('Players')local RunService=game:GetService('RunService')
+local Logger=__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()
+local Signal=__DARKLUA_BUNDLE_MODULES.c()local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/Distribution/bundle.luau]]
 local CLIENT_MODULE_NAME='Client'local getfenvAny=getfenv local env=(getfenvAny(
 0))local genv=(env.getgenv and env.getgenv())or env local function getGlobal(k)

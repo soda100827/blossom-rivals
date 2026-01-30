@@ -115,10 +115,6 @@ function Visuals.setShowTeammates(self: VisualsFeature, shouldShow: boolean): ()
 	State.settings.shouldShowTeammates = shouldShow
 end
 
-function Visuals.setMaxDistance(self: VisualsFeature, value: number): ()
-	State.settings.maxDistance = value
-end
-
 function Visuals.setBoxColor(self: VisualsFeature, color: Color3): ()
 	State.settings.boxColor = color
 end

@@ -280,7 +280,7 @@ function Helpers.render()
     local rootPart = root :: BasePart
     local distance = (rootPart.Position - camera.CFrame.Position).Magnitude
     local _, onScreen = camera:WorldToViewportPoint(rootPart.Position)
-    if not onScreen or distance > State.settings.maxDistance then
+    if not onScreen then
       _setGroupVisible(group, false)
       local highlight = State.highlights[player]
       if highlight then

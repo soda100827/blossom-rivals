@@ -20,7 +20,6 @@ local Constants = {
     shouldShowHealthbar = false,
     shouldShowHighlight = false,
     shouldShowTeammates = true,
-    maxDistance = 2000,
     boxColor = Color3.new(1, 1, 1),
     textColor = Color3.new(1, 1, 1),
     weaponColor = Color3.new(1, 1, 1),

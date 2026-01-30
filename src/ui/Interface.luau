@@ -151,6 +151,10 @@ local function _mount()
 	_state.themeManager = themeManager
 	_state.saveManager = saveManager
 
+	if library and library.AccentColor ~= nil then
+		library.AccentColor = Color3.fromRGB(255, 105, 180)
+	end
+
 	local window = library:CreateWindow({
 		Title = "Blossom " .. _state.client.Version,
 		Center = true,
@@ -378,7 +382,15 @@ local function _mount()
 	})
 
 	combatGroup:AddDropdown("CombatTargetPart", {
-		Values = { "Head", "UpperTorso", "LowerTorso" },
+		Values = {
+			"Head",
+			"UpperTorso",
+			"LowerTorso",
+			"LeftUpperArm",
+			"RightUpperArm",
+			"LeftUpperLeg",
+			"RightUpperLeg",
+		},
 		Default = 1,
 		Multi = false,
 		Text = "Target Part",
@@ -390,7 +402,6 @@ local function _mount()
 			end
 		end,
 	})
-
 
 	local espGroup = tabs.visuals:AddLeftGroupbox("ESP")
 	espGroup:AddToggle("VisualsToggle", {
@@ -674,21 +685,6 @@ local function _mount()
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.setTextSize then
 				mod:setTextSize(value)
-			end
-		end,
-	})
-
-	espGroup:AddSlider("ESPMaxDistance", {
-		Text = "Max Distance",
-		Default = 2000,
-		Min = 100,
-		Max = 10000,
-		Rounding = 0,
-		Compact = true,
-		Callback = function(value)
-			local mod = _state.client.Modules.Visuals
-			if mod and mod.setMaxDistance then
-				mod:setMaxDistance(value)
 			end
 		end,
 	})
