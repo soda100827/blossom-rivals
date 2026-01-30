@@ -42,7 +42,8 @@ local function _updateCircle(
 		c.NumSides = Constants.FOV_CIRCLE_NUM_SIDES
 		c.Filled = false
 		c.Color = color
-		c.Transparency = math.clamp(transparency, 0, 1)
+		local alpha = math.clamp(transparency, 0, 1)
+		c.Transparency = 1 - alpha
 		c.Position = mouseLocation
 		c.Radius = radius
 		c.Visible = true

@@ -712,18 +712,19 @@ transparency,mouseLocation)local lib=Helpers.getDrawingLib()if not lib then
 return end local stateAny=State local circle=stateAny[circleId]if isEnabled then
 if not circle then circle=lib.new('Circle')stateAny[circleId]=circle end local c
 =circle c.Thickness=Constants.FOV_CIRCLE_THICKNESS c.NumSides=Constants.
-FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=color c.Transparency=math.clamp(
-transparency,0,1)c.Position=mouseLocation c.Radius=radius c.Visible=true else
-local c=circle if c then c.Visible=false end end end function Visuals.
-updateFovCircle()local mouseLocation=UserInputService:GetMouseLocation()
-_updateCircle('fovCircle',State.isFovEnabled,State.fovRadius,State.fovColor,
-State.fovTransparency,mouseLocation)_updateCircle('silentAimFovCircle',State.
-isSilentAimFovEnabled,State.silentAimFovRadius,State.silentAimFovColor,State.
-silentAimFovTransparency,mouseLocation)end return Visuals end function
-__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
-do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.r()local
+FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=color local alpha=math.clamp(
+transparency,0,1)c.Transparency=1-alpha c.Position=mouseLocation c.Radius=radius
+c.Visible=true else local c=circle if c then c.Visible=false end end end
+function Visuals.updateFovCircle()local mouseLocation=UserInputService:
+GetMouseLocation()_updateCircle('fovCircle',State.isFovEnabled,State.fovRadius,
+State.fovColor,State.fovTransparency,mouseLocation)_updateCircle(
+'silentAimFovCircle',State.isSilentAimFovEnabled,State.silentAimFovRadius,State.
+silentAimFovColor,State.silentAimFovTransparency,mouseLocation)end return
+Visuals end function __DARKLUA_BUNDLE_MODULES.w()local v=
+__DARKLUA_BUNDLE_MODULES.cache.w if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end do local function
+__modImpl()local RunService=game:GetService('RunService')local Maid=(
+__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.r()local
 Constants=__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
 local Targeting=__DARKLUA_BUNDLE_MODULES.t()local Aimbot=
 __DARKLUA_BUNDLE_MODULES.u()local Types=__DARKLUA_BUNDLE_MODULES.p()local
