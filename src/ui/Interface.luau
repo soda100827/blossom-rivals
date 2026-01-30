@@ -929,6 +929,35 @@ local function _mount()
 		end,
 	})
 
+	playerGroup:AddToggle("PlayerSlideBoost", {
+		Text = "Slide Boost",
+		Default = false,
+		Tooltip = "Boosts your sliding speed.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setSlideBoostEnabled then
+				mod:setSlideBoostEnabled(state)
+			end
+		end,
+	})
+
+	playerGroup:AddSlider("PlayerSlideBoostMultiplier", {
+		Text = "Slide Boost Multiplier",
+		Default = 1,
+		Min = 1,
+		Max = 10,
+		Rounding = 1,
+		Suffix = "x",
+		Tooltip = "Multiplier for sliding speed.",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setSlideBoostMultiplier then
+				mod:setSlideBoostMultiplier(value)
+			end
+		end,
+	})
+
 	_state.controlBindings = {
 		{
 			toggleId = "CombatAimbotEnabled",

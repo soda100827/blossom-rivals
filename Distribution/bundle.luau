@@ -366,33 +366,34 @@ isWalkSpeedEnabled=false,isJumpPowerEnabled=false,walkSpeedValue=16,
 jumpPowerValue=50,flySpeed=Constants.DEFAULT_FLY_SPEED,defaultWalkSpeed=nil,
 defaultJumpPower=nil,defaultJumpHeight=nil,defaultUseJumpPower=nil,
 defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},characterMaid=nil,
-input={forward=0,back=0,left=0,right=0,up=0,down=0}}return State end function
-__DARKLUA_BUNDLE_MODULES.m()local v=__DARKLUA_BUNDLE_MODULES.cache.m if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-Workspace=game:GetService('Workspace')local Constants=__DARKLUA_BUNDLE_MODULES.
-k()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers={}function Helpers.
-getLocalPlayer()return Players.LocalPlayer end function Helpers.resetInput()
-State.input={forward=0,back=0,left=0,right=0,up=0,down=0}end function Helpers.
-cacheDefaults(humanoid)State.defaultWalkSpeed=humanoid.WalkSpeed State.
-defaultUseJumpPower=humanoid.UseJumpPower if humanoid.UseJumpPower then State.
-defaultJumpPower=humanoid.JumpPower State.defaultJumpHeight=nil else State.
-defaultJumpPower=nil State.defaultJumpHeight=humanoid.JumpHeight end State.
-defaultAutoRotate=humanoid.AutoRotate State.defaultPlatformStand=humanoid.
-PlatformStand end function Helpers.applyWalkSpeed()local humanoid=State.humanoid
-if not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
-WalkSpeed=State.defaultWalkSpeed end end function Helpers.applyJumpPower()return
-end function Helpers.restoreMovementDefaults()local humanoid=State.humanoid if
-not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
-WalkSpeed=State.defaultWalkSpeed end if State.defaultUseJumpPower~=nil then
-humanoid.UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower
-then if State.defaultJumpPower~=nil then humanoid.JumpPower=State.
-defaultJumpPower end else if State.defaultJumpHeight~=nil then humanoid.
-JumpHeight=State.defaultJumpHeight end end if State.defaultAutoRotate~=nil then
-humanoid.AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=
-nil then humanoid.PlatformStand=State.defaultPlatformStand end end function
-Helpers.setCharacter(character)State.character=character State.humanoid=nil
-State.rootPart=nil if not character then return end local humanoid=character:
+input={forward=0,back=0,left=0,right=0,up=0,down=0},isSlideBoostEnabled=false,
+slideBoostMultiplier=1}return State end function __DARKLUA_BUNDLE_MODULES.m()
+local v=__DARKLUA_BUNDLE_MODULES.cache.m if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end do local function
+__modImpl()local Players=game:GetService('Players')local Workspace=game:
+GetService('Workspace')local Constants=__DARKLUA_BUNDLE_MODULES.k()local State=
+__DARKLUA_BUNDLE_MODULES.m()local Helpers={}function Helpers.getLocalPlayer()
+return Players.LocalPlayer end function Helpers.resetInput()State.input={forward
+=0,back=0,left=0,right=0,up=0,down=0}end function Helpers.cacheDefaults(humanoid
+)State.defaultWalkSpeed=humanoid.WalkSpeed State.defaultUseJumpPower=humanoid.
+UseJumpPower if humanoid.UseJumpPower then State.defaultJumpPower=humanoid.
+JumpPower State.defaultJumpHeight=nil else State.defaultJumpPower=nil State.
+defaultJumpHeight=humanoid.JumpHeight end State.defaultAutoRotate=humanoid.
+AutoRotate State.defaultPlatformStand=humanoid.PlatformStand end function
+Helpers.applyWalkSpeed()local humanoid=State.humanoid if not humanoid then
+return end if State.defaultWalkSpeed~=nil then humanoid.WalkSpeed=State.
+defaultWalkSpeed end end function Helpers.applyJumpPower()return end function
+Helpers.restoreMovementDefaults()local humanoid=State.humanoid if not humanoid
+then return end if State.defaultWalkSpeed~=nil then humanoid.WalkSpeed=State.
+defaultWalkSpeed end if State.defaultUseJumpPower~=nil then humanoid.
+UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower then if
+State.defaultJumpPower~=nil then humanoid.JumpPower=State.defaultJumpPower end
+else if State.defaultJumpHeight~=nil then humanoid.JumpHeight=State.
+defaultJumpHeight end end if State.defaultAutoRotate~=nil then humanoid.
+AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=nil then
+humanoid.PlatformStand=State.defaultPlatformStand end end function Helpers.
+setCharacter(character)State.character=character State.humanoid=nil State.
+rootPart=nil if not character then return end local humanoid=character:
 FindFirstChildOfClass('Humanoid')if not humanoid then humanoid=(character:
 WaitForChild('Humanoid',5))end local rootPart=character:FindFirstChild(
 'HumanoidRootPart')if not rootPart then rootPart=character:WaitForChild(
@@ -425,105 +426,128 @@ characterMaid:DoCleaning()State.characterMaid=nil end Helpers.resetInput()State.
 character=nil State.humanoid=nil State.rootPart=nil end function Helpers.
 onInputChanged(input,isPressed)local keyName=Constants.INPUT_MAP[input.KeyCode]
 if not keyName then return end State.input[keyName]=isPressed and 1 or 0 end
-return Helpers end function __DARKLUA_BUNDLE_MODULES.n()local v=
+function Helpers.getGlobal(name)local getfenvAny=getfenv local env=(getfenvAny(0
+))local genv=(env.getgenv and env.getgenv())or env return genv[name]or env[name]
+end function Helpers.getReplicatedClassModule()local replicatedStorage=game:
+GetService('ReplicatedStorage')local modules=replicatedStorage:WaitForChild(
+'Modules',5)if not modules then return nil end local replicatedClass=modules:
+WaitForChild('ReplicatedClass',5)if not replicatedClass then return nil end
+local success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(replicatedClass)end)return success and result or nil end return
+Helpers end function __DARKLUA_BUNDLE_MODULES.n()local v=
 __DARKLUA_BUNDLE_MODULES.cache.n if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local UserInputService=game:GetService(
+__modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers=
+__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup()local
+hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
+'replaceclosure')local checkcaller=Helpers.getGlobal('checkcaller')or function()
+return false end if not hookfunction then State.logger:warn(
+'hookfunction not found, Player Mods will not work.')return end task.spawn(
+function()local replicatedClassMod=Helpers.getReplicatedClassModule()if
+replicatedClassMod then local oldGet oldGet=hookfunction(replicatedClassMod.Get,
+function(self,key)if not checkcaller()then if key=='SlidingSpeedMax'and State.
+isSlideBoostEnabled then return 3*State.slideBoostMultiplier end end return
+oldGet(self,key)end)end end)end return PlayerMods end function
+__DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+RunService=game:GetService('RunService')local UserInputService=game:GetService(
 'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
 __DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()local
 State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()local
-Player={}Player.__index=Player local _maid=nil local _signals={}local function
-_connect()_maid:DoCleaning()local function bindCharacter()if State.characterMaid
-then State.characterMaid:DoCleaning()end State.characterMaid=Maid.new()local
-humanoid=State.humanoid local rootPart=State.rootPart if humanoid and rootPart
-then local stateConn=humanoid.StateChanged:Connect(function(_,newState)if not
-State.isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.
-Jumping then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=
-State.jumpPowerValue if current.Y<jumpVelocity then rootPart.
-AssemblyLinearVelocity=Vector3.new(current.X,jumpVelocity,current.Z)end end end)
-State.characterMaid:GiveTask(stateConn)end end local function
-handleCharacterAdded(character)Helpers.onCharacterAdded(character)bindCharacter(
-)end local function handleCharacterRemoving()Helpers.onCharacterRemoving()end
-local function attachPlayer(player)local addedConn=player.CharacterAdded:
-Connect(function(character)handleCharacterAdded(character)end)_maid:GiveTask(
-addedConn)local removingConn=player.CharacterRemoving:Connect(function()
-handleCharacterRemoving()end)_maid:GiveTask(removingConn)if player.Character
-then handleCharacterAdded(player.Character)end end local player=Helpers.
-getLocalPlayer()if player then attachPlayer(player)else local playerAddedConn=
-Players.PlayerAdded:Connect(function(addedPlayer)if addedPlayer==Helpers.
-getLocalPlayer()then attachPlayer(addedPlayer)end end)_maid:GiveTask(
-playerAddedConn)end local inputBeganConn=UserInputService.InputBegan:Connect(
-function(input,processed)if processed then return end Helpers.onInputChanged(
-input,true)end)_maid:GiveTask(inputBeganConn)local inputEndedConn=
-UserInputService.InputEnded:Connect(function(input,processed)if processed then
-return end Helpers.onInputChanged(input,false)end)_maid:GiveTask(inputEndedConn)
-local renderConn=RunService.RenderStepped:Connect(function()if not State.
-isFlyEnabled then local rootPart=State.rootPart local humanoid=State.humanoid if
-rootPart and humanoid and State.isWalkSpeedEnabled then local moveDir=humanoid.
-MoveDirection local horizontal=Vector3.new(moveDir.X,0,moveDir.Z)if horizontal.
-Magnitude>0 then horizontal=horizontal.Unit*State.walkSpeedValue end local
-current=rootPart.AssemblyLinearVelocity rootPart.AssemblyLinearVelocity=Vector3.
-new(horizontal.X,current.Y,horizontal.Z)end return end local rootPart=State.
-rootPart if not rootPart then return end local move=Helpers.getFlyMoveVector()
-rootPart.AssemblyLinearVelocity=move*State.flySpeed rootPart.
-AssemblyAngularVelocity=Vector3.zero local camera=Workspace.CurrentCamera if
-camera then local look=Vector3.new(camera.CFrame.LookVector.X,0,camera.CFrame.
-LookVector.Z)if look.Magnitude>0.001 then rootPart.CFrame=CFrame.new(rootPart.
-Position,rootPart.Position+look)end end end)_maid:GiveTask(renderConn)local
-steppedConn=RunService.Stepped:Connect(function()if State.isNoclipEnabled then
-Helpers.applyNoclip()end end)_maid:GiveTask(steppedConn)end function Player.init
-(self,client)State.client=client State.logger=client.Logger _maid=Maid.new()
-_connect()end function Player.cleanup(self)State.isFlyEnabled=false State.
-isNoclipEnabled=false State.isWalkSpeedEnabled=false State.isJumpPowerEnabled=
-false Helpers.restoreNoclip()Helpers.restoreMovementDefaults()if _maid then
-_maid:DoCleaning()end end function Player.setFlyEnabled(self,isEnabled)if State.
-isFlyEnabled==isEnabled then return end State.isFlyEnabled=isEnabled Helpers.
-applyFlyState()end function Player.setNoclipEnabled(self,isEnabled)if State.
-isNoclipEnabled==isEnabled then return end State.isNoclipEnabled=isEnabled if
-not isEnabled then Helpers.restoreNoclip()else Helpers.applyNoclip()end end
-function Player.setWalkSpeedEnabled(self,isEnabled)if State.isWalkSpeedEnabled==
-isEnabled then return end State.isWalkSpeedEnabled=isEnabled Helpers.
-applyWalkSpeed()end function Player.setJumpPowerEnabled(self,isEnabled)if State.
-isJumpPowerEnabled==isEnabled then return end State.isJumpPowerEnabled=isEnabled
-Helpers.applyJumpPower()end function Player.setWalkSpeed(self,value)State.
-walkSpeedValue=value Helpers.applyWalkSpeed()end function Player.setJumpPower(
-self,value)State.jumpPowerValue=value Helpers.applyJumpPower()end function
-Player.setFlySpeed(self,value)State.flySpeed=value end return Player end
-function __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c
-end end do local function __modImpl()return{}end function
+PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=Player
+local _maid=nil local _signals={}local function _connect()_maid:DoCleaning()
+local function bindCharacter()if State.characterMaid then State.characterMaid:
+DoCleaning()end State.characterMaid=Maid.new()local humanoid=State.humanoid
+local rootPart=State.rootPart if humanoid and rootPart then local stateConn=
+humanoid.StateChanged:Connect(function(_,newState)if not State.
+isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.Jumping
+then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=State.
+jumpPowerValue if current.Y<jumpVelocity then rootPart.AssemblyLinearVelocity=
+Vector3.new(current.X,jumpVelocity,current.Z)end end end)State.characterMaid:
+GiveTask(stateConn)end end local function handleCharacterAdded(character)Helpers
+.onCharacterAdded(character)bindCharacter()end local function
+handleCharacterRemoving()Helpers.onCharacterRemoving()end local function
+attachPlayer(player)local addedConn=player.CharacterAdded:Connect(function(
+character)handleCharacterAdded(character)end)_maid:GiveTask(addedConn)local
+removingConn=player.CharacterRemoving:Connect(function()handleCharacterRemoving(
+)end)_maid:GiveTask(removingConn)if player.Character then handleCharacterAdded(
+player.Character)end end local player=Helpers.getLocalPlayer()if player then
+attachPlayer(player)else local playerAddedConn=Players.PlayerAdded:Connect(
+function(addedPlayer)if addedPlayer==Helpers.getLocalPlayer()then attachPlayer(
+addedPlayer)end end)_maid:GiveTask(playerAddedConn)end local inputBeganConn=
+UserInputService.InputBegan:Connect(function(input,processed)if processed then
+return end Helpers.onInputChanged(input,true)end)_maid:GiveTask(inputBeganConn)
+local inputEndedConn=UserInputService.InputEnded:Connect(function(input,
+processed)if processed then return end Helpers.onInputChanged(input,false)end)
+_maid:GiveTask(inputEndedConn)local renderConn=RunService.RenderStepped:Connect(
+function()if not State.isFlyEnabled then local rootPart=State.rootPart local
+humanoid=State.humanoid if rootPart and humanoid and State.isWalkSpeedEnabled
+then local moveDir=humanoid.MoveDirection local horizontal=Vector3.new(moveDir.X
+,0,moveDir.Z)if horizontal.Magnitude>0 then horizontal=horizontal.Unit*State.
+walkSpeedValue end local current=rootPart.AssemblyLinearVelocity rootPart.
+AssemblyLinearVelocity=Vector3.new(horizontal.X,current.Y,horizontal.Z)end
+return end local rootPart=State.rootPart if not rootPart then return end local
+move=Helpers.getFlyMoveVector()rootPart.AssemblyLinearVelocity=move*State.
+flySpeed rootPart.AssemblyAngularVelocity=Vector3.zero local camera=Workspace.
+CurrentCamera if camera then local look=Vector3.new(camera.CFrame.LookVector.X,0
+,camera.CFrame.LookVector.Z)if look.Magnitude>0.001 then rootPart.CFrame=CFrame.
+new(rootPart.Position,rootPart.Position+look)end end end)_maid:GiveTask(
+renderConn)local steppedConn=RunService.Stepped:Connect(function()if State.
+isNoclipEnabled then Helpers.applyNoclip()end end)_maid:GiveTask(steppedConn)end
+function Player.init(self,client)State.client=client State.logger=client.Logger
+_maid=Maid.new()_connect()PlayerMods.setup()end function Player.cleanup(self)
+State.isFlyEnabled=false State.isNoclipEnabled=false State.isWalkSpeedEnabled=
+false State.isJumpPowerEnabled=false Helpers.restoreNoclip()Helpers.
+restoreMovementDefaults()if _maid then _maid:DoCleaning()end end function Player
+.setFlyEnabled(self,isEnabled)if State.isFlyEnabled==isEnabled then return end
+State.isFlyEnabled=isEnabled Helpers.applyFlyState()end function Player.
+setNoclipEnabled(self,isEnabled)if State.isNoclipEnabled==isEnabled then return
+end State.isNoclipEnabled=isEnabled if not isEnabled then Helpers.restoreNoclip(
+)else Helpers.applyNoclip()end end function Player.setWalkSpeedEnabled(self,
+isEnabled)if State.isWalkSpeedEnabled==isEnabled then return end State.
+isWalkSpeedEnabled=isEnabled Helpers.applyWalkSpeed()end function Player.
+setJumpPowerEnabled(self,isEnabled)if State.isJumpPowerEnabled==isEnabled then
+return end State.isJumpPowerEnabled=isEnabled Helpers.applyJumpPower()end
+function Player.setWalkSpeed(self,value)State.walkSpeedValue=value Helpers.
+applyWalkSpeed()end function Player.setJumpPower(self,value)State.jumpPowerValue
+=value Helpers.applyJumpPower()end function Player.setFlySpeed(self,value)State.
+flySpeed=value end function Player.setSlideBoostEnabled(self,isEnabled)State.
+isSlideBoostEnabled=isEnabled end function Player.setSlideBoostMultiplier(self,
+multiplier)State.slideBoostMultiplier=multiplier end return Player end function
 __DARKLUA_BUNDLE_MODULES.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c end end
-do local function __modImpl()local Constants={FOV_CIRCLE_COLOR=Color3.fromRGB(
-255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,MIN_AIM_SPEED=4,
-MAX_AIM_SPEED=40,MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,
-TARGET_DROP_FOV_MULTIPLIER=1.2,AIMBOT_RENDER_STEP_NAME='CombatAimbot'}return
-Constants end function __DARKLUA_BUNDLE_MODULES.q()local v=
-__DARKLUA_BUNDLE_MODULES.cache.q if not v then v={c=__modImpl()}
+do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.q()
+local v=__DARKLUA_BUNDLE_MODULES.cache.q if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.q=v end return v.c end end do local function
-__modImpl()local Types=__DARKLUA_BUNDLE_MODULES.p()local Constants=
-__DARKLUA_BUNDLE_MODULES.q()local State={client=nil,logger=nil,isAimbotEnabled=
-false,isSilentAimEnabled=false,isFovEnabled=true,isSilentAimFovEnabled=true,
-fovRadius=100,silentAimFovRadius=100,fovColor=Constants.FOV_CIRCLE_COLOR,
-silentAimFovColor=Constants.FOV_CIRCLE_COLOR,fovTransparency=0,
-silentAimFovTransparency=0,silentHitChance=100,targetPart='Head',
-isManipulationEnabled=false,isAntiKatanaEnabled=false,isClosestPositionEnabled=
-true,closestPositionWhitelist={'Head','UpperTorso','LowerTorso','LeftUpperArm',
-'RightUpperArm','LeftUpperLeg','RightUpperLeg','LowerTorso'},isWallCheckEnabled=
-false,smoothness=0,isNoRecoilEnabled=false,isNoSpreadEnabled=false,
-isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=100,target=nil,
-silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
-silentAimFovCircle=nil,cameraController=nil,fighterController=nil,remoteHooked=
-false,utilityHooked=false,cameraShakerHooked=false,gunModsHooked=false,
-isInputLocked=false,mouseBehavior=nil,mouseDeltaSensitivity=nil}return State end
-function __DARKLUA_BUNDLE_MODULES.r()local v=__DARKLUA_BUNDLE_MODULES.cache.r if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.r=v end return v.c
-end end do local function __modImpl()local Players=game:GetService('Players')
-local Workspace=game:GetService('Workspace')local UserInputService=game:
-GetService('UserInputService')local ReplicatedStorage=game:GetService(
-'ReplicatedStorage')local State=__DARKLUA_BUNDLE_MODULES.r()local Constants=
-__DARKLUA_BUNDLE_MODULES.q()local Helpers={}function Helpers.getGlobal(name)
+__modImpl()local Constants={FOV_CIRCLE_COLOR=Color3.fromRGB(255,255,255),
+FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,MIN_AIM_SPEED=4,MAX_AIM_SPEED=40,
+MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,TARGET_DROP_FOV_MULTIPLIER=1.2,
+AIMBOT_RENDER_STEP_NAME='CombatAimbot'}return Constants end function
+__DARKLUA_BUNDLE_MODULES.r()local v=__DARKLUA_BUNDLE_MODULES.cache.r if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.r=v end return v.c end end
+do local function __modImpl()local Types=__DARKLUA_BUNDLE_MODULES.q()local
+Constants=__DARKLUA_BUNDLE_MODULES.r()local State={client=nil,logger=nil,
+isAimbotEnabled=false,isSilentAimEnabled=false,isFovEnabled=true,
+isSilentAimFovEnabled=true,fovRadius=100,silentAimFovRadius=100,fovColor=
+Constants.FOV_CIRCLE_COLOR,silentAimFovColor=Constants.FOV_CIRCLE_COLOR,
+fovTransparency=0,silentAimFovTransparency=0,silentHitChance=100,targetPart=
+'Head',isManipulationEnabled=false,isAntiKatanaEnabled=false,
+isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
+'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg',
+'LowerTorso'},isWallCheckEnabled=false,smoothness=0,isNoRecoilEnabled=false,
+isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
+100,target=nil,silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,
+fovCircle=nil,silentAimFovCircle=nil,cameraController=nil,fighterController=nil,
+remoteHooked=false,utilityHooked=false,cameraShakerHooked=false,gunModsHooked=
+false,isInputLocked=false,mouseBehavior=nil,mouseDeltaSensitivity=nil}return
+State end function __DARKLUA_BUNDLE_MODULES.s()local v=__DARKLUA_BUNDLE_MODULES.
+cache.s if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.s=v end
+return v.c end end do local function __modImpl()local Players=game:GetService(
+'Players')local Workspace=game:GetService('Workspace')local UserInputService=
+game:GetService('UserInputService')local ReplicatedStorage=game:GetService(
+'ReplicatedStorage')local State=__DARKLUA_BUNDLE_MODULES.s()local Constants=
+__DARKLUA_BUNDLE_MODULES.r()local Helpers={}function Helpers.getGlobal(name)
 local getfenvAny=getfenv local env=(getfenvAny(0))local genv=(env.getgenv and
 env.getgenv())or env return genv[name]or env[name]end function Helpers.
 getUtility()local modules=ReplicatedStorage:WaitForChild('Modules',5)if not
@@ -610,13 +634,13 @@ not modules then return nil end local replicatedClass=modules:WaitForChild(
 'ReplicatedClass',5)if not replicatedClass then return nil end local success,
 result=pcall(function()local dynamicRequire=require return dynamicRequire(
 replicatedClass)end)return success and result or nil end return Helpers end
-function __DARKLUA_BUNDLE_MODULES.s()local v=__DARKLUA_BUNDLE_MODULES.cache.s if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.s=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.t()local v=__DARKLUA_BUNDLE_MODULES.cache.t if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.t=v end return v.c
 end end do local function __modImpl()local CollectionService=game:GetService(
 'CollectionService')local Players=game:GetService('Players')local
 UserInputService=game:GetService('UserInputService')local Workspace=game:
-GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.r()local Constants=
-__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()local
+GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.s()local Constants=
+__DARKLUA_BUNDLE_MODULES.r()local Helpers=__DARKLUA_BUNDLE_MODULES.t()local
 TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Targeting={}local _raycastParams=
 RaycastParams.new()local _raycastFilter=table.create(2)_raycastParams.FilterType
 =Enum.RaycastFilterType.Exclude local function _getBestPartForCharacter(
@@ -689,10 +713,10 @@ end local hum=entity:FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=
 entity,camera,localPlayer.Character,mouseLocation)if not anyOnScreen or not
 bestPart then continue end if distSq<closestDistSq then closest=bestPart
 closestDistSq=distSq end end return closest end return Targeting end function
-__DARKLUA_BUNDLE_MODULES.t()local v=__DARKLUA_BUNDLE_MODULES.cache.t if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.t=v end return v.c end end
-do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.r()local
-Constants=__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
+__DARKLUA_BUNDLE_MODULES.u()local v=__DARKLUA_BUNDLE_MODULES.cache.u if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end
+do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.s()local
+Constants=__DARKLUA_BUNDLE_MODULES.r()local Helpers=__DARKLUA_BUNDLE_MODULES.t()
 local Aimbot={}function Aimbot.aimAt(target,bestPart,deltaTime)if not target.
 Character then return end local targetPos=(bestPart).Position local camera=
 Helpers.getCamera()local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.
@@ -708,11 +732,11 @@ elseif State.smoothness>0 then local currentRot=(State.cameraController.Rotation
 MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)
 local newRot=currentRot:Lerp(targetRotation,alpha)State.cameraController:
 SetRotation(newRot)else State.cameraController:SetRotation(targetRotation)end
-end return Aimbot end function __DARKLUA_BUNDLE_MODULES.u()local v=
-__DARKLUA_BUNDLE_MODULES.cache.u if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end do local function
-__modImpl()local State=__DARKLUA_BUNDLE_MODULES.r()local Helpers=
-__DARKLUA_BUNDLE_MODULES.s()local Targeting=__DARKLUA_BUNDLE_MODULES.t()local
+end return Aimbot end function __DARKLUA_BUNDLE_MODULES.v()local v=
+__DARKLUA_BUNDLE_MODULES.cache.v if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end do local function
+__modImpl()local State=__DARKLUA_BUNDLE_MODULES.s()local Helpers=
+__DARKLUA_BUNDLE_MODULES.t()local Targeting=__DARKLUA_BUNDLE_MODULES.u()local
 SilentAim={}local _lastSilentTargetPos=nil function SilentAim.isGunAction()local
 debugGlobal=Helpers.getGlobal('debug')local traceback=debugGlobal and
 debugGlobal.traceback or debug.traceback local stack=traceback()return(stack:
@@ -741,10 +765,10 @@ cameraShakerHooked=true local mt=getmetatable(cameraShaker.Presets)if mt and mt.
 __index then local oldIdx=mt.__index mt.__index=function(t,k)if State.
 isSilentAimEnabled and(k=='StartShooting'or k=='')then return nil end return
 oldIdx(t,k)end end end end)end return SilentAim end function
-__DARKLUA_BUNDLE_MODULES.v()local v=__DARKLUA_BUNDLE_MODULES.cache.v if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end
-do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.r()local
-Helpers=__DARKLUA_BUNDLE_MODULES.s()local GunMods={}local _oldShootCooldowns={}
+__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
+do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.s()local
+Helpers=__DARKLUA_BUNDLE_MODULES.t()local GunMods={}local _oldShootCooldowns={}
 function GunMods.setup()local hookfunction=Helpers.getGlobal('hookfunction')or
 Helpers.getGlobal('replaceclosure')local checkcaller=Helpers.getGlobal(
 'checkcaller')or function()return false end if not hookfunction then State.
@@ -789,11 +813,11 @@ unpack(returns)end)local oldIsFullyAiming oldIsFullyAiming=hookfunction(gunMod.
 IsFullyAiming,function(self,...)if not checkcaller()and State.isNoSpreadEnabled
 then return true end return oldIsFullyAiming(self,...)end)end State.
 gunModsHooked=true end)end return GunMods end function __DARKLUA_BUNDLE_MODULES.
-w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end do local function
+x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
 __modImpl()local UserInputService=game:GetService('UserInputService')local State
-=__DARKLUA_BUNDLE_MODULES.r()local Constants=__DARKLUA_BUNDLE_MODULES.q()local
-Helpers=__DARKLUA_BUNDLE_MODULES.s()local Visuals={}local function _updateCircle
+=__DARKLUA_BUNDLE_MODULES.s()local Constants=__DARKLUA_BUNDLE_MODULES.r()local
+Helpers=__DARKLUA_BUNDLE_MODULES.t()local Visuals={}local function _updateCircle
 (circleId,isEnabled,radius,color,transparency,mouseLocation)local lib=Helpers.
 getDrawingLib()if not lib then return end local stateAny=State local circle=
 stateAny[circleId]if isEnabled then if not circle then circle=lib.new('Circle')
@@ -806,16 +830,16 @@ UserInputService:GetMouseLocation()_updateCircle('fovCircle',State.isFovEnabled,
 State.fovRadius,State.fovColor,State.fovTransparency,mouseLocation)
 _updateCircle('silentAimFovCircle',State.isSilentAimFovEnabled,State.
 silentAimFovRadius,State.silentAimFovColor,State.silentAimFovTransparency,
-mouseLocation)end return Visuals end function __DARKLUA_BUNDLE_MODULES.x()local
-v=__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
+mouseLocation)end return Visuals end function __DARKLUA_BUNDLE_MODULES.y()local
+v=__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.r()local
-Constants=__DARKLUA_BUNDLE_MODULES.q()local Helpers=__DARKLUA_BUNDLE_MODULES.s()
-local Targeting=__DARKLUA_BUNDLE_MODULES.t()local Aimbot=
-__DARKLUA_BUNDLE_MODULES.u()local Types=__DARKLUA_BUNDLE_MODULES.p()local
-SilentAim=(__DARKLUA_BUNDLE_MODULES.v())local GunMods=(__DARKLUA_BUNDLE_MODULES.
-w())local Visuals=(__DARKLUA_BUNDLE_MODULES.x())local Combat={}Combat.__index=
+__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.s()local
+Constants=__DARKLUA_BUNDLE_MODULES.r()local Helpers=__DARKLUA_BUNDLE_MODULES.t()
+local Targeting=__DARKLUA_BUNDLE_MODULES.u()local Aimbot=
+__DARKLUA_BUNDLE_MODULES.v()local Types=__DARKLUA_BUNDLE_MODULES.q()local
+SilentAim=(__DARKLUA_BUNDLE_MODULES.w())local GunMods=(__DARKLUA_BUNDLE_MODULES.
+x())local Visuals=(__DARKLUA_BUNDLE_MODULES.y())local Combat={}Combat.__index=
 Combat local _maid=nil local function _connect()_maid:DoCleaning()task.spawn(
 function()Helpers.fetchCameraController(State.logger)end)SilentAim.setup()
 GunMods.setup()RunService:BindToRenderStep(Constants.AIMBOT_RENDER_STEP_NAME,
@@ -868,8 +892,8 @@ setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end function
 Combat.setNoMuzzleFlashEnabled(self,isEnabled)State.isNoMuzzleFlashEnabled=
 isEnabled end function Combat.setAttackCooldownMultiplier(self,multiplier)State.
 attackCooldownMultiplier=multiplier end return Combat end function
-__DARKLUA_BUNDLE_MODULES.y()local v=__DARKLUA_BUNDLE_MODULES.cache.y if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.z()local v=__DARKLUA_BUNDLE_MODULES.cache.z if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end
 do local function __modImpl()local RunService=game:GetService('RunService')local
 Maid=(__DARKLUA_BUNDLE_MODULES.a())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
@@ -1127,20 +1151,28 @@ SyncToggleState=false,Callback=function()_updateControlBindings()end})
 playerGroup:AddSlider('PlayerJumpPower',{Text='Jump Power',Default=50,Min=0,Max=
 200,Rounding=0,Tooltip='Your character jump power.',Compact=true,Callback=
 function(value)local mod=_state.client.Modules.Player if mod and mod.
-setJumpPower then mod:setJumpPower(value)end end})_state.controlBindings={{
-toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=
-function(active)local mod=_state.client.Modules.Combat if mod and mod.
-setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly'
-,keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.
-client.Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active
-)end end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,
+setJumpPower then mod:setJumpPower(value)end end})playerGroup:AddToggle(
+'PlayerSlideBoost',{Text='Slide Boost',Default=false,Tooltip=
+'Boosts your sliding speed.',Callback=function(state)local mod=_state.client.
+Modules.Player if mod and mod.setSlideBoostEnabled then mod:
+setSlideBoostEnabled(state)end end})playerGroup:AddSlider(
+'PlayerSlideBoostMultiplier',{Text='Slide Boost Multiplier',Default=1,Min=1,Max=
+10,Rounding=1,Suffix='x',Tooltip='Multiplier for sliding speed.',Compact=true,
+Callback=function(value)local mod=_state.client.Modules.Player if mod and mod.
+setSlideBoostMultiplier then mod:setSlideBoostMultiplier(value)end end})_state.
+controlBindings={{toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind'
+,last=nil,setter=function(active)local mod=_state.client.Modules.Combat if mod
+and mod.setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId=
+'PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local
+mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then mod:
+setFlyEnabled(active)end end},{toggleId='PlayerNoclip',keybindId=
+'PlayerNoclipKeybind',last=nil,setter=function(active)local mod=_state.client.
+Modules.Player if mod and mod.setNoclipEnabled then mod:setNoclipEnabled(active)
+end end},{toggleId='PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',
+last=nil,setter=function(active)local mod=_state.client.Modules.Player if mod
+and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{
+toggleId='PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,
 setter=function(active)local mod=_state.client.Modules.Player if mod and mod.
-setNoclipEnabled then mod:setNoclipEnabled(active)end end},{toggleId=
-'PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',last=nil,setter=
-function(active)local mod=_state.client.Modules.Player if mod and mod.
-setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{toggleId=
-'PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,setter=
-function(active)local mod=_state.client.Modules.Player if mod and mod.
 setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
 'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
 local mod=_state.client.Modules.Combat if mod and mod.setSilentAimEnabled then
@@ -1155,8 +1187,8 @@ _runAutoload(library,saveManager,false)end function Interface.init(self,client)
 _state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()
 _mount()end function Interface.cleanup(self)_maid:DoCleaning()if _state.library
 then _state.library:Unload()end _state.isMounted=false end return Interface end
-function __DARKLUA_BUNDLE_MODULES.z()local v=__DARKLUA_BUNDLE_MODULES.cache.z if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
 end end end local ReplicatedFirst=game:GetService('ReplicatedFirst')local
 Players=game:GetService('Players')local RunService=game:GetService('RunService')
 local Logger=__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()
@@ -1170,9 +1202,9 @@ clear_teleport_queue=getGlobal('clear_teleport_queue')or getGlobal(
 'clearteleportqueue')or(env.syn and env.syn.clear_teleport_queue)local
 getloadedmodules=getGlobal('getloadedmodules')or function()return nil end local
 MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.j())},{name='Player',
-loader=(__DARKLUA_BUNDLE_MODULES.o())},{name='Combat',loader=(
-__DARKLUA_BUNDLE_MODULES.y())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.z())}}local Client={}Client.__index=Client local _maid=
+loader=(__DARKLUA_BUNDLE_MODULES.p())},{name='Combat',loader=(
+__DARKLUA_BUNDLE_MODULES.z())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.A())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
 BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
 Signal.new(),stopped=Signal.new()}local _modules={}local function
