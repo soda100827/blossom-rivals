@@ -91,9 +91,9 @@ end end do local function __modImpl()return nil end function
 __DARKLUA_BUNDLE_MODULES.d()local v=__DARKLUA_BUNDLE_MODULES.cache.d if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
-TEAM_ATTRIBUTE_KEYS={'TeamId'}local TeamUtils={}TeamUtils.__index=TeamUtils
-local _maid=nil local _state={isDebugEnabled=false}local _signals={}local
-_fighterController=nil local _searchedController=false local function
+TEAM_ATTRIBUTE_KEYS={'TeamID','TeamId'}local TeamUtils={}TeamUtils.__index=
+TeamUtils local _maid=nil local _state={isDebugEnabled=false}local _signals={}
+local _fighterController=nil local _searchedController=false local function
 _getFighterController()if _searchedController then return _fighterController end
 _searchedController=true local localPlayer=Players.LocalPlayer if not
 localPlayer then return nil end local playerScripts=localPlayer:FindFirstChild(
@@ -133,55 +133,57 @@ Name==teamA end end if typeof(teamA)=='BrickColor'and typeof(teamB)==
 'BrickColor'then return teamA.Number==teamB.Number end if typeof(teamA)==
 'Color3'and typeof(teamB)=='Color3'then return teamA==teamB end return tostring(
 teamA)==tostring(teamB)end local function _getTeamFromFighter(fighter,
-fallbackPlayer)if not fighter then return nil end local teamValue=fighter.Team
-or fighter.team or fighter.TeamId or fighter.teamId or fighter.TeamID or fighter
-.teamID or fighter.Side or fighter.side if teamValue~=nil then return teamValue
-end local owner=fighter.Owner or fighter.owner or fighter.Player or fighter.
-player if typeof(owner)=='Instance'and owner:IsA('Player')then if fallbackPlayer
-and owner==fallbackPlayer then return nil end return TeamUtils.getPlayerTeamId(
-owner)end return nil end local function _getFighterForPlayer(controller,player)
-if not controller then return nil end local getter=controller.getFighter or
-controller.GetFighter or controller.getFighterByPlayer or controller.
-GetFighterByPlayer or controller.getFighterFromPlayer or controller.
-GetFighterFromPlayer if getter then local ok,fighter=pcall(getter,controller,
-player)if ok and fighter then return fighter end end local fighters=controller.
-Fighters or controller.fighters or controller._fighters or controller.
-FighterByPlayer or controller.fighterByPlayer if fighters then return fighters[
-player]or fighters[player.UserId]or fighters[tostring(player.UserId)]end return
-nil end function TeamUtils.getPlayerTeamId(player)local controller=
-_getFighterController()local fighter=_getFighterForPlayer(controller,player)
-local fighterTeam=_getTeamFromFighter(fighter,player)if fighterTeam~=nil then
-_debugLog(player,'fighter',fighterTeam)return fighterTeam end local playerAttr=
-_readAttributeTeam(player)if playerAttr~=nil then _debugLog(player,'player-attr'
-,playerAttr)return playerAttr end local playerPropertyTeam=
-_getTeamFromPlayerProperties(player)if playerPropertyTeam~=nil then _debugLog(
-player,'player-team',playerPropertyTeam)return playerPropertyTeam end local
-playerValue=_readValueObjectTeam(player)if playerValue~=nil then _debugLog(
-player,'player-value',playerValue)return playerValue end local character=player.
-Character if character then local characterAttr=_readAttributeTeam(character)if
-characterAttr~=nil then _debugLog(player,'character-attr',characterAttr)return
-characterAttr end local characterValue=_readValueObjectTeam(character)if
-characterValue~=nil then _debugLog(player,'character-value',characterValue)
-return characterValue end end return nil end function TeamUtils.isSameTeam(
-playerA,playerB)if playerA==playerB then return true end local teamA=TeamUtils.
-getPlayerTeamId(playerA)if teamA==nil then return false end local teamB=
-TeamUtils.getPlayerTeamId(playerB)if teamB==nil then return false end return
-_areTeamsEqual(teamA,teamB)end function TeamUtils.setDebugEnabled(isEnabled)
-_state.isDebugEnabled=isEnabled end return TeamUtils end function
-__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
-do local function __modImpl()local Constants={DEFAULT_SETTINGS={isEspEnabled=
-false,shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
-shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
-shouldShowHighlight=false,shouldShowTeammates=true,maxDistance=2000,boxColor=
-Color3.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),
-distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=
-Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=
-Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=
-Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.
-new(0,0,0),highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),
-boxThickness=1,skeletonThickness=1,textSize=12,shouldOutline=true},R15_JOINTS={{
-'Head','UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
+fallbackPlayer)if not fighter then return nil end local getFn=fighter.Get if
+getFn then local ok,teamId=pcall(getFn,fighter,'TeamID')if ok and teamId~=nil
+then return teamId end end local teamValue=fighter.Team or fighter.team or
+fighter.TeamId or fighter.teamId or fighter.TeamID or fighter.teamID or fighter.
+Side or fighter.side if teamValue~=nil then return teamValue end local owner=
+fighter.Owner or fighter.owner or fighter.Player or fighter.player if typeof(
+owner)=='Instance'and owner:IsA('Player')then if fallbackPlayer and owner==
+fallbackPlayer then return nil end return TeamUtils.getPlayerTeamId(owner)end
+return nil end local function _getFighterForPlayer(controller,player)if not
+controller then return nil end local getter=controller.getFighter or controller.
+GetFighter or controller.getFighterByPlayer or controller.GetFighterByPlayer or
+controller.getFighterFromPlayer or controller.GetFighterFromPlayer if getter
+then local ok,fighter=pcall(getter,controller,player)if ok and fighter then
+return fighter end end local fighters=controller.Fighters or controller.fighters
+or controller._fighters or controller.FighterByPlayer or controller.
+fighterByPlayer if fighters then return fighters[player]or fighters[player.
+UserId]or fighters[tostring(player.UserId)]end return nil end function TeamUtils
+.getPlayerTeamId(player)local controller=_getFighterController()local fighter=
+_getFighterForPlayer(controller,player)local fighterTeam=_getTeamFromFighter(
+fighter,player)if fighterTeam~=nil then _debugLog(player,'fighter',fighterTeam)
+return fighterTeam end local playerAttr=_readAttributeTeam(player)if playerAttr
+~=nil then _debugLog(player,'player-attr',playerAttr)return playerAttr end local
+playerPropertyTeam=_getTeamFromPlayerProperties(player)if playerPropertyTeam~=
+nil then _debugLog(player,'player-team',playerPropertyTeam)return
+playerPropertyTeam end local playerValue=_readValueObjectTeam(player)if
+playerValue~=nil then _debugLog(player,'player-value',playerValue)return
+playerValue end local character=player.Character if character then local
+characterAttr=_readAttributeTeam(character)if characterAttr~=nil then _debugLog(
+player,'character-attr',characterAttr)return characterAttr end local
+characterValue=_readValueObjectTeam(character)if characterValue~=nil then
+_debugLog(player,'character-value',characterValue)return characterValue end end
+return nil end function TeamUtils.isSameTeam(playerA,playerB)if playerA==playerB
+then return true end local teamA=TeamUtils.getPlayerTeamId(playerA)if teamA==nil
+then return false end local teamB=TeamUtils.getPlayerTeamId(playerB)if teamB==
+nil then return false end return _areTeamsEqual(teamA,teamB)end function
+TeamUtils.setDebugEnabled(isEnabled)_state.isDebugEnabled=isEnabled end return
+TeamUtils end function __DARKLUA_BUNDLE_MODULES.e()local v=
+__DARKLUA_BUNDLE_MODULES.cache.e if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end do local function
+__modImpl()local Constants={DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames
+=true,shouldShowWeapon=false,shouldShowDistance=false,shouldShowBoxes=true,
+shouldShowSkeleton=false,shouldShowHealthbar=false,shouldShowHighlight=false,
+shouldShowTeammates=true,maxDistance=2000,boxColor=Color3.new(1,1,1),textColor=
+Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),
+skeletonColor=Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),
+healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=Color3.new(0,0,0),
+weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=Color3.new(0,0,0),
+boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.new(0,0,0),
+highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),boxThickness=
+1,skeletonThickness=1,textSize=12,shouldOutline=true},R15_JOINTS={{'Head',
+'UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
 'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
 'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
 ,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',

@@ -7,6 +7,7 @@ local Players = game:GetService("Players")
 
 --// Constants
 local TEAM_ATTRIBUTE_KEYS = {
+	"TeamID",
 	"TeamId",
 }
 
@@ -176,6 +177,14 @@ end
 local function _getTeamFromFighter(fighter: any, fallbackPlayer: Player?): TeamId?
 	if not fighter then
 		return nil
+	end
+
+	local getFn = fighter.Get
+	if getFn then
+		local ok, teamId = pcall(getFn, fighter, "TeamID")
+		if ok and teamId ~= nil then
+			return teamId
+		end
 	end
 
 	local teamValue = fighter.Team
