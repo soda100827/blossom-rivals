@@ -82,6 +82,9 @@ export type VisualsFeature = {
 	setTextSize: (self: VisualsFeature, value: number) -> (),
 	setOutline: (self: VisualsFeature, isEnabled: boolean) -> (),
 	setOverrideCheck: (self: VisualsFeature, check: () -> boolean) -> (),
+	setCustomHitSoundEnabled: (self: VisualsFeature, isEnabled: boolean) -> (),
+	setHitSoundId: (self: VisualsFeature, id: string) -> (),
+	setNoHurtEffectEnabled: (self: VisualsFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state
