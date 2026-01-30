@@ -295,4 +295,40 @@ function Helpers.getReplicatedClassModule(): any
 	return success and result or nil
 end
 
+function Helpers.getMeleeModule(): any
+	local playerScripts = Helpers.getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local itemTypes = modules:WaitForChild("ItemTypes", 5)
+	if not itemTypes then
+		return nil
+	end
+	local melee = itemTypes:WaitForChild("Melee", 5)
+	if not melee then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(melee)
+	end)
+	return success and result or nil
+end
+
+function Helpers.getItemModules(): any
+	local playerScripts = Helpers.getLocalPlayer():WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	return modules:WaitForChild("Items", 5)
+end
+
 return Helpers

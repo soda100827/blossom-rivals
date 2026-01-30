@@ -13,6 +13,7 @@ local Aimbot = require("./Aimbot")
 local Types = require("./Types")
 local SilentAim = require("./SilentAim") :: { setup: () -> () }
 local GunMods = require("./GunMods") :: { setup: () -> () }
+local MeleeMods = require("./MeleeMods") :: { setup: () -> () }
 local Visuals = require("./Visuals") :: Types.CombatVisuals
 
 --// Constants
@@ -34,6 +35,7 @@ local function _connect()
 	end)
 	SilentAim.setup()
 	GunMods.setup()
+	MeleeMods.setup()
 
 	RunService:BindToRenderStep(
 		Constants.AIMBOT_RENDER_STEP_NAME,
@@ -207,6 +209,38 @@ end
 
 function Combat.setAttackCooldownMultiplier(self: CombatFeature, multiplier: number): ()
 	State.attackCooldownMultiplier = multiplier
+end
+
+function Combat.setMeleeAttackCooldownEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isMeleeAttackCooldownEnabled = isEnabled
+end
+
+function Combat.setMeleeAttackCooldownMultiplier(self: CombatFeature, multiplier: number): ()
+	State.meleeAttackCooldownMultiplier = multiplier
+end
+
+function Combat.setMeleeSkillCooldownEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isMeleeSkillCooldownEnabled = isEnabled
+end
+
+function Combat.setMeleeSkillCooldownMultiplier(self: CombatFeature, multiplier: number): ()
+	State.meleeSkillCooldownMultiplier = multiplier
+end
+
+function Combat.setMeleeAuraEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isMeleeAuraEnabled = isEnabled
+end
+
+function Combat.setTeleportAuraEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isTeleportAuraEnabled = isEnabled
+end
+
+function Combat.setMeleeAuraRadius(self: CombatFeature, radius: number): ()
+	State.meleeAuraRadius = radius
+end
+
+function Combat.setTeleportAuraRadius(self: CombatFeature, radius: number): ()
+	State.teleportAuraRadius = radius
 end
 
 return Combat

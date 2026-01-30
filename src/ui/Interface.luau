@@ -456,6 +456,141 @@ local function _mount()
 	gunModsGroup:AddSlider("GunModsAttackCooldown", {
 		Text = "Attack Cooldown",
 		Default = 100,
+		Min = 0,
+		Max = 100,
+		Rounding = 0,
+		Suffix = "%",
+		Tooltip = "Adjusts weapon fire rate (100% is normal).",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setAttackCooldownMultiplier then
+				mod:setAttackCooldownMultiplier(value)
+			end
+		end,
+	})
+
+	local meleeModsGroup = tabs.combat:AddRightGroupbox("Melee Mods")
+
+	meleeModsGroup:AddToggle("MeleeModsAttackCooldownEnabled", {
+		Text = "Attack Cooldown",
+		Default = false,
+		Tooltip = "Enables custom melee attack cooldown.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setMeleeAttackCooldownEnabled then
+				mod:setMeleeAttackCooldownEnabled(state)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddSlider("MeleeModsAttackCooldown", {
+		Text = "Attack Cooldown %",
+		Default = 100,
+		Min = 0,
+		Max = 100,
+		Rounding = 0,
+		Suffix = "%",
+		Tooltip = "Adjusts melee attack rate (100% is normal).",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setMeleeAttackCooldownMultiplier then
+				mod:setMeleeAttackCooldownMultiplier(value)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddToggle("MeleeModsSkillCooldownEnabled", {
+		Text = "Skill Cooldown",
+		Default = false,
+		Tooltip = "Enables custom melee skill cooldown (Katana, Scythe, etc).",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setMeleeSkillCooldownEnabled then
+				mod:setMeleeSkillCooldownEnabled(state)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddSlider("MeleeModsSkillCooldown", {
+		Text = "Skill Cooldown %",
+		Default = 100,
+		Min = 0,
+		Max = 100,
+		Rounding = 0,
+		Suffix = "%",
+		Tooltip = "Adjusts melee skill cooldown (100% is normal).",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setMeleeSkillCooldownMultiplier then
+				mod:setMeleeSkillCooldownMultiplier(value)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddToggle("MeleeModsAura", {
+		Text = "Melee Aura",
+		Default = false,
+		Tooltip = "Automatically attacks nearby enemies.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setMeleeAuraEnabled then
+				mod:setMeleeAuraEnabled(state)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddSlider("MeleeModsAuraRadius", {
+		Text = "Aura Radius",
+		Default = 20,
+		Min = 5,
+		Max = 50,
+		Rounding = 0,
+		Suffix = " studs",
+		Tooltip = "Radius for Melee Aura.",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setMeleeAuraRadius then
+				mod:setMeleeAuraRadius(value)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddToggle("MeleeModsTeleportAura", {
+		Text = "Teleport Aura",
+		Default = false,
+		Tooltip = "Teleports to nearby enemies and attacks them.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setTeleportAuraEnabled then
+				mod:setTeleportAuraEnabled(state)
+			end
+		end,
+	})
+
+	meleeModsGroup:AddSlider("MeleeModsTeleportRadius", {
+		Text = "Teleport Radius",
+		Default = 50,
+		Min = 5,
+		Max = 200,
+		Rounding = 0,
+		Suffix = " studs",
+		Tooltip = "Radius for Teleport Aura.",
+		Compact = true,
+		Callback = function(value)
+			local mod = _state.client.Modules.Combat
+			if mod and mod.setTeleportAuraRadius then
+				mod:setTeleportAuraRadius(value)
+			end
+		end,
+	})
+
+	gunModsGroup:AddSlider("GunModsAttackCooldown", {
+		Text = "Attack Cooldown",
+		Default = 100,
 		Min = 1,
 		Max = 100,
 		Rounding = 0,
