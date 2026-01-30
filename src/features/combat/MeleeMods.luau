@@ -77,7 +77,7 @@ function MeleeMods.setup()
 		if meleeMod then
 			local oldStartShooting
 			oldStartShooting = hookfunction(meleeMod.StartShooting, function(self, ...)
-				if not checkcaller() and State.isMeleeAttackCooldownEnabled then
+				if not checkcaller() then
 					-- self.Info is usually shared, so we temporarily override it or modify it
 					local originalCooldown: number = self.Info.AttackCooldown
 					self.Info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
@@ -102,7 +102,7 @@ function MeleeMods.setup()
 						if itemMod and itemMod.StartAiming then
 							local oldStartAiming
 							oldStartAiming = hookfunction(itemMod.StartAiming, function(self, ...)
-								if not checkcaller() and State.isMeleeSkillCooldownEnabled then
+								if not checkcaller() then
 									-- Find potentially multiple cooldown fields
 									local cooldownFields = { "DeflectCooldown", "DashCooldown", "InvisCooldown" }
 									local originals: { [string]: number } = {}
