@@ -318,4 +318,21 @@ function Helpers.getMechanicsController(): any
 	return success and result or nil
 end
 
+function Helpers.getSetControlsRemote(): any
+	local replicatedStorage = game:GetService("ReplicatedStorage")
+	local remotes = replicatedStorage:WaitForChild("Remotes", 5)
+	if not remotes then
+		return nil
+	end
+	local replication = remotes:WaitForChild("Replication", 5)
+	if not replication then
+		return nil
+	end
+	local fighter = replication:WaitForChild("Fighter", 5)
+	if not fighter then
+		return nil
+	end
+	return fighter:WaitForChild("SetControls", 5)
+end
+
 return Helpers

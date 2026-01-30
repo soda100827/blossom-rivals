@@ -227,17 +227,17 @@ end
 
 function Player.setSpoofDevice(self: PlayerFeature, device: string): ()
 	State.spoofDevice = device
-	local controlsController = Helpers.getControlsController()
-	if controlsController and State.isSpoofDeviceEnabled and device ~= "None" then
-		controlsController:SetControls(device)
+	local setControlsRemote = Helpers.getSetControlsRemote()
+	if setControlsRemote and State.isSpoofDeviceEnabled and device ~= "None" then
+		setControlsRemote:FireServer(device)
 	end
 end
 
 function Player.setSpoofDeviceEnabled(self: PlayerFeature, isEnabled: boolean): ()
 	State.isSpoofDeviceEnabled = isEnabled
-	local controlsController = Helpers.getControlsController()
-	if controlsController and isEnabled and State.spoofDevice ~= "None" then
-		controlsController:SetControls(State.spoofDevice)
+	local setControlsRemote = Helpers.getSetControlsRemote()
+	if setControlsRemote and isEnabled and State.spoofDevice ~= "None" then
+		setControlsRemote:FireServer(State.spoofDevice)
 	end
 end
 

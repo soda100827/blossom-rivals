@@ -462,12 +462,18 @@ playerScripts:WaitForChild('Controllers',5)if not controllers then return nil
 end local mechanicsController=controllers:WaitForChild('MechanicsController',5)
 if not mechanicsController then return nil end local success,result=pcall(
 function()local dynamicRequire=require return dynamicRequire(mechanicsController
-)end)return success and result or nil end return Helpers end function
-__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
-do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local
-Helpers=__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup
-()local hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
+)end)return success and result or nil end function Helpers.getSetControlsRemote(
+)local replicatedStorage=game:GetService('ReplicatedStorage')local remotes=
+replicatedStorage:WaitForChild('Remotes',5)if not remotes then return nil end
+local replication=remotes:WaitForChild('Replication',5)if not replication then
+return nil end local fighter=replication:WaitForChild('Fighter',5)if not fighter
+then return nil end return fighter:WaitForChild('SetControls',5)end return
+Helpers end function __DARKLUA_BUNDLE_MODULES.n()local v=
+__DARKLUA_BUNDLE_MODULES.cache.n if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end do local function
+__modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers=
+__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup()local
+hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
 'replaceclosure')local checkcaller=Helpers.getGlobal('checkcaller')or function()
 return false end if not hookfunction then State.logger:warn(
 'hookfunction not found, Player Mods will not work.')return end task.spawn(
@@ -475,38 +481,33 @@ function()local replicatedClassMod=Helpers.getReplicatedClassModule()if
 replicatedClassMod then local oldGet oldGet=hookfunction(replicatedClassMod.Get,
 function(self,key)if not checkcaller()then if key=='SlidingSpeedMax'and State.
 isSlideBoostEnabled then return 3*State.slideBoostMultiplier end end return
-oldGet(self,key)end)end local controlsController=Helpers.getControlsController()
-if controlsController then local oldSetControls oldSetControls=hookfunction(
-controlsController.SetControls,function(self,device)if not checkcaller()and
-State.isSpoofDeviceEnabled and State.spoofDevice~='None'then device=State.
-spoofDevice end return oldSetControls(self,device)end)task.spawn(function()while
-true do if State.isSpoofDeviceEnabled and State.spoofDevice~='None'then if
-controlsController.CurrentControls~=State.spoofDevice then controlsController.
-CurrentControls=State.spoofDevice if controlsController.ControlsChanged then
-controlsController.ControlsChanged:Fire()end end end task.wait(0.5)end end)end
-local flashedMod=Helpers.getFlashedModule()if flashedMod then local
-oldAttemptToFlash oldAttemptToFlash=hookfunction(flashedMod.AttemptToFlash,
-function(self,...)if not checkcaller()and State.isAntiFlashEnabled then return
-end return oldAttemptToFlash(self,...)end)local oldFlash oldFlash=hookfunction(
-flashedMod.Flash,function(self,...)if not checkcaller()and State.
-isAntiFlashEnabled then return end return oldFlash(self,...)end)end task.spawn(
-function()local mechanicsController=Helpers.getMechanicsController()while true
-do if State.isSoundSpammerEnabled and mechanicsController then pcall(function()
-mechanicsController:PlayMechanicsSound(State.soundSpammerType)end)end task.wait(
-0.1)end end)end)end return PlayerMods end function __DARKLUA_BUNDLE_MODULES.o()
-local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local UserInputService=game:GetService(
-'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()local
-State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()local
-PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=Player
-local _maid=nil local _signals={}local function _connect()_maid:DoCleaning()
-local function bindCharacter()if State.characterMaid then State.characterMaid:
-DoCleaning()end State.characterMaid=Maid.new()local humanoid=State.humanoid
-local rootPart=State.rootPart if humanoid and rootPart then local stateConn=
-humanoid.StateChanged:Connect(function(_,newState)if not State.
+oldGet(self,key)end)end local setControlsRemote=Helpers.getSetControlsRemote()if
+setControlsRemote then local oldFireServer oldFireServer=hookfunction(
+setControlsRemote.FireServer,function(self,device)if not checkcaller()and State.
+isSpoofDeviceEnabled and State.spoofDevice~='None'then device=State.spoofDevice
+end return oldFireServer(self,device)end)end local flashedMod=Helpers.
+getFlashedModule()if flashedMod then local oldAttemptToFlash oldAttemptToFlash=
+hookfunction(flashedMod.AttemptToFlash,function(self,...)if not checkcaller()and
+State.isAntiFlashEnabled then return end return oldAttemptToFlash(self,...)end)
+local oldFlash oldFlash=hookfunction(flashedMod.Flash,function(self,...)if not
+checkcaller()and State.isAntiFlashEnabled then return end return oldFlash(self,
+...)end)end task.spawn(function()local mechanicsController=Helpers.
+getMechanicsController()while true do if State.isSoundSpammerEnabled and
+mechanicsController then pcall(function()mechanicsController:PlayMechanicsSound(
+State.soundSpammerType)end)end task.wait(0.1)end end)end)end return PlayerMods
+end function __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.
+o if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v
+.c end end do local function __modImpl()local Players=game:GetService('Players')
+local RunService=game:GetService('RunService')local UserInputService=game:
+GetService('UserInputService')local Workspace=game:GetService('Workspace')local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.n()
+local State=__DARKLUA_BUNDLE_MODULES.m()local Types=__DARKLUA_BUNDLE_MODULES.l()
+local PlayerMods=__DARKLUA_BUNDLE_MODULES.o()local Player={}Player.__index=
+Player local _maid=nil local _signals={}local function _connect()_maid:
+DoCleaning()local function bindCharacter()if State.characterMaid then State.
+characterMaid:DoCleaning()end State.characterMaid=Maid.new()local humanoid=State
+.humanoid local rootPart=State.rootPart if humanoid and rootPart then local
+stateConn=humanoid.StateChanged:Connect(function(_,newState)if not State.
 isJumpPowerEnabled then return end if newState==Enum.HumanoidStateType.Jumping
 then local current=rootPart.AssemblyLinearVelocity local jumpVelocity=State.
 jumpPowerValue if current.Y<jumpVelocity then rootPart.AssemblyLinearVelocity=
@@ -561,13 +562,13 @@ applyWalkSpeed()end function Player.setJumpPower(self,value)State.jumpPowerValue
 flySpeed=value end function Player.setSlideBoostEnabled(self,isEnabled)State.
 isSlideBoostEnabled=isEnabled end function Player.setSlideBoostMultiplier(self,
 multiplier)State.slideBoostMultiplier=multiplier end function Player.
-setSpoofDevice(self,device)State.spoofDevice=device local controlsController=
-Helpers.getControlsController()if controlsController and State.
-isSpoofDeviceEnabled and device~='None'then controlsController:SetControls(
-device)end end function Player.setSpoofDeviceEnabled(self,isEnabled)State.
-isSpoofDeviceEnabled=isEnabled local controlsController=Helpers.
-getControlsController()if controlsController and isEnabled and State.spoofDevice
-~='None'then controlsController:SetControls(State.spoofDevice)end end function
+setSpoofDevice(self,device)State.spoofDevice=device local setControlsRemote=
+Helpers.getSetControlsRemote()if setControlsRemote and State.
+isSpoofDeviceEnabled and device~='None'then setControlsRemote:FireServer(device)
+end end function Player.setSpoofDeviceEnabled(self,isEnabled)State.
+isSpoofDeviceEnabled=isEnabled local setControlsRemote=Helpers.
+getSetControlsRemote()if setControlsRemote and isEnabled and State.spoofDevice~=
+'None'then setControlsRemote:FireServer(State.spoofDevice)end end function
 Player.setAntiFlashEnabled(self,isEnabled)State.isAntiFlashEnabled=isEnabled end
 function Player.setSoundSpammerEnabled(self,isEnabled)State.
 isSoundSpammerEnabled=isEnabled end function Player.setSoundSpammerType(self,
