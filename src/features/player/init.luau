@@ -225,4 +225,12 @@ function Player.setSlideBoostMultiplier(self: PlayerFeature, multiplier: number)
 	State.slideBoostMultiplier = multiplier
 end
 
+function Player.setSpoofDevice(self: PlayerFeature, device: string): ()
+	State.spoofDevice = device
+	local controlsController = Helpers.getControlsController()
+	if controlsController and device ~= "None" then
+		controlsController:SetControls(device)
+	end
+end
+
 return Player

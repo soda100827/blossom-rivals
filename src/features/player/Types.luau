@@ -40,6 +40,7 @@ export type PlayerState = {
 	input: InputState,
 	isSlideBoostEnabled: boolean,
 	slideBoostMultiplier: number,
+	spoofDevice: string,
 }
 
 export type PlayerFeature = {
@@ -54,6 +55,7 @@ export type PlayerFeature = {
 	setFlySpeed: (self: PlayerFeature, value: number) -> (),
 	setSlideBoostEnabled: (self: PlayerFeature, isEnabled: boolean) -> (),
 	setSlideBoostMultiplier: (self: PlayerFeature, multiplier: number) -> (),
+	setSpoofDevice: (self: PlayerFeature, device: string) -> (),
 }
 
 --// Private state

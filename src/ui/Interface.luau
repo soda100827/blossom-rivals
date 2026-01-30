@@ -958,6 +958,20 @@ local function _mount()
 		end,
 	})
 
+	playerGroup:AddDropdown("PlayerSpoofDevice", {
+		Values = { "None", "Touch", "Gamepad", "VR", "MouseKeyboard" },
+		Default = 1,
+		Multi = false,
+		Text = "Spoof Device",
+		Tooltip = "Tricks the game into thinking you are on a different device.",
+		Callback = function(value)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setSpoofDevice then
+				mod:setSpoofDevice(value)
+			end
+		end,
+	})
+
 	_state.controlBindings = {
 		{
 			toggleId = "CombatAimbotEnabled",

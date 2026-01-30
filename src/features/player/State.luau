@@ -42,6 +42,7 @@ local State: Types.PlayerState = {
 	},
 	isSlideBoostEnabled = false,
 	slideBoostMultiplier = 1,
+	spoofDevice = "None",
 }
 
 --// Private helpers

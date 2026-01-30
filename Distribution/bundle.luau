@@ -367,33 +367,33 @@ jumpPowerValue=50,flySpeed=Constants.DEFAULT_FLY_SPEED,defaultWalkSpeed=nil,
 defaultJumpPower=nil,defaultJumpHeight=nil,defaultUseJumpPower=nil,
 defaultAutoRotate=nil,defaultPlatformStand=nil,noclipParts={},characterMaid=nil,
 input={forward=0,back=0,left=0,right=0,up=0,down=0},isSlideBoostEnabled=false,
-slideBoostMultiplier=1}return State end function __DARKLUA_BUNDLE_MODULES.m()
-local v=__DARKLUA_BUNDLE_MODULES.cache.m if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local Workspace=game:
-GetService('Workspace')local Constants=__DARKLUA_BUNDLE_MODULES.k()local State=
-__DARKLUA_BUNDLE_MODULES.m()local Helpers={}function Helpers.getLocalPlayer()
-return Players.LocalPlayer end function Helpers.resetInput()State.input={forward
-=0,back=0,left=0,right=0,up=0,down=0}end function Helpers.cacheDefaults(humanoid
-)State.defaultWalkSpeed=humanoid.WalkSpeed State.defaultUseJumpPower=humanoid.
-UseJumpPower if humanoid.UseJumpPower then State.defaultJumpPower=humanoid.
-JumpPower State.defaultJumpHeight=nil else State.defaultJumpPower=nil State.
-defaultJumpHeight=humanoid.JumpHeight end State.defaultAutoRotate=humanoid.
-AutoRotate State.defaultPlatformStand=humanoid.PlatformStand end function
-Helpers.applyWalkSpeed()local humanoid=State.humanoid if not humanoid then
-return end if State.defaultWalkSpeed~=nil then humanoid.WalkSpeed=State.
-defaultWalkSpeed end end function Helpers.applyJumpPower()return end function
-Helpers.restoreMovementDefaults()local humanoid=State.humanoid if not humanoid
-then return end if State.defaultWalkSpeed~=nil then humanoid.WalkSpeed=State.
-defaultWalkSpeed end if State.defaultUseJumpPower~=nil then humanoid.
-UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower then if
-State.defaultJumpPower~=nil then humanoid.JumpPower=State.defaultJumpPower end
-else if State.defaultJumpHeight~=nil then humanoid.JumpHeight=State.
-defaultJumpHeight end end if State.defaultAutoRotate~=nil then humanoid.
-AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=nil then
-humanoid.PlatformStand=State.defaultPlatformStand end end function Helpers.
-setCharacter(character)State.character=character State.humanoid=nil State.
-rootPart=nil if not character then return end local humanoid=character:
+slideBoostMultiplier=1,spoofDevice='None'}return State end function
+__DARKLUA_BUNDLE_MODULES.m()local v=__DARKLUA_BUNDLE_MODULES.cache.m if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+Workspace=game:GetService('Workspace')local Constants=__DARKLUA_BUNDLE_MODULES.
+k()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers={}function Helpers.
+getLocalPlayer()return Players.LocalPlayer end function Helpers.resetInput()
+State.input={forward=0,back=0,left=0,right=0,up=0,down=0}end function Helpers.
+cacheDefaults(humanoid)State.defaultWalkSpeed=humanoid.WalkSpeed State.
+defaultUseJumpPower=humanoid.UseJumpPower if humanoid.UseJumpPower then State.
+defaultJumpPower=humanoid.JumpPower State.defaultJumpHeight=nil else State.
+defaultJumpPower=nil State.defaultJumpHeight=humanoid.JumpHeight end State.
+defaultAutoRotate=humanoid.AutoRotate State.defaultPlatformStand=humanoid.
+PlatformStand end function Helpers.applyWalkSpeed()local humanoid=State.humanoid
+if not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
+WalkSpeed=State.defaultWalkSpeed end end function Helpers.applyJumpPower()return
+end function Helpers.restoreMovementDefaults()local humanoid=State.humanoid if
+not humanoid then return end if State.defaultWalkSpeed~=nil then humanoid.
+WalkSpeed=State.defaultWalkSpeed end if State.defaultUseJumpPower~=nil then
+humanoid.UseJumpPower=State.defaultUseJumpPower end if State.defaultUseJumpPower
+then if State.defaultJumpPower~=nil then humanoid.JumpPower=State.
+defaultJumpPower end else if State.defaultJumpHeight~=nil then humanoid.
+JumpHeight=State.defaultJumpHeight end end if State.defaultAutoRotate~=nil then
+humanoid.AutoRotate=State.defaultAutoRotate end if State.defaultPlatformStand~=
+nil then humanoid.PlatformStand=State.defaultPlatformStand end end function
+Helpers.setCharacter(character)State.character=character State.humanoid=nil
+State.rootPart=nil if not character then return end local humanoid=character:
 FindFirstChildOfClass('Humanoid')if not humanoid then humanoid=(character:
 WaitForChild('Humanoid',5))end local rootPart=character:FindFirstChild(
 'HumanoidRootPart')if not rootPart then rootPart=character:WaitForChild(
@@ -433,13 +433,20 @@ GetService('ReplicatedStorage')local modules=replicatedStorage:WaitForChild(
 'Modules',5)if not modules then return nil end local replicatedClass=modules:
 WaitForChild('ReplicatedClass',5)if not replicatedClass then return nil end
 local success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(replicatedClass)end)return success and result or nil end return
-Helpers end function __DARKLUA_BUNDLE_MODULES.n()local v=
-__DARKLUA_BUNDLE_MODULES.cache.n if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end do local function
-__modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local Helpers=
-__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup()local
-hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
+dynamicRequire(replicatedClass)end)return success and result or nil end function
+Helpers.getControlsController()local player=Helpers.getLocalPlayer()if not
+player then return nil end local playerScripts=player:WaitForChild(
+'PlayerScripts',5)if not playerScripts then return nil end local controllers=
+playerScripts:WaitForChild('Controllers',5)if not controllers then return nil
+end local controlsController=controllers:WaitForChild('ControlsController',5)if
+not controlsController then return nil end local success,result=pcall(function()
+local dynamicRequire=require return dynamicRequire(controlsController)end)return
+success and result or nil end return Helpers end function
+__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
+do local function __modImpl()local State=__DARKLUA_BUNDLE_MODULES.m()local
+Helpers=__DARKLUA_BUNDLE_MODULES.n()local PlayerMods={}function PlayerMods.setup
+()local hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
 'replaceclosure')local checkcaller=Helpers.getGlobal('checkcaller')or function()
 return false end if not hookfunction then State.logger:warn(
 'hookfunction not found, Player Mods will not work.')return end task.spawn(
@@ -447,7 +454,15 @@ function()local replicatedClassMod=Helpers.getReplicatedClassModule()if
 replicatedClassMod then local oldGet oldGet=hookfunction(replicatedClassMod.Get,
 function(self,key)if not checkcaller()then if key=='SlidingSpeedMax'and State.
 isSlideBoostEnabled then return 3*State.slideBoostMultiplier end end return
-oldGet(self,key)end)end end)end return PlayerMods end function
+oldGet(self,key)end)end local controlsController=Helpers.getControlsController()
+if controlsController then local oldSetControls oldSetControls=hookfunction(
+controlsController.SetControls,function(self,device)if not checkcaller()and
+State.spoofDevice~='None'then device=State.spoofDevice end return
+oldSetControls(self,device)end)task.spawn(function()while true do if State.
+spoofDevice~='None'then if controlsController.CurrentControls~=State.spoofDevice
+then controlsController.CurrentControls=State.spoofDevice if controlsController.
+ControlsChanged then controlsController.ControlsChanged:Fire()end end end task.
+wait(0.5)end end)end end)end return PlayerMods end function
 __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
@@ -514,7 +529,10 @@ applyWalkSpeed()end function Player.setJumpPower(self,value)State.jumpPowerValue
 =value Helpers.applyJumpPower()end function Player.setFlySpeed(self,value)State.
 flySpeed=value end function Player.setSlideBoostEnabled(self,isEnabled)State.
 isSlideBoostEnabled=isEnabled end function Player.setSlideBoostMultiplier(self,
-multiplier)State.slideBoostMultiplier=multiplier end return Player end function
+multiplier)State.slideBoostMultiplier=multiplier end function Player.
+setSpoofDevice(self,device)State.spoofDevice=device local controlsController=
+Helpers.getControlsController()if controlsController and device~='None'then
+controlsController:SetControls(device)end end return Player end function
 __DARKLUA_BUNDLE_MODULES.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c end end
 do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.q()
@@ -1159,20 +1177,25 @@ setSlideBoostEnabled(state)end end})playerGroup:AddSlider(
 'PlayerSlideBoostMultiplier',{Text='Slide Boost Multiplier',Default=1,Min=1,Max=
 10,Rounding=1,Suffix='x',Tooltip='Multiplier for sliding speed.',Compact=true,
 Callback=function(value)local mod=_state.client.Modules.Player if mod and mod.
-setSlideBoostMultiplier then mod:setSlideBoostMultiplier(value)end end})_state.
-controlBindings={{toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind'
-,last=nil,setter=function(active)local mod=_state.client.Modules.Combat if mod
-and mod.setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId=
-'PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local
-mod=_state.client.Modules.Player if mod and mod.setFlyEnabled then mod:
-setFlyEnabled(active)end end},{toggleId='PlayerNoclip',keybindId=
-'PlayerNoclipKeybind',last=nil,setter=function(active)local mod=_state.client.
-Modules.Player if mod and mod.setNoclipEnabled then mod:setNoclipEnabled(active)
-end end},{toggleId='PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',
-last=nil,setter=function(active)local mod=_state.client.Modules.Player if mod
-and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{
-toggleId='PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,
+setSlideBoostMultiplier then mod:setSlideBoostMultiplier(value)end end})
+playerGroup:AddDropdown('PlayerSpoofDevice',{Values={'None','Touch','Gamepad',
+'VR','MouseKeyboard'},Default=1,Multi=false,Text='Spoof Device',Tooltip=
+[[Tricks the game into thinking you are on a different device.]],Callback=
+function(value)local mod=_state.client.Modules.Player if mod and mod.
+setSpoofDevice then mod:setSpoofDevice(value)end end})_state.controlBindings={{
+toggleId='CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Combat if mod and mod.
+setAimbotEnabled then mod:setAimbotEnabled(active)end end},{toggleId='PlayerFly'
+,keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local mod=_state.
+client.Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active
+)end end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,
 setter=function(active)local mod=_state.client.Modules.Player if mod and mod.
+setNoclipEnabled then mod:setNoclipEnabled(active)end end},{toggleId=
+'PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Player if mod and mod.
+setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{toggleId=
+'PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,setter=
+function(active)local mod=_state.client.Modules.Player if mod and mod.
 setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
 'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
 local mod=_state.client.Modules.Combat if mod and mod.setSilentAimEnabled then

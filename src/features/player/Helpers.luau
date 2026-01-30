@@ -234,4 +234,28 @@ function Helpers.getReplicatedClassModule(): any
 	return success and result or nil
 end
 
+function Helpers.getControlsController(): any
+	local player = Helpers.getLocalPlayer()
+	if not player then
+		return nil
+	end
+	local playerScripts = player:WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local controllers = playerScripts:WaitForChild("Controllers", 5)
+	if not controllers then
+		return nil
+	end
+	local controlsController = controllers:WaitForChild("ControlsController", 5)
+	if not controlsController then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(controlsController)
+	end)
+	return success and result or nil
+end
+
 return Helpers
