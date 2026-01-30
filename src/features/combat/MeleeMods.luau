@@ -41,6 +41,9 @@ local function _getNearbyEnemies(): { Player }
 		if TeamUtils.isSameTeam(player, localPlayer) then
 			continue
 		end
+		if not TeamUtils.isInSameDuel(localPlayer, player) then
+			continue
+		end
 
 		local character = player.Character
 		if not character then

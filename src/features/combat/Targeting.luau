@@ -95,7 +95,7 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
 	if player == localPlayer then
 		return false, nil, false, math.huge
 	end
-	if not TeamUtils.isInDuel(localPlayer) or not TeamUtils.isInDuel(player) then
+	if not TeamUtils.isInSameDuel(localPlayer, player) then
 		return false, nil, false, math.huge
 	end
 	if TeamUtils.isSameTeam(player, localPlayer) then
@@ -236,7 +236,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 		end
 
 		local player = Players:GetPlayerFromCharacter(entity :: Model)
-		if player and not TeamUtils.isInDuel(player) then
+		if player and not TeamUtils.isInSameDuel(localPlayer, player) then
 			continue
 		end
 		if player and TeamUtils.isSameTeam(player, localPlayer) then
@@ -275,6 +275,9 @@ function Targeting.getClosestTargetGlobal(): BasePart?
 			continue
 		end
 		if TeamUtils.isSameTeam(player, localPlayer) then
+			continue
+		end
+		if not TeamUtils.isInSameDuel(localPlayer, player) then
 			continue
 		end
 

@@ -94,11 +94,25 @@ do local function __modImpl()local Players=game:GetService('Players')local Maid=
 (__DARKLUA_BUNDLE_MODULES.a())local TeamUtils={}TeamUtils.__index=TeamUtils
 local getfenvAny=getfenv local env=(getfenvAny(0))local genv=(env.getgenv and
 env.getgenv())or env local _cache=(genv.cache or env.cache)local _maid=Maid.new(
-)local _state={}local _signals={}local _fighterController=nil local function
-_clearPlayerCache(player)if _cache and _cache.iscached and _cache.invalidate
-then if _cache.iscached(player)then _cache.invalidate(player)end end end
-local function _connect()local removeConn=Players.PlayerRemoving:Connect(
-function(player)_clearPlayerCache(player)end)_maid:GiveTask(removeConn)end
+)local _state={}local _signals={}local _fighterController=nil local
+_duelController=nil local function _clearPlayerCache(player)if _cache and _cache
+.iscached and _cache.invalidate then if _cache.iscached(player)then _cache.
+invalidate(player)end end end local function _connect()local removeConn=Players.
+PlayerRemoving:Connect(function(player)_clearPlayerCache(player)end)_maid:
+GiveTask(removeConn)end local function _getDuelController()if _duelController
+then return _duelController end local localPlayer=Players.LocalPlayer if not
+localPlayer then return nil end local playerScripts=localPlayer:FindFirstChild(
+'PlayerScripts')if not playerScripts then return nil end local controllers=
+playerScripts:FindFirstChild('Controllers')if not controllers then return nil
+end local duelControllerScript=controllers:FindFirstChild('DuelController')if
+not(duelControllerScript and duelControllerScript:IsA('ModuleScript'))then
+return nil end local success,result=pcall(function()local dynamicRequire=require
+return dynamicRequire(duelControllerScript)end)if success then _duelController=
+result end return _duelController end local function _getLocalDuel()local
+localPlayer=Players.LocalPlayer if not localPlayer then return nil end local
+duelController=_getDuelController()if not duelController or not duelController.
+GetDuel then return nil end local ok,duel=pcall(duelController.GetDuel,
+duelController,localPlayer)if ok then return duel end return nil end
 local function _getFighterController()if _fighterController then return
 _fighterController end local localPlayer=Players.LocalPlayer if not localPlayer
 then return nil end local playerScripts=localPlayer:FindFirstChild(
@@ -140,32 +154,47 @@ getPlayerTeamId(playerA)if teamA==nil then return false end local teamB=
 TeamUtils.getPlayerTeamId(playerB)if teamB==nil then return false end return
 _areTeamsEqual(teamA,teamB)end function TeamUtils.isInDuel(player)local
 controller=_getFighterController()local fighter=_getFighterForPlayer(controller,
-player)return _getFighterIsInDuel(fighter)end _connect()return TeamUtils end
-function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c
-end end do local function __modImpl()local Constants={DEFAULT_SETTINGS={
-isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false,
-shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
-shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,
-boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,
-1,1),distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),
-healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),
-nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),
-distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
-skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
-highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
-12,shouldOutline=true,isCustomHitSoundEnabled=false,hitSoundId='160432334',
-isNoHurtEffectEnabled=false},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
-'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
-'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
-'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
-'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
-'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
-}}return Constants end function __DARKLUA_BUNDLE_MODULES.f()local v=
-__DARKLUA_BUNDLE_MODULES.cache.f if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end do local function
-__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.g()local v=
-__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+player)return _getFighterIsInDuel(fighter)end function TeamUtils.isInSameDuel(
+playerA,playerB)local localPlayer=Players.LocalPlayer if localPlayer and(playerA
+==localPlayer or playerB==localPlayer)then if not TeamUtils.isInDuel(localPlayer
+)then return false end end local localDuel=_getLocalDuel()if localDuel and
+localDuel.GetDueler then local okA,duelerA=pcall(localDuel.GetDueler,localDuel,
+playerA)if not okA or not duelerA then return false end local okB,duelerB=pcall(
+localDuel.GetDueler,localDuel,playerB)if not okB or not duelerB then return
+false end return true end local controller=_getFighterController()local fighterA
+=_getFighterForPlayer(controller,playerA)local fighterB=_getFighterForPlayer(
+controller,playerB)if not fighterA or not fighterB then return false end if not
+_getFighterIsInDuel(fighterA)or not _getFighterIsInDuel(fighterB)then return
+false end local matchA=fighterA.Match or fighterA.MatchID or fighterA.MatchId or
+fighterA._match local matchB=fighterB.Match or fighterB.MatchID or fighterB.
+MatchId or fighterB._match if matchA and matchB and matchA==matchB then return
+true end local charA=playerA.Character local charB=playerB.Character if charA
+and charB and charA.Parent==charB.Parent and charA.Parent~=Workspace then return
+true end return false end _connect()return TeamUtils end function
+__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
+do local function __modImpl()local Constants={DEFAULT_SETTINGS={isEspEnabled=
+false,shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
+shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
+shouldShowHighlight=false,shouldShowTeammates=true,boxColor=Color3.new(1,1,1),
+textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),distanceColor=Color3.
+new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),
+healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=Color3.new(0,0,0),
+weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=Color3.new(0,0,0),
+boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.new(0,0,0),
+highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),boxThickness=
+1,skeletonThickness=1,textSize=12,shouldOutline=true,isCustomHitSoundEnabled=
+false,hitSoundId='160432334',isNoHurtEffectEnabled=false},R15_JOINTS={{'Head',
+'UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
+'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
+'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
+,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',
+'LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm','RightLowerArm'},{
+'RightLowerArm','RightHand'}}}return Constants end function
+__DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
+do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.g()
+local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
 __modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.f()local Types=
 __DARKLUA_BUNDLE_MODULES.g()local State={client=nil,logger=nil,isEnabled=false,
@@ -243,36 +272,36 @@ clearAll()return end local camera=Helpers.getCamera()local localPlayer=Players.
 LocalPlayer if not localPlayer then return end if not TeamUtils.isInDuel(
 localPlayer)then Helpers.clearAll()return end for _,player in ipairs(Players:
 GetPlayers())do if player==localPlayer or(localPlayer.Character and player.
-Character==localPlayer.Character)then continue end if not TeamUtils.isInDuel(
-player)then Helpers.removePlayer(player)continue end local character=player.
-Character local humanoid=character and character:FindFirstChildOfClass(
-'Humanoid')local root=character and character:FindFirstChild('HumanoidRootPart')
-if not character or not root or not humanoid or humanoid.Health<=0 then Helpers.
-removePlayer(player)continue end if not State.settings.shouldShowTeammates and
-TeamUtils.isSameTeam(player,localPlayer)then Helpers.removePlayer(player)
-continue end local group=Helpers.ensurePlayerDrawings(player)if not group then
-continue end local rootPart=root local distance=(rootPart.Position-camera.CFrame
-.Position).Magnitude local _,onScreen=camera:WorldToViewportPoint(rootPart.
-Position)if not onScreen then _setGroupVisible(group,false)local highlight=State
-.highlights[player]if highlight then highlight.Enabled=false end continue end
-Helpers.updateHighlight(player,character)local rootPos=camera:
-WorldToViewportPoint(rootPart.Position)local legPos=camera:WorldToViewportPoint(
-rootPart.Position-Vector3.new(0,3,0))local headPos=camera:WorldToViewportPoint(
-rootPart.Position+Vector3.new(0,2,0))local height=math.abs(headPos.Y-legPos.Y)*
-1.5 local width=height*0.6 local boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-
-height/2)local boxSize=Vector2.new(width,height)if State.settings.
-shouldShowBoxes then group.boxOutline.Size=boxSize group.boxOutline.Position=
-boxPos group.boxOutline.Color=State.settings.boxOutlineColor group.boxOutline.
-Thickness=State.settings.boxThickness+2 group.boxOutline.Visible=true group.
-boxOutline.ZIndex=1 group.box.Size=boxSize group.box.Position=boxPos group.box.
-Color=State.settings.boxColor group.box.Thickness=State.settings.boxThickness
-group.box.Visible=true group.box.ZIndex=2 else group.box.Visible=false group.
-boxOutline.Visible=false end if State.settings.shouldShowHealthbar then local
-healthPerc=math.clamp(humanoid.Health/humanoid.MaxHealth,0,1)local barHeight=
-height*healthPerc group.healthbarOutline.Size=Vector2.new(4,height+2)group.
-healthbarOutline.Position=Vector2.new(boxPos.X-6,boxPos.Y-1)group.
-healthbarOutline.Color=State.settings.healthbarOutlineColor group.
-healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
+Character==localPlayer.Character)then continue end if not TeamUtils.
+isInSameDuel(localPlayer,player)then Helpers.removePlayer(player)continue end
+local character=player.Character local humanoid=character and character:
+FindFirstChildOfClass('Humanoid')local root=character and character:
+FindFirstChild('HumanoidRootPart')if not character or not root or not humanoid
+or humanoid.Health<=0 then Helpers.removePlayer(player)continue end if not State
+.settings.shouldShowTeammates and TeamUtils.isSameTeam(player,localPlayer)then
+Helpers.removePlayer(player)continue end local group=Helpers.
+ensurePlayerDrawings(player)if not group then continue end local rootPart=root
+local distance=(rootPart.Position-camera.CFrame.Position).Magnitude local _,
+onScreen=camera:WorldToViewportPoint(rootPart.Position)if not onScreen then
+_setGroupVisible(group,false)local highlight=State.highlights[player]if
+highlight then highlight.Enabled=false end continue end Helpers.updateHighlight(
+player,character)local rootPos=camera:WorldToViewportPoint(rootPart.Position)
+local legPos=camera:WorldToViewportPoint(rootPart.Position-Vector3.new(0,3,0))
+local headPos=camera:WorldToViewportPoint(rootPart.Position+Vector3.new(0,2,0))
+local height=math.abs(headPos.Y-legPos.Y)*1.5 local width=height*0.6 local
+boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-height/2)local boxSize=Vector2.
+new(width,height)if State.settings.shouldShowBoxes then group.boxOutline.Size=
+boxSize group.boxOutline.Position=boxPos group.boxOutline.Color=State.settings.
+boxOutlineColor group.boxOutline.Thickness=State.settings.boxThickness+2 group.
+boxOutline.Visible=true group.boxOutline.ZIndex=1 group.box.Size=boxSize group.
+box.Position=boxPos group.box.Color=State.settings.boxColor group.box.Thickness=
+State.settings.boxThickness group.box.Visible=true group.box.ZIndex=2 else group
+.box.Visible=false group.boxOutline.Visible=false end if State.settings.
+shouldShowHealthbar then local healthPerc=math.clamp(humanoid.Health/humanoid.
+MaxHealth,0,1)local barHeight=height*healthPerc group.healthbarOutline.Size=
+Vector2.new(4,height+2)group.healthbarOutline.Position=Vector2.new(boxPos.X-6,
+boxPos.Y-1)group.healthbarOutline.Color=State.settings.healthbarOutlineColor
+group.healthbarOutline.Filled=true group.healthbarOutline.Visible=true group.
 healthbarOutline.ZIndex=1 group.healthbar.Size=Vector2.new(2,barHeight)group.
 healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-barHeight))group.
 healthbar.Color=State.settings.healthbarColor:Lerp(Color3.new(1,0,0),1-
@@ -804,39 +833,39 @@ character:FindFirstChild(State.targetPart)or character:FindFirstChild('Head')if
 p then checkPart(p)end end return bestPart,anyOnScreen,shortestDistSq end
 function Targeting.getTargetState(player)local camera=Helpers.getCamera()local
 localPlayer=Helpers.getLocalPlayer()if player==localPlayer then return false,nil
-,false,math.huge end if not TeamUtils.isInDuel(localPlayer)or not TeamUtils.
-isInDuel(player)then return false,nil,false,math.huge end if TeamUtils.
-isSameTeam(player,localPlayer)then return false,nil,false,math.huge end local
-character=player.Character if not character then return false,nil,false,math.
-huge end local humanoid=character:FindFirstChildOfClass('Humanoid')if not
-humanoid or humanoid.Health<=0 then return false,nil,false,math.huge end if
-character:FindFirstChildOfClass('ForceField')then return false,nil,false,math.
-huge end local mouseLocation=UserInputService:GetMouseLocation()local bestPart,
-anyOnScreen,shortestDistSq=_getBestPartForCharacter(character,camera,localPlayer
-.Character,mouseLocation)if not bestPart then return false,nil,false,math.huge
-end local shortestDist=if shortestDistSq==math.huge then math.huge else math.
-sqrt(shortestDistSq)return true,bestPart,anyOnScreen,shortestDist end function
-Targeting.getBestTarget(radius)local localPlayer=Helpers.getLocalPlayer()local
-bestTarget=nil local shortestDistance=radius for _,player in ipairs(Players:
-GetPlayers())do if player==localPlayer then continue end local isValid,headPart,
-onScreen,distance=Targeting.getTargetState(player)if not isValid or not headPart
-or not onScreen then continue end if distance>radius then continue end if
-distance<shortestDistance then shortestDistance=distance bestTarget=player end
-end return bestTarget end function Targeting.resolveTarget()if State.target then
-local dropRadius=State.fovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER local
-isValid,headPart,onScreen,distance=Targeting.getTargetState(State.target)if
-isValid and headPart and onScreen and distance<=dropRadius then State.
-targetLostAt=nil return State.target end if not isValid or not headPart then
-State.targetLostAt=nil State.target=nil else local now=os.clock()local
-targetLostAt=State.targetLostAt if not targetLostAt then targetLostAt=now State.
-targetLostAt=now end if now-(targetLostAt)<Constants.TARGET_DROP_DELAY then
-return State.target end State.targetLostAt=nil State.target=nil end end local
-newTarget=Targeting.getBestTarget(State.fovRadius)State.target=newTarget return
-newTarget end function Targeting.resolveSilentTarget()if State.silentTarget then
-local dropRadius=State.silentAimFovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER
-local isValid,headPart,onScreen,distance=Targeting.getTargetState(State.
-silentTarget)if isValid and headPart and onScreen and distance<=dropRadius then
-State.silentTargetLostAt=nil return State.silentTarget end if not isValid or not
+,false,math.huge end if not TeamUtils.isInSameDuel(localPlayer,player)then
+return false,nil,false,math.huge end if TeamUtils.isSameTeam(player,localPlayer)
+then return false,nil,false,math.huge end local character=player.Character if
+not character then return false,nil,false,math.huge end local humanoid=character
+:FindFirstChildOfClass('Humanoid')if not humanoid or humanoid.Health<=0 then
+return false,nil,false,math.huge end if character:FindFirstChildOfClass(
+'ForceField')then return false,nil,false,math.huge end local mouseLocation=
+UserInputService:GetMouseLocation()local bestPart,anyOnScreen,shortestDistSq=
+_getBestPartForCharacter(character,camera,localPlayer.Character,mouseLocation)if
+not bestPart then return false,nil,false,math.huge end local shortestDist=if
+shortestDistSq==math.huge then math.huge else math.sqrt(shortestDistSq)return
+true,bestPart,anyOnScreen,shortestDist end function Targeting.getBestTarget(
+radius)local localPlayer=Helpers.getLocalPlayer()local bestTarget=nil local
+shortestDistance=radius for _,player in ipairs(Players:GetPlayers())do if player
+==localPlayer then continue end local isValid,headPart,onScreen,distance=
+Targeting.getTargetState(player)if not isValid or not headPart or not onScreen
+then continue end if distance>radius then continue end if distance<
+shortestDistance then shortestDistance=distance bestTarget=player end end return
+bestTarget end function Targeting.resolveTarget()if State.target then local
+dropRadius=State.fovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER local isValid,
+headPart,onScreen,distance=Targeting.getTargetState(State.target)if isValid and
+headPart and onScreen and distance<=dropRadius then State.targetLostAt=nil
+return State.target end if not isValid or not headPart then State.targetLostAt=
+nil State.target=nil else local now=os.clock()local targetLostAt=State.
+targetLostAt if not targetLostAt then targetLostAt=now State.targetLostAt=now
+end if now-(targetLostAt)<Constants.TARGET_DROP_DELAY then return State.target
+end State.targetLostAt=nil State.target=nil end end local newTarget=Targeting.
+getBestTarget(State.fovRadius)State.target=newTarget return newTarget end
+function Targeting.resolveSilentTarget()if State.silentTarget then local
+dropRadius=State.silentAimFovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER local
+isValid,headPart,onScreen,distance=Targeting.getTargetState(State.silentTarget)
+if isValid and headPart and onScreen and distance<=dropRadius then State.
+silentTargetLostAt=nil return State.silentTarget end if not isValid or not
 headPart then State.silentTargetLostAt=nil State.silentTarget=nil else local now
 =os.clock()local silentTargetLostAt=State.silentTargetLostAt if not
 silentTargetLostAt then silentTargetLostAt=now State.silentTargetLostAt=now end
@@ -850,10 +879,10 @@ end local closest=nil local closestDistSq=State.silentAimFovRadius*State.
 silentAimFovRadius local mouseLocation=UserInputService:GetMouseLocation()for _,
 entity in ipairs(CollectionService:GetTagged('Entity'))do if entity==localPlayer
 .Character or entity.Name==localPlayer.Name then continue end local player=
-Players:GetPlayerFromCharacter(entity)if player and not TeamUtils.isInDuel(
-player)then continue end if player and TeamUtils.isSameTeam(player,localPlayer)
-then continue end local hum=entity:FindFirstChildOfClass('Humanoid')if not hum
-or hum.Health<=0 then continue end local bestPart,anyOnScreen,distSq=
+Players:GetPlayerFromCharacter(entity)if player and not TeamUtils.isInSameDuel(
+localPlayer,player)then continue end if player and TeamUtils.isSameTeam(player,
+localPlayer)then continue end local hum=entity:FindFirstChildOfClass('Humanoid')
+if not hum or hum.Health<=0 then continue end local bestPart,anyOnScreen,distSq=
 _getBestPartForCharacter(entity,camera,localPlayer.Character,mouseLocation)if
 not anyOnScreen or not bestPart then continue end if distSq<closestDistSq then
 closest=bestPart closestDistSq=distSq end end return closest end function
@@ -861,8 +890,9 @@ Targeting.getClosestTargetGlobal()local camera=Helpers.getCamera()local
 localPlayer=Helpers.getLocalPlayer()local closest=nil local shortestDist=math.
 huge local mouseLocation=UserInputService:GetMouseLocation()for _,player in
 ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
-TeamUtils.isSameTeam(player,localPlayer)then continue end local character=player
-.Character if not character then continue end local hum=character:
+TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
+isInSameDuel(localPlayer,player)then continue end local character=player.
+Character if not character then continue end local hum=character:
 FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
 if character:FindFirstChildOfClass('ForceField')then continue end local root=(
 character:FindFirstChild('HumanoidRootPart'))if not root then continue end local
@@ -997,7 +1027,8 @@ Character if not localCharacter then return{}end local localRoot=(localCharacter
 :FindFirstChild('HumanoidRootPart'))if not localRoot then return{}end local
 enemies={}for _,player in ipairs(Players:GetPlayers())do if player==localPlayer
 then continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end
-local character=player.Character if not character then continue end local root=(
+if not TeamUtils.isInSameDuel(localPlayer,player)then continue end local
+character=player.Character if not character then continue end local root=(
 character:FindFirstChild('HumanoidRootPart'))local hum=character:
 FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
 continue end table.insert(enemies,player)end return enemies end function
@@ -1083,8 +1114,9 @@ _getDistance(p1,p2)return(p1-p2).Magnitude end local function _getNearbyEnemies(
 )local localPlayer=Helpers.getLocalPlayer()local localCharacter=localPlayer.
 Character if not localCharacter then return{}end local enemies={}for _,player in
 ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
-TeamUtils.isSameTeam(player,localPlayer)then continue end local character=player
-.Character if not character then continue end local root=(character:
+TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
+isInSameDuel(localPlayer,player)then continue end local character=player.
+Character if not character then continue end local root=(character:
 FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
 'Humanoid')if not root or not hum or hum.Health<=0 then continue end table.
 insert(enemies,player)end return enemies end local function _safeCall(func,...)

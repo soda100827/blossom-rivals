@@ -261,7 +261,7 @@ function Helpers.render()
 			continue
 		end
 
-		if not TeamUtils.isInDuel(player) then
+		if not TeamUtils.isInSameDuel(localPlayer, player) then
 			Helpers.removePlayer(player)
 			continue
 		end
