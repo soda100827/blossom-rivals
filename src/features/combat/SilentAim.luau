@@ -14,6 +14,7 @@ local Targeting = require("./Targeting")
 --// Private state
 local SilentAim = {}
 local _lastSilentTargetPos: Vector3? = nil
+local _lastSilentOrigin: Vector3? = nil
 
 --// Private helpers
 
@@ -83,10 +84,12 @@ function SilentAim.setup()
 						end
 
 						_lastSilentTargetPos = targetPart.Position
+						_lastSilentOrigin = newOrigin
 						return oldRaycast(self, newOrigin, targetPart.Position, distance, filter, ...)
 					end
 				end
 				_lastSilentTargetPos = nil
+				_lastSilentOrigin = nil
 				return oldRaycast(self, origin, target, distance, filter, ...)
 			end, State.logger)
 
@@ -98,7 +101,11 @@ function SilentAim.setup()
 					and _lastSilentTargetPos
 					and SilentAim.isGunAction()
 				then
-					local newCF = CFrame.lookAt(cf.Position, _lastSilentTargetPos :: Vector3)
+					local originPos = cf.Position
+					if State.isManipulationEnabled and _lastSilentOrigin then
+						originPos = _lastSilentOrigin
+					end
+					local newCF = CFrame.lookAt(originPos, _lastSilentTargetPos :: Vector3)
 					return oldEncode(self, newCF)
 				end
 				return oldEncode(self, cf)

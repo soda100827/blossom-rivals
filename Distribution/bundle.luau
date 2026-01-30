@@ -832,15 +832,16 @@ __DARKLUA_BUNDLE_MODULES.cache.v if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end do local function
 __modImpl()local State=__DARKLUA_BUNDLE_MODULES.s()local Helpers=
 __DARKLUA_BUNDLE_MODULES.t()local Targeting=__DARKLUA_BUNDLE_MODULES.u()local
-SilentAim={}local _lastSilentTargetPos=nil function SilentAim.isGunAction()local
-debugGlobal=Helpers.getGlobal('debug')local traceback=debugGlobal and
-debugGlobal.traceback or debug.traceback local stack=traceback()return(stack:
-find('StartShooting')or stack:find('GetEntitiesFromRaycast')or stack:find(
-'_LocalTracers')or stack:find('_ImpactMarker'))~=nil end function SilentAim.
-setup()local hookfunction=Helpers.getGlobal('hookfunction')or Helpers.getGlobal(
-'replaceclosure')local checkcaller=Helpers.getGlobal('checkcaller')or function()
-return false end local newcclosure=Helpers.getGlobal('newcclosure')or function(f
-)return f end if not hookfunction then State.logger:warn(
+SilentAim={}local _lastSilentTargetPos=nil local _lastSilentOrigin=nil function
+SilentAim.isGunAction()local debugGlobal=Helpers.getGlobal('debug')local
+traceback=debugGlobal and debugGlobal.traceback or debug.traceback local stack=
+traceback()return(stack:find('StartShooting')or stack:find(
+'GetEntitiesFromRaycast')or stack:find('_LocalTracers')or stack:find(
+'_ImpactMarker'))~=nil end function SilentAim.setup()local hookfunction=Helpers.
+getGlobal('hookfunction')or Helpers.getGlobal('replaceclosure')local checkcaller
+=Helpers.getGlobal('checkcaller')or function()return false end local newcclosure
+=Helpers.getGlobal('newcclosure')or function(f)return f end if not hookfunction
+then State.logger:warn(
 'hookfunction not found, Perfect Silent Aim will not work.')return end task.
 spawn(function()local utility=Helpers.getUtility()if utility and not State.
 utilityHooked then State.utilityHooked=true local oldRaycast oldRaycast=Helpers.
@@ -854,14 +855,16 @@ local newOrigin=origin if State.isManipulationEnabled then local camera=Helpers.
 getCamera()if camera then local camPos=camera.CFrame.Position local dir=(
 targetPart.Position-camPos).Unit newOrigin=targetPart.Position-(dir*5)else
 newOrigin=targetPart.Position+Vector3.new(0,1,0)end end _lastSilentTargetPos=
-targetPart.Position return oldRaycast(self,newOrigin,targetPart.Position,
-distance,filter,...)end end _lastSilentTargetPos=nil return oldRaycast(self,
-origin,target,distance,filter,...)end,State.logger)local oldEncode oldEncode=
-Helpers.safeHook(utility,'EncodeCFrame',function(self,cf)if not checkcaller()and
-State.isSilentAimEnabled and _lastSilentTargetPos and SilentAim.isGunAction()
-then local newCF=CFrame.lookAt(cf.Position,_lastSilentTargetPos)return
-oldEncode(self,newCF)end return oldEncode(self,cf)end,State.logger)end local
-cameraShaker=Helpers.getCameraShaker()if cameraShaker and not State.
+targetPart.Position _lastSilentOrigin=newOrigin return oldRaycast(self,newOrigin
+,targetPart.Position,distance,filter,...)end end _lastSilentTargetPos=nil
+_lastSilentOrigin=nil return oldRaycast(self,origin,target,distance,filter,...)
+end,State.logger)local oldEncode oldEncode=Helpers.safeHook(utility,
+'EncodeCFrame',function(self,cf)if not checkcaller()and State.isSilentAimEnabled
+and _lastSilentTargetPos and SilentAim.isGunAction()then local originPos=cf.
+Position if State.isManipulationEnabled and _lastSilentOrigin then originPos=
+_lastSilentOrigin end local newCF=CFrame.lookAt(originPos,_lastSilentTargetPos)
+return oldEncode(self,newCF)end return oldEncode(self,cf)end,State.logger)end
+local cameraShaker=Helpers.getCameraShaker()if cameraShaker and not State.
 cameraShakerHooked then State.cameraShakerHooked=true local mt=getmetatable(
 cameraShaker.Presets)if mt and mt.__index then local oldIdx=mt.__index mt.
 __index=newcclosure(function(t,k)if State.isSilentAimEnabled and(k==
