@@ -392,6 +392,20 @@ local function _runAutoload(library: any, saveManager: any, isSilent: boolean)
 	end
 end
 
+local function _unloadAll()
+	local client = _state.client
+	if client and client.destroy then
+		client:destroy()
+		return
+	end
+
+	_maid:DoCleaning()
+	if _state.library then
+		_state.library:Unload()
+	end
+	_state.isMounted = false
+end
+
 local function _connect()
 	_maid:DoCleaning()
 
@@ -1164,16 +1178,16 @@ local function _mount()
 
 	local menuGroup = tabs.uiSettings:AddLeftGroupbox("Menu")
 	menuGroup:AddButton("Unload", function()
-		library:Unload()
+		_unloadAll()
 	end)
 	menuGroup:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
 		Default = "End",
 		NoUI = true,
 		Text = "Menu keybind",
 	})
+	menuGroup:AddDivider()
 
-	local interfaceGroup = tabs.uiSettings:AddRightGroupbox("Interface")
-	interfaceGroup:AddToggle("UIShowKeybindList", {
+	menuGroup:AddToggle("UIShowKeybindList", {
 		Text = "Keybind List",
 		Default = true,
 		Tooltip = "Shows the keybind list panel.",
@@ -1181,7 +1195,7 @@ local function _mount()
 			_setKeybindListVisible(isVisible)
 		end,
 	})
-	interfaceGroup:AddToggle("UIShowWatermark", {
+	menuGroup:AddToggle("UIShowWatermark", {
 		Text = "Watermark",
 		Default = true,
 		Tooltip = "Shows the watermark display.",
@@ -1189,7 +1203,7 @@ local function _mount()
 			_setWatermarkVisible(isVisible)
 		end,
 	})
-	interfaceGroup:AddDropdown("UIKeybindListMode", {
+	menuGroup:AddDropdown("UIKeybindListMode", {
 		Values = { "Active", "Toggle", "All" },
 		Default = "Active",
 		Multi = false,

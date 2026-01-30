@@ -1272,21 +1272,23 @@ library)if isSilent then _setNotifyMuted(library,true)if wasVisible then pcall(
 function()library:Toggle()end)end end pcall(function()saveManager:
 LoadAutoloadConfig()end)if isSilent then if wasVisible then pcall(function()
 library:Toggle()end)end _setNotifyMuted(library,false)end end local function
-_connect()_maid:DoCleaning()local updateConn=RunService.RenderStepped:Connect(
-function()_updateControlBindings()_updateWatermark()_updateKeybindList()end)
-_maid:GiveTask(updateConn)end local function _mount()if _state.isMounted then
-return end _state.isMounted=true local logger=_state.logger local library=
-_loadRemote('Library.lua',logger)local themeManager=_loadRemote(
-'addons/ThemeManager.lua',logger)local saveManager=_loadRemote(
-'addons/SaveManager.lua',logger)_state.library=library _state.themeManager=
-themeManager _state.saveManager=saveManager _installSaveManagerExtensions(
-saveManager)local window=library:CreateWindow({Title='Blossom '.._state.client.
-Version,Center=true,AutoShow=not _state.client.IsSilent,TabPadding=8,
-MenuFadeTime=0.2})local tabs={combat=window:AddTab('Combat'),visuals=window:
-AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings=window:AddTab(
-'UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox('Combat')local
-silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text='Silent Aim',
-Default=false,Tooltip=
+_unloadAll()local client=_state.client if client and client.destroy then client:
+destroy()return end _maid:DoCleaning()if _state.library then _state.library:
+Unload()end _state.isMounted=false end local function _connect()_maid:
+DoCleaning()local updateConn=RunService.RenderStepped:Connect(function()
+_updateControlBindings()_updateWatermark()_updateKeybindList()end)_maid:
+GiveTask(updateConn)end local function _mount()if _state.isMounted then return
+end _state.isMounted=true local logger=_state.logger local library=_loadRemote(
+'Library.lua',logger)local themeManager=_loadRemote('addons/ThemeManager.lua',
+logger)local saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.
+library=library _state.themeManager=themeManager _state.saveManager=saveManager
+_installSaveManagerExtensions(saveManager)local window=library:CreateWindow({
+Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
+IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:AddTab(
+'Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings
+=window:AddTab('UI Settings')}local combatGroup=tabs.combat:AddLeftGroupbox(
+'Combat')local silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text=
+'Silent Aim',Default=false,Tooltip=
 [[Redirects shots toward the closest valid target within your silent FOV.]],
 Callback=function()_updateControlBindings()end})silentAimToggle:AddKeyPicker(
 'SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text='Silent Aim',
@@ -1496,38 +1498,37 @@ AddSlider('ESPTextSize',{Text='Text Size',Default=12,Min=10,Max=24,Rounding=0,
 Tooltip='Size of ESP text.',Compact=true,Callback=function(value)local mod=
 _state.client.Modules.Visuals if mod and mod.setTextSize then mod:setTextSize(
 value)end end})local menuGroup=tabs.uiSettings:AddLeftGroupbox('Menu')menuGroup:
-AddButton('Unload',function()library:Unload()end)menuGroup:AddLabel('Menu bind')
-:AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})local
-interfaceGroup=tabs.uiSettings:AddRightGroupbox('Interface')interfaceGroup:
-AddToggle('UIShowKeybindList',{Text='Keybind List',Default=true,Tooltip=
-'Shows the keybind list panel.',Callback=function(isVisible)
-_setKeybindListVisible(isVisible)end})interfaceGroup:AddToggle('UIShowWatermark'
-,{Text='Watermark',Default=true,Tooltip='Shows the watermark display.',Callback=
-function(isVisible)_setWatermarkVisible(isVisible)end})interfaceGroup:
-AddDropdown('UIKeybindListMode',{Values={'Active','Toggle','All'},Default=
-'Active',Multi=false,Text='Keybind Mode',Tooltip='Filter for the keybind list.',
-Callback=function()_updateKeybindList()end})local getfenvAny=getfenv local env=(
-getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and
-getgenvFunc().Options)or _G.Options if GlobalOptions and GlobalOptions.
-MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind end
-themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
-IgnoreThemeSettings()themeManager:SetFolder('Blossom')saveManager:SetFolder(
-'Blossom')saveManager:BuildConfigSection(tabs.uiSettings)themeManager:
-ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:AddLeftGroupbox('Player')
-local exploitsGroup=tabs.misc:AddRightGroupbox('Exploits')local playerFlyToggle=
-playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=false,Tooltip=
-'Toggle flight mode.',Callback=function(state)_updateControlBindings()end})
-playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text=
-'Fly',SyncToggleState=false,Callback=function()_updateControlBindings()end})
-playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
-200,Rounding=0,Tooltip='Movement speed while flying.',Compact=true,Callback=
-function(value)local mod=_state.client.Modules.Player if mod and mod.setFlySpeed
-then mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:
-AddToggle('PlayerNoclip',{Text='Noclip',Default=false,Tooltip=
-'Disable collisions for your character.',Callback=function(state)
-_updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
-'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip',SyncToggleState=
-false,Callback=function()_updateControlBindings()end})local
+AddButton('Unload',function()_unloadAll()end)menuGroup:AddLabel('Menu bind'):
+AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})
+menuGroup:AddDivider()menuGroup:AddToggle('UIShowKeybindList',{Text=
+'Keybind List',Default=true,Tooltip='Shows the keybind list panel.',Callback=
+function(isVisible)_setKeybindListVisible(isVisible)end})menuGroup:AddToggle(
+'UIShowWatermark',{Text='Watermark',Default=true,Tooltip=
+'Shows the watermark display.',Callback=function(isVisible)_setWatermarkVisible(
+isVisible)end})menuGroup:AddDropdown('UIKeybindListMode',{Values={'Active',
+'Toggle','All'},Default='Active',Multi=false,Text='Keybind Mode',Tooltip=
+'Filter for the keybind list.',Callback=function()_updateKeybindList()end})local
+getfenvAny=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
+GlobalOptions=(getgenvFunc and getgenvFunc().Options)or _G.Options if
+GlobalOptions and GlobalOptions.MenuKeybind then library.ToggleKeybind=
+GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
+SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
+'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
+uiSettings)themeManager:ApplyToTab(tabs.uiSettings)local playerGroup=tabs.misc:
+AddLeftGroupbox('Player')local exploitsGroup=tabs.misc:AddRightGroupbox(
+'Exploits')local playerFlyToggle=playerGroup:AddToggle('PlayerFly',{Text='Fly',
+Default=false,Tooltip='Toggle flight mode.',Callback=function(state)
+_updateControlBindings()end})playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{
+Default='F',NoUI=false,Text='Fly',SyncToggleState=false,Callback=function()
+_updateControlBindings()end})playerGroup:AddSlider('PlayerFlySpeed',{Text=
+'Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Tooltip=
+'Movement speed while flying.',Compact=true,Callback=function(value)local mod=
+_state.client.Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(
+value)end end})local playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{
+Text='Noclip',Default=false,Tooltip='Disable collisions for your character.',
+Callback=function(state)_updateControlBindings()end})playerNoclipToggle:
+AddKeyPicker('PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip',
+SyncToggleState=false,Callback=function()_updateControlBindings()end})local
 playerWalkSpeedToggle=playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text=
 'Walk Speed',Default=false,Tooltip='Toggle custom walk speed.',Callback=function
 (state)_updateControlBindings()end})playerWalkSpeedToggle:AddKeyPicker(
