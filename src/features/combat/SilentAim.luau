@@ -101,11 +101,30 @@ function SilentAim.setup()
 							-- Update return to use extendedTarget
 							_lastSilentTargetPos = targetPart.Position
 							_lastSilentOrigin = newOrigin
-							return oldRaycast(self, newOrigin, extendedTarget, distance, filter, ...)
+
+							local result = oldRaycast(self, newOrigin, extendedTarget, distance, filter, ...)
+
+							-- PROXY/SPOOFING LOGIC:
+							-- The ray physically hits the FLOOR (due to filter), which is good for tracers/server validation of "Through" shot.
+							-- BUT the game logic needs to see a Player Hit to fire damage.
+							-- So we wrap the result and lie about the Instance.
+							if result then
+								local fakeResult = {
+									Instance = targetPart, -- LIE: We hit the player
+									Position = result.Position, -- TRUTH: End of ray (Floor)
+									Material = result.Material,
+									Normal = result.Normal,
+									Distance = result.Distance,
+								}
+								return fakeResult
+							end
+
+							return result
 						end
 
 						_lastSilentTargetPos = targetPart.Position
 						_lastSilentOrigin = newOrigin
+						-- For non-magic bullet silent aim, we just hit the target directly
 						return oldRaycast(self, newOrigin, targetPart.Position, distance, filter, ...)
 					end
 				end
