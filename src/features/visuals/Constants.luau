@@ -39,7 +39,7 @@ local Constants = {
 		textSize = 12,
 		shouldOutline = true,
 		isCustomHitSoundEnabled = false,
-		hitSoundId = "rbxassetid://160432334",
+		hitSoundId = "160432334",
 		isNoHurtEffectEnabled = false,
 	},
 	R15_JOINTS = {

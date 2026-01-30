@@ -154,18 +154,18 @@ nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),
 distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
 skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
 highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
-12,shouldOutline=true,isCustomHitSoundEnabled=false,hitSoundId=
-'rbxassetid://160432334',isNoHurtEffectEnabled=false},R15_JOINTS={{'Head',
-'UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
-'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
-'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
-,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',
-'LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm','RightLowerArm'},{
-'RightLowerArm','RightHand'}}}return Constants end function
-__DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.g()
-local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+12,shouldOutline=true,isCustomHitSoundEnabled=false,hitSoundId='160432334',
+isNoHurtEffectEnabled=false},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
+'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
+'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
+'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
+'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
+'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
+}}return Constants end function __DARKLUA_BUNDLE_MODULES.f()local v=
+__DARKLUA_BUNDLE_MODULES.cache.f if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end do local function
+__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.g()local v=
+__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
 __modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.f()local Types=
 __DARKLUA_BUNDLE_MODULES.g()local State={client=nil,logger=nil,isEnabled=false,
@@ -450,61 +450,71 @@ GetService('RunService')local SoundService=game:GetService('SoundService')local
 State=__DARKLUA_BUNDLE_MODULES.h()local HitEffects={}local _maid=nil
 local function _playHitSound()if not State.settings.isCustomHitSoundEnabled then
 return end local soundId=State.settings.hitSoundId if not soundId or soundId==''
-then return end local sound=Instance.new('Sound')sound.SoundId=soundId sound.
-Volume=0.5 sound.Parent=SoundService sound:Play()task.delay(2,function()sound:
-Destroy()end)end function HitEffects.setup(maid)_maid=maid local hurtEffectConn=
-RunService.Heartbeat:Connect(function()if State.settings.isNoHurtEffectEnabled
-then local player=Players.LocalPlayer if player then local playerGui=player:
-FindFirstChild('PlayerGui')if playerGui then local damageOverlay=playerGui:
-FindFirstChild('DamageOverlay',true)if damageOverlay and damageOverlay:IsA(
-'GuiObject')then damageOverlay.Visible=false end local hurtOverlay=playerGui:
-FindFirstChild('HurtOverlay',true)if hurtOverlay and hurtOverlay:IsA('GuiObject'
-)then hurtOverlay.Visible=false end end end end end)_maid:GiveTask(
-hurtEffectConn)task.spawn(function()local combatHelpers=__DARKLUA_BUNDLE_MODULES
-.m()local gameplayUtility=combatHelpers.getGameplayUtility()if gameplayUtility
-then local oldHitMarker=gameplayUtility._HitMarker if oldHitMarker then
-gameplayUtility._HitMarker=function(...)_playHitSound()return oldHitMarker(...)
-end end end end)end return HitEffects end function __DARKLUA_BUNDLE_MODULES.n()
-local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local Maid=(__DARKLUA_BUNDLE_MODULES.a())local Helpers=
-__DARKLUA_BUNDLE_MODULES.i()local State=__DARKLUA_BUNDLE_MODULES.h()local Types=
-__DARKLUA_BUNDLE_MODULES.g()local HitEffects=__DARKLUA_BUNDLE_MODULES.n()local
-Visuals={}Visuals.__index=Visuals local _maid=nil local _signals={}
-local function _connect()_maid:DoCleaning()local removeConn=Players.
-PlayerRemoving:Connect(function(player)Helpers.removePlayer(player)end)_maid:
-GiveTask(removeConn)local renderConn=RunService.RenderStepped:Connect(function()
-Helpers.render()end)_maid:GiveTask(renderConn)end local function _enable()if not
-Helpers.getDrawingLib()then State.isEnabled=false return end _connect()
-HitEffects.setup(_maid)end local function _disable()_maid:DoCleaning()Helpers.
-clearAll()end function Visuals.init(self,client)State.client=client State.logger
-=client.Logger _maid=Maid.new()end function Visuals.cleanup(self)State.isEnabled
-=false _disable()end function Visuals.toggle(self,isEnabled)if State.isEnabled==
-isEnabled then return end State.isEnabled=isEnabled if isEnabled then _enable()
-else _disable()end end function Visuals.setEspEnabled(self,isEnabled)State.
-settings.isEspEnabled=isEnabled if not isEnabled then Helpers.clearAll()end end
-function Visuals.setShowNames(self,shouldShow)State.settings.shouldShowNames=
-shouldShow end function Visuals.setShowWeapon(self,shouldShow)State.settings.
-shouldShowWeapon=shouldShow end function Visuals.setShowDistance(self,shouldShow
-)State.settings.shouldShowDistance=shouldShow end function Visuals.setShowBoxes(
-self,shouldShow)State.settings.shouldShowBoxes=shouldShow end function Visuals.
-setShowSkeleton(self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end
-function Visuals.setShowHealthbar(self,shouldShow)State.settings.
-shouldShowHealthbar=shouldShow end function Visuals.setShowHighlight(self,
-shouldShow)State.settings.shouldShowHighlight=shouldShow if not shouldShow then
-Helpers.clearHighlights()end end function Visuals.setShowTeammates(self,
-shouldShow)State.settings.shouldShowTeammates=shouldShow end function Visuals.
-setBoxColor(self,color)State.settings.boxColor=color end function Visuals.
-setTextColor(self,color)State.settings.textColor=color end function Visuals.
-setWeaponColor(self,color)State.settings.weaponColor=color end function Visuals.
-setDistanceColor(self,color)State.settings.distanceColor=color end function
-Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=color end
-function Visuals.setHealthbarColor(self,color)State.settings.healthbarColor=
-color end function Visuals.setHealthbarOutlineColor(self,color)State.settings.
-healthbarOutlineColor=color end function Visuals.setNameOutlineColor(self,color)
-State.settings.nameOutlineColor=color end function Visuals.setWeaponOutlineColor
-(self,color)State.settings.weaponOutlineColor=color end function Visuals.
+then return end if not soundId:find('rbxassetid://')then soundId='rbxassetid://'
+..soundId end task.defer(function()local sound=Instance.new('Sound')sound.
+SoundId=soundId sound.Volume=2 sound.Parent=SoundService sound:Play()task.delay(
+2,function()sound:Destroy()end)end)end function HitEffects.setup(maid)_maid=maid
+task.spawn(function()local combatHelpers=__DARKLUA_BUNDLE_MODULES.m()local
+gameplayUtility=combatHelpers.getGameplayUtility()local hookfunction=
+combatHelpers.getGlobal('hookfunction')or combatHelpers.getGlobal(
+'replaceclosure')if gameplayUtility then if gameplayUtility._HitMarker then
+local oldHitMarker oldHitMarker=hookfunction(gameplayUtility._HitMarker,function
+(...)_playHitSound()return oldHitMarker(...)end)end if gameplayUtility.
+_ImpactMarker then local oldImpactMarker oldImpactMarker=hookfunction(
+gameplayUtility._ImpactMarker,function(...)if State.settings.
+isNoHurtEffectEnabled then return end return oldImpactMarker(...)end)end end
+local oldPlayLocalSound oldPlayLocalSound=hookfunction(SoundService.
+PlayLocalSound,function(self,sound)if sound and State.settings.
+isCustomHitSoundEnabled then local name=sound.Name:lower()if name:find('hit')or
+name:find('impact')or name:find('kill')then _playHitSound()end end return
+oldPlayLocalSound(self,sound)end)local hurtEffectConn=RunService.Heartbeat:
+Connect(function()if State.settings.isNoHurtEffectEnabled then local player=
+Players.LocalPlayer if player then local playerGui=player:FindFirstChild(
+'PlayerGui')if playerGui then local names={'DamageOverlay','HurtOverlay',
+'BloodOverlay','PainOverlay'}for _,name in ipairs(names)do local ui=playerGui:
+FindFirstChild(name,true)if ui and ui:IsA('GuiObject')then ui.Visible=false end
+end end end end end)_maid:GiveTask(hurtEffectConn)end)end return HitEffects end
+function __DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c
+end end do local function __modImpl()local Players=game:GetService('Players')
+local RunService=game:GetService('RunService')local Maid=(
+__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.i()local
+State=__DARKLUA_BUNDLE_MODULES.h()local Types=__DARKLUA_BUNDLE_MODULES.g()local
+HitEffects=__DARKLUA_BUNDLE_MODULES.n()local Visuals={}Visuals.__index=Visuals
+local _maid=nil local _signals={}local function _connect()_maid:DoCleaning()
+local removeConn=Players.PlayerRemoving:Connect(function(player)Helpers.
+removePlayer(player)end)_maid:GiveTask(removeConn)local renderConn=RunService.
+RenderStepped:Connect(function()Helpers.render()end)_maid:GiveTask(renderConn)
+end local function _enable()if not Helpers.getDrawingLib()then State.isEnabled=
+false return end _connect()HitEffects.setup(_maid)end local function _disable()
+_maid:DoCleaning()Helpers.clearAll()end function Visuals.init(self,client)State.
+client=client State.logger=client.Logger _maid=Maid.new()end function Visuals.
+cleanup(self)State.isEnabled=false _disable()end function Visuals.toggle(self,
+isEnabled)if State.isEnabled==isEnabled then return end State.isEnabled=
+isEnabled if isEnabled then _enable()else _disable()end end function Visuals.
+setEspEnabled(self,isEnabled)State.settings.isEspEnabled=isEnabled if not
+isEnabled then Helpers.clearAll()end end function Visuals.setShowNames(self,
+shouldShow)State.settings.shouldShowNames=shouldShow end function Visuals.
+setShowWeapon(self,shouldShow)State.settings.shouldShowWeapon=shouldShow end
+function Visuals.setShowDistance(self,shouldShow)State.settings.
+shouldShowDistance=shouldShow end function Visuals.setShowBoxes(self,shouldShow)
+State.settings.shouldShowBoxes=shouldShow end function Visuals.setShowSkeleton(
+self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end function
+Visuals.setShowHealthbar(self,shouldShow)State.settings.shouldShowHealthbar=
+shouldShow end function Visuals.setShowHighlight(self,shouldShow)State.settings.
+shouldShowHighlight=shouldShow if not shouldShow then Helpers.clearHighlights()
+end end function Visuals.setShowTeammates(self,shouldShow)State.settings.
+shouldShowTeammates=shouldShow end function Visuals.setBoxColor(self,color)State
+.settings.boxColor=color end function Visuals.setTextColor(self,color)State.
+settings.textColor=color end function Visuals.setWeaponColor(self,color)State.
+settings.weaponColor=color end function Visuals.setDistanceColor(self,color)
+State.settings.distanceColor=color end function Visuals.setSkeletonColor(self,
+color)State.settings.skeletonColor=color end function Visuals.setHealthbarColor(
+self,color)State.settings.healthbarColor=color end function Visuals.
+setHealthbarOutlineColor(self,color)State.settings.healthbarOutlineColor=color
+end function Visuals.setNameOutlineColor(self,color)State.settings.
+nameOutlineColor=color end function Visuals.setWeaponOutlineColor(self,color)
+State.settings.weaponOutlineColor=color end function Visuals.
 setDistanceOutlineColor(self,color)State.settings.distanceOutlineColor=color end
 function Visuals.setBoxOutlineColor(self,color)State.settings.boxOutlineColor=
 color end function Visuals.setSkeletonOutlineColor(self,color)State.settings.
@@ -1351,8 +1361,9 @@ true,Text='Hit Sound ID',Tooltip='The sound ID to play on hit.',Placeholder=
 'rbxassetid://...',Callback=function(value)local mod=_state.client.Modules.
 Visuals if mod and mod.setHitSoundId then mod:setHitSoundId(value)end end})
 hitEffectsGroup:AddToggle('VisualsNoHurtEffect',{Text='No Hurt Effect',Default=
-false,Tooltip='Disables the red screen flash when taking damage.',Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.
+false,Tooltip=
+[[Disables the blood/sparks and red flash on ENEMIES when you hit them.]],
+Callback=function(state)local mod=_state.client.Modules.Visuals if mod and mod.
 setNoHurtEffectEnabled then mod:setNoHurtEffectEnabled(state)end end})espGroup:
 AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Tooltip=
 'Reserved for future bounds improvements.',Callback=function(_stateValue)end})

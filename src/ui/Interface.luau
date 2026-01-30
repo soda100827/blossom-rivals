@@ -837,7 +837,7 @@ local function _mount()
 	hitEffectsGroup:AddToggle("VisualsNoHurtEffect", {
 		Text = "No Hurt Effect",
 		Default = false,
-		Tooltip = "Disables the red screen flash when taking damage.",
+		Tooltip = "Disables the blood/sparks and red flash on ENEMIES when you hit them.",
 		Callback = function(state)
 			local mod = _state.client.Modules.Visuals
 			if mod and mod.setNoHurtEffectEnabled then
