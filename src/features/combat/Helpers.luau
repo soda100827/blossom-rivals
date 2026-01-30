@@ -331,4 +331,35 @@ function Helpers.getItemModules(): any
 	return modules:WaitForChild("Items", 5)
 end
 
+function Helpers.safeHook(targetTable: any, targetKey: string, replacement: any, logger: any): any
+	local targetFunc = targetTable[targetKey]
+	if not targetFunc or type(targetFunc) ~= "function" then
+		return nil
+	end
+
+	local hookfunction = Helpers.getGlobal("hookfunction") or Helpers.getGlobal("replaceclosure")
+	local newcclosure = Helpers.getGlobal("newcclosure") or function(f)
+		return f
+	end
+
+	-- Ensure replacement is wrapped
+	local wrapped = newcclosure(replacement)
+
+	if hookfunction then
+		local success, old = pcall(function()
+			return hookfunction(targetFunc, wrapped)
+		end)
+		if success then
+			return old
+		end
+		if logger then
+			logger:warn("hookfunction failed for " .. targetKey .. ", falling back to overwrite.")
+		end
+	end
+
+	-- Fallback
+	targetTable[targetKey] = wrapped
+	return targetFunc
+end
+
 return Helpers

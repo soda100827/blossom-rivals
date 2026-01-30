@@ -52,48 +52,42 @@ function SilentAim.setup()
 			State.utilityHooked = true
 
 			local oldRaycast
-			oldRaycast = hookfunction(
-				utility.Raycast,
-				newcclosure(function(self, origin, target, distance, filter, ...)
-					if
-						not checkcaller()
-						and State.isSilentAimEnabled
-						and (distance == 400 or distance == 999)
-						and SilentAim.isGunAction()
-					then
-						-- Hit Chance check
-						if math.random(1, 100) > State.silentHitChance then
-							_lastSilentTargetPos = nil
-							return oldRaycast(self, origin, target, distance, filter, ...)
-						end
-
-						local targetPart = Targeting.getClosestSilentTarget()
-						if targetPart then
-							_lastSilentTargetPos = targetPart.Position
-							return oldRaycast(self, origin, targetPart.Position, distance, filter, ...)
-						end
+			oldRaycast = Helpers.safeHook(utility, "Raycast", function(self, origin, target, distance, filter, ...)
+				if
+					not checkcaller()
+					and State.isSilentAimEnabled
+					and (distance == 400 or distance == 999)
+					and SilentAim.isGunAction()
+				then
+					-- Hit Chance check
+					if math.random(1, 100) > State.silentHitChance then
+						_lastSilentTargetPos = nil
+						return oldRaycast(self, origin, target, distance, filter, ...)
 					end
-					_lastSilentTargetPos = nil
-					return oldRaycast(self, origin, target, distance, filter, ...)
-				end)
-			)
+
+					local targetPart = Targeting.getClosestSilentTarget()
+					if targetPart then
+						_lastSilentTargetPos = targetPart.Position
+						return oldRaycast(self, origin, targetPart.Position, distance, filter, ...)
+					end
+				end
+				_lastSilentTargetPos = nil
+				return oldRaycast(self, origin, target, distance, filter, ...)
+			end, State.logger)
 
 			local oldEncode
-			oldEncode = hookfunction(
-				utility.EncodeCFrame,
-				newcclosure(function(self, cf)
-					if
-						not checkcaller()
-						and State.isSilentAimEnabled
-						and _lastSilentTargetPos
-						and SilentAim.isGunAction()
-					then
-						local newCF = CFrame.lookAt(cf.Position, _lastSilentTargetPos :: Vector3)
-						return oldEncode(self, newCF)
-					end
-					return oldEncode(self, cf)
-				end)
-			)
+			oldEncode = Helpers.safeHook(utility, "EncodeCFrame", function(self, cf)
+				if
+					not checkcaller()
+					and State.isSilentAimEnabled
+					and _lastSilentTargetPos
+					and SilentAim.isGunAction()
+				then
+					local newCF = CFrame.lookAt(cf.Position, _lastSilentTargetPos :: Vector3)
+					return oldEncode(self, newCF)
+				end
+				return oldEncode(self, cf)
+			end, State.logger)
 		end
 
 		local cameraShaker = Helpers.getCameraShaker()

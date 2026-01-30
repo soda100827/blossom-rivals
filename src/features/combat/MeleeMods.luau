@@ -59,74 +59,67 @@ end
 
 --// Public API
 function MeleeMods.setup()
-	local hookfunction = Helpers.getGlobal("hookfunction") or Helpers.getGlobal("replaceclosure")
 	local checkcaller = Helpers.getGlobal("checkcaller") or function()
 		return false
-	end
-
-	-- Helper to wrap closures if available to avoid "hook has more upvalues" error
-	local newcclosure = Helpers.getGlobal("newcclosure") or function(f)
-		return f
-	end
-
-	if not hookfunction then
-		State.logger:warn("hookfunction not found, Melee Mods will not work.")
-		return
 	end
 
 	task.spawn(function()
 		local meleeMod = Helpers.getMeleeModule()
 		if meleeMod then
 			local oldStartShooting
-			oldStartShooting = hookfunction(
-				meleeMod.StartShooting,
-				newcclosure(function(self, ...)
-					if not checkcaller() then
-						local info = (self :: any).Info
+			oldStartShooting = Helpers.safeHook(meleeMod, "StartShooting", function(self, ...)
+				if not checkcaller() then
+					local info = (self :: any).Info
 
-						-- No cooldown during Aura
-						if State.isMeleeAuraEnabled then
-							(self :: any)._attack_cooldown = 0
-							(self :: any)._equip_cooldown = 0
-						end
-
-						-- Apply Multiplier
-						local originalCooldown: number = info.AttackCooldown
-						info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
-
-						-- Reach manipulation (Always apply reach during Aura)
-						local originalReach = info.AttackReach
-						if State.isMeleeAuraEnabled then
-							info.AttackReach = State.meleeAuraReach -- Configurable reach
-						end
-
-						local result = table.pack(oldStartShooting(self, ...))
-
-						-- Restore
-						info.AttackCooldown = originalCooldown
-						info.AttackReach = originalReach
-
-						return table.unpack(result)
+					-- No cooldown during Aura
+					if State.isMeleeAuraEnabled then
+						(self :: any)._attack_cooldown = 0
+						(self :: any)._equip_cooldown = 0
 					end
-					return oldStartShooting(self, ...)
-				end)
-			)
+
+					-- Apply Multiplier
+					local originalCooldown: number = info.AttackCooldown
+					info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
+
+					-- Reach manipulation (Always apply reach during Aura)
+					local originalReach = info.AttackReach
+					if State.isMeleeAuraEnabled then
+						info.AttackReach = State.meleeAuraReach -- Configurable reach
+					end
+
+					local result = table.pack(oldStartShooting(self, ...))
+
+					-- Restore
+					info.AttackCooldown = originalCooldown
+					info.AttackReach = originalReach
+
+					return table.unpack(result)
+				end
+				return oldStartShooting(self, ...)
+			end, State.logger)
 
 			local oldCanQuickAttack
-			oldCanQuickAttack = hookfunction(
-				meleeMod.CanQuickAttack,
-				newcclosure(function(self, ...)
-					if not checkcaller() and State.isMeleeAuraEnabled then
-						return true
-					end
-					return oldCanQuickAttack(self, ...)
-				end)
-			)
+			oldCanQuickAttack = Helpers.safeHook(meleeMod, "CanQuickAttack", function(self, ...)
+				if not checkcaller() and State.isMeleeAuraEnabled then
+					return true
+				end
+				return oldCanQuickAttack(self, ...)
+			end, State.logger)
 		end
 
 		-- Hook specific melee items for StartAiming (Skills)
 		local itemModules = Helpers.getItemModules()
 		if itemModules then
+			local hookfunction = Helpers.getGlobal("hookfunction") or Helpers.getGlobal("replaceclosure")
+			local newcclosure = Helpers.getGlobal("newcclosure") or function(f)
+				return f
+			end
+
+			if not hookfunction then
+				State.logger:warn("hookfunction not found for item skills, skill cooldowns will not work.")
+				return
+			end
+
 			local itemsToHook = { "Katana", "Scythe", "BowieKnife" }
 			for _, itemName in ipairs(itemsToHook) do
 				local itemScript = itemModules:FindFirstChild(itemName)
