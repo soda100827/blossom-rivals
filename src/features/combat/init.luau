@@ -15,6 +15,7 @@ local SilentAim = require("./SilentAim") :: { setup: () -> () }
 local GunMods = require("./GunMods") :: { setup: () -> () }
 local MeleeMods = require("./MeleeMods") :: { setup: () -> () }
 local Visuals = require("./Visuals") :: Types.CombatVisuals
+local RageBot = require("./RageBot") :: { setup: () -> () }
 
 --// Constants
 
@@ -36,6 +37,7 @@ local function _connect()
 	SilentAim.setup()
 	GunMods.setup()
 	MeleeMods.setup()
+	RageBot.setup()
 
 	RunService:BindToRenderStep(
 		Constants.AIMBOT_RENDER_STEP_NAME,
@@ -237,6 +239,26 @@ end
 
 function Combat.setMeleeAuraReach(self: CombatFeature, reach: number): ()
 	State.meleeAuraReach = reach
+end
+
+function Combat.setRageBotEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isRageBotEnabled = isEnabled
+end
+
+function Combat.setSwapWeaponOnReloadEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isSwapWeaponOnReloadEnabled = isEnabled
+end
+
+function Combat.setTargetStrafeEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isTargetStrafeEnabled = isEnabled
+end
+
+function Combat.setRageBotPrimaryWeapon(self: CombatFeature, weapon: string): ()
+	State.rageBotPrimaryWeapon = weapon
+end
+
+function Combat.setRageBotSecondaryWeapon(self: CombatFeature, weapon: string): ()
+	State.rageBotSecondaryWeapon = weapon
 end
 
 return Combat

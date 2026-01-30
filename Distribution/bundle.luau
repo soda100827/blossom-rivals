@@ -325,8 +325,10 @@ isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
 isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
 100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
 isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
-isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,meleeAuraReach=100,target=
-nil,silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
+isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,meleeAuraReach=100,
+isRageBotEnabled=false,isSwapWeaponOnReloadEnabled=false,isTargetStrafeEnabled=
+false,rageBotPrimaryWeapon='None',rageBotSecondaryWeapon='None',target=nil,
+silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
 silentAimFovCircle=nil,cameraController=nil,fighterController=nil,remoteHooked=
 false,utilityHooked=false,cameraShakerHooked=false,gunModsHooked=false,
 isInputLocked=false,mouseBehavior=nil,mouseDeltaSensitivity=nil}return State end
@@ -1056,59 +1058,107 @@ isSilentAimFovEnabled,State.silentAimFovRadius,State.silentAimFovColor,State.
 silentAimFovTransparency,mouseLocation)end return Visuals end function
 __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c end end
-do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.l()local
+do local function __modImpl()local Players=game:GetService('Players')local
+Workspace=game:GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.l()
+local Helpers=__DARKLUA_BUNDLE_MODULES.m()local TeamUtils=
+__DARKLUA_BUNDLE_MODULES.e()local RageBot={}local _originalCFrame=nil local
+_isRaging=false local function _getDistance(p1,p2)return(p1-p2).Magnitude end
+local function _getNearbyEnemies()local localPlayer=Helpers.getLocalPlayer()
+local localCharacter=localPlayer.Character if not localCharacter then return{}
+end local enemies={}for _,player in ipairs(Players:GetPlayers())do if player==
+localPlayer then continue end if TeamUtils.isSameTeam(player,localPlayer)then
+continue end local character=player.Character if not character then continue end
+local root=(character:FindFirstChild('HumanoidRootPart'))local hum=character:
+FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
+continue end table.insert(enemies,player)end return enemies end function RageBot
+.setup()task.spawn(function()while true do local localPlayer=Helpers.
+getLocalPlayer()local character=localPlayer.Character if State.isRageBotEnabled
+and character and TeamUtils.isInDuel(localPlayer)then Helpers.
+fetchFighterController(State.logger)local localFighter=State.fighterController
+and State.fighterController.LocalFighter if localFighter then local enemies=
+_getNearbyEnemies()local localRoot=(character:FindFirstChild('HumanoidRootPart')
+)if localRoot and#enemies>0 then if not _isRaging then _originalCFrame=localRoot
+.CFrame _isRaging=true end table.sort(enemies,function(a,b)local charA=a.
+Character local charB=b.Character if not charA or not charB then return false
+end local rootA=(charA:FindFirstChild('HumanoidRootPart'))local rootB=(charB:
+FindFirstChild('HumanoidRootPart'))if not rootA or not rootB then return false
+end return _getDistance(localRoot.Position,rootA.Position)<_getDistance(
+localRoot.Position,rootB.Position)end)local target=enemies[1]local targetChar=
+target.Character local targetRoot=(targetChar:FindFirstChild('HumanoidRootPart')
+)if targetRoot then local strafeOffset=Vector3.new(0,0,0)if State.
+isTargetStrafeEnabled then local t=os.clock()*20 strafeOffset=Vector3.new(math.
+sin(t)*15,10+math.cos(t*1.5)*10,math.cos(t)*15)end localRoot.CFrame=targetRoot.
+CFrame*CFrame.new(0,0,8)+strafeOffset local equipped=localFighter.EquippedItem
+local isReloading=false if equipped and equipped.Info and equipped.Info.IsGun
+then isReloading=equipped._reloading or equipped.Reloading end if State.
+isSwapWeaponOnReloadEnabled and isReloading then local targetSlot=1 if
+localFighter.EquippedSlot==1 then targetSlot=2 end pcall(function()localFighter:
+EquipItem(targetSlot)end)equipped=localFighter.EquippedItem if equipped and
+equipped.Info and equipped.Info.IsGun then isReloading=equipped._reloading or
+equipped.Reloading end end if isReloading and _originalCFrame then localRoot.
+CFrame=_originalCFrame else if equipped and equipped.Input then equipped:Input(
+'StartShooting')end end end else if _isRaging and _originalCFrame and localRoot
+then localRoot.CFrame=_originalCFrame _isRaging=false _originalCFrame=nil end
+end end else if _isRaging and _originalCFrame and character then local localRoot
+=(character:FindFirstChild('HumanoidRootPart'))if localRoot then localRoot.
+CFrame=_originalCFrame end _isRaging=false _originalCFrame=nil end end task.
+wait(0.01)end end)end return RageBot end function __DARKLUA_BUNDLE_MODULES.B()
+local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end do local function
+__modImpl()local RunService=game:GetService('RunService')local Maid=(
+__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.l()local
 Constants=__DARKLUA_BUNDLE_MODULES.k()local Helpers=__DARKLUA_BUNDLE_MODULES.m()
 local Targeting=__DARKLUA_BUNDLE_MODULES.v()local Aimbot=
 __DARKLUA_BUNDLE_MODULES.w()local Types=__DARKLUA_BUNDLE_MODULES.j()local
 SilentAim=(__DARKLUA_BUNDLE_MODULES.x())local GunMods=(__DARKLUA_BUNDLE_MODULES.
 y())local MeleeMods=(__DARKLUA_BUNDLE_MODULES.z())local Visuals=(
-__DARKLUA_BUNDLE_MODULES.A())local Combat={}Combat.__index=Combat local _maid=
-nil local function _connect()_maid:DoCleaning()task.spawn(function()Helpers.
-fetchCameraController(State.logger)end)SilentAim.setup()GunMods.setup()MeleeMods
-.setup()RunService:BindToRenderStep(Constants.AIMBOT_RENDER_STEP_NAME,Enum.
-RenderPriority.Camera.Value+1,function(deltaTime)Visuals.updateFovCircle()if
-State.isAimbotEnabled then local target=Targeting.resolveTarget()if target then
-local _isValid,_bestPart,_anyOnScreen,_shortestDist=Targeting.getTargetState(
-target)if _isValid and _bestPart then Helpers.applyInputLock(true)Aimbot.aimAt(
-target,_bestPart,deltaTime)else Helpers.applyInputLock(false)end else Helpers.
-applyInputLock(false)end else State.target=nil Helpers.applyInputLock(false)end
-if State.isSilentAimEnabled then Targeting.resolveSilentTarget()else State.
-silentTarget=nil end end)_maid:GiveTask(function()RunService:
-UnbindFromRenderStep(Constants.AIMBOT_RENDER_STEP_NAME)end)end local function
-_disconnect()if State.fovCircle then pcall(function()((State.fovCircle)):Remove(
-)end)State.fovCircle=nil end if State.silentAimFovCircle then pcall(function()((
-State.silentAimFovCircle)):Remove()end)State.silentAimFovCircle=nil end State.
-target=nil State.silentTarget=nil State.targetLostAt=nil State.
-silentTargetLostAt=nil Helpers.applyInputLock(false)_maid:DoCleaning()end
-function Combat.init(self,client)State.client=client State.logger=client.Logger
-_maid=Maid.new()_connect()end function Combat.cleanup(self)State.isAimbotEnabled
-=false _disconnect()end function Combat.setAimbotEnabled(self,isEnabled)if State
-.isAimbotEnabled==isEnabled then return end State.isAimbotEnabled=isEnabled if
-not isEnabled then State.target=nil State.targetLostAt=nil Helpers.
-applyInputLock(false)end end function Combat.setFovEnabled(self,isEnabled)State.
-isFovEnabled=isEnabled end function Combat.setFovRadius(self,radius)State.
-fovRadius=radius end function Combat.setFovColor(self,color)State.fovColor=color
-end function Combat.setFovTransparency(self,transparency)State.fovTransparency=
-math.clamp(transparency,0,1)end function Combat.setSmoothness(self,smoothness)
-local wasMaxSmoothness=Helpers.isMaxSmoothness()State.smoothness=math.clamp(
-smoothness,0,Constants.MAX_SMOOTHNESS)if wasMaxSmoothness and not Helpers.
-isMaxSmoothness()then Helpers.applyInputLock(false)end end function Combat.
-setWallCheckEnabled(self,isEnabled)State.isWallCheckEnabled=isEnabled end
-function Combat.setSilentAimEnabled(self,isEnabled)State.isSilentAimEnabled=
-isEnabled if not isEnabled then State.silentTarget=nil State.silentTargetLostAt=
-nil end end function Combat.setSilentAimFovEnabled(self,isEnabled)State.
-isSilentAimFovEnabled=isEnabled end function Combat.setSilentAimFovRadius(self,
-radius)State.silentAimFovRadius=radius end function Combat.setSilentAimFovColor(
-self,color)State.silentAimFovColor=color end function Combat.
-setSilentAimFovTransparency(self,transparency)State.silentAimFovTransparency=
-math.clamp(transparency,0,1)end function Combat.setSilentHitChance(self,chance)
-State.silentHitChance=math.clamp(chance,0,100)end function Combat.setTargetPart(
-self,part)State.targetPart=part end function Combat.setManipulationEnabled(self,
-enabled)State.isManipulationEnabled=enabled end function Combat.
-setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=enabled end function
-Combat.setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=
-enabled end function Combat.setClosestPositionWhitelist(self,whitelist)State.
+__DARKLUA_BUNDLE_MODULES.A())local RageBot=(__DARKLUA_BUNDLE_MODULES.B())local
+Combat={}Combat.__index=Combat local _maid=nil local function _connect()_maid:
+DoCleaning()task.spawn(function()Helpers.fetchCameraController(State.logger)end)
+SilentAim.setup()GunMods.setup()MeleeMods.setup()RageBot.setup()RunService:
+BindToRenderStep(Constants.AIMBOT_RENDER_STEP_NAME,Enum.RenderPriority.Camera.
+Value+1,function(deltaTime)Visuals.updateFovCircle()if State.isAimbotEnabled
+then local target=Targeting.resolveTarget()if target then local _isValid,
+_bestPart,_anyOnScreen,_shortestDist=Targeting.getTargetState(target)if _isValid
+and _bestPart then Helpers.applyInputLock(true)Aimbot.aimAt(target,_bestPart,
+deltaTime)else Helpers.applyInputLock(false)end else Helpers.applyInputLock(
+false)end else State.target=nil Helpers.applyInputLock(false)end if State.
+isSilentAimEnabled then Targeting.resolveSilentTarget()else State.silentTarget=
+nil end end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(Constants.
+AIMBOT_RENDER_STEP_NAME)end)end local function _disconnect()if State.fovCircle
+then pcall(function()((State.fovCircle)):Remove()end)State.fovCircle=nil end if
+State.silentAimFovCircle then pcall(function()((State.silentAimFovCircle)):
+Remove()end)State.silentAimFovCircle=nil end State.target=nil State.silentTarget
+=nil State.targetLostAt=nil State.silentTargetLostAt=nil Helpers.applyInputLock(
+false)_maid:DoCleaning()end function Combat.init(self,client)State.client=client
+State.logger=client.Logger _maid=Maid.new()_connect()end function Combat.cleanup
+(self)State.isAimbotEnabled=false _disconnect()end function Combat.
+setAimbotEnabled(self,isEnabled)if State.isAimbotEnabled==isEnabled then return
+end State.isAimbotEnabled=isEnabled if not isEnabled then State.target=nil State
+.targetLostAt=nil Helpers.applyInputLock(false)end end function Combat.
+setFovEnabled(self,isEnabled)State.isFovEnabled=isEnabled end function Combat.
+setFovRadius(self,radius)State.fovRadius=radius end function Combat.setFovColor(
+self,color)State.fovColor=color end function Combat.setFovTransparency(self,
+transparency)State.fovTransparency=math.clamp(transparency,0,1)end function
+Combat.setSmoothness(self,smoothness)local wasMaxSmoothness=Helpers.
+isMaxSmoothness()State.smoothness=math.clamp(smoothness,0,Constants.
+MAX_SMOOTHNESS)if wasMaxSmoothness and not Helpers.isMaxSmoothness()then Helpers
+.applyInputLock(false)end end function Combat.setWallCheckEnabled(self,isEnabled
+)State.isWallCheckEnabled=isEnabled end function Combat.setSilentAimEnabled(self
+,isEnabled)State.isSilentAimEnabled=isEnabled if not isEnabled then State.
+silentTarget=nil State.silentTargetLostAt=nil end end function Combat.
+setSilentAimFovEnabled(self,isEnabled)State.isSilentAimFovEnabled=isEnabled end
+function Combat.setSilentAimFovRadius(self,radius)State.silentAimFovRadius=
+radius end function Combat.setSilentAimFovColor(self,color)State.
+silentAimFovColor=color end function Combat.setSilentAimFovTransparency(self,
+transparency)State.silentAimFovTransparency=math.clamp(transparency,0,1)end
+function Combat.setSilentHitChance(self,chance)State.silentHitChance=math.clamp(
+chance,0,100)end function Combat.setTargetPart(self,part)State.targetPart=part
+end function Combat.setManipulationEnabled(self,enabled)State.
+isManipulationEnabled=enabled end function Combat.setAntiKatanaEnabled(self,
+enabled)State.isAntiKatanaEnabled=enabled end function Combat.
+setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=enabled
+end function Combat.setClosestPositionWhitelist(self,whitelist)State.
 closestPositionWhitelist=whitelist end function Combat.setNoRecoilEnabled(self,
 isEnabled)State.isNoRecoilEnabled=isEnabled end function Combat.
 setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end function
@@ -1124,11 +1174,18 @@ State.meleeSkillCooldownMultiplier=multiplier end function Combat.
 setMeleeAuraEnabled(self,isEnabled)State.isMeleeAuraEnabled=isEnabled end
 function Combat.setTeleportAuraEnabled(self,isEnabled)State.
 isTeleportAuraEnabled=isEnabled end function Combat.setMeleeAuraReach(self,reach
-)State.meleeAuraReach=reach end return Combat end function
-__DARKLUA_BUNDLE_MODULES.B()local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end
-do local function __modImpl()local RunService=game:GetService('RunService')local
-Maid=(__DARKLUA_BUNDLE_MODULES.a())local REPO_URL=
+)State.meleeAuraReach=reach end function Combat.setRageBotEnabled(self,isEnabled
+)State.isRageBotEnabled=isEnabled end function Combat.
+setSwapWeaponOnReloadEnabled(self,isEnabled)State.isSwapWeaponOnReloadEnabled=
+isEnabled end function Combat.setTargetStrafeEnabled(self,isEnabled)State.
+isTargetStrafeEnabled=isEnabled end function Combat.setRageBotPrimaryWeapon(self
+,weapon)State.rageBotPrimaryWeapon=weapon end function Combat.
+setRageBotSecondaryWeapon(self,weapon)State.rageBotSecondaryWeapon=weapon end
+return Combat end function __DARKLUA_BUNDLE_MODULES.C()local v=
+__DARKLUA_BUNDLE_MODULES.cache.C if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end do local function
+__modImpl()local RunService=game:GetService('RunService')local Maid=(
+__DARKLUA_BUNDLE_MODULES.a())local REPO_URL=
 [[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]local
 Interface={}Interface.__index=Interface local _maid=nil local _state={client=nil
 ,logger=nil,library=nil,themeManager=nil,saveManager=nil,isMounted=false,
@@ -1279,18 +1336,41 @@ Rounding=0,Suffix='%',Tooltip=
 'Weapon fire rate cooldown. 1% is near-instant fire rate.',Compact=true,Callback
 =function(value)local mod=_state.client.Modules.Combat if mod and mod.
 setAttackCooldownMultiplier then mod:setAttackCooldownMultiplier(value)end end})
-local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup:AddToggle(
-'VisualsToggle',{Text='Visuals (ESP)',Default=false,Tooltip=
-'Master toggle for all ESP visuals.',Callback=function(state)local mod=_state.
-client.Modules.Visuals if mod and mod.toggle then mod:toggle(state)end if mod
-and mod.setEspEnabled then mod:setEspEnabled(state)end end})espGroup:AddToggle(
-'ESPNames',{Text='Name',Default=true,Tooltip='Show player names.',Callback=
-function(state)local mod=_state.client.Modules.Visuals if mod and mod.
-setShowNames then mod:setShowNames(state)end end}):AddColorPicker('ESPTextColor'
-,{Default=Color3.new(1,1,1),Title='Text Color',Tooltip=
-'Color for ESP name text.',Callback=function(value)local mod=_state.client.
-Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)end end}
-):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
+local rageBotGroup=tabs.combat:AddRightGroupbox('Rage Bot')local rageBotToggle=
+rageBotGroup:AddToggle('RageBotEnabled',{Text='Rage Bot',Default=false,Tooltip=
+'Automatically move to and eliminate enemies.',Callback=function()
+_updateControlBindings()end})rageBotToggle:AddKeyPicker('RageBotKeybind',{
+Default='None',NoUI=false,Text='Rage Bot Keybind',SyncToggleState=false,Callback
+=function()_updateControlBindings()end})rageBotGroup:AddToggle(
+'RageBotSwapOnReload',{Text='Swap Weapon On Reload',Default=false,Tooltip=
+[[Automatically swap weapons when current weapon is reloading.]],Callback=
+function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setSwapWeaponOnReloadEnabled then mod:setSwapWeaponOnReloadEnabled(state)end end
+})rageBotGroup:AddToggle('RageBotTargetStrafe',{Text='Target Strafe',Default=
+false,Tooltip='Fast movement around the target to avoid being hit.',Callback=
+function(state)local mod=_state.client.Modules.Combat if mod and mod.
+setTargetStrafeEnabled then mod:setTargetStrafeEnabled(state)end end})
+rageBotGroup:AddDropdown('RageBotPrimaryWeapon',{Values={'Pistol','Rifle',
+'Sniper','Shotgun'},Default=1,Multi=false,Text='Primary Weapon',Tooltip=
+'Preferred primary weapon for Rage Bot.',Callback=function(value)local mod=
+_state.client.Modules.Combat if mod and mod.setRageBotPrimaryWeapon then mod:
+setRageBotPrimaryWeapon(value)end end})rageBotGroup:AddDropdown(
+'RageBotSecondaryWeapon',{Values={'Pistol','Rifle','Sniper','Shotgun'},Default=1
+,Multi=false,Text='Secondary Weapon',Tooltip=
+'Preferred secondary weapon for Rage Bot.',Callback=function(value)local mod=
+_state.client.Modules.Combat if mod and mod.setRageBotSecondaryWeapon then mod:
+setRageBotSecondaryWeapon(value)end end})local espGroup=tabs.visuals:
+AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',
+Default=false,Tooltip='Master toggle for all ESP visuals.',Callback=function(
+state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:
+toggle(state)end if mod and mod.setEspEnabled then mod:setEspEnabled(state)end
+end})espGroup:AddToggle('ESPNames',{Text='Name',Default=true,Tooltip=
+'Show player names.',Callback=function(state)local mod=_state.client.Modules.
+Visuals if mod and mod.setShowNames then mod:setShowNames(state)end end}):
+AddColorPicker('ESPTextColor',{Default=Color3.new(1,1,1),Title='Text Color',
+Tooltip='Color for ESP name text.',Callback=function(value)local mod=_state.
+client.Modules.Visuals if mod and mod.setTextColor then mod:setTextColor(value)
+end end}):AddColorPicker('ESPNameOutlineColor',{Default=Color3.new(0,0,0),Title=
 'Name Outline',Tooltip='Outline color for ESP names.',Callback=function(value)
 local mod=_state.client.Modules.Visuals if mod and mod.setNameOutlineColor then
 mod:setNameOutlineColor(value)end end})espGroup:AddToggle('ESPWeapon',{Text=
@@ -1467,19 +1547,22 @@ function(active)local mod=_state.client.Modules.Player if mod and mod.
 setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
 'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
 local mod=_state.client.Modules.Combat if mod and mod.setSilentAimEnabled then
-mod:setSilentAimEnabled(active)end end}}_updateControlBindings()local miscGroup=
-tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:AddToggle('TeleportQueue',{Text=
-'Auto Load',Default=false,Tooltip='Auto-load Blossom after teleport.',Callback=
-function(enabled)_state.client:setTeleportQueue(enabled)end})miscGroup:
-AddToggle('SilentMode',{Text='Silent Mode',Default=false,Tooltip=
+mod:setSilentAimEnabled(active)end end},{toggleId='RageBotEnabled',keybindId=
+'RageBotKeybind',last=nil,setter=function(active)local mod=_state.client.Modules
+.Combat if mod and mod.setRageBotEnabled then mod:setRageBotEnabled(active)end
+end}}_updateControlBindings()local miscGroup=tabs.misc:AddLeftGroupbox(
+'Auto Load')miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,
+Tooltip='Auto-load Blossom after teleport.',Callback=function(enabled)_state.
+client:setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
+'Silent Mode',Default=false,Tooltip=
 'Mutes UI notifications and auto-opens silently.',Callback=function(enabled)
 _setNotifyMuted(library,enabled)_state.client:setSilent(enabled)end})
 _runAutoload(library,saveManager,false)end function Interface.init(self,client)
 _state.client=client _state.logger=client.Logger _maid=Maid.new()_connect()
 _mount()end function Interface.cleanup(self)_maid:DoCleaning()if _state.library
 then _state.library:Unload()end _state.isMounted=false end return Interface end
-function __DARKLUA_BUNDLE_MODULES.C()local v=__DARKLUA_BUNDLE_MODULES.cache.C if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.D()local v=__DARKLUA_BUNDLE_MODULES.cache.D if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c
 end end end local ReplicatedFirst=game:GetService('ReplicatedFirst')local
 Players=game:GetService('Players')local RunService=game:GetService('RunService')
 local Logger=__DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()
@@ -1494,8 +1577,8 @@ clear_teleport_queue=getGlobal('clear_teleport_queue')or getGlobal(
 getloadedmodules=getGlobal('getloadedmodules')or function()return nil end local
 MODULES={{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.o())},{name='Player',
 loader=(__DARKLUA_BUNDLE_MODULES.u())},{name='Combat',loader=(
-__DARKLUA_BUNDLE_MODULES.B())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.C())}}local Client={}Client.__index=Client local _maid=
+__DARKLUA_BUNDLE_MODULES.C())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.D())}}local Client={}Client.__index=Client local _maid=
 Maid.new()local _state={isRunning=false,shouldTeleportQueue=false,isSilent=genv.
 BlossomSilent or env.BlossomSilent or false,logger=nil}local _signals={started=
 Signal.new(),stopped=Signal.new()}local _modules={}local function
