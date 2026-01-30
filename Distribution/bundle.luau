@@ -604,7 +604,7 @@ isAimbotEnabled=false,isSilentAimEnabled=false,isFovEnabled=true,
 isSilentAimFovEnabled=true,fovRadius=100,silentAimFovRadius=100,fovColor=
 Constants.FOV_CIRCLE_COLOR,silentAimFovColor=Constants.FOV_CIRCLE_COLOR,
 fovTransparency=0,silentAimFovTransparency=0,silentHitChance=100,targetPart=
-'Head',isManipulationEnabled=false,isAntiKatanaEnabled=false,
+'Head',isManipulationEnabled=true,isAntiKatanaEnabled=false,
 isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
 'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg',
 'LowerTorso'},isWallCheckEnabled=false,smoothness=0,isNoRecoilEnabled=false,
