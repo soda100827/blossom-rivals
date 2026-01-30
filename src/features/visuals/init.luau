@@ -5,11 +5,12 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
+local ExecutorUtils = require("../../shared/ExecutorUtils")
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
-local Helpers = require("./Helpers")
+local Helpers = require("./Utils/Helpers")
 local State = require("./State")
 local Types = require("./Types")
-local HitEffects = require("./HitEffects")
+local HitEffects = require("./Systems/HitEffects")
 
 --// Constants
 
@@ -38,7 +39,7 @@ local function _connect()
 end
 
 local function _enable()
-	if not Helpers.getDrawingLib() then
+	if not ExecutorUtils.getDrawingLib() then
 		State.isEnabled = false
 		return
 	end

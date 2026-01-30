@@ -8,10 +8,11 @@ local Workspace = game:GetService("Workspace")
 
 --// Dependencies (require)
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
-local Helpers = require("./Helpers")
+local Helpers = require("./Utils/Helpers")
+local PlayerUtils = require("../../shared/PlayerUtils")
 local State = require("./State")
 local Types = require("./Types")
-local PlayerMods = require("./PlayerMods")
+local PlayerMods = require("./Systems/PlayerMods")
 
 --// Constants
 
@@ -78,12 +79,12 @@ local function _connect()
 		end
 	end
 
-	local player = Helpers.getLocalPlayer()
+	local player = PlayerUtils.getLocalPlayer()
 	if player then
 		attachPlayer(player)
 	else
 		local playerAddedConn = Players.PlayerAdded:Connect(function(addedPlayer)
-			if addedPlayer == Helpers.getLocalPlayer() then
+			if addedPlayer == PlayerUtils.getLocalPlayer() then
 				attachPlayer(addedPlayer)
 			end
 		end)
@@ -152,7 +153,7 @@ function Player.init(self: PlayerFeature, client: any): ()
 	State.logger = client.Logger
 	_maid = Maid.new()
 	_connect()
-	PlayerMods.setup()
+	PlayerMods.setup(_maid)
 end
 
 function Player.cleanup(self: PlayerFeature): ()

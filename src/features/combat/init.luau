@@ -7,14 +7,14 @@ local RunService = game:GetService("RunService")
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 local State = require("./State")
 local Constants = require("./Constants")
-local Helpers = require("./Helpers")
-local Targeting = require("./Targeting")
-local Aimbot = require("./Aimbot")
+local Helpers = require("./Utils/Helpers")
+local Targeting = require("./Systems/Targeting")
+local Aimbot = require("./Systems/Aimbot")
 local Types = require("./Types")
-local SilentAim = require("./SilentAim") :: { setup: () -> () }
-local GunMods = require("./GunMods") :: { setup: () -> () }
-local MeleeMods = require("./MeleeMods") :: { setup: () -> () }
-local Visuals = require("./Visuals") :: Types.CombatVisuals
+local SilentAim = require("./Mods/SilentAim") :: { setup: (maid: any) -> () }
+local GunMods = require("./Mods/GunMods") :: { setup: (maid: any) -> () }
+local MeleeMods = require("./Mods/MeleeMods") :: { setup: (maid: any) -> () }
+local Visuals = require("./Systems/Visuals") :: Types.CombatVisuals
 
 --// Constants
 
@@ -33,9 +33,9 @@ local function _connect()
 	task.spawn(function()
 		Helpers.fetchCameraController(State.logger)
 	end)
-	SilentAim.setup()
-	GunMods.setup()
-	MeleeMods.setup()
+	SilentAim.setup(_maid)
+	GunMods.setup(_maid)
+	MeleeMods.setup(_maid)
 
 	RunService:BindToRenderStep(
 		Constants.AIMBOT_RENDER_STEP_NAME,
@@ -105,6 +105,10 @@ end
 function Combat.cleanup(self: CombatFeature): ()
 	State.isAimbotEnabled = false
 	_disconnect()
+	State.remoteHooked = false
+	State.utilityHooked = false
+	State.cameraShakerHooked = false
+	State.gunModsHooked = false
 end
 
 function Combat.setAimbotEnabled(self: CombatFeature, isEnabled: boolean): ()
