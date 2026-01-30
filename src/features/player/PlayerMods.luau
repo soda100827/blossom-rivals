@@ -45,7 +45,7 @@ function PlayerMods.setup()
 		if controlsController then
 			local oldSetControls
 			oldSetControls = hookfunction(controlsController.SetControls, function(self, device)
-				if not checkcaller() and State.spoofDevice ~= "None" then
+				if not checkcaller() and State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" then
 					device = State.spoofDevice
 				end
 				return oldSetControls(self, device)
@@ -54,7 +54,7 @@ function PlayerMods.setup()
 			-- Periodically ensure CurrentControls is spoofed if active
 			task.spawn(function()
 				while true do
-					if State.spoofDevice ~= "None" then
+					if State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" then
 						if controlsController.CurrentControls ~= State.spoofDevice then
 							controlsController.CurrentControls = State.spoofDevice
 							if controlsController.ControlsChanged then

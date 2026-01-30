@@ -931,20 +931,7 @@ local function _mount()
 		end,
 	})
 
-	-- Exploits Group
-	exploitsGroup:AddToggle("PlayerAntiFlash", {
-		Text = "Anti Flashbang",
-		Default = false,
-		Tooltip = "Prevents you from being blinded by flashbangs.",
-		Callback = function(state)
-			local mod = _state.client.Modules.Player
-			if mod and mod.setAntiFlashEnabled then
-				mod:setAntiFlashEnabled(state)
-			end
-		end,
-	})
-
-	exploitsGroup:AddToggle("PlayerSlideBoost", {
+	playerGroup:AddToggle("PlayerSlideBoost", {
 		Text = "Slide Boost",
 		Default = false,
 		Tooltip = "Boosts your sliding speed.",
@@ -956,7 +943,7 @@ local function _mount()
 		end,
 	})
 
-	exploitsGroup:AddSlider("PlayerSlideBoostMultiplier", {
+	playerGroup:AddSlider("PlayerSlideBoostMultiplier", {
 		Text = "Slide Boost Multiplier",
 		Default = 1,
 		Min = 1,
@@ -973,12 +960,37 @@ local function _mount()
 		end,
 	})
 
+	-- Exploits Group
+	exploitsGroup:AddToggle("PlayerAntiFlash", {
+		Text = "Anti Flashbang",
+		Default = false,
+		Tooltip = "Prevents you from being blinded by flashbangs.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setAntiFlashEnabled then
+				mod:setAntiFlashEnabled(state)
+			end
+		end,
+	})
+
+	exploitsGroup:AddToggle("PlayerSpoofDeviceEnabled", {
+		Text = "Spoof Device",
+		Default = false,
+		Tooltip = "Toggle device spoofing.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Player
+			if mod and mod.setSpoofDeviceEnabled then
+				mod:setSpoofDeviceEnabled(state)
+			end
+		end,
+	})
+
 	exploitsGroup:AddDropdown("PlayerSpoofDevice", {
 		Values = { "None", "Touch", "Gamepad", "VR", "MouseKeyboard" },
 		Default = 1,
 		Multi = false,
-		Text = "Spoof Device",
-		Tooltip = "Tricks the game into thinking you are on a different device.",
+		Text = "Device",
+		Tooltip = "The device to spoof as.",
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
 			if mod and mod.setSpoofDevice then
@@ -1003,7 +1015,7 @@ local function _mount()
 		Values = { "DoubleJump", "Slide" },
 		Default = 1,
 		Multi = false,
-		Text = "Sound Type",
+		Text = "Sound",
 		Tooltip = "The sound to spam.",
 		Callback = function(value)
 			local mod = _state.client.Modules.Player
