@@ -226,7 +226,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 	local mouseLocation = UserInputService:GetMouseLocation()
 
 	for _, entity in ipairs(CollectionService:GetTagged("Entity")) do
-		if entity == localPlayer.Character then
+		if entity == localPlayer.Character or entity.Name == localPlayer.Name then
 			continue
 		end
 

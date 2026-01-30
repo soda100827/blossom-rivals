@@ -67,7 +67,7 @@ function SilentAim.setup()
 					end
 
 					local targetPart = Targeting.getClosestSilentTarget()
-					if targetPart then
+					if targetPart and not targetPart:IsDescendantOf(Helpers.getLocalPlayer().Character) then
 						local newOrigin = origin
 						if State.isManipulationEnabled then
 							-- Magic Bullet: Spawn bullet extremely close (1 stud) to target for reliable wall penetration
