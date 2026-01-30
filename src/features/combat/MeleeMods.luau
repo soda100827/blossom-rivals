@@ -64,6 +64,11 @@ function MeleeMods.setup()
 		return false
 	end
 
+	-- Helper to wrap closures if available to avoid "hook has more upvalues" error
+	local newcclosure = Helpers.getGlobal("newcclosure") or function(f)
+		return f
+	end
+
 	if not hookfunction then
 		State.logger:warn("hookfunction not found, Melee Mods will not work.")
 		return
@@ -73,44 +78,50 @@ function MeleeMods.setup()
 		local meleeMod = Helpers.getMeleeModule()
 		if meleeMod then
 			local oldStartShooting
-			oldStartShooting = hookfunction(meleeMod.StartShooting, function(self, ...)
-				if not checkcaller() then
-					local info = (self :: any).Info
+			oldStartShooting = hookfunction(
+				meleeMod.StartShooting,
+				newcclosure(function(self, ...)
+					if not checkcaller() then
+						local info = (self :: any).Info
 
-					-- No cooldown during Aura
-					if State.isMeleeAuraEnabled then
-						(self :: any)._attack_cooldown = 0
-						(self :: any)._equip_cooldown = 0
+						-- No cooldown during Aura
+						if State.isMeleeAuraEnabled then
+							(self :: any)._attack_cooldown = 0
+							(self :: any)._equip_cooldown = 0
+						end
+
+						-- Apply Multiplier
+						local originalCooldown: number = info.AttackCooldown
+						info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
+
+						-- Reach manipulation (Always apply reach during Aura)
+						local originalReach = info.AttackReach
+						if State.isMeleeAuraEnabled then
+							info.AttackReach = State.meleeAuraReach -- Configurable reach
+						end
+
+						local result = table.pack(oldStartShooting(self, ...))
+
+						-- Restore
+						info.AttackCooldown = originalCooldown
+						info.AttackReach = originalReach
+
+						return table.unpack(result)
 					end
-
-					-- Apply Multiplier
-					local originalCooldown: number = info.AttackCooldown
-					info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
-
-					-- Reach manipulation (Always apply reach during Aura)
-					local originalReach = info.AttackReach
-					if State.isMeleeAuraEnabled then
-						info.AttackReach = State.meleeAuraReach -- Configurable reach
-					end
-
-					local result = table.pack(oldStartShooting(self, ...))
-
-					-- Restore
-					info.AttackCooldown = originalCooldown
-					info.AttackReach = originalReach
-
-					return table.unpack(result)
-				end
-				return oldStartShooting(self, ...)
-			end)
+					return oldStartShooting(self, ...)
+				end)
+			)
 
 			local oldCanQuickAttack
-			oldCanQuickAttack = hookfunction(meleeMod.CanQuickAttack, function(self, ...)
-				if not checkcaller() and State.isMeleeAuraEnabled then
-					return true
-				end
-				return oldCanQuickAttack(self, ...)
-			end)
+			oldCanQuickAttack = hookfunction(
+				meleeMod.CanQuickAttack,
+				newcclosure(function(self, ...)
+					if not checkcaller() and State.isMeleeAuraEnabled then
+						return true
+					end
+					return oldCanQuickAttack(self, ...)
+				end)
+			)
 		end
 
 		-- Hook specific melee items for StartAiming (Skills)
@@ -125,27 +136,31 @@ function MeleeMods.setup()
 						local itemMod = dynamicRequire(itemScript)
 						if itemMod and itemMod.StartAiming then
 							local oldStartAiming
-							oldStartAiming = hookfunction(itemMod.StartAiming, function(self, ...)
-								if not checkcaller() then
-									local info = (self :: any).Info
-									local cooldownFields = { "DeflectCooldown", "DashCooldown", "InvisCooldown" }
-									local originals: { [string]: number } = {}
-									for _, field in ipairs(cooldownFields) do
-										if info[field] then
-											originals[field] = info[field]
-											info[field] = originals[field] * (State.meleeSkillCooldownMultiplier / 100)
+							oldStartAiming = hookfunction(
+								itemMod.StartAiming,
+								newcclosure(function(self, ...)
+									if not checkcaller() then
+										local info = (self :: any).Info
+										local cooldownFields = { "DeflectCooldown", "DashCooldown", "InvisCooldown" }
+										local originals: { [string]: number } = {}
+										for _, field in ipairs(cooldownFields) do
+											if info[field] then
+												originals[field] = info[field]
+												info[field] = originals[field]
+													* (State.meleeSkillCooldownMultiplier / 100)
+											end
 										end
-									end
 
-									local result = table.pack(oldStartAiming(self, ...))
+										local result = table.pack(oldStartAiming(self, ...))
 
-									for field, val in pairs(originals) do
-										info[field] = val
+										for field, val in pairs(originals) do
+											info[field] = val
+										end
+										return table.unpack(result)
 									end
-									return table.unpack(result)
-								end
-								return oldStartAiming(self, ...)
-							end)
+									return oldStartAiming(self, ...)
+								end)
+							)
 						end
 					end)
 				end

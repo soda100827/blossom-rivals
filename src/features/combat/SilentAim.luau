@@ -36,6 +36,11 @@ function SilentAim.setup()
 		return false
 	end
 
+	-- Helper to wrap closures if available to avoid "hook has more upvalues" error
+	local newcclosure = Helpers.getGlobal("newcclosure") or function(f)
+		return f
+	end
+
 	if not hookfunction then
 		State.logger:warn("hookfunction not found, Perfect Silent Aim will not work.")
 		return
@@ -47,42 +52,48 @@ function SilentAim.setup()
 			State.utilityHooked = true
 
 			local oldRaycast
-			oldRaycast = hookfunction(utility.Raycast, function(self, origin, target, distance, filter, ...)
-				if
-					not checkcaller()
-					and State.isSilentAimEnabled
-					and (distance == 400 or distance == 999)
-					and SilentAim.isGunAction()
-				then
-					-- Hit Chance check
-					if math.random(1, 100) > State.silentHitChance then
-						_lastSilentTargetPos = nil
-						return oldRaycast(self, origin, target, distance, filter, ...)
-					end
+			oldRaycast = hookfunction(
+				utility.Raycast,
+				newcclosure(function(self, origin, target, distance, filter, ...)
+					if
+						not checkcaller()
+						and State.isSilentAimEnabled
+						and (distance == 400 or distance == 999)
+						and SilentAim.isGunAction()
+					then
+						-- Hit Chance check
+						if math.random(1, 100) > State.silentHitChance then
+							_lastSilentTargetPos = nil
+							return oldRaycast(self, origin, target, distance, filter, ...)
+						end
 
-					local targetPart = Targeting.getClosestSilentTarget()
-					if targetPart then
-						_lastSilentTargetPos = targetPart.Position
-						return oldRaycast(self, origin, targetPart.Position, distance, filter, ...)
+						local targetPart = Targeting.getClosestSilentTarget()
+						if targetPart then
+							_lastSilentTargetPos = targetPart.Position
+							return oldRaycast(self, origin, targetPart.Position, distance, filter, ...)
+						end
 					end
-				end
-				_lastSilentTargetPos = nil
-				return oldRaycast(self, origin, target, distance, filter, ...)
-			end)
+					_lastSilentTargetPos = nil
+					return oldRaycast(self, origin, target, distance, filter, ...)
+				end)
+			)
 
 			local oldEncode
-			oldEncode = hookfunction(utility.EncodeCFrame, function(self, cf)
-				if
-					not checkcaller()
-					and State.isSilentAimEnabled
-					and _lastSilentTargetPos
-					and SilentAim.isGunAction()
-				then
-					local newCF = CFrame.lookAt(cf.Position, _lastSilentTargetPos :: Vector3)
-					return oldEncode(self, newCF)
-				end
-				return oldEncode(self, cf)
-			end)
+			oldEncode = hookfunction(
+				utility.EncodeCFrame,
+				newcclosure(function(self, cf)
+					if
+						not checkcaller()
+						and State.isSilentAimEnabled
+						and _lastSilentTargetPos
+						and SilentAim.isGunAction()
+					then
+						local newCF = CFrame.lookAt(cf.Position, _lastSilentTargetPos :: Vector3)
+						return oldEncode(self, newCF)
+					end
+					return oldEncode(self, cf)
+				end)
+			)
 		end
 
 		local cameraShaker = Helpers.getCameraShaker()
@@ -91,12 +102,12 @@ function SilentAim.setup()
 			local mt = getmetatable(cameraShaker.Presets)
 			if mt and mt.__index then
 				local oldIdx = mt.__index
-				mt.__index = function(t, k)
+				mt.__index = newcclosure(function(t, k)
 					if State.isSilentAimEnabled and (k == "StartShooting" or k == "") then
 						return nil
 					end
 					return oldIdx(t, k)
-				end
+				end)
 			end
 		end
 	end)
