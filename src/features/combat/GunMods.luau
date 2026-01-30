@@ -117,39 +117,62 @@ function GunMods.setup()
 						return oldStartShooting(self, ...)
 					end
 
-					-- No Spread: Modify Info properties before internal calculations
+					-- Capture Originals
+					local info = self.Info
+					local infoStr = tostring(info)
+
+					-- We use distinct keys for Spread/Burst/Cooldown to avoid conflicts
+					if not _oldShootCooldowns[infoStr .. "_Shoot"] then
+						_oldShootCooldowns[infoStr .. "_Shoot"] = info.ShootCooldown
+					end
+					if not _oldShootCooldowns[infoStr .. "_Burst"] then
+						_oldShootCooldowns[infoStr .. "_Burst"] = info.ShootBurstCooldown
+					end
+					if not _oldShootCooldowns[infoStr .. "_Spread"] then
+						_oldShootCooldowns[infoStr .. "_Spread"] = info.ShootSpread
+					end
+					if not _oldShootCooldowns[infoStr .. "_AimML"] then
+						_oldShootCooldowns[infoStr .. "_AimML"] = info.AimSpreadMultiplier
+					end
+					if not _oldShootCooldowns[infoStr .. "_Quick"] then
+						_oldShootCooldowns[infoStr .. "_Quick"] = info.QuickShotSpread
+					end
+
+					local origShoot = _oldShootCooldowns[infoStr .. "_Shoot"]
+					local origBurst = _oldShootCooldowns[infoStr .. "_Burst"]
+					local origSpread = _oldShootCooldowns[infoStr .. "_Spread"]
+					local origAimML = _oldShootCooldowns[infoStr .. "_AimML"]
+					local origQuick = _oldShootCooldowns[infoStr .. "_Quick"]
+
+					-- Apply Modifications
 					if State.isNoSpreadEnabled then
-						if not _oldShootCooldowns[tostring(self.Info) .. "_Spread"] then
-							_oldShootCooldowns[tostring(self.Info) .. "_Spread"] = self.Info.ShootSpread
-							_oldShootCooldowns[tostring(self.Info) .. "_AimML"] = self.Info.AimSpreadMultiplier
-						end
-						self.Info.ShootSpread = 0
-						self.Info.AimSpreadMultiplier = 0
-						if self.Info.QuickShotSpread then
-							if not _oldShootCooldowns[tostring(self.Info) .. "_Quick"] then
-								_oldShootCooldowns[tostring(self.Info) .. "_Quick"] = self.Info.QuickShotSpread
-							end
-							self.Info.QuickShotSpread = 0
+						info.ShootSpread = 0
+						info.AimSpreadMultiplier = 0
+						if info.QuickShotSpread then
+							info.QuickShotSpread = 0
 						end
 					end
 
-					-- Attack Cooldown: Modify fire rate
 					if State.attackCooldownMultiplier < 100 then
-						if not _oldShootCooldowns[self.Info] then
-							_oldShootCooldowns[self.Info] = self.Info.ShootCooldown
-						end
-						self.Info.ShootCooldown = _oldShootCooldowns[self.Info] * (State.attackCooldownMultiplier / 100)
-
-						if self.Info.ShootBurstCooldown then
-							if not _oldShootCooldowns[self.Info.ShootBurstCooldown] then
-								_oldShootCooldowns[self.Info.ShootBurstCooldown] = self.Info.ShootBurstCooldown
-							end
-							self.Info.ShootBurstCooldown = _oldShootCooldowns[self.Info.ShootBurstCooldown]
-								* (State.attackCooldownMultiplier / 100)
+						info.ShootCooldown = origShoot * (State.attackCooldownMultiplier / 100)
+						if info.ShootBurstCooldown then
+							info.ShootBurstCooldown = origBurst * (State.attackCooldownMultiplier / 100)
 						end
 					end
 
+					-- Call Original
 					local returns = { oldStartShooting(self, ...) }
+
+					-- Restore Originals Immediately
+					info.ShootCooldown = origShoot
+					if info.ShootBurstCooldown then
+						info.ShootBurstCooldown = origBurst
+					end
+					info.ShootSpread = origSpread
+					info.AimSpreadMultiplier = origAimML
+					if info.QuickShotSpread then
+						info.QuickShotSpread = origQuick
+					end
 
 					-- No Spread: Force "IsFullyAiming" flag in the packet sent to server
 					if State.isNoSpreadEnabled and #returns >= 4 then
