@@ -327,7 +327,7 @@ isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
 isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
 isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,meleeAuraReach=100,
 isRageBotEnabled=false,isSwapWeaponOnReloadEnabled=false,isTargetStrafeEnabled=
-false,rageBotPrimaryWeapon='None',rageBotSecondaryWeapon='None',target=nil,
+false,isRageBotPrimaryEnabled=true,isRageBotSecondaryEnabled=true,target=nil,
 silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
 silentAimFovCircle=nil,cameraController=nil,fighterController=nil,remoteHooked=
 false,utilityHooked=false,cameraShakerHooked=false,gunModsHooked=false,
@@ -1062,48 +1062,59 @@ do local function __modImpl()local Players=game:GetService('Players')local
 Workspace=game:GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.l()
 local Helpers=__DARKLUA_BUNDLE_MODULES.m()local TeamUtils=
 __DARKLUA_BUNDLE_MODULES.e()local RageBot={}local _originalCFrame=nil local
-_isRaging=false local function _getDistance(p1,p2)return(p1-p2).Magnitude end
-local function _getNearbyEnemies()local localPlayer=Helpers.getLocalPlayer()
-local localCharacter=localPlayer.Character if not localCharacter then return{}
-end local enemies={}for _,player in ipairs(Players:GetPlayers())do if player==
-localPlayer then continue end if TeamUtils.isSameTeam(player,localPlayer)then
-continue end local character=player.Character if not character then continue end
-local root=(character:FindFirstChild('HumanoidRootPart'))local hum=character:
-FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
-continue end table.insert(enemies,player)end return enemies end function RageBot
-.setup()task.spawn(function()while true do local localPlayer=Helpers.
-getLocalPlayer()local character=localPlayer.Character if State.isRageBotEnabled
-and character and TeamUtils.isInDuel(localPlayer)then Helpers.
-fetchFighterController(State.logger)local localFighter=State.fighterController
-and State.fighterController.LocalFighter if localFighter then local enemies=
-_getNearbyEnemies()local localRoot=(character:FindFirstChild('HumanoidRootPart')
-)if localRoot and#enemies>0 then if not _isRaging then _originalCFrame=localRoot
-.CFrame _isRaging=true end table.sort(enemies,function(a,b)local charA=a.
-Character local charB=b.Character if not charA or not charB then return false
-end local rootA=(charA:FindFirstChild('HumanoidRootPart'))local rootB=(charB:
-FindFirstChild('HumanoidRootPart'))if not rootA or not rootB then return false
-end return _getDistance(localRoot.Position,rootA.Position)<_getDistance(
-localRoot.Position,rootB.Position)end)local target=enemies[1]local targetChar=
-target.Character local targetRoot=(targetChar:FindFirstChild('HumanoidRootPart')
-)if targetRoot then local strafeOffset=Vector3.new(0,0,0)if State.
-isTargetStrafeEnabled then local t=os.clock()*20 strafeOffset=Vector3.new(math.
-sin(t)*15,10+math.cos(t*1.5)*10,math.cos(t)*15)end localRoot.CFrame=targetRoot.
-CFrame*CFrame.new(0,0,8)+strafeOffset local equipped=localFighter.EquippedItem
-local isReloading=false if equipped and equipped.Info and equipped.Info.IsGun
-then isReloading=equipped._reloading or equipped.Reloading end if State.
-isSwapWeaponOnReloadEnabled and isReloading then local targetSlot=1 if
-localFighter.EquippedSlot==1 then targetSlot=2 end pcall(function()localFighter:
-EquipItem(targetSlot)end)equipped=localFighter.EquippedItem if equipped and
-equipped.Info and equipped.Info.IsGun then isReloading=equipped._reloading or
-equipped.Reloading end end if isReloading and _originalCFrame then localRoot.
-CFrame=_originalCFrame else if equipped and equipped.Input then equipped:Input(
-'StartShooting')end end end else if _isRaging and _originalCFrame and localRoot
-then localRoot.CFrame=_originalCFrame _isRaging=false _originalCFrame=nil end
-end end else if _isRaging and _originalCFrame and character then local localRoot
-=(character:FindFirstChild('HumanoidRootPart'))if localRoot then localRoot.
-CFrame=_originalCFrame end _isRaging=false _originalCFrame=nil end end task.
-wait(0.01)end end)end return RageBot end function __DARKLUA_BUNDLE_MODULES.B()
-local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
+_isRaging=false local _lastShootTime=0 local _lastSwapTime=0 local function
+_getDistance(p1,p2)return(p1-p2).Magnitude end local function _getNearbyEnemies(
+)local localPlayer=Helpers.getLocalPlayer()local localCharacter=localPlayer.
+Character if not localCharacter then return{}end local enemies={}for _,player in
+ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
+TeamUtils.isSameTeam(player,localPlayer)then continue end local character=player
+.Character if not character then continue end local root=(character:
+FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
+'Humanoid')if not root or not hum or hum.Health<=0 then continue end table.
+insert(enemies,player)end return enemies end local function _safeCall(func,...)
+local setidentity=Helpers.getGlobal('setthreadidentity')or Helpers.getGlobal(
+'setthreadcontext')or Helpers.getGlobal('set_thread_identity')local oldIdentity
+if setidentity then pcall(function()local getidentity=Helpers.getGlobal(
+'getthreadidentity')or Helpers.getGlobal('getthreadcontext')if getidentity then
+oldIdentity=getidentity()end setidentity(2)end)end local returns=table.pack(
+pcall(func,...))if setidentity and oldIdentity then pcall(setidentity,
+oldIdentity)end return table.unpack(returns)end function RageBot.setup()task.
+spawn(function()while true do local localPlayer=Helpers.getLocalPlayer()local
+character=localPlayer.Character if State.isRageBotEnabled and character and
+TeamUtils.isInDuel(localPlayer)then Helpers.fetchFighterController(State.logger)
+local localFighter=State.fighterController and State.fighterController.
+LocalFighter if localFighter then local enemies=_getNearbyEnemies()local
+localRoot=(character:FindFirstChild('HumanoidRootPart'))if localRoot and#enemies
+>0 then if not _isRaging then _originalCFrame=localRoot.CFrame _isRaging=true
+end table.sort(enemies,function(a,b)local charA=a.Character local charB=b.
+Character if not charA or not charB then return false end local rootA=(charA:
+FindFirstChild('HumanoidRootPart'))local rootB=(charB:FindFirstChild(
+'HumanoidRootPart'))if not rootA or not rootB then return false end return
+_getDistance(localRoot.Position,rootA.Position)<_getDistance(localRoot.Position,
+rootB.Position)end)local target=enemies[1]local targetChar=target.Character
+local targetRoot=(targetChar:FindFirstChild('HumanoidRootPart'))if targetRoot
+then local strafeOffset=Vector3.new(0,0,0)if State.isTargetStrafeEnabled then
+local t=os.clock()*20 strafeOffset=Vector3.new(math.sin(t)*15,10+math.cos(t*1.5)
+*10,math.cos(t)*15)else strafeOffset=Vector3.new(0,15,0)end localRoot.CFrame=
+targetRoot.CFrame*CFrame.new(0,0,5)+strafeOffset local equipped=localFighter.
+EquippedItem local isReloading=false if equipped and equipped.Info and equipped.
+Info.IsGun then isReloading=equipped._reloading or equipped.Reloading or(
+equipped._clip==0)end if State.isSwapWeaponOnReloadEnabled and isReloading and
+os.clock()-_lastSwapTime>0.5 then local targetSlot=0 if State.
+isRageBotSecondaryEnabled and localFighter.EquippedSlot==1 then targetSlot=2
+elseif State.isRageBotPrimaryEnabled and localFighter.EquippedSlot==2 then
+targetSlot=1 end if targetSlot~=0 then _lastSwapTime=os.clock()pcall(function()
+localFighter:EquipItem(targetSlot)end)task.wait(0.1)equipped=localFighter.
+EquippedItem end end if equipped then local now=os.clock()if now-_lastShootTime>
+0.05 then _lastShootTime=now if equipped.Input then _safeCall(equipped.Input,
+equipped,'StartShooting')end if equipped.StartShooting then _safeCall(equipped.
+StartShooting,equipped)end end end end else if _isRaging and _originalCFrame and
+localRoot then localRoot.CFrame=_originalCFrame _isRaging=false _originalCFrame=
+nil end end end else if _isRaging and _originalCFrame and character then local
+localRoot=(character:FindFirstChild('HumanoidRootPart'))if localRoot then
+localRoot.CFrame=_originalCFrame end _isRaging=false _originalCFrame=nil end end
+task.wait(0.01)end end)end return RageBot end function __DARKLUA_BUNDLE_MODULES.
+B()local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end do local function
 __modImpl()local RunService=game:GetService('RunService')local Maid=(
 __DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.l()local
@@ -1178,10 +1189,10 @@ isTeleportAuraEnabled=isEnabled end function Combat.setMeleeAuraReach(self,reach
 )State.isRageBotEnabled=isEnabled end function Combat.
 setSwapWeaponOnReloadEnabled(self,isEnabled)State.isSwapWeaponOnReloadEnabled=
 isEnabled end function Combat.setTargetStrafeEnabled(self,isEnabled)State.
-isTargetStrafeEnabled=isEnabled end function Combat.setRageBotPrimaryWeapon(self
-,weapon)State.rageBotPrimaryWeapon=weapon end function Combat.
-setRageBotSecondaryWeapon(self,weapon)State.rageBotSecondaryWeapon=weapon end
-return Combat end function __DARKLUA_BUNDLE_MODULES.C()local v=
+isTargetStrafeEnabled=isEnabled end function Combat.setRageBotPrimaryEnabled(
+self,isEnabled)State.isRageBotPrimaryEnabled=isEnabled end function Combat.
+setRageBotSecondaryEnabled(self,isEnabled)State.isRageBotSecondaryEnabled=
+isEnabled end return Combat end function __DARKLUA_BUNDLE_MODULES.C()local v=
 __DARKLUA_BUNDLE_MODULES.cache.C if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end do local function
 __modImpl()local RunService=game:GetService('RunService')local Maid=(
@@ -1350,16 +1361,14 @@ setSwapWeaponOnReloadEnabled then mod:setSwapWeaponOnReloadEnabled(state)end end
 false,Tooltip='Fast movement around the target to avoid being hit.',Callback=
 function(state)local mod=_state.client.Modules.Combat if mod and mod.
 setTargetStrafeEnabled then mod:setTargetStrafeEnabled(state)end end})
-rageBotGroup:AddDropdown('RageBotPrimaryWeapon',{Values={'Pistol','Rifle',
-'Sniper','Shotgun'},Default=1,Multi=false,Text='Primary Weapon',Tooltip=
-'Preferred primary weapon for Rage Bot.',Callback=function(value)local mod=
-_state.client.Modules.Combat if mod and mod.setRageBotPrimaryWeapon then mod:
-setRageBotPrimaryWeapon(value)end end})rageBotGroup:AddDropdown(
-'RageBotSecondaryWeapon',{Values={'Pistol','Rifle','Sniper','Shotgun'},Default=1
-,Multi=false,Text='Secondary Weapon',Tooltip=
-'Preferred secondary weapon for Rage Bot.',Callback=function(value)local mod=
-_state.client.Modules.Combat if mod and mod.setRageBotSecondaryWeapon then mod:
-setRageBotSecondaryWeapon(value)end end})local espGroup=tabs.visuals:
+rageBotGroup:AddToggle('RageBotPrimaryEnabled',{Text='Use Primary',Default=true,
+Tooltip='Allow Rage Bot to use primary weapon (Slot 1).',Callback=function(state
+)local mod=_state.client.Modules.Combat if mod and mod.setRageBotPrimaryEnabled
+then mod:setRageBotPrimaryEnabled(state)end end})rageBotGroup:AddToggle(
+'RageBotSecondaryEnabled',{Text='Use Secondary',Default=true,Tooltip=
+'Allow Rage Bot to use secondary weapon (Slot 2).',Callback=function(state)local
+mod=_state.client.Modules.Combat if mod and mod.setRageBotSecondaryEnabled then
+mod:setRageBotSecondaryEnabled(state)end end})local espGroup=tabs.visuals:
 AddLeftGroupbox('ESP')espGroup:AddToggle('VisualsToggle',{Text='Visuals (ESP)',
 Default=false,Tooltip='Master toggle for all ESP visuals.',Callback=function(
 state)local mod=_state.client.Modules.Visuals if mod and mod.toggle then mod:

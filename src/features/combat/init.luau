@@ -253,12 +253,12 @@ function Combat.setTargetStrafeEnabled(self: CombatFeature, isEnabled: boolean):
 	State.isTargetStrafeEnabled = isEnabled
 end
 
-function Combat.setRageBotPrimaryWeapon(self: CombatFeature, weapon: string): ()
-	State.rageBotPrimaryWeapon = weapon
+function Combat.setRageBotPrimaryEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isRageBotPrimaryEnabled = isEnabled
 end
 
-function Combat.setRageBotSecondaryWeapon(self: CombatFeature, weapon: string): ()
-	State.rageBotSecondaryWeapon = weapon
+function Combat.setRageBotSecondaryEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isRageBotSecondaryEnabled = isEnabled
 end
 
 return Combat

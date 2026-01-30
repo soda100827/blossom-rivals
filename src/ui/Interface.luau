@@ -591,30 +591,26 @@ local function _mount()
 		end,
 	})
 
-	rageBotGroup:AddDropdown("RageBotPrimaryWeapon", {
-		Values = { "Pistol", "Rifle", "Sniper", "Shotgun" }, -- Example values
-		Default = 1,
-		Multi = false,
-		Text = "Primary Weapon",
-		Tooltip = "Preferred primary weapon for Rage Bot.",
-		Callback = function(value)
+	rageBotGroup:AddToggle("RageBotPrimaryEnabled", {
+		Text = "Use Primary",
+		Default = true,
+		Tooltip = "Allow Rage Bot to use primary weapon (Slot 1).",
+		Callback = function(state)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setRageBotPrimaryWeapon then
-				mod:setRageBotPrimaryWeapon(value)
+			if mod and mod.setRageBotPrimaryEnabled then
+				mod:setRageBotPrimaryEnabled(state)
 			end
 		end,
 	})
 
-	rageBotGroup:AddDropdown("RageBotSecondaryWeapon", {
-		Values = { "Pistol", "Rifle", "Sniper", "Shotgun" }, -- Example values
-		Default = 1,
-		Multi = false,
-		Text = "Secondary Weapon",
-		Tooltip = "Preferred secondary weapon for Rage Bot.",
-		Callback = function(value)
+	rageBotGroup:AddToggle("RageBotSecondaryEnabled", {
+		Text = "Use Secondary",
+		Default = true,
+		Tooltip = "Allow Rage Bot to use secondary weapon (Slot 2).",
+		Callback = function(state)
 			local mod = _state.client.Modules.Combat
-			if mod and mod.setRageBotSecondaryWeapon then
-				mod:setRageBotSecondaryWeapon(value)
+			if mod and mod.setRageBotSecondaryEnabled then
+				mod:setRageBotSecondaryEnabled(state)
 			end
 		end,
 	})

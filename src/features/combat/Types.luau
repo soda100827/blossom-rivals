@@ -42,8 +42,8 @@ export type CombatState = {
 	isRageBotEnabled: boolean,
 	isSwapWeaponOnReloadEnabled: boolean,
 	isTargetStrafeEnabled: boolean,
-	rageBotPrimaryWeapon: string,
-	rageBotSecondaryWeapon: string,
+	isRageBotPrimaryEnabled: boolean,
+	isRageBotSecondaryEnabled: boolean,
 	-- Internal
 	forcingAim: boolean?,
 	target: Player?,
@@ -102,8 +102,8 @@ export type CombatFeature = {
 	setRageBotEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSwapWeaponOnReloadEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setTargetStrafeEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-	setRageBotPrimaryWeapon: (self: CombatFeature, weapon: string) -> (),
-	setRageBotSecondaryWeapon: (self: CombatFeature, weapon: string) -> (),
+	setRageBotPrimaryEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
+	setRageBotSecondaryEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state
