@@ -75,53 +75,6 @@ function SilentAim.setup()
 					local localChar = Helpers.getLocalPlayer().Character
 					if targetPart and localChar and not targetPart:IsDescendantOf(localChar) then
 						local newOrigin = origin
-						if State.isManipulationEnabled then
-							-- Magic Bullet: Spawn bullet slightly above target (1 stud) to be outside hitbox
-							newOrigin = targetPart.Position + Vector3.new(0, 1, 0)
-
-							-- Extend the target position downwards to ensure the ray doesn't stop AT the target center
-							-- but continues through it to hit the floor/map.
-							local direction = (targetPart.Position - newOrigin).Unit
-							local extendedTarget = newOrigin + (direction * 100) -- Shoot 100 studs through
-
-							-- Debug Logging
-							-- print(string.format("[MagicBullet] Origin: %s | Dir: %s | ExtendedTgt: %s",
-							-- 	tostring(newOrigin), tostring(direction), tostring(extendedTarget)))
-
-							-- CRITICAL: Add target to filter to force "penetration" logic.
-							-- We add BOTH the specific part and the character model to be safe.
-							if type(filter) == "table" then
-								table.insert(filter, targetPart)
-								table.insert(filter, targetPart.Parent)
-								-- print("[MagicBullet] Added Target & Parent to filter: " .. tostring(targetPart))
-							else
-								warn("[MagicBullet] Filter is not a table: " .. typeof(filter))
-							end
-
-							-- Update return to use extendedTarget
-							_lastSilentTargetPos = targetPart.Position
-							_lastSilentOrigin = newOrigin
-
-							local result = oldRaycast(self, newOrigin, extendedTarget, distance, filter, ...)
-
-							-- PROXY/SPOOFING LOGIC:
-							-- The ray physically hits the FLOOR (due to filter), which is good for tracers/server validation of "Through" shot.
-							-- BUT the game logic needs to see a Player Hit to fire damage.
-							-- So we wrap the result and lie about the Instance.
-							if result then
-								local fakeResult = {
-									Instance = targetPart, -- LIE: We hit the player
-									Position = result.Position, -- TRUTH: End of ray (Floor)
-									Material = result.Material,
-									Normal = result.Normal,
-									Distance = result.Distance,
-								}
-								return fakeResult
-							end
-
-							return result
-						end
-
 						_lastSilentTargetPos = targetPart.Position
 						_lastSilentOrigin = newOrigin
 						-- For non-magic bullet silent aim, we just hit the target directly
@@ -142,9 +95,6 @@ function SilentAim.setup()
 					and SilentAim.isGunAction()
 				then
 					local originPos = cf.Position
-					if State.isManipulationEnabled and _lastSilentOrigin then
-						originPos = _lastSilentOrigin
-					end
 					local newCF = CFrame.lookAt(originPos, _lastSilentTargetPos :: Vector3)
 					return oldEncode(self, newCF)
 				end

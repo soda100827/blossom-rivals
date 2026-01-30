@@ -604,7 +604,7 @@ isAimbotEnabled=false,isSilentAimEnabled=false,isFovEnabled=true,
 isSilentAimFovEnabled=true,fovRadius=100,silentAimFovRadius=100,fovColor=
 Constants.FOV_CIRCLE_COLOR,silentAimFovColor=Constants.FOV_CIRCLE_COLOR,
 fovTransparency=0,silentAimFovTransparency=0,silentHitChance=100,targetPart=
-'Head',isManipulationEnabled=true,isAntiKatanaEnabled=false,
+'Head',isManipulationEnabled=false,isAntiKatanaEnabled=false,
 isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
 'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg',
 'LowerTorso'},isWallCheckEnabled=false,smoothness=0,isNoRecoilEnabled=false,
@@ -854,24 +854,14 @@ SilentAim.isGunAction()then if math.random(1,100)>State.silentHitChance then
 _lastSilentTargetPos=nil return oldRaycast(self,origin,target,distance,filter,
 ...)end local targetPart=Targeting.getClosestSilentTarget()local localChar=
 Helpers.getLocalPlayer().Character if targetPart and localChar and not
-targetPart:IsDescendantOf(localChar)then local newOrigin=origin if State.
-isManipulationEnabled then newOrigin=targetPart.Position+Vector3.new(0,1,0)local
-direction=(targetPart.Position-newOrigin).Unit local extendedTarget=newOrigin+(
-direction*100)if type(filter)=='table'then table.insert(filter,targetPart)table.
-insert(filter,targetPart.Parent)else warn(
-'[MagicBullet] Filter is not a table: '..typeof(filter))end _lastSilentTargetPos
-=targetPart.Position _lastSilentOrigin=newOrigin local result=oldRaycast(self,
-newOrigin,extendedTarget,distance,filter,...)if result then local fakeResult={
-Instance=targetPart,Position=result.Position,Material=result.Material,Normal=
-result.Normal,Distance=result.Distance}return fakeResult end return result end
+targetPart:IsDescendantOf(localChar)then local newOrigin=origin
 _lastSilentTargetPos=targetPart.Position _lastSilentOrigin=newOrigin return
 oldRaycast(self,newOrigin,targetPart.Position,distance,filter,...)end end
 _lastSilentTargetPos=nil _lastSilentOrigin=nil return oldRaycast(self,origin,
 target,distance,filter,...)end,State.logger)local oldEncode oldEncode=Helpers.
 safeHook(utility,'EncodeCFrame',function(self,cf)if not checkcaller()and State.
 isSilentAimEnabled and _lastSilentTargetPos and SilentAim.isGunAction()then
-local originPos=cf.Position if State.isManipulationEnabled and _lastSilentOrigin
-then originPos=_lastSilentOrigin end local newCF=CFrame.lookAt(originPos,
+local originPos=cf.Position local newCF=CFrame.lookAt(originPos,
 _lastSilentTargetPos)return oldEncode(self,newCF)end return oldEncode(self,cf)
 end,State.logger)end local cameraShaker=Helpers.getCameraShaker()if cameraShaker
 and not State.cameraShakerHooked then State.cameraShakerHooked=true local mt=
