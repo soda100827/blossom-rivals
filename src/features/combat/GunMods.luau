@@ -59,7 +59,23 @@ function GunMods.setup()
 			end, State.logger)
 		end
 
-		-- 4. Gun Action hooks (Fire Rate & Packet Manipulation)
+		-- 4. ReplicatedClass hooks for "IsAiming" state bypass
+		local replicatedClassMod = Helpers.getReplicatedClassModule()
+		if replicatedClassMod then
+			local oldGet
+			oldGet = Helpers.safeHook(replicatedClassMod, "Get", function(self, key)
+				-- Only spoof IsAiming for spread calculations, allow real value for UI/Camera if possible?
+				-- Actually if we hook Get, it affects everything reading it.
+				-- But usually Camera logic reads from its own state or uses IsAiming for FOV.
+				-- Let's try returning true. If this breaks Zoom again, we will need to detect CALLER.
+				if not checkcaller() and State.isNoSpreadEnabled and key == "IsAiming" then
+					return true
+				end
+				return oldGet(self, key)
+			end, State.logger)
+		end
+
+		-- 5. Gun Action hooks (Fire Rate & Packet Manipulation)
 		local gunMod = Helpers.getGunModule()
 		if gunMod then
 			local oldStartShooting

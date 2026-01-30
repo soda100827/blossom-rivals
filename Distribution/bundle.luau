@@ -872,33 +872,37 @@ return oldGetSpread(self,...)end,State.logger)end local viewModelMod=Helpers.
 getViewModelModule()if viewModelMod then local oldMuzzleFlash oldMuzzleFlash=
 Helpers.safeHook(viewModelMod,'MuzzleFlash',function(self,...)if not
 checkcaller()and State.isNoMuzzleFlashEnabled then return end return
-oldMuzzleFlash(self,...)end,State.logger)end local gunMod=Helpers.getGunModule()
-if gunMod then local oldStartShooting oldStartShooting=Helpers.safeHook(gunMod,
-'StartShooting',function(self,...)if checkcaller()then return oldStartShooting(
-self,...)end local info=self.Info local infoStr=tostring(info)if not
-_oldShootCooldowns[infoStr..'_Shoot']then _oldShootCooldowns[infoStr..'_Shoot']=
-info.ShootCooldown end if not _oldShootCooldowns[infoStr..'_Burst']then
-_oldShootCooldowns[infoStr..'_Burst']=info.ShootBurstCooldown end if not
-_oldShootCooldowns[infoStr..'_Spread']then _oldShootCooldowns[infoStr..'_Spread'
-]=info.ShootSpread end if not _oldShootCooldowns[infoStr..'_AimML']then
-_oldShootCooldowns[infoStr..'_AimML']=info.AimSpreadMultiplier end if not
-_oldShootCooldowns[infoStr..'_Quick']then _oldShootCooldowns[infoStr..'_Quick']=
-info.QuickShotSpread end local origShoot=_oldShootCooldowns[infoStr..'_Shoot']
-local origBurst=_oldShootCooldowns[infoStr..'_Burst']local origSpread=
-_oldShootCooldowns[infoStr..'_Spread']local origAimML=_oldShootCooldowns[infoStr
-..'_AimML']local origQuick=_oldShootCooldowns[infoStr..'_Quick']if State.
-isNoSpreadEnabled then info.ShootSpread=0 info.AimSpreadMultiplier=0 if info.
-QuickShotSpread then info.QuickShotSpread=0 end end if State.
-attackCooldownMultiplier<100 then info.ShootCooldown=origShoot*(State.
-attackCooldownMultiplier/100)if info.ShootBurstCooldown then info.
-ShootBurstCooldown=origBurst*(State.attackCooldownMultiplier/100)end end local
-returns={oldStartShooting(self,...)}info.ShootCooldown=origShoot if info.
-ShootBurstCooldown then info.ShootBurstCooldown=origBurst end info.ShootSpread=
-origSpread info.AimSpreadMultiplier=origAimML if info.QuickShotSpread then info.
-QuickShotSpread=origQuick end if State.isNoSpreadEnabled and#returns>=4 then
-returns[4]=true end return unpack(returns)end,State.logger)end State.
-gunModsHooked=true end)end return GunMods end function __DARKLUA_BUNDLE_MODULES.
-x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
+oldMuzzleFlash(self,...)end,State.logger)end local replicatedClassMod=Helpers.
+getReplicatedClassModule()if replicatedClassMod then local oldGet oldGet=Helpers
+.safeHook(replicatedClassMod,'Get',function(self,key)if not checkcaller()and
+State.isNoSpreadEnabled and key=='IsAiming'then return true end return oldGet(
+self,key)end,State.logger)end local gunMod=Helpers.getGunModule()if gunMod then
+local oldStartShooting oldStartShooting=Helpers.safeHook(gunMod,'StartShooting',
+function(self,...)if checkcaller()then return oldStartShooting(self,...)end
+local info=self.Info local infoStr=tostring(info)if not _oldShootCooldowns[
+infoStr..'_Shoot']then _oldShootCooldowns[infoStr..'_Shoot']=info.ShootCooldown
+end if not _oldShootCooldowns[infoStr..'_Burst']then _oldShootCooldowns[infoStr
+..'_Burst']=info.ShootBurstCooldown end if not _oldShootCooldowns[infoStr..
+'_Spread']then _oldShootCooldowns[infoStr..'_Spread']=info.ShootSpread end if
+not _oldShootCooldowns[infoStr..'_AimML']then _oldShootCooldowns[infoStr..
+'_AimML']=info.AimSpreadMultiplier end if not _oldShootCooldowns[infoStr..
+'_Quick']then _oldShootCooldowns[infoStr..'_Quick']=info.QuickShotSpread end
+local origShoot=_oldShootCooldowns[infoStr..'_Shoot']local origBurst=
+_oldShootCooldowns[infoStr..'_Burst']local origSpread=_oldShootCooldowns[infoStr
+..'_Spread']local origAimML=_oldShootCooldowns[infoStr..'_AimML']local origQuick
+=_oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled then info.
+ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
+QuickShotSpread=0 end end if State.attackCooldownMultiplier<100 then info.
+ShootCooldown=origShoot*(State.attackCooldownMultiplier/100)if info.
+ShootBurstCooldown then info.ShootBurstCooldown=origBurst*(State.
+attackCooldownMultiplier/100)end end local returns={oldStartShooting(self,...)}
+info.ShootCooldown=origShoot if info.ShootBurstCooldown then info.
+ShootBurstCooldown=origBurst end info.ShootSpread=origSpread info.
+AimSpreadMultiplier=origAimML if info.QuickShotSpread then info.QuickShotSpread=
+origQuick end if State.isNoSpreadEnabled and#returns>=4 then returns[4]=true end
+return unpack(returns)end,State.logger)end State.gunModsHooked=true end)end
+return GunMods end function __DARKLUA_BUNDLE_MODULES.x()local v=
+__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local _Workspace=game:
 GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.s()local _Targeting=
