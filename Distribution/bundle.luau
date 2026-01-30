@@ -866,15 +866,8 @@ then return CFrame.identity end return oldGetSpread(self,...)end))end local
 viewModelMod=Helpers.getViewModelModule()if viewModelMod then local
 oldMuzzleFlash oldMuzzleFlash=hookfunction(viewModelMod.MuzzleFlash,newcclosure(
 function(self,...)if not checkcaller()and State.isNoMuzzleFlashEnabled then
-return end return oldMuzzleFlash(self,...)end))end local replicatedClassMod=
-Helpers.getReplicatedClassModule()if replicatedClassMod then local oldGet oldGet
-=hookfunction(replicatedClassMod.Get,newcclosure(function(self,key)if not
-checkcaller()and State.isNoSpreadEnabled and key=='IsAiming'then return true end
-return oldGet(self,key)end))local oldSetReplicate oldSetReplicate=hookfunction(
-replicatedClassMod.SetReplicate,newcclosure(function(self,key,value,unreliable)
-if not checkcaller()and State.isNoSpreadEnabled and key=='IsAiming'then value=
-true end return oldSetReplicate(self,key,value,unreliable)end))end local gunMod=
-Helpers.getGunModule()if gunMod then local oldStartShooting oldStartShooting=
+return end return oldMuzzleFlash(self,...)end))end local gunMod=Helpers.
+getGunModule()if gunMod then local oldStartShooting oldStartShooting=
 hookfunction(gunMod.StartShooting,newcclosure(function(self,...)if checkcaller()
 then return oldStartShooting(self,...)end local info=self.Info local infoStr=
 tostring(info)if not _oldShootCooldowns[infoStr..'_Shoot']then
@@ -898,17 +891,14 @@ info.ShootCooldown=origShoot if info.ShootBurstCooldown then info.
 ShootBurstCooldown=origBurst end info.ShootSpread=origSpread info.
 AimSpreadMultiplier=origAimML if info.QuickShotSpread then info.QuickShotSpread=
 origQuick end if State.isNoSpreadEnabled and#returns>=4 then returns[4]=true end
-return unpack(returns)end))local oldIsFullyAiming oldIsFullyAiming=hookfunction(
-gunMod.IsFullyAiming,newcclosure(function(self,...)if not checkcaller()and State
-.isNoSpreadEnabled then return true end return oldIsFullyAiming(self,...)end))
-end State.gunModsHooked=true end)end return GunMods end function
-__DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-_Workspace=game:GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.s()
-local _Targeting=__DARKLUA_BUNDLE_MODULES.u()local TeamUtils=
-__DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.t()local
-MeleeMods={}local function _getDistance(p1,p2)return(p1-p2).Magnitude end
+return unpack(returns)end))end State.gunModsHooked=true end)end return GunMods
+end function __DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.
+x if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v
+.c end end do local function __modImpl()local Players=game:GetService('Players')
+local _Workspace=game:GetService('Workspace')local State=
+__DARKLUA_BUNDLE_MODULES.s()local _Targeting=__DARKLUA_BUNDLE_MODULES.u()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.t()
+local MeleeMods={}local function _getDistance(p1,p2)return(p1-p2).Magnitude end
 local function _getNearbyEnemies()local localPlayer=Helpers.getLocalPlayer()
 local localCharacter=localPlayer.Character if not localCharacter then return{}
 end local localRoot=(localCharacter:FindFirstChild('HumanoidRootPart'))if not

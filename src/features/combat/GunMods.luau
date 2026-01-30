@@ -79,34 +79,7 @@ function GunMods.setup()
 			)
 		end
 
-		-- 4. ReplicatedClass hooks for "IsAiming" state bypass
-		local replicatedClassMod = Helpers.getReplicatedClassModule()
-		if replicatedClassMod then
-			-- Forced IsAiming state bypass
-			local oldGet
-			oldGet = hookfunction(
-				replicatedClassMod.Get,
-				newcclosure(function(self, key)
-					if not checkcaller() and State.isNoSpreadEnabled and key == "IsAiming" then
-						return true
-					end
-					return oldGet(self, key)
-				end)
-			)
-
-			local oldSetReplicate
-			oldSetReplicate = hookfunction(
-				replicatedClassMod.SetReplicate,
-				newcclosure(function(self, key, value, unreliable)
-					if not checkcaller() and State.isNoSpreadEnabled and key == "IsAiming" then
-						value = true
-					end
-					return oldSetReplicate(self, key, value, unreliable)
-				end)
-			)
-		end
-
-		-- 5. Gun Action hooks (Fire Rate & Packet Manipulation)
+		-- 4. Gun Action hooks (Fire Rate & Packet Manipulation)
 		local gunMod = Helpers.getGunModule()
 		if gunMod then
 			local oldStartShooting
@@ -180,17 +153,6 @@ function GunMods.setup()
 					end
 
 					return unpack(returns)
-				end)
-			)
-
-			local oldIsFullyAiming
-			oldIsFullyAiming = hookfunction(
-				gunMod.IsFullyAiming,
-				newcclosure(function(self, ...)
-					if not checkcaller() and State.isNoSpreadEnabled then
-						return true
-					end
-					return oldIsFullyAiming(self, ...)
 				end)
 			)
 		end
