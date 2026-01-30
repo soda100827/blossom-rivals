@@ -808,6 +808,44 @@ local function _mount()
 			end,
 		})
 
+	local hitEffectsGroup = tabs.visuals:AddRightGroupbox("Hit Effects")
+	hitEffectsGroup:AddToggle("VisualsCustomHitSound", {
+		Text = "Custom Hit Sound",
+		Default = false,
+		Tooltip = "Play a custom sound when hitting an enemy.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setCustomHitSoundEnabled then
+				mod:setCustomHitSoundEnabled(state)
+			end
+		end,
+	})
+	hitEffectsGroup:AddInput("VisualsHitSoundId", {
+		Default = "rbxassetid://160432334",
+		Numeric = false,
+		Finished = true,
+		Text = "Hit Sound ID",
+		Tooltip = "The sound ID to play on hit.",
+		Placeholder = "rbxassetid://...",
+		Callback = function(value)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setHitSoundId then
+				mod:setHitSoundId(value)
+			end
+		end,
+	})
+	hitEffectsGroup:AddToggle("VisualsNoHurtEffect", {
+		Text = "No Hurt Effect",
+		Default = false,
+		Tooltip = "Disables the red screen flash when taking damage.",
+		Callback = function(state)
+			local mod = _state.client.Modules.Visuals
+			if mod and mod.setNoHurtEffectEnabled then
+				mod:setNoHurtEffectEnabled(state)
+			end
+		end,
+	})
+
 	espGroup:AddToggle("ESPBetterBounds", {
 		Text = "Better Bounds",
 		Default = false,

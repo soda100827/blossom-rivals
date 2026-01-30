@@ -9,6 +9,7 @@ local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
 local Helpers = require("./Helpers")
 local State = require("./State")
 local Types = require("./Types")
+local HitEffects = require("./HitEffects")
 
 --// Constants
 
@@ -42,6 +43,7 @@ local function _enable()
 		return
 	end
 	_connect()
+	HitEffects.setup(_maid)
 end
 
 local function _disable()
@@ -189,6 +191,18 @@ end
 
 function Visuals.setOverrideCheck(self: VisualsFeature, check: () -> boolean): ()
 	State.overrideCheck = check
+end
+
+function Visuals.setCustomHitSoundEnabled(self: VisualsFeature, isEnabled: boolean): ()
+	State.settings.isCustomHitSoundEnabled = isEnabled
+end
+
+function Visuals.setHitSoundId(self: VisualsFeature, id: string): ()
+	State.settings.hitSoundId = id
+end
+
+function Visuals.setNoHurtEffectEnabled(self: VisualsFeature, isEnabled: boolean): ()
+	State.settings.isNoHurtEffectEnabled = isEnabled
 end
 
 return Visuals
