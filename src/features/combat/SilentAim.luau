@@ -72,7 +72,7 @@ function SilentAim.setup()
 							-- Magic Bullet: Rayback calculation
 							local camera = Helpers.getCamera()
 							if camera then
-							 camPos = camera.CFrame	local.Position
+								local camPos = camera.CFrame.Position
 								local dir = (targetPart.Position - camPos).Unit
 								-- Start 5 studs away from target, approaching from camera direction
 								newOrigin = targetPart.Position - (dir * 5)
