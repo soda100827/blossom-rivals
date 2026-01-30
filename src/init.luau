@@ -9,7 +9,6 @@ local RunService = game:GetService("RunService")
 local Logger = require("src/utils/Logger")
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid")
 local Signal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
-local TeamUtils = require("src/utils/TeamUtils")
 
 --// Constants
 local BUNDLE_URL =
@@ -203,27 +202,29 @@ local function _waitForClientLoaded()
 	until controllersFolder
 	local folder = controllersFolder :: Instance
 
-	local function isModuleLoaded(mod: ModuleScript): boolean
-		local loaded = getloadedmodules()
-		if not loaded then
-			return true
-		end
-		for _, v in ipairs(loaded) do
-			if v == mod then
-				return true
-			end
-		end
-		return false
-	end
-
 	while true do
 		local allLoaded = true
-		if getloadedmodules() and not isModuleLoaded(clientModule :: ModuleScript) then
+		local loaded = getloadedmodules()
+		local loadedSet = {} :: { [ModuleScript]: boolean }
+		local hasLoaded = loaded ~= nil
+		if loaded then
+			for _, mod in ipairs(loaded) do
+				loadedSet[mod] = true
+			end
+		end
+		local function isLoaded(mod: ModuleScript): boolean
+			if not hasLoaded then
+				return true
+			end
+			return loadedSet[mod] == true
+		end
+
+		if hasLoaded and not isLoaded(clientModule :: ModuleScript) then
 			allLoaded = false
 		else
 			for _, child in ipairs(folder:GetChildren()) do
 				if child:IsA("ModuleScript") then
-					if getloadedmodules() and not isModuleLoaded(child) then
+					if hasLoaded and not isLoaded(child) then
 						allLoaded = false
 						break
 					end
@@ -292,9 +293,6 @@ function Client.start(self: BlossomClient): ()
 
 	_disableAnalyticsPipeline(_state.logger)
 	_state.logger:info("Blossom 초기화 시작됨.")
-	local teamSource = genv.BlossomTeamSource or env.BlossomTeamSource or "fighter"
-	TeamUtils.setTeamSource(teamSource)
-	TeamUtils.setDebugEnabled(true)
 	_waitForClientLoaded()
 
 	for _, entry in ipairs(MODULES) do
