@@ -1132,34 +1132,39 @@ AURA_UPDATE_INTERVAL else AURA_IDLE_INTERVAL)end end)end return MeleeMods end
 function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
 end end do local function __modImpl()local Players=game:GetService('Players')
-local RunService=game:GetService('RunService')local Workspace=game:GetService(
-'Workspace')local RAGE_HEIGHT=7 local TARGET_RADIUS=99999 local State=
-__DARKLUA_BUNDLE_MODULES.u()local SilentAim=__DARKLUA_BUNDLE_MODULES.y()local
-TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local LocalPlayer=Players.LocalPlayer
-local PlayerScripts=LocalPlayer:WaitForChild('PlayerScripts')local Controllers=
-PlayerScripts:WaitForChild('Controllers')local FighterControllerModule=require(
-Controllers:WaitForChild('FighterController'))local Ragebot={}Ragebot.__index=
-Ragebot local function getLocalFighter()return FighterControllerModule.
-LocalFighter end local function getEquippedWeapon(fighter)if not fighter then
-return nil end for _,v in pairs(fighter)do if type(v)=='table'and v.IsEquipped==
-true and v.ViewModel then return v end end if fighter.Inventory then for _,item
-in pairs(fighter.Inventory)do if item.IsEquipped then return item end end end if
-fighter.Items then for _,item in pairs(fighter.Items)do if item.IsEquipped then
-return item end end end return nil end local function findTarget(localFighter)
-local closest=nil local closestDist=TARGET_RADIUS local myRoot=localFighter.
-Entity and localFighter.Entity.RootPart if not myRoot then return nil end for _,
-fighter in pairs(FighterControllerModule.Objects)do if fighter==localFighter
-then continue end if not fighter.Entity or not fighter.Entity.RootPart or not
-fighter.Entity.Humanoid then continue end if fighter.Entity.Humanoid.Health<=0
-then continue end local fighterPlayer=fighter.Player if fighterPlayer then if
-TeamUtils.isSameTeam(LocalPlayer,fighterPlayer)then continue end end local dist=
-(myRoot.Position-fighter.Entity.RootPart.Position).Magnitude if dist<closestDist
-then closestDist=dist closest=fighter end end return closest end function
-Ragebot.setup(maid)SilentAim.setup(maid)maid:GiveTask(RunService.Heartbeat:
-Connect(function()Ragebot.update()end))end function Ragebot.update()local
-localFighter=getLocalFighter()if not localFighter or not localFighter.Entity or
-not localFighter.Entity.RootPart then return end State.isSilentAimEnabled=true
-State.silentHitChance=100 State.silentAimFovRadius=math.huge local weapon=
+local RunService=game:GetService('RunService')local ReplicatedStorage=game:
+GetService('ReplicatedStorage')local Workspace=game:GetService('Workspace')local
+RAGE_HEIGHT=7 local TARGET_RADIUS=99999 local State=__DARKLUA_BUNDLE_MODULES.u()
+local SilentAim=__DARKLUA_BUNDLE_MODULES.y()local LocalPlayer=Players.
+LocalPlayer local PlayerScripts=LocalPlayer:WaitForChild('PlayerScripts')local
+Controllers=PlayerScripts:WaitForChild('Controllers')local
+FighterControllerModule=require(Controllers:WaitForChild('FighterController'))
+local Ragebot={}Ragebot.__index=Ragebot local function getLocalFighter()return
+FighterControllerModule.LocalFighter end local function getEquippedWeapon(
+fighter)if not fighter then return nil end for _,v in pairs(fighter)do if type(v
+)=='table'and v.IsEquipped==true and v.ViewModel then return v end end if
+fighter.Inventory then for _,item in pairs(fighter.Inventory)do if item.
+IsEquipped then return item end end end if fighter.Items then for _,item in
+pairs(fighter.Items)do if item.IsEquipped then return item end end end return
+nil end local function isSameTeam(playerA,playerB)if playerA==playerB then
+return true end local teamA=playerA:GetAttribute('TeamID')local teamB=playerB:
+GetAttribute('TeamID')if teamA and teamB and teamA==teamB then return true end
+if playerA.Team and playerB.Team and playerA.Team==playerB.Team then return true
+end return false end local function findTarget(localFighter)local closest=nil
+local closestDist=TARGET_RADIUS local myRoot=localFighter.Entity and
+localFighter.Entity.RootPart if not myRoot then return nil end for _,fighter in
+pairs(FighterControllerModule.Objects)do if fighter==localFighter then continue
+end if not fighter.Entity or not fighter.Entity.RootPart or not fighter.Entity.
+Humanoid then continue end if fighter.Entity.Humanoid.Health<=0 then continue
+end local fighterPlayer=fighter.Player if fighterPlayer then if isSameTeam(
+LocalPlayer,fighterPlayer)then continue end end local dist=(myRoot.Position-
+fighter.Entity.RootPart.Position).Magnitude if dist<closestDist then closestDist
+=dist closest=fighter end end return closest end function Ragebot.setup(maid)
+SilentAim.setup(maid)maid:GiveTask(RunService.Heartbeat:Connect(function()
+Ragebot.update()end))end function Ragebot.update()local localFighter=
+getLocalFighter()if not localFighter or not localFighter.Entity or not
+localFighter.Entity.RootPart then return end State.isSilentAimEnabled=true State
+.silentHitChance=100 State.silentAimFovRadius=math.huge local weapon=
 getEquippedWeapon(localFighter)local target=findTarget(localFighter)if target
 and target.Entity and target.Entity.RootPart then local targetRoot=target.Entity
 .RootPart local myRoot=localFighter.Entity.RootPart local approachCFrame=CFrame.

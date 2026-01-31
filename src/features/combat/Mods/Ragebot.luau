@@ -3,6 +3,7 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 --// Constants
@@ -13,7 +14,7 @@ local TARGET_RADIUS = 99999
 local State = require("../State")
 local SilentAim = require("./SilentAim")
 
-local TeamUtils = require("../../../shared/TeamUtils")
+-- local TeamUtils = require("../../../shared/TeamUtils") -- Temporarily disabled due to bundle loader error
 
 --// Helper Variables
 local LocalPlayer = Players.LocalPlayer
@@ -65,6 +66,25 @@ local function getEquippedWeapon(fighter: any)
 	return nil
 end
 
+local function isSameTeam(playerA: Player, playerB: Player)
+	if playerA == playerB then
+		return true
+	end
+
+	local teamA = playerA:GetAttribute("TeamID")
+	local teamB = playerB:GetAttribute("TeamID")
+
+	if teamA and teamB and teamA == teamB then
+		return true
+	end
+
+	if playerA.Team and playerB.Team and playerA.Team == playerB.Team then
+		return true
+	end
+
+	return false
+end
+
 local function findTarget(localFighter: any)
 	local closest = nil
 	local closestDist = TARGET_RADIUS
@@ -90,7 +110,7 @@ local function findTarget(localFighter: any)
 		-- Check Team
 		local fighterPlayer = fighter.Player
 		if fighterPlayer then
-			if TeamUtils.isSameTeam(LocalPlayer, fighterPlayer) then
+			if isSameTeam(LocalPlayer, fighterPlayer) then
 				continue
 			end
 		end
