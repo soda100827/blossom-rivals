@@ -834,8 +834,8 @@ __DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()local
 PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
 .e()local Targeting={}Targeting.__index=Targeting local _maid=nil local _signals
 ={}local _state={raycastParams=RaycastParams.new(),raycastFilter=table.create(2)
-,cachedMouseLocation=Vector2.zero,cachedCamera=nil,lastUpdate=0}_state.
-raycastParams.FilterType=Enum.RaycastFilterType.Exclude local function
+,cachedMouseLocation=Vector2.zero,cachedCamera=nil,lastUpdate=0,debugNextAt=0}
+_state.raycastParams.FilterType=Enum.RaycastFilterType.Exclude local function
 _refreshCaches()local now=os.clock()if now-_state.lastUpdate<Constants.
 TARGETING_UPDATE_INTERVAL then return end _state.lastUpdate=now _state.
 cachedMouseLocation=UserInputService:GetMouseLocation()_state.cachedCamera=
@@ -913,46 +913,53 @@ getClosestSilentTarget()_refreshCaches()local camera=_getCamera()local
 localPlayer=PlayerUtils.getLocalPlayer()if not TeamUtils.isInDuel(localPlayer)
 then return nil end local closest=nil local closestDistSq=State.
 silentAimFovRadius*State.silentAimFovRadius local mouseLocation=
-_getMouseLocation()for _,entity in ipairs(CollectionService:GetTagged('Entity'))
-do if entity==localPlayer.Character or entity.Name==localPlayer.Name then
-continue end local player=Players:GetPlayerFromCharacter(entity)if player and
-not TeamUtils.isInSameDuel(localPlayer,player)then continue end if player and
-TeamUtils.isSameTeam(player,localPlayer)then continue end local hum=entity:
-FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
-local bestPart,isAnyOnScreen,distSq=_getBestPartForCharacter(entity,camera,
-localPlayer.Character,mouseLocation)if not bestPart then continue end if not
-isAnyOnScreen and not State.isRagebotEnabled then continue end if distSq<
-closestDistSq then closest=bestPart closestDistSq=distSq end end return closest
-end return Targeting end function __DARKLUA_BUNDLE_MODULES.w()local v=
-__DARKLUA_BUNDLE_MODULES.cache.w if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end do local function
-__modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=
-__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()local
-Helpers=__DARKLUA_BUNDLE_MODULES.v()local Aimbot={}Aimbot.__index=Aimbot local
-_maid=nil local _signals={}local _state={}function Aimbot.aimAt(target,bestPart,
-deltaTime)if not target.Character then return end local targetPos=(bestPart).
-Position local camera=PlayerUtils.getCamera()local currentCFrame=camera.CFrame
-local lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)if not State.
-cameraController or not State.cameraController.SetRotation then local alpha=1 if
-not Helpers.isMaxSmoothness()then local speed=Constants.MIN_AIM_SPEED+(1-State.
-smoothness)*(Constants.MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)alpha=1-math.exp(-
-speed*deltaTime)end camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return
-end local x,y,_=lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y
-)if Helpers.isMaxSmoothness()then State.cameraController:SetRotation(
-targetRotation)elseif State.smoothness>0 then local currentRot=(State.
-cameraController.Rotation)local speed=Constants.MIN_AIM_SPEED+(1-State.
-smoothness)*(Constants.MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)local alpha=1-math.
-exp(-speed*deltaTime)local newRot=currentRot:Lerp(targetRotation,alpha)State.
-cameraController:SetRotation(newRot)else State.cameraController:SetRotation(
-targetRotation)end end return Aimbot end function __DARKLUA_BUNDLE_MODULES.x()
-local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
-__modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=
-__DARKLUA_BUNDLE_MODULES.p()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=__DARKLUA_BUNDLE_MODULES.v()
-local Targeting=__DARKLUA_BUNDLE_MODULES.w()local SilentAim={}SilentAim.__index=
-SilentAim local _maid=nil local _signals={}local _state={lastSilentTargetPos=nil
-,lastSilentOrigin=nil}local function _isGunAction()local debugGlobal=
+_getMouseLocation()local closestOnScreen=false local closestName=''for _,entity
+in ipairs(CollectionService:GetTagged('Entity'))do if entity==localPlayer.
+Character or entity.Name==localPlayer.Name then continue end local player=
+Players:GetPlayerFromCharacter(entity)if player and not TeamUtils.isInSameDuel(
+localPlayer,player)then continue end if player and TeamUtils.isSameTeam(player,
+localPlayer)then continue end local hum=entity:FindFirstChildOfClass('Humanoid')
+if not hum or hum.Health<=0 then continue end local bestPart,isAnyOnScreen,
+distSq=_getBestPartForCharacter(entity,camera,localPlayer.Character,
+mouseLocation)if not bestPart then continue end if not isAnyOnScreen and not
+State.isRagebotEnabled then continue end if distSq<closestDistSq then closest=
+bestPart closestDistSq=distSq closestOnScreen=isAnyOnScreen local player=Players
+:GetPlayerFromCharacter(entity)if player then closestName=player.Name else
+closestName=entity.Name end end end if State.isRagebotEnabled and State.
+isSilentAimEnabled and State.logger then local now=os.clock()if now>=_state.
+debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+'[Ragebot Debug] Silent target',closestName~=''and closestName or'nil',
+'onScreen',closestOnScreen)end end return closest end return Targeting end
+function __DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c
+end end do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.
+f()local State=__DARKLUA_BUNDLE_MODULES.u()local Constants=
+__DARKLUA_BUNDLE_MODULES.t()local Helpers=__DARKLUA_BUNDLE_MODULES.v()local
+Aimbot={}Aimbot.__index=Aimbot local _maid=nil local _signals={}local _state={}
+function Aimbot.aimAt(target,bestPart,deltaTime)if not target.Character then
+return end local targetPos=(bestPart).Position local camera=PlayerUtils.
+getCamera()local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(
+currentCFrame.Position,targetPos)if not State.cameraController or not State.
+cameraController.SetRotation then local alpha=1 if not Helpers.isMaxSmoothness()
+then local speed=Constants.MIN_AIM_SPEED+(1-State.smoothness)*(Constants.
+MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)alpha=1-math.exp(-speed*deltaTime)end
+camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return end local x,y,_=
+lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)if Helpers.
+isMaxSmoothness()then State.cameraController:SetRotation(targetRotation)elseif
+State.smoothness>0 then local currentRot=(State.cameraController.Rotation)local
+speed=Constants.MIN_AIM_SPEED+(1-State.smoothness)*(Constants.MAX_AIM_SPEED-
+Constants.MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)local newRot=
+currentRot:Lerp(targetRotation,alpha)State.cameraController:SetRotation(newRot)
+else State.cameraController:SetRotation(targetRotation)end end return Aimbot end
+function __DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c
+end end do local function __modImpl()local ExecutorUtils=
+__DARKLUA_BUNDLE_MODULES.d()local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.u()
+local Helpers=__DARKLUA_BUNDLE_MODULES.v()local Targeting=
+__DARKLUA_BUNDLE_MODULES.w()local SilentAim={}SilentAim.__index=SilentAim local
+_maid=nil local _signals={}local _state={lastSilentTargetPos=nil,
+lastSilentOrigin=nil}local function _isGunAction()local debugGlobal=
 ExecutorUtils.getGlobal('debug')local traceback=debugGlobal and debugGlobal.
 traceback or debug.traceback local stack=traceback()return(stack:find(
 'StartShooting')or stack:find('GetEntitiesFromRaycast')or stack:find(

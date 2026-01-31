@@ -28,6 +28,7 @@ local _state = {
   cachedMouseLocation = Vector2.zero,
   cachedCamera = nil :: Camera?,
   lastUpdate = 0,
+  debugNextAt = 0,
 }
 
 _state.raycastParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -284,6 +285,8 @@ function Targeting.getClosestSilentTarget(): BasePart?
   local closest: BasePart? = nil
   local closestDistSq = State.silentAimFovRadius * State.silentAimFovRadius
   local mouseLocation = _getMouseLocation()
+  local closestOnScreen = false
+  local closestName = "" :: string
 
   for _, entity in ipairs(CollectionService:GetTagged("Entity")) do
     if entity == localPlayer.Character or entity.Name == localPlayer.Name then
@@ -315,8 +318,29 @@ function Targeting.getClosestSilentTarget(): BasePart?
     if distSq < closestDistSq then
       closest = bestPart
       closestDistSq = distSq
+      closestOnScreen = isAnyOnScreen
+      local player = Players:GetPlayerFromCharacter(entity :: Model)
+      if player then
+        closestName = player.Name
+      else
+        closestName = entity.Name
+      end
     end
   end
+
+  if State.isRagebotEnabled and State.isSilentAimEnabled and State.logger then
+    local now = os.clock()
+    if now >= _state.debugNextAt then
+      _state.debugNextAt = now + 1
+      State.logger:info(
+        "[Ragebot Debug] Silent target",
+        closestName ~= "" and closestName or "nil",
+        "onScreen",
+        closestOnScreen
+      )
+    end
+  end
+
   return closest
 end
 
