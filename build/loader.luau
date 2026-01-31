@@ -192,8 +192,8 @@ local camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
 WaitForChild('Camera'))end return camera end return PlayerUtils end function
 __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-do local function __modImpl()local ESP_RENDER_INTERVAL=1/20 local
-ESP_SKELETON_INTERVAL=1/10 local ESP_TEXT_INTERVAL=1/4 local Constants={
+do local function __modImpl()local ESP_RENDER_INTERVAL=1/60 local
+ESP_SKELETON_INTERVAL=1/60 local ESP_TEXT_INTERVAL=1/60 local Constants={
 DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false
 ,shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
 shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,

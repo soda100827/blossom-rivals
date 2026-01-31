@@ -5,10 +5,10 @@
 --// Dependencies (require)
 
 --// Constants
-local ESP_RENDER_INTERVAL = 1 / 20
-local ESP_SKELETON_INTERVAL = 1 / 10
+local ESP_RENDER_INTERVAL = 1 / 60
+local ESP_SKELETON_INTERVAL = 1 / 60
 
-local ESP_TEXT_INTERVAL = 1 / 4
+local ESP_TEXT_INTERVAL = 1 / 60
 
 --// Types
 
