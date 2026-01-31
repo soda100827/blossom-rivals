@@ -363,26 +363,11 @@ local function _swapWeaponOnReload(localFighter: any)
 		local secondarySlot = 2
 
 		if currentSlot == primarySlot then
-			-- If on Primary
-			if _state.returnedToPrimary then
-				-- We already used Secondary, now back on Primary.
-				-- Try reloading Primary. Only swap if we fail to maintain ammo (Dry).
-				_tryStartReload(equipped)
+			-- Primary: Reload and stay until dry
+			_tryStartReload(equipped)
 
-				-- If we tried reloading recently and still empty after 3 seconds, assume dry.
-				if now - _state.lastReloadAttemptAt > 3.0 then
-					-- Dry. Reset cycle and swap.
-					_state.returnedToPrimary = false
-					local otherItem = _getItemBySlot(localFighter, secondarySlot)
-					if otherItem then
-						_state.lastWeaponSwapAt = now
-						pcall(function()
-							localFighter:EquipItem(secondarySlot)
-						end)
-					end
-				end
-			else
-				-- First time Primary went empty. Swap to Secondary.
+			-- If we tried reloading recently and still empty after 3 seconds, assume dry.
+			if now - _state.lastReloadAttemptAt > 3.0 then
 				local otherItem = _getItemBySlot(localFighter, secondarySlot)
 				if otherItem then
 					_state.lastWeaponSwapAt = now
@@ -392,11 +377,10 @@ local function _swapWeaponOnReload(localFighter: any)
 				end
 			end
 		elseif currentSlot == secondarySlot then
-			-- If on Secondary
-			-- Empty. Swap back to Primary.
+			-- Secondary: Always swap back to Primary after 1 mag
 			local otherItem = _getItemBySlot(localFighter, primarySlot)
 			if otherItem then
-				_state.returnedToPrimary = true -- Flag that we are returning
+				_state.returnedToPrimary = true -- Flag that we are returning (used to reset reload timer if needed, though simpler now)
 				_state.lastWeaponSwapAt = now
 				pcall(function()
 					localFighter:EquipItem(primarySlot)

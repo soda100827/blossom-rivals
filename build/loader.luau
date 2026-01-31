@@ -1109,18 +1109,15 @@ lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
 localFighter.EquipItem then return end local equipped=localFighter.EquippedItem
 if not equipped or not _isGunItem(equipped)then return end if _isOutOfAmmo(
 equipped)then local currentSlot=(equipped).Slot local primarySlot=1 local
-secondarySlot=2 if currentSlot==primarySlot then if _state.returnedToPrimary
-then _tryStartReload(equipped)if now-_state.lastReloadAttemptAt>3 then _state.
-returnedToPrimary=false local otherItem=_getItemBySlot(localFighter,
+secondarySlot=2 if currentSlot==primarySlot then _tryStartReload(equipped)if now
+-_state.lastReloadAttemptAt>3 then local otherItem=_getItemBySlot(localFighter,
 secondarySlot)if otherItem then _state.lastWeaponSwapAt=now pcall(function()
-localFighter:EquipItem(secondarySlot)end)end end else local otherItem=
-_getItemBySlot(localFighter,secondarySlot)if otherItem then _state.
-lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(secondarySlot)end)
-end end elseif currentSlot==secondarySlot then local otherItem=_getItemBySlot(
-localFighter,primarySlot)if otherItem then _state.returnedToPrimary=true _state.
-lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(primarySlot)end)end
-else _tryStartReload(equipped)end end end local function _refreshInputFunctions(
-)if _state.mouse1press or _state.mouse1click then return end _state.mouse1press=
+localFighter:EquipItem(secondarySlot)end)end end elseif currentSlot==
+secondarySlot then local otherItem=_getItemBySlot(localFighter,primarySlot)if
+otherItem then _state.returnedToPrimary=true _state.lastWeaponSwapAt=now pcall(
+function()localFighter:EquipItem(primarySlot)end)end else _tryStartReload(
+equipped)end end end local function _refreshInputFunctions()if _state.
+mouse1press or _state.mouse1click then return end _state.mouse1press=
 ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
 getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
 'mouse1click')end local function _safeCallInput(obj,inputName)if not obj or not
