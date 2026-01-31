@@ -5,10 +5,10 @@
 --// Dependencies (require)
 
 --// Constants
-local ESP_RENDER_INTERVAL = 1 / 30
-local ESP_SKELETON_INTERVAL = 1 / 15
+local ESP_RENDER_INTERVAL = 1 / 20
+local ESP_SKELETON_INTERVAL = 1 / 10
 
-local ESP_TEXT_INTERVAL = 1 / 5
+local ESP_TEXT_INTERVAL = 1 / 4
 
 --// Types
 
@@ -42,9 +42,6 @@ local Constants = {
     skeletonThickness = 1,
     textSize = 12,
     shouldOutline = true,
-    isCustomHitSoundEnabled = false,
-    hitSoundId = "160432334",
-    isNoHurtEffectEnabled = false,
   },
   R15_JOINTS = {
     { "Head", "UpperTorso" },

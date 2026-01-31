@@ -192,8 +192,8 @@ local camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
 WaitForChild('Camera'))end return camera end return PlayerUtils end function
 __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
-do local function __modImpl()local ESP_RENDER_INTERVAL=1/30 local
-ESP_SKELETON_INTERVAL=1/15 local ESP_TEXT_INTERVAL=1/5 local Constants={
+do local function __modImpl()local ESP_RENDER_INTERVAL=1/20 local
+ESP_SKELETON_INTERVAL=1/10 local ESP_TEXT_INTERVAL=1/4 local Constants={
 DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false
 ,shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
 shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,
@@ -204,8 +204,7 @@ nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),
 distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
 skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
 highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
-12,shouldOutline=true,isCustomHitSoundEnabled=false,hitSoundId='160432334',
-isNoHurtEffectEnabled=false},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
+12,shouldOutline=true},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
 'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
 'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
 'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
@@ -357,281 +356,72 @@ group.skeleton)do line.Visible=false end for _,line in pairs(group.
 skeletonOutline)do line.Visible=false end end end end return Helpers end
 function __DARKLUA_BUNDLE_MODULES.j()local v=__DARKLUA_BUNDLE_MODULES.cache.j if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.j=v end return v.c
-end end do local function __modImpl()local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.d()local HookUtils={}HookUtils.__index=HookUtils local
-_maid=nil local _state={}local _signals={}function HookUtils.safeHook(
-targetTable,targetKey,replacement,logger,maid)local targetFunc=targetTable[
-targetKey]if not targetFunc or type(targetFunc)~='function'then return nil end
-local hookfunction=ExecutorUtils.getGlobal('hookfunction')or ExecutorUtils.
-getGlobal('replaceclosure')local newcclosure=ExecutorUtils.getGlobal(
-'newcclosure')or function(f)return f end local wrapped=newcclosure(replacement)
-if hookfunction then local success,old=pcall(function()return hookfunction(
-targetFunc,wrapped)end)if success then if maid then maid:GiveTask(function()
-local restoreHook=ExecutorUtils.getGlobal('hookfunction')or ExecutorUtils.
-getGlobal('replaceclosure')if restoreHook then pcall(function()restoreHook(
-targetFunc,old)end)else targetTable[targetKey]=old end end)end return old end if
-logger and logger.warnUnsupported then logger:warnUnsupported('hookfunction')
-elseif logger then logger:warn(
-[[This executor does not support 'hookfunction'. Some features may not work as expected.]]
-)end else if logger and logger.warnUnsupported then logger:warnUnsupported(
-'hookfunction')elseif logger then logger:warn(
-[[This executor does not support 'hookfunction'. Some features may not work as expected.]]
-)end end targetTable[targetKey]=wrapped if maid then maid:GiveTask(function()if
-targetTable[targetKey]==wrapped then targetTable[targetKey]=targetFunc end end)
-end return targetFunc end return HookUtils end function __DARKLUA_BUNDLE_MODULES
-.k()local v=__DARKLUA_BUNDLE_MODULES.cache.k if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.k=v end return v.c end end do local function
-__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.l()local v=
-__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.l=v end return v.c end end do local function
-__modImpl()local TARGETING_UPDATE_INTERVAL=1/30 local Constants={
-TARGETING_UPDATE_INTERVAL=TARGETING_UPDATE_INTERVAL,FOV_CIRCLE_COLOR=Color3.
-fromRGB(255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,
-MIN_AIM_SPEED=4,MAX_AIM_SPEED=40,MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,
-TARGET_DROP_FOV_MULTIPLIER=1.2,AIMBOT_RENDER_STEP_NAME='CombatAimbot'}return
-Constants end function __DARKLUA_BUNDLE_MODULES.m()local v=
-__DARKLUA_BUNDLE_MODULES.cache.m if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end do local function
-__modImpl()local Types=__DARKLUA_BUNDLE_MODULES.l()local Constants=
-__DARKLUA_BUNDLE_MODULES.m()local _maid=nil local _signals={}local _state={
-client=nil,logger=nil,isAimbotEnabled=false,isSilentAimEnabled=false,
-isFovEnabled=true,isSilentAimFovEnabled=true,fovRadius=100,silentAimFovRadius=
-100,fovColor=Constants.FOV_CIRCLE_COLOR,silentAimFovColor=Constants.
-FOV_CIRCLE_COLOR,fovTransparency=0,silentAimFovTransparency=0,silentHitChance=
-100,targetPart='Head',isManipulationEnabled=false,isAntiKatanaEnabled=false,
-isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
-'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg',
-'LowerTorso'},isWallCheckEnabled=false,smoothness=0,isNoRecoilEnabled=false,
-isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
-100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
-isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
-isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,target=nil,silentTarget=nil
-,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
-cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
-false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
-mouseBehavior=nil,mouseDeltaSensitivity=nil}return _state end function
-__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-UserInputService=game:GetService('UserInputService')local ReplicatedStorage=game
-:GetService('ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()
-local State=__DARKLUA_BUNDLE_MODULES.n()local Constants=__DARKLUA_BUNDLE_MODULES
-.m()local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}
-local _state={}function Helpers.getUtility()local modules=ReplicatedStorage:
-WaitForChild('Modules',5)if not modules then return nil end local utility=
-modules:WaitForChild('Utility',5)if not utility then return nil end local
-success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(utility)end)return success and result or nil end function Helpers
-.getGameplayUtility()local modules=ReplicatedStorage:WaitForChild('Modules',5)if
-not modules then return nil end local utility=modules:WaitForChild(
-'GameplayUtility',5)if not utility then return nil end local success,result=
-pcall(function()local dynamicRequire=require return dynamicRequire(utility)end)
-return success and result or nil end function Helpers.getCameraShaker()local
-localPlayer=Players.LocalPlayer if not localPlayer then return nil end local
-playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
-then return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
-modules then return nil end local cameraShaker=modules:WaitForChild(
-'CameraShaker',5)if not cameraShaker then return nil end local success,result=
-pcall(function()local dynamicRequire=require return dynamicRequire(cameraShaker)
-end)return success and result or nil end function Helpers.applyInputLock(
-isLocked)if isLocked and State.smoothness<Constants.MAX_SMOOTHNESS then return
-end if isLocked==State.isInputLocked then return end if isLocked then if State.
-mouseBehavior==nil then State.mouseBehavior=UserInputService.MouseBehavior end
-if State.mouseDeltaSensitivity==nil then State.mouseDeltaSensitivity=
-UserInputService.MouseDeltaSensitivity end UserInputService.MouseBehavior=Enum.
-MouseBehavior.LockCenter UserInputService.MouseDeltaSensitivity=0 else local
-restoreBehavior=State.mouseBehavior or Enum.MouseBehavior.Default local
-restoreSensitivity=State.mouseDeltaSensitivity or 1 UserInputService.
-MouseBehavior=restoreBehavior UserInputService.MouseDeltaSensitivity=
-restoreSensitivity State.mouseBehavior=nil State.mouseDeltaSensitivity=nil end
-State.isInputLocked=isLocked end function Helpers.isMaxSmoothness()return State.
-smoothness>=Constants.MAX_SMOOTHNESS end function Helpers.fetchCameraController(
-logger)if State.cameraController then return end local player=PlayerUtils.
-getLocalPlayer()if not player then return end local playerScripts=player:
-WaitForChild('PlayerScripts')if not playerScripts then return end local
-controllers=playerScripts:WaitForChild('Controllers')if not controllers then
-return end local camControllerScript=controllers:WaitForChild('CameraController'
-)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
-success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(camControllerScript)end)if success then State.cameraController=
-result else if logger then logger:error('Failed CameraController',result)end end
-end end function Helpers.fetchFighterController(logger)if State.
-fighterController then return end local player=PlayerUtils.getLocalPlayer()if
-not player then return end local playerScripts=player:WaitForChild(
-'PlayerScripts',10)if not playerScripts then return end local controllers=
-playerScripts:WaitForChild('Controllers',10)if not controllers then return end
-local fighterControllerScript=controllers:WaitForChild('FighterController',5)if
-fighterControllerScript and fighterControllerScript:IsA('ModuleScript')then
-local success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(fighterControllerScript)end)if success then State.
-fighterController=result end end end function Helpers.getGunModule()local player
-=PlayerUtils.getLocalPlayer()if not player then return nil end local
-playerScripts=player:WaitForChild('PlayerScripts',5)if not playerScripts then
-return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
-modules then return nil end local itemTypes=modules:WaitForChild('ItemTypes',5)
-if not itemTypes then return nil end local gun=itemTypes:WaitForChild('Gun',5)if
-not gun then return nil end local success,result=pcall(function()local
-dynamicRequire=require return dynamicRequire(gun)end)return success and result
-or nil end function Helpers.getClientItemModule()local player=PlayerUtils.
-getLocalPlayer()if not player then return nil end local playerScripts=player:
-WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
-modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
-end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
-,5)if not clientReplicatedClasses then return nil end local clientFighter=
-clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
-return nil end local clientItem=clientFighter:WaitForChild('ClientItem',5)if not
-clientItem then return nil end local success,result=pcall(function()local
-dynamicRequire=require return dynamicRequire(clientItem)end)return success and
-result or nil end function Helpers.getViewModelModule()local player=PlayerUtils.
-getLocalPlayer()if not player then return nil end local playerScripts=player:
-WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
-modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
-end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
-,5)if not clientReplicatedClasses then return nil end local clientFighter=
-clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
-return nil end local clientItemScript=clientFighter:WaitForChild('ClientItem',5)
-if not clientItemScript then return nil end local viewModel=clientItemScript:
-WaitForChild('ClientViewModel',5)if not viewModel then return nil end local
-success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(viewModel)end)return success and result or nil end function
-Helpers.getReplicatedClassModule()local replicatedStorage=game:GetService(
-'ReplicatedStorage')local modules=replicatedStorage:WaitForChild('Modules',5)if
-not modules then return nil end local replicatedClass=modules:WaitForChild(
-'ReplicatedClass',5)if not replicatedClass then return nil end local success,
-result=pcall(function()local dynamicRequire=require return dynamicRequire(
-replicatedClass)end)return success and result or nil end function Helpers.
-getMeleeModule()local player=PlayerUtils.getLocalPlayer()if not player then
-return nil end local playerScripts=player:WaitForChild('PlayerScripts',5)if not
-playerScripts then return nil end local modules=playerScripts:WaitForChild(
-'Modules',5)if not modules then return nil end local itemTypes=modules:
-WaitForChild('ItemTypes',5)if not itemTypes then return nil end local melee=
-itemTypes:WaitForChild('Melee',5)if not melee then return nil end local success,
-result=pcall(function()local dynamicRequire=require return dynamicRequire(melee)
-end)return success and result or nil end function Helpers.getItemModules()local
-player=PlayerUtils.getLocalPlayer()if not player then return nil end local
-playerScripts=player:WaitForChild('PlayerScripts',5)if not playerScripts then
-return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
-modules then return nil end return modules:WaitForChild('Items',5)end return
-Helpers end function __DARKLUA_BUNDLE_MODULES.o()local v=
-__DARKLUA_BUNDLE_MODULES.cache.o if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end do local function
-__modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local SoundService=game:GetService('SoundService')local
-State=__DARKLUA_BUNDLE_MODULES.i()local HookUtils=__DARKLUA_BUNDLE_MODULES.k()
-local combatHelpers=__DARKLUA_BUNDLE_MODULES.o()local HitEffects={}HitEffects.
-__index=HitEffects local _maid=nil local _signals={}local _state={lastUiCleanup=
-0,cachedPlayerGui=nil,cachedHitmarker=nil,isRunning=false}local function
-_playHitSound()if not State.settings.isCustomHitSoundEnabled then return end
-local soundId=State.settings.hitSoundId if not soundId or soundId==''then return
-end if not soundId:find('rbxassetid://')and tonumber(soundId)then soundId=
-'rbxassetid://'..soundId end task.spawn(function()local sound=Instance.new(
-'Sound')sound.SoundId=soundId sound.Volume=3 sound.Parent=SoundService sound:
-Play()task.delay(2,function()sound:Destroy()end)end)end local function
-_setupHooks()local viewModelModule=combatHelpers.getViewModelModule()if
-viewModelModule and viewModelModule.PlayHitmarkerSound then local
-oldPlayHitmarkerSound oldPlayHitmarkerSound=HookUtils.safeHook(viewModelModule,
-'PlayHitmarkerSound',function(self,...)_playHitSound()return
-oldPlayHitmarkerSound(self,...)end,nil,_maid)end local clientItemModule=
-combatHelpers.getClientItemModule()if clientItemModule then if clientItemModule.
-_ImpactMarker then local oldImpactMarker oldImpactMarker=HookUtils.safeHook(
-clientItemModule,'_ImpactMarker',function(self,...)if State.settings.
-isNoHurtEffectEnabled then return end return oldImpactMarker(self,...)end,nil,
-_maid)end if clientItemModule._ImpactMarkerSlash then local oldImpactMarkerSlash
-oldImpactMarkerSlash=HookUtils.safeHook(clientItemModule,'_ImpactMarkerSlash',
-function(self,...)if State.settings.isNoHurtEffectEnabled then return end return
-oldImpactMarkerSlash(self,...)end,nil,_maid)end end end local function _connect(
-)if not _maid then return end local hurtEffectConn=RunService.Heartbeat:Connect(
-function()if not _state.isRunning or not State.settings.isNoHurtEffectEnabled
-then return end local now=os.clock()if now-_state.lastUiCleanup<0.25 then return
-end _state.lastUiCleanup=now local player=Players.LocalPlayer if not player then
-return end local playerGui=_state.cachedPlayerGui if not playerGui or not
-playerGui.Parent then playerGui=player:FindFirstChild('PlayerGui')_state.
-cachedPlayerGui=playerGui end if not playerGui then return end local names={
-'DamageOverlay','HurtOverlay','BloodOverlay','PainOverlay','FlashbangGui'}for _,
-name in ipairs(names)do local ui=playerGui:FindFirstChild(name,true)if ui and ui
-:IsA('GuiObject')then ui.Visible=false end end local mouseGui=playerGui:
-FindFirstChild('MouseGui',true)or playerGui:FindFirstChild('MainGui',true)if
-mouseGui then local hitmarker=_state.cachedHitmarker if not hitmarker or not
-hitmarker.Parent then hitmarker=mouseGui:FindFirstChild('Hitmarker',true)_state.
-cachedHitmarker=hitmarker end if hitmarker then for _,child in ipairs(hitmarker:
-GetChildren())do if child:IsA('ImageLabel')then child.ImageColor3=Color3.new(1,1
-,1)end end end end end)_maid:GiveTask(hurtEffectConn)end function HitEffects.
-setup(maid)_maid=maid _state.isRunning=true if _maid then _maid:GiveTask(
-function()_state.isRunning=false end)end task.spawn(function()if not _state.
-isRunning then return end _setupHooks()_connect()end)end return HitEffects end
-function __DARKLUA_BUNDLE_MODULES.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c
 end end do local function __modImpl()local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')local ExecutorUtils=
 __DARKLUA_BUNDLE_MODULES.d()local Maid=(__DARKLUA_BUNDLE_MODULES.a())local
 Helpers=__DARKLUA_BUNDLE_MODULES.j()local State=__DARKLUA_BUNDLE_MODULES.i()
 local Types=__DARKLUA_BUNDLE_MODULES.h()local Constants=__DARKLUA_BUNDLE_MODULES
-.g()local HitEffects=__DARKLUA_BUNDLE_MODULES.p()local ESP_RENDER_INTERVAL=
-Constants.ESP_RENDER_INTERVAL local Visuals={}Visuals.__index=Visuals local
-_maid=nil local _signals={}local _state={lastRender=0}local function _connect()
-_maid:DoCleaning()local removeConn=Players.PlayerRemoving:Connect(function(
-player)Helpers.removePlayer(player)end)_maid:GiveTask(removeConn)local
-renderConn=RunService.RenderStepped:Connect(function()local now=os.clock()if now
--_state.lastRender<ESP_RENDER_INTERVAL then return end _state.lastRender=now
-Helpers.render()end)_maid:GiveTask(renderConn)end local function _enable()if not
-ExecutorUtils.getDrawingLib()then State.isEnabled=false return end _connect()
-HitEffects.setup(_maid)end local function _disable()_maid:DoCleaning()Helpers.
-clearAll()end function Visuals.init(self,client)State.client=client State.logger
-=client.Logger _maid=Maid.new()end function Visuals.Destroy(self)State.isEnabled
-=false _disable()end function Visuals.toggle(self,isEnabled)if State.isEnabled==
-isEnabled then return end State.isEnabled=isEnabled if isEnabled then _enable()
-else _disable()end end function Visuals.setEspEnabled(self,isEnabled)State.
-settings.isEspEnabled=isEnabled if not isEnabled then Helpers.clearAll()end end
-function Visuals.setShowNames(self,shouldShow)State.settings.shouldShowNames=
-shouldShow end function Visuals.setShowWeapon(self,shouldShow)State.settings.
-shouldShowWeapon=shouldShow end function Visuals.setShowDistance(self,shouldShow
-)State.settings.shouldShowDistance=shouldShow end function Visuals.setShowBoxes(
-self,shouldShow)State.settings.shouldShowBoxes=shouldShow end function Visuals.
-setShowSkeleton(self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end
-function Visuals.setShowHealthbar(self,shouldShow)State.settings.
-shouldShowHealthbar=shouldShow end function Visuals.setShowHighlight(self,
-shouldShow)State.settings.shouldShowHighlight=shouldShow if not shouldShow then
-Helpers.clearHighlights()end end function Visuals.setShowTeammates(self,
-shouldShow)State.settings.shouldShowTeammates=shouldShow end function Visuals.
-setBoxColor(self,color)State.settings.boxColor=color end function Visuals.
-setTextColor(self,color)State.settings.textColor=color end function Visuals.
-setWeaponColor(self,color)State.settings.weaponColor=color end function Visuals.
-setDistanceColor(self,color)State.settings.distanceColor=color end function
-Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=color end
-function Visuals.setHealthbarColor(self,color)State.settings.healthbarColor=
-color end function Visuals.setHealthbarOutlineColor(self,color)State.settings.
-healthbarOutlineColor=color end function Visuals.setNameOutlineColor(self,color)
-State.settings.nameOutlineColor=color end function Visuals.setWeaponOutlineColor
-(self,color)State.settings.weaponOutlineColor=color end function Visuals.
-setDistanceOutlineColor(self,color)State.settings.distanceOutlineColor=color end
-function Visuals.setBoxOutlineColor(self,color)State.settings.boxOutlineColor=
-color end function Visuals.setSkeletonOutlineColor(self,color)State.settings.
-skeletonOutlineColor=color end function Visuals.setHighlightFill(self,color)
-State.settings.highlightFill=color end function Visuals.setHighlightOutline(self
-,color)State.settings.highlightOutline=color end function Visuals.
-setBoxThickness(self,value)State.settings.boxThickness=value end function
-Visuals.setSkeletonThickness(self,value)State.settings.skeletonThickness=value
-end function Visuals.setTextSize(self,value)State.settings.textSize=value end
-function Visuals.setOutline(self,isEnabled)State.settings.shouldOutline=
-isEnabled end function Visuals.setOverrideCheck(self,check)State.overrideCheck=
-check end function Visuals.setCustomHitSoundEnabled(self,isEnabled)State.
-settings.isCustomHitSoundEnabled=isEnabled end function Visuals.setHitSoundId(
-self,id)State.settings.hitSoundId=id end function Visuals.setNoHurtEffectEnabled
-(self,isEnabled)State.settings.isNoHurtEffectEnabled=isEnabled end return
-Visuals end function __DARKLUA_BUNDLE_MODULES.q()local v=
-__DARKLUA_BUNDLE_MODULES.cache.q if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.q=v end return v.c end end do local function
-__modImpl()local Constants={DEFAULT_FLY_SPEED=50,INPUT_MAP={[Enum.KeyCode.W]=
-'forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]='left',[Enum.KeyCode.D]=
-'right',[Enum.KeyCode.Space]='up',[Enum.KeyCode.LeftControl]='down'}}return
-Constants end function __DARKLUA_BUNDLE_MODULES.r()local v=
-__DARKLUA_BUNDLE_MODULES.cache.r if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.r=v end return v.c end end do local function
-__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.s()local v=
-__DARKLUA_BUNDLE_MODULES.cache.s if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.s=v end return v.c end end do local function
-__modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.r()local Types=
-__DARKLUA_BUNDLE_MODULES.s()local _maid=nil local _signals={}local _state={
+.g()local ESP_RENDER_INTERVAL=Constants.ESP_RENDER_INTERVAL local Visuals={}
+Visuals.__index=Visuals local _maid=nil local _signals={}local _state={
+lastRender=0}local function _connect()_maid:DoCleaning()local removeConn=Players
+.PlayerRemoving:Connect(function(player)Helpers.removePlayer(player)end)_maid:
+GiveTask(removeConn)local renderConn=RunService.RenderStepped:Connect(function()
+local now=os.clock()if now-_state.lastRender<ESP_RENDER_INTERVAL then return end
+_state.lastRender=now Helpers.render()end)_maid:GiveTask(renderConn)end
+local function _enable()if not ExecutorUtils.getDrawingLib()then State.isEnabled
+=false return end _connect()end local function _disable()_maid:DoCleaning()
+Helpers.clearAll()end function Visuals.init(self,client)State.client=client
+State.logger=client.Logger _maid=Maid.new()end function Visuals.Destroy(self)
+State.isEnabled=false _disable()end function Visuals.toggle(self,isEnabled)if
+State.isEnabled==isEnabled then return end State.isEnabled=isEnabled if
+isEnabled then _enable()else _disable()end end function Visuals.setEspEnabled(
+self,isEnabled)State.settings.isEspEnabled=isEnabled if not isEnabled then
+Helpers.clearAll()end end function Visuals.setShowNames(self,shouldShow)State.
+settings.shouldShowNames=shouldShow end function Visuals.setShowWeapon(self,
+shouldShow)State.settings.shouldShowWeapon=shouldShow end function Visuals.
+setShowDistance(self,shouldShow)State.settings.shouldShowDistance=shouldShow end
+function Visuals.setShowBoxes(self,shouldShow)State.settings.shouldShowBoxes=
+shouldShow end function Visuals.setShowSkeleton(self,shouldShow)State.settings.
+shouldShowSkeleton=shouldShow end function Visuals.setShowHealthbar(self,
+shouldShow)State.settings.shouldShowHealthbar=shouldShow end function Visuals.
+setShowHighlight(self,shouldShow)State.settings.shouldShowHighlight=shouldShow
+if not shouldShow then Helpers.clearHighlights()end end function Visuals.
+setShowTeammates(self,shouldShow)State.settings.shouldShowTeammates=shouldShow
+end function Visuals.setBoxColor(self,color)State.settings.boxColor=color end
+function Visuals.setTextColor(self,color)State.settings.textColor=color end
+function Visuals.setWeaponColor(self,color)State.settings.weaponColor=color end
+function Visuals.setDistanceColor(self,color)State.settings.distanceColor=color
+end function Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=
+color end function Visuals.setHealthbarColor(self,color)State.settings.
+healthbarColor=color end function Visuals.setHealthbarOutlineColor(self,color)
+State.settings.healthbarOutlineColor=color end function Visuals.
+setNameOutlineColor(self,color)State.settings.nameOutlineColor=color end
+function Visuals.setWeaponOutlineColor(self,color)State.settings.
+weaponOutlineColor=color end function Visuals.setDistanceOutlineColor(self,color
+)State.settings.distanceOutlineColor=color end function Visuals.
+setBoxOutlineColor(self,color)State.settings.boxOutlineColor=color end function
+Visuals.setSkeletonOutlineColor(self,color)State.settings.skeletonOutlineColor=
+color end function Visuals.setHighlightFill(self,color)State.settings.
+highlightFill=color end function Visuals.setHighlightOutline(self,color)State.
+settings.highlightOutline=color end function Visuals.setBoxThickness(self,value)
+State.settings.boxThickness=value end function Visuals.setSkeletonThickness(self
+,value)State.settings.skeletonThickness=value end function Visuals.setTextSize(
+self,value)State.settings.textSize=value end function Visuals.setOutline(self,
+isEnabled)State.settings.shouldOutline=isEnabled end function Visuals.
+setOverrideCheck(self,check)State.overrideCheck=check end return Visuals end
+function __DARKLUA_BUNDLE_MODULES.k()local v=__DARKLUA_BUNDLE_MODULES.cache.k if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.k=v end return v.c
+end end do local function __modImpl()local Constants={DEFAULT_FLY_SPEED=50,
+INPUT_MAP={[Enum.KeyCode.W]='forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]=
+'left',[Enum.KeyCode.D]='right',[Enum.KeyCode.Space]='up',[Enum.KeyCode.
+LeftControl]='down'}}return Constants end function __DARKLUA_BUNDLE_MODULES.l()
+local v=__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.l=v end return v.c end end do local function
+__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.m()local v=
+__DARKLUA_BUNDLE_MODULES.cache.m if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.m=v end return v.c end end do local function
+__modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.l()local Types=
+__DARKLUA_BUNDLE_MODULES.m()local _maid=nil local _signals={}local _state={
 client=nil,logger=nil,character=nil,humanoid=nil,rootPart=nil,isFlyEnabled=false
 ,isNoclipEnabled=false,isWalkSpeedEnabled=false,isJumpPowerEnabled=false,
 walkSpeedValue=16,jumpPowerValue=50,flySpeed=Constants.DEFAULT_FLY_SPEED,
@@ -641,10 +431,10 @@ noclipParts={},characterMaid=nil,input={forward=0,back=0,left=0,right=0,up=0,
 down=0},isSlideBoostEnabled=false,slideBoostMultiplier=1,spoofDevice='None',
 isSpoofDeviceEnabled=false,isAntiFlashEnabled=false,isSoundSpammerEnabled=false,
 soundSpammerType='DoubleJump'}return _state end function
-__DARKLUA_BUNDLE_MODULES.t()local v=__DARKLUA_BUNDLE_MODULES.cache.t if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.t=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
 do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-Constants=__DARKLUA_BUNDLE_MODULES.r()local State=__DARKLUA_BUNDLE_MODULES.t()
+Constants=__DARKLUA_BUNDLE_MODULES.l()local State=__DARKLUA_BUNDLE_MODULES.n()
 local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}local
 _state={cachedNoclipParts={}}function Helpers.resetInput()State.input={forward=0
 ,back=0,left=0,right=0,up=0,down=0}end function Helpers.cacheDefaults(humanoid)
@@ -745,13 +535,36 @@ not remotes then return nil end local replication=remotes:WaitForChild(
 'Replication',5)if not replication then return nil end local fighter=replication
 :WaitForChild('Fighter',5)if not fighter then return nil end return fighter:
 WaitForChild('PlayMechanicsSound',5)end return Helpers end function
-__DARKLUA_BUNDLE_MODULES.u()local v=__DARKLUA_BUNDLE_MODULES.cache.u if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end
 do local function __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
-local HookUtils=__DARKLUA_BUNDLE_MODULES.k()local State=__DARKLUA_BUNDLE_MODULES
-.t()local Helpers=__DARKLUA_BUNDLE_MODULES.u()local PlayerMods={}PlayerMods.
-__index=PlayerMods local _maid=nil local _signals={}local _state={lastSoundSpam=
-0}function PlayerMods.setup(maid)_maid=maid local checkcaller=ExecutorUtils.
+local HookUtils={}HookUtils.__index=HookUtils local _maid=nil local _state={}
+local _signals={}function HookUtils.safeHook(targetTable,targetKey,replacement,
+logger,maid)local targetFunc=targetTable[targetKey]if not targetFunc or type(
+targetFunc)~='function'then return nil end local hookfunction=ExecutorUtils.
+getGlobal('hookfunction')or ExecutorUtils.getGlobal('replaceclosure')local
+newcclosure=ExecutorUtils.getGlobal('newcclosure')or function(f)return f end
+local wrapped=newcclosure(replacement)if hookfunction then local success,old=
+pcall(function()return hookfunction(targetFunc,wrapped)end)if success then if
+maid then maid:GiveTask(function()local restoreHook=ExecutorUtils.getGlobal(
+'hookfunction')or ExecutorUtils.getGlobal('replaceclosure')if restoreHook then
+pcall(function()restoreHook(targetFunc,old)end)else targetTable[targetKey]=old
+end end)end return old end if logger and logger.warnUnsupported then logger:
+warnUnsupported('hookfunction')elseif logger then logger:warn(
+[[This executor does not support 'hookfunction'. Some features may not work as expected.]]
+)end else if logger and logger.warnUnsupported then logger:warnUnsupported(
+'hookfunction')elseif logger then logger:warn(
+[[This executor does not support 'hookfunction'. Some features may not work as expected.]]
+)end end targetTable[targetKey]=wrapped if maid then maid:GiveTask(function()if
+targetTable[targetKey]==wrapped then targetTable[targetKey]=targetFunc end end)
+end return targetFunc end return HookUtils end function __DARKLUA_BUNDLE_MODULES
+.p()local v=__DARKLUA_BUNDLE_MODULES.cache.p if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.p=v end return v.c end end do local function
+__modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=
+__DARKLUA_BUNDLE_MODULES.p()local State=__DARKLUA_BUNDLE_MODULES.n()local
+Helpers=__DARKLUA_BUNDLE_MODULES.o()local PlayerMods={}PlayerMods.__index=
+PlayerMods local _maid=nil local _signals={}local _state={lastSoundSpam=0}
+function PlayerMods.setup(maid)_maid=maid local checkcaller=ExecutorUtils.
 getGlobal('checkcaller')or function()return false end local isRunning=true if
 _maid then _maid:GiveTask(function()isRunning=false end)end task.spawn(function(
 )if not isRunning then return end local replicatedClassMod=Helpers.
@@ -777,16 +590,16 @@ isAntiFlashEnabled then return end return oldAttemptToFlash(self,...)end,State.
 logger,_maid)local oldFlash oldFlash=HookUtils.safeHook(flashedMod,'Flash',
 function(self,...)if not checkcaller()and State.isAntiFlashEnabled then return
 end return oldFlash(self,...)end,State.logger,_maid)end end)end return
-PlayerMods end function __DARKLUA_BUNDLE_MODULES.v()local v=
-__DARKLUA_BUNDLE_MODULES.cache.v if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end do local function
+PlayerMods end function __DARKLUA_BUNDLE_MODULES.q()local v=
+__DARKLUA_BUNDLE_MODULES.cache.q if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.q=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
 GetService('RunService')local UserInputService=game:GetService(
 'UserInputService')local Workspace=game:GetService('Workspace')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.u()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.t()
-local Types=__DARKLUA_BUNDLE_MODULES.s()local PlayerMods=
-__DARKLUA_BUNDLE_MODULES.v()local NOCLIP_UPDATE_INTERVAL=0.1 local Player={}
+__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.o()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.n()
+local Types=__DARKLUA_BUNDLE_MODULES.m()local PlayerMods=
+__DARKLUA_BUNDLE_MODULES.q()local NOCLIP_UPDATE_INTERVAL=0.1 local Player={}
 Player.__index=Player local _maid=nil local _signals={}local _state={
 lastNoclipUpdate=0,hasRenderLoop=false,hasSteppedLoop=false}local function
 _connect()_maid:DoCleaning()local function _bindCharacter()if State.
@@ -861,36 +674,170 @@ Player.setAntiFlashEnabled(self,isEnabled)State.isAntiFlashEnabled=isEnabled end
 function Player.setSoundSpammerEnabled(self,isEnabled)State.
 isSoundSpammerEnabled=isEnabled end function Player.setSoundSpammerType(self,
 soundType)State.soundSpammerType=soundType end return Player end function
-__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
-do local function __modImpl()local CollectionService=game:GetService(
-'CollectionService')local Players=game:GetService('Players')local
-UserInputService=game:GetService('UserInputService')local Workspace=game:
-GetService('Workspace')local State=__DARKLUA_BUNDLE_MODULES.n()local Constants=
-__DARKLUA_BUNDLE_MODULES.m()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local Targeting={}Targeting.__index=
-Targeting local _maid=nil local _signals={}local _state={raycastParams=
-RaycastParams.new(),raycastFilter=table.create(2),cachedMouseLocation=Vector2.
-zero,cachedCamera=nil,lastUpdate=0}_state.raycastParams.FilterType=Enum.
-RaycastFilterType.Exclude local function _refreshCaches()local now=os.clock()if
-now-_state.lastUpdate<Constants.TARGETING_UPDATE_INTERVAL then return end _state
-.lastUpdate=now _state.cachedMouseLocation=UserInputService:GetMouseLocation()
-_state.cachedCamera=PlayerUtils.getCamera()end local function _getMouseLocation(
-)return _state.cachedMouseLocation end local function _getCamera()return(_state.
-cachedCamera or PlayerUtils.getCamera())end local function
-_getBestPartForCharacter(character,camera,localCharacter,mouseLocation)local
-bestPart=nil local shortestDistSq=math.huge local isAnyOnScreen=false local
-origin=camera.CFrame.Position local function _checkPart(part)if not part:IsA(
-'BasePart')then return end local screenPos,onScreen=camera:WorldToViewportPoint(
-part.Position)if not onScreen then if not bestPart then bestPart=part end return
-end if State.isWallCheckEnabled and not State.isManipulationEnabled then _state.
-raycastFilter[1]=localCharacter _state.raycastFilter[2]=character _state.
-raycastParams.FilterDescendantsInstances=_state.raycastFilter local direction=
-part.Position-origin local result=Workspace:Raycast(origin,direction,_state.
-raycastParams)if result then return end end isAnyOnScreen=true local dx=
-screenPos.X-mouseLocation.X local dy=screenPos.Y-mouseLocation.Y local distSq=(
-dx*dx)+(dy*dy)if distSq<shortestDistSq then shortestDistSq=distSq bestPart=part
-end end if State.isClosestPositionEnabled then for _,partName in ipairs(State.
+__DARKLUA_BUNDLE_MODULES.r()local v=__DARKLUA_BUNDLE_MODULES.cache.r if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.r=v end return v.c end end
+do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.s()
+local v=__DARKLUA_BUNDLE_MODULES.cache.s if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.s=v end return v.c end end do local function
+__modImpl()local TARGETING_UPDATE_INTERVAL=1/30 local Constants={
+TARGETING_UPDATE_INTERVAL=TARGETING_UPDATE_INTERVAL,FOV_CIRCLE_COLOR=Color3.
+fromRGB(255,255,255),FOV_CIRCLE_THICKNESS=1,FOV_CIRCLE_NUM_SIDES=64,
+MIN_AIM_SPEED=4,MAX_AIM_SPEED=40,MAX_SMOOTHNESS=1,TARGET_DROP_DELAY=0.15,
+TARGET_DROP_FOV_MULTIPLIER=1.2,AIMBOT_RENDER_STEP_NAME='CombatAimbot'}return
+Constants end function __DARKLUA_BUNDLE_MODULES.t()local v=
+__DARKLUA_BUNDLE_MODULES.cache.t if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.t=v end return v.c end end do local function
+__modImpl()local Types=__DARKLUA_BUNDLE_MODULES.s()local Constants=
+__DARKLUA_BUNDLE_MODULES.t()local _maid=nil local _signals={}local _state={
+client=nil,logger=nil,isAimbotEnabled=false,isSilentAimEnabled=false,
+isFovEnabled=true,isSilentAimFovEnabled=true,fovRadius=100,silentAimFovRadius=
+100,fovColor=Constants.FOV_CIRCLE_COLOR,silentAimFovColor=Constants.
+FOV_CIRCLE_COLOR,fovTransparency=0,silentAimFovTransparency=0,silentHitChance=
+100,targetPart='Head',isManipulationEnabled=false,isAntiKatanaEnabled=false,
+isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
+'LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg','RightUpperLeg',
+'LowerTorso'},isWallCheckEnabled=false,smoothness=0,isNoRecoilEnabled=false,
+isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
+100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
+isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
+isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,target=nil,silentTarget=nil
+,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
+cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
+false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
+mouseBehavior=nil,mouseDeltaSensitivity=nil}return _state end function
+__DARKLUA_BUNDLE_MODULES.u()local v=__DARKLUA_BUNDLE_MODULES.cache.u if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+UserInputService=game:GetService('UserInputService')local ReplicatedStorage=game
+:GetService('ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()
+local State=__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES
+.t()local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}
+local _state={}function Helpers.getUtility()local modules=ReplicatedStorage:
+WaitForChild('Modules',5)if not modules then return nil end local utility=
+modules:WaitForChild('Utility',5)if not utility then return nil end local
+success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(utility)end)return success and result or nil end function Helpers
+.getGameplayUtility()local modules=ReplicatedStorage:WaitForChild('Modules',5)if
+not modules then return nil end local utility=modules:WaitForChild(
+'GameplayUtility',5)if not utility then return nil end local success,result=
+pcall(function()local dynamicRequire=require return dynamicRequire(utility)end)
+return success and result or nil end function Helpers.getCameraShaker()local
+localPlayer=Players.LocalPlayer if not localPlayer then return nil end local
+playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
+then return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return nil end local cameraShaker=modules:WaitForChild(
+'CameraShaker',5)if not cameraShaker then return nil end local success,result=
+pcall(function()local dynamicRequire=require return dynamicRequire(cameraShaker)
+end)return success and result or nil end function Helpers.applyInputLock(
+isLocked)if isLocked and State.smoothness<Constants.MAX_SMOOTHNESS then return
+end if isLocked==State.isInputLocked then return end if isLocked then if State.
+mouseBehavior==nil then State.mouseBehavior=UserInputService.MouseBehavior end
+if State.mouseDeltaSensitivity==nil then State.mouseDeltaSensitivity=
+UserInputService.MouseDeltaSensitivity end UserInputService.MouseBehavior=Enum.
+MouseBehavior.LockCenter UserInputService.MouseDeltaSensitivity=0 else local
+restoreBehavior=State.mouseBehavior or Enum.MouseBehavior.Default local
+restoreSensitivity=State.mouseDeltaSensitivity or 1 UserInputService.
+MouseBehavior=restoreBehavior UserInputService.MouseDeltaSensitivity=
+restoreSensitivity State.mouseBehavior=nil State.mouseDeltaSensitivity=nil end
+State.isInputLocked=isLocked end function Helpers.isMaxSmoothness()return State.
+smoothness>=Constants.MAX_SMOOTHNESS end function Helpers.fetchCameraController(
+logger)if State.cameraController then return end local player=PlayerUtils.
+getLocalPlayer()if not player then return end local playerScripts=player:
+WaitForChild('PlayerScripts')if not playerScripts then return end local
+controllers=playerScripts:WaitForChild('Controllers')if not controllers then
+return end local camControllerScript=controllers:WaitForChild('CameraController'
+)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
+success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(camControllerScript)end)if success then State.cameraController=
+result else if logger then logger:error('Failed CameraController',result)end end
+end end function Helpers.fetchFighterController(logger)if State.
+fighterController then return end local player=PlayerUtils.getLocalPlayer()if
+not player then return end local playerScripts=player:WaitForChild(
+'PlayerScripts',10)if not playerScripts then return end local controllers=
+playerScripts:WaitForChild('Controllers',10)if not controllers then return end
+local fighterControllerScript=controllers:WaitForChild('FighterController',5)if
+fighterControllerScript and fighterControllerScript:IsA('ModuleScript')then
+local success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(fighterControllerScript)end)if success then State.
+fighterController=result end end end function Helpers.getGunModule()local player
+=PlayerUtils.getLocalPlayer()if not player then return nil end local
+playerScripts=player:WaitForChild('PlayerScripts',5)if not playerScripts then
+return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return nil end local itemTypes=modules:WaitForChild('ItemTypes',5)
+if not itemTypes then return nil end local gun=itemTypes:WaitForChild('Gun',5)if
+not gun then return nil end local success,result=pcall(function()local
+dynamicRequire=require return dynamicRequire(gun)end)return success and result
+or nil end function Helpers.getClientItemModule()local player=PlayerUtils.
+getLocalPlayer()if not player then return nil end local playerScripts=player:
+WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
+modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
+end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
+,5)if not clientReplicatedClasses then return nil end local clientFighter=
+clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
+return nil end local clientItem=clientFighter:WaitForChild('ClientItem',5)if not
+clientItem then return nil end local success,result=pcall(function()local
+dynamicRequire=require return dynamicRequire(clientItem)end)return success and
+result or nil end function Helpers.getViewModelModule()local player=PlayerUtils.
+getLocalPlayer()if not player then return nil end local playerScripts=player:
+WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
+modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
+end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
+,5)if not clientReplicatedClasses then return nil end local clientFighter=
+clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
+return nil end local clientItemScript=clientFighter:WaitForChild('ClientItem',5)
+if not clientItemScript then return nil end local viewModel=clientItemScript:
+WaitForChild('ClientViewModel',5)if not viewModel then return nil end local
+success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(viewModel)end)return success and result or nil end function
+Helpers.getReplicatedClassModule()local replicatedStorage=game:GetService(
+'ReplicatedStorage')local modules=replicatedStorage:WaitForChild('Modules',5)if
+not modules then return nil end local replicatedClass=modules:WaitForChild(
+'ReplicatedClass',5)if not replicatedClass then return nil end local success,
+result=pcall(function()local dynamicRequire=require return dynamicRequire(
+replicatedClass)end)return success and result or nil end function Helpers.
+getMeleeModule()local player=PlayerUtils.getLocalPlayer()if not player then
+return nil end local playerScripts=player:WaitForChild('PlayerScripts',5)if not
+playerScripts then return nil end local modules=playerScripts:WaitForChild(
+'Modules',5)if not modules then return nil end local itemTypes=modules:
+WaitForChild('ItemTypes',5)if not itemTypes then return nil end local melee=
+itemTypes:WaitForChild('Melee',5)if not melee then return nil end local success,
+result=pcall(function()local dynamicRequire=require return dynamicRequire(melee)
+end)return success and result or nil end function Helpers.getItemModules()local
+player=PlayerUtils.getLocalPlayer()if not player then return nil end local
+playerScripts=player:WaitForChild('PlayerScripts',5)if not playerScripts then
+return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return nil end return modules:WaitForChild('Items',5)end return
+Helpers end function __DARKLUA_BUNDLE_MODULES.v()local v=
+__DARKLUA_BUNDLE_MODULES.cache.v if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c end end do local function
+__modImpl()local CollectionService=game:GetService('CollectionService')local
+Players=game:GetService('Players')local UserInputService=game:GetService(
+'UserInputService')local Workspace=game:GetService('Workspace')local State=
+__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
+.e()local Targeting={}Targeting.__index=Targeting local _maid=nil local _signals
+={}local _state={raycastParams=RaycastParams.new(),raycastFilter=table.create(2)
+,cachedMouseLocation=Vector2.zero,cachedCamera=nil,lastUpdate=0}_state.
+raycastParams.FilterType=Enum.RaycastFilterType.Exclude local function
+_refreshCaches()local now=os.clock()if now-_state.lastUpdate<Constants.
+TARGETING_UPDATE_INTERVAL then return end _state.lastUpdate=now _state.
+cachedMouseLocation=UserInputService:GetMouseLocation()_state.cachedCamera=
+PlayerUtils.getCamera()end local function _getMouseLocation()return _state.
+cachedMouseLocation end local function _getCamera()return(_state.cachedCamera or
+PlayerUtils.getCamera())end local function _getBestPartForCharacter(character,
+camera,localCharacter,mouseLocation)local bestPart=nil local shortestDistSq=math
+.huge local isAnyOnScreen=false local origin=camera.CFrame.Position
+local function _checkPart(part)if not part:IsA('BasePart')then return end local
+screenPos,onScreen=camera:WorldToViewportPoint(part.Position)if not onScreen
+then if not bestPart then bestPart=part end return end if State.
+isWallCheckEnabled and not State.isManipulationEnabled then _state.raycastFilter
+[1]=localCharacter _state.raycastFilter[2]=character _state.raycastParams.
+FilterDescendantsInstances=_state.raycastFilter local direction=part.Position-
+origin local result=Workspace:Raycast(origin,direction,_state.raycastParams)if
+result then return end end isAnyOnScreen=true local dx=screenPos.X-mouseLocation
+.X local dy=screenPos.Y-mouseLocation.Y local distSq=(dx*dx)+(dy*dy)if distSq<
+shortestDistSq then shortestDistSq=distSq bestPart=part end end if State.
+isClosestPositionEnabled then for _,partName in ipairs(State.
 closestPositionWhitelist)do local p=character:FindFirstChild(partName)if p then
 _checkPart(p)end end else local p=character:FindFirstChild(State.targetPart)or
 character:FindFirstChild('Head')if p then _checkPart(p)end end return bestPart,
@@ -959,11 +906,11 @@ local bestPart,isAnyOnScreen,distSq=_getBestPartForCharacter(entity,camera,
 localPlayer.Character,mouseLocation)if not isAnyOnScreen or not bestPart then
 continue end if distSq<closestDistSq then closest=bestPart closestDistSq=distSq
 end end return closest end return Targeting end function
-__DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
 do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-State=__DARKLUA_BUNDLE_MODULES.n()local Constants=__DARKLUA_BUNDLE_MODULES.m()
-local Helpers=__DARKLUA_BUNDLE_MODULES.o()local Aimbot={}Aimbot.__index=Aimbot
+State=__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()
+local Helpers=__DARKLUA_BUNDLE_MODULES.v()local Aimbot={}Aimbot.__index=Aimbot
 local _maid=nil local _signals={}local _state={}function Aimbot.aimAt(target,
 bestPart,deltaTime)if not target.Character then return end local targetPos=(
 bestPart).Position local camera=PlayerUtils.getCamera()local currentCFrame=
@@ -980,12 +927,12 @@ currentRot=(State.cameraController.Rotation)local speed=Constants.MIN_AIM_SPEED+
 alpha=1-math.exp(-speed*deltaTime)local newRot=currentRot:Lerp(targetRotation,
 alpha)State.cameraController:SetRotation(newRot)else State.cameraController:
 SetRotation(targetRotation)end end return Aimbot end function
-__DARKLUA_BUNDLE_MODULES.y()local v=__DARKLUA_BUNDLE_MODULES.cache.y if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end
 do local function __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
-local HookUtils=__DARKLUA_BUNDLE_MODULES.k()local PlayerUtils=
-__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.n()local
-Helpers=__DARKLUA_BUNDLE_MODULES.o()local Targeting=__DARKLUA_BUNDLE_MODULES.x()
+local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local PlayerUtils=
+__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.u()local
+Helpers=__DARKLUA_BUNDLE_MODULES.v()local Targeting=__DARKLUA_BUNDLE_MODULES.w()
 local SilentAim={}SilentAim.__index=SilentAim local _maid=nil local _signals={}
 local _state={lastSilentTargetPos=nil,lastSilentOrigin=nil}local function
 _isGunAction()local debugGlobal=ExecutorUtils.getGlobal('debug')local traceback=
@@ -1027,12 +974,12 @@ cameraShaker.Presets)if mt and mt.__index then local oldIdx=mt.__index mt.
 __index=newcclosure(function(t,k)if State.isSilentAimEnabled and(k==
 'StartShooting'or k=='')then return nil end return oldIdx(t,k)end)if _maid then
 _maid:GiveTask(function()mt.__index=oldIdx end)end end end end)end return
-SilentAim end function __DARKLUA_BUNDLE_MODULES.z()local v=
-__DARKLUA_BUNDLE_MODULES.cache.z if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end do local function
+SilentAim end function __DARKLUA_BUNDLE_MODULES.y()local v=
+__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=
-__DARKLUA_BUNDLE_MODULES.k()local State=__DARKLUA_BUNDLE_MODULES.n()local
-Helpers=__DARKLUA_BUNDLE_MODULES.o()local GunMods={}GunMods.__index=GunMods
+__DARKLUA_BUNDLE_MODULES.p()local State=__DARKLUA_BUNDLE_MODULES.u()local
+Helpers=__DARKLUA_BUNDLE_MODULES.v()local GunMods={}GunMods.__index=GunMods
 local _maid=nil local _signals={}local _state={oldShootCooldowns={}}function
 GunMods.setup(maid)_maid=maid local checkcaller=ExecutorUtils.getGlobal(
 'checkcaller')or function()return false end local isRunning=true if _maid then
@@ -1084,13 +1031,13 @@ info.ShootSpread=origSpread info.AimSpreadMultiplier=origAimML if info.
 QuickShotSpread then info.QuickShotSpread=origQuick end if State.
 isNoSpreadEnabled and#returns>=4 then returns[4]=true end return unpack(returns)
 end,State.logger,_maid)end State.isGunModsHooked=true end)end return GunMods end
-function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.z()local v=__DARKLUA_BUNDLE_MODULES.cache.z if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c
 end end do local function __modImpl()local Players=game:GetService('Players')
-local State=__DARKLUA_BUNDLE_MODULES.n()local TeamUtils=__DARKLUA_BUNDLE_MODULES
+local State=__DARKLUA_BUNDLE_MODULES.u()local TeamUtils=__DARKLUA_BUNDLE_MODULES
 .e()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.d()local HookUtils=__DARKLUA_BUNDLE_MODULES.k()local
-Helpers=__DARKLUA_BUNDLE_MODULES.o()local AURA_UPDATE_INTERVAL=0.03 local
+__DARKLUA_BUNDLE_MODULES.d()local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local
+Helpers=__DARKLUA_BUNDLE_MODULES.v()local AURA_UPDATE_INTERVAL=0.03 local
 AURA_IDLE_INTERVAL=0.15 local MeleeMods={}MeleeMods.__index=MeleeMods local
 _maid=nil local _signals={}local _state={cachedLocalPlayer=nil,cachedLocalRoot=
 nil,lastLocalCacheUpdate=0,lastFighterFetch=0,hookedItems={},checkcaller=nil}
@@ -1168,11 +1115,11 @@ EquippedItem if equipped and(equipped.Info and not equipped.Info.IsGun)then if
 equipped.StartShooting then equipped:Input('StartShooting')end end end end end
 task.wait(if State.isMeleeAuraEnabled or State.isTeleportAuraEnabled then
 AURA_UPDATE_INTERVAL else AURA_IDLE_INTERVAL)end end)end return MeleeMods end
-function __DARKLUA_BUNDLE_MODULES.B()local v=__DARKLUA_BUNDLE_MODULES.cache.B if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
 end end do local function __modImpl()local UserInputService=game:GetService(
-'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.n()local Constants=
-__DARKLUA_BUNDLE_MODULES.m()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
+'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.u()local Constants=
+__DARKLUA_BUNDLE_MODULES.t()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
 local Visuals={}local _maid=nil local _signals={}local _state={}local function
 _updateCircle(circleId,isEnabled,radius,color,transparency,mouseLocation)local
 lib=ExecutorUtils.getDrawingLib()if not lib then return end local stateAny=State
@@ -1186,17 +1133,17 @@ UserInputService:GetMouseLocation()_updateCircle('fovCircle',State.isFovEnabled,
 State.fovRadius,State.fovColor,State.fovTransparency,mouseLocation)
 _updateCircle('silentAimFovCircle',State.isSilentAimFovEnabled,State.
 silentAimFovRadius,State.silentAimFovColor,State.silentAimFovTransparency,
-mouseLocation)end return Visuals end function __DARKLUA_BUNDLE_MODULES.C()local
-v=__DARKLUA_BUNDLE_MODULES.cache.C if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end do local function
+mouseLocation)end return Visuals end function __DARKLUA_BUNDLE_MODULES.B()local
+v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end do local function
 __modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.n()local
-Constants=__DARKLUA_BUNDLE_MODULES.m()local Helpers=__DARKLUA_BUNDLE_MODULES.o()
-local Targeting=__DARKLUA_BUNDLE_MODULES.x()local Aimbot=
-__DARKLUA_BUNDLE_MODULES.y()local Types=__DARKLUA_BUNDLE_MODULES.l()local
-SilentAim=(__DARKLUA_BUNDLE_MODULES.z())local GunMods=(__DARKLUA_BUNDLE_MODULES.
-A())local MeleeMods=(__DARKLUA_BUNDLE_MODULES.B())local Visuals=(
-__DARKLUA_BUNDLE_MODULES.C())local Combat={}Combat.__index=Combat local _maid=
+__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.u()local
+Constants=__DARKLUA_BUNDLE_MODULES.t()local Helpers=__DARKLUA_BUNDLE_MODULES.v()
+local Targeting=__DARKLUA_BUNDLE_MODULES.w()local Aimbot=
+__DARKLUA_BUNDLE_MODULES.x()local Types=__DARKLUA_BUNDLE_MODULES.s()local
+SilentAim=(__DARKLUA_BUNDLE_MODULES.y())local GunMods=(__DARKLUA_BUNDLE_MODULES.
+z())local MeleeMods=(__DARKLUA_BUNDLE_MODULES.A())local Visuals=(
+__DARKLUA_BUNDLE_MODULES.B())local Combat={}Combat.__index=Combat local _maid=
 nil local _signals={}local _state={}local function _connect()_maid:DoCleaning()
 task.spawn(function()Helpers.fetchCameraController(State.logger)end)SilentAim.
 setup(_maid)GunMods.setup(_maid)MeleeMods.setup(_maid)RunService:
@@ -1259,8 +1206,8 @@ State.meleeSkillCooldownMultiplier=multiplier end function Combat.
 setMeleeAuraEnabled(self,isEnabled)State.isMeleeAuraEnabled=isEnabled end
 function Combat.setTeleportAuraEnabled(self,isEnabled)State.
 isTeleportAuraEnabled=isEnabled end return Combat end function
-__DARKLUA_BUNDLE_MODULES.D()local v=__DARKLUA_BUNDLE_MODULES.cache.D if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.C()local v=__DARKLUA_BUNDLE_MODULES.cache.C if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end
 do local function __modImpl()local CombatTab={}CombatTab.__index=CombatTab local
 _maid=nil local _state={}local _signals={}function CombatTab.Build(tabs,context)
 local client=context.client local updateControlBindings=context.
@@ -1361,9 +1308,9 @@ setMeleeAttackCooldownMultiplier then mod:setMeleeAttackCooldownMultiplier(value
 [[Skill cooldown multiplier. Lower values reduce skill cooldowns.]],Compact=true
 ,Callback=function(value)local mod=client.Modules.Combat if mod and mod.
 setMeleeSkillCooldownMultiplier then mod:setMeleeSkillCooldownMultiplier(value)
-end end})end return CombatTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
-__DARKLUA_BUNDLE_MODULES.cache.E if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end do local function
+end end})end return CombatTab end function __DARKLUA_BUNDLE_MODULES.D()local v=
+__DARKLUA_BUNDLE_MODULES.cache.D if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end do local function
 __modImpl()local VisualsTab={}VisualsTab.__index=VisualsTab local _maid=nil
 local _state={}local _signals={}function VisualsTab.Build(tabs,context)local
 client=context.client local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup
@@ -1438,20 +1385,7 @@ mod=client.Modules.Visuals if mod and mod.setHighlightFill then mod:
 setHighlightFill(value)end end}):AddColorPicker('ESPHighlightOutline',{Default=
 Color3.new(1,1,1),Title='Outline Color',Tooltip='Outline color for Highlight.',
 Callback=function(value)local mod=client.Modules.Visuals if mod and mod.
-setHighlightOutline then mod:setHighlightOutline(value)end end})local
-hitEffectsGroup=tabs.visuals:AddRightGroupbox('Hit Effects')hitEffectsGroup:
-AddToggle('VisualsCustomHitSound',{Text='Custom Hit Sound',Default=false,Tooltip
-='Play a custom sound when hitting an enemy.',Callback=function(state)local mod=
-client.Modules.Visuals if mod and mod.setCustomHitSoundEnabled then mod:
-setCustomHitSoundEnabled(state)end end})hitEffectsGroup:AddInput(
-'VisualsHitSoundId',{Default='rbxassetid://160432334',Numeric=false,Finished=
-true,Text='Hit Sound ID',Tooltip='The sound ID to play on hit.',Placeholder=
-'rbxassetid://...',Callback=function(value)local mod=client.Modules.Visuals if
-mod and mod.setHitSoundId then mod:setHitSoundId(value)end end})hitEffectsGroup:
-AddToggle('VisualsNoHurtEffect',{Text='No Hurt Effect',Default=false,Tooltip=
-[[Disables the blood/sparks and red flash on ENEMIES when you hit them.]],
-Callback=function(state)local mod=client.Modules.Visuals if mod and mod.
-setNoHurtEffectEnabled then mod:setNoHurtEffectEnabled(state)end end})espGroup:
+setHighlightOutline then mod:setHighlightOutline(value)end end})espGroup:
 AddToggle('ESPBetterBounds',{Text='Better Bounds',Default=false,Tooltip=
 'Reserved for future bounds improvements.',Callback=function(_stateValue)end})
 espGroup:AddToggle('ESPShowTeammates',{Text='Show Teammates',Default=true,
@@ -1464,51 +1398,53 @@ setSkeletonThickness then mod:setSkeletonThickness(value)end end})espGroup:
 AddSlider('ESPTextSize',{Text='Text Size',Default=12,Min=10,Max=24,Rounding=0,
 Tooltip='Size of ESP text.',Compact=true,Callback=function(value)local mod=
 client.Modules.Visuals if mod and mod.setTextSize then mod:setTextSize(value)end
-end})end return VisualsTab end function __DARKLUA_BUNDLE_MODULES.F()local v=
-__DARKLUA_BUNDLE_MODULES.cache.F if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.F=v end return v.c end end do local function
+end})end return VisualsTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
+__DARKLUA_BUNDLE_MODULES.cache.E if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end do local function
 __modImpl()local UiSettingsTab={}UiSettingsTab.__index=UiSettingsTab local _maid
 =nil local _state={}local _signals={}function UiSettingsTab.Build(tabs,context)
 local library=context.library local themeManager=context.themeManager local
 saveManager=context.saveManager local unloadAll=context.unloadAll local
 setKeybindListVisible=context.setKeybindListVisible local setWatermarkVisible=
 context.setWatermarkVisible local updateKeybindList=context.updateKeybindList
-local menuGroup=tabs.uiSettings:AddLeftGroupbox('Menu')menuGroup:AddButton(
-'Unload',function()unloadAll()end)menuGroup:AddLabel('Menu bind'):AddKeyPicker(
-'MenuKeybind',{Default='End',NoUI=true,Text='Menu keybind'})menuGroup:
-AddDivider()menuGroup:AddToggle('UIShowKeybindList',{Text='Keybind List',Default
-=true,Tooltip='Shows the keybind list panel.',Callback=function(isVisible)
+local setKeybindListMode=context.setKeybindListMode local menuGroup=tabs.
+uiSettings:AddLeftGroupbox('Menu')menuGroup:AddButton('Unload',function()
+unloadAll()end)menuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{
+Default='End',NoUI=true,Text='Menu keybind'})menuGroup:AddDivider()menuGroup:
+AddToggle('UIShowKeybindList',{Text='Keybind List',Default=true,Tooltip=
+'Shows the keybind list panel.',Callback=function(isVisible)
 setKeybindListVisible(isVisible)end})menuGroup:AddToggle('UIShowWatermark',{Text
 ='Watermark',Default=true,Tooltip='Shows the watermark display.',Callback=
 function(isVisible)setWatermarkVisible(isVisible)end})menuGroup:AddDropdown(
 'UIKeybindListMode',{Values={'Active','Toggle','All'},Default='Active',Multi=
 false,Text='Keybind Mode',Tooltip='Filter for the keybind list.',Callback=
-function()updateKeybindList()end})local getfenvAny=getfenv local env=(
-getfenvAny(0))local getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and
-getgenvFunc().Options)or _G.Options if GlobalOptions and GlobalOptions.
-MenuKeybind then library.ToggleKeybind=GlobalOptions.MenuKeybind end
-themeManager:SetLibrary(library)saveManager:SetLibrary(library)saveManager:
-IgnoreThemeSettings()themeManager:SetFolder('Blossom')saveManager:SetFolder(
-'Blossom')saveManager:BuildConfigSection(tabs.uiSettings)themeManager:
-ApplyToTab(tabs.uiSettings)end return UiSettingsTab end function
-__DARKLUA_BUNDLE_MODULES.G()local v=__DARKLUA_BUNDLE_MODULES.cache.G if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.G=v end return v.c end end
-do local function __modImpl()local MiscTab={}MiscTab.__index=MiscTab local _maid
-=nil local _state={}local _signals={}function MiscTab.Build(tabs,context)local
-client=context.client local library=context.library local updateControlBindings=
-context.updateControlBindings local setNotifyMuted=context.setNotifyMuted local
-playerGroup=tabs.misc:AddLeftGroupbox('Player')local exploitsGroup=tabs.misc:
-AddRightGroupbox('Exploits')local playerFlyToggle=playerGroup:AddToggle(
-'PlayerFly',{Text='Fly',Default=false,Tooltip='Toggle flight mode.',Callback=
-function(state)updateControlBindings()end})playerFlyToggle:AddKeyPicker(
-'PlayerFlyKeybind',{Default='F',NoUI=false,Text='Fly',SyncToggleState=false,
-Callback=function()updateControlBindings()end})playerGroup:AddSlider(
-'PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Tooltip=
-'Movement speed while flying.',Compact=true,Callback=function(value)local mod=
-client.Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(value)end
-end})local playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{Text=
-'Noclip',Default=false,Tooltip='Disable collisions for your character.',Callback
-=function(state)updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
+function(value)setKeybindListMode(value)updateKeybindList()end})local getfenvAny
+=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
+GlobalOptions=(getgenvFunc and getgenvFunc().Options)or _G.Options if
+GlobalOptions and GlobalOptions.MenuKeybind then library.ToggleKeybind=
+GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
+SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
+'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
+uiSettings)themeManager:ApplyToTab(tabs.uiSettings)end return UiSettingsTab end
+function __DARKLUA_BUNDLE_MODULES.F()local v=__DARKLUA_BUNDLE_MODULES.cache.F if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.F=v end return v.c
+end end do local function __modImpl()local MiscTab={}MiscTab.__index=MiscTab
+local _maid=nil local _state={}local _signals={}function MiscTab.Build(tabs,
+context)local client=context.client local library=context.library local
+updateControlBindings=context.updateControlBindings local setNotifyMuted=context
+.setNotifyMuted local playerGroup=tabs.misc:AddLeftGroupbox('Player')local
+exploitsGroup=tabs.misc:AddRightGroupbox('Exploits')local playerFlyToggle=
+playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=false,Tooltip=
+'Toggle flight mode.',Callback=function(state)updateControlBindings()end})
+playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text=
+'Fly',SyncToggleState=false,Callback=function()updateControlBindings()end})
+playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
+200,Rounding=0,Tooltip='Movement speed while flying.',Compact=true,Callback=
+function(value)local mod=client.Modules.Player if mod and mod.setFlySpeed then
+mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:AddToggle(
+'PlayerNoclip',{Text='Noclip',Default=false,Tooltip=
+'Disable collisions for your character.',Callback=function(state)
+updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
 'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip',SyncToggleState=
 false,Callback=function()updateControlBindings()end})local playerWalkSpeedToggle
 =playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text='Walk Speed',Default=false
@@ -1581,13 +1517,13 @@ setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
 'Silent Mode',Default=false,Tooltip=
 'Mutes UI notifications and auto-opens silently.',Callback=function(enabled)
 setNotifyMuted(library,enabled)client:setSilent(enabled)end})end return MiscTab
-end function __DARKLUA_BUNDLE_MODULES.H()local v=__DARKLUA_BUNDLE_MODULES.cache.
-H if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.H=v end return v
+end function __DARKLUA_BUNDLE_MODULES.G()local v=__DARKLUA_BUNDLE_MODULES.cache.
+G if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.G=v end return v
 .c end end do local function __modImpl()local RunService=game:GetService(
 'RunService')local Stats=game:GetService('Stats')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local CombatTab=__DARKLUA_BUNDLE_MODULES.E()local
-VisualsTab=__DARKLUA_BUNDLE_MODULES.F()local UiSettingsTab=
-__DARKLUA_BUNDLE_MODULES.G()local MiscTab=__DARKLUA_BUNDLE_MODULES.H()local
+__DARKLUA_BUNDLE_MODULES.a())local CombatTab=__DARKLUA_BUNDLE_MODULES.D()local
+VisualsTab=__DARKLUA_BUNDLE_MODULES.E()local UiSettingsTab=
+__DARKLUA_BUNDLE_MODULES.F()local MiscTab=__DARKLUA_BUNDLE_MODULES.G()local
 REPO_URL=[[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local WATERMARK_TEMPLATE='Blossom | %d fps | %d ms'local
 WATERMARK_UPDATE_INTERVAL=1 local KEYBIND_LIST_UPDATE_INTERVAL=0.2 local
@@ -1629,17 +1565,15 @@ watermark.frameCount/(now-watermark.lastSample))watermark.frameCount=0 watermark
 _getPingMs()))end local function _extractKeybindParts(text)local key,name,mode=
 text:match('^%[([^%]]+)%]%s*(.-)%s*%(([^%)]*)%)$')if key and name and mode then
 return key,name,mode end return nil,nil,nil end local function
-_getKeybindListMode()local _,options=_getLinoriaGlobals()if options then local
-option=options.UIKeybindListMode if option and option.Value then _state.
-keybindListMode=option.Value end end return _state.keybindListMode end
-local function _updateKeybindList()local library=_state.library if not library
-or not library.KeybindContainer or not library.KeybindFrame then return end
-local toggles=_getLinoriaGlobals()local mode=_getKeybindListMode()local ySize=0
-local xSize=0 for _,label in next,library.KeybindContainer:GetChildren()do if
-label:IsA('TextLabel')then local key,name,modeText=_extractKeybindParts(label.
-Text)if key and name and modeText then label.Text=string.format('[%s] %s (%s)',
-key,name,modeText)end local isVisible=true if mode=='Active'then isVisible=label
-.TextColor3==library.AccentColor elseif mode=='Toggle'then if modeText then
+_getKeybindListMode()return _state.keybindListMode end local function
+_updateKeybindList()local library=_state.library if not library or not library.
+KeybindContainer or not library.KeybindFrame then return end local toggles=
+_getLinoriaGlobals()local mode=_getKeybindListMode()local ySize=0 local xSize=0
+for _,label in next,library.KeybindContainer:GetChildren()do if label:IsA(
+'TextLabel')then local key,name,modeText=_extractKeybindParts(label.Text)if key
+and name and modeText then label.Text=string.format('[%s] %s (%s)',key,name,
+modeText)end local isVisible=true if mode=='Active'then isVisible=label.
+TextColor3==library.AccentColor elseif mode=='Toggle'then if modeText then
 isVisible=modeText=='Toggle'else local mapName=name or label.Text local toggleId
 =_state.keybindToggleMap[mapName]local toggle=toggles and toggleId and toggles[
 toggleId]isVisible=toggle and toggle.Value==true or false end end label.Visible=
@@ -1722,18 +1656,21 @@ end local function _mount()if _state.isMounted then return end _state.isMounted=
 true local logger=_state.logger local library=_loadRemote('Library.lua',logger)
 local themeManager=_loadRemote('addons/ThemeManager.lua',logger)local
 saveManager=_loadRemote('addons/SaveManager.lua',logger)_state.library=library
-_state.themeManager=themeManager _state.saveManager=saveManager
-_installSaveManagerExtensions(saveManager)local window=library:CreateWindow({
-Title='Blossom '.._state.client.Version,Center=true,AutoShow=not _state.client.
-IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:AddTab(
-'Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),uiSettings
-=window:AddTab('UI Settings')}CombatTab.Build(tabs,{client=_state.client,
-updateControlBindings=_updateControlBindings})VisualsTab.Build(tabs,{client=
-_state.client})UiSettingsTab.Build(tabs,{library=library,themeManager=
+_state.themeManager=themeManager _state.saveManager=saveManager do local _,
+options=_getLinoriaGlobals()if options and options.UIKeybindListMode and options
+.UIKeybindListMode.Value then _state.keybindListMode=options.UIKeybindListMode.
+Value end end _installSaveManagerExtensions(saveManager)local window=library:
+CreateWindow({Title='Blossom '.._state.client.Version,Center=true,AutoShow=not
+_state.client.IsSilent,TabPadding=8,MenuFadeTime=0.2})local tabs={combat=window:
+AddTab('Combat'),visuals=window:AddTab('Visuals'),misc=window:AddTab('Misc'),
+uiSettings=window:AddTab('UI Settings')}CombatTab.Build(tabs,{client=_state.
+client,updateControlBindings=_updateControlBindings})VisualsTab.Build(tabs,{
+client=_state.client})UiSettingsTab.Build(tabs,{library=library,themeManager=
 themeManager,saveManager=saveManager,unloadAll=_unloadAll,setKeybindListVisible=
 _setKeybindListVisible,setWatermarkVisible=_setWatermarkVisible,
-updateKeybindList=_updateKeybindList})MiscTab.Build(tabs,{client=_state.client,
-library=library,updateControlBindings=_updateControlBindings,setNotifyMuted=
+updateKeybindList=_updateKeybindList,setKeybindListMode=function(value)_state.
+keybindListMode=value end})MiscTab.Build(tabs,{client=_state.client,library=
+library,updateControlBindings=_updateControlBindings,setNotifyMuted=
 _setNotifyMuted,setKeybindToggleMap=function(map)_state.keybindToggleMap=map end
 ,setControlBindings=function(bindings)_state.controlBindings=bindings end})
 _updateControlBindings()_runAutoload(library,saveManager,false)
@@ -1741,22 +1678,22 @@ _syncUiVisibility()end function Interface.init(self,client)_state.client=client
 _state.logger=client.Logger _maid=Maid.new()_connect()_mount()end function
 Interface.Destroy(self)_maid:DoCleaning()if _state.library then _state.library:
 Unload()end _state.isMounted=false end return Interface end function
-__DARKLUA_BUNDLE_MODULES.I()local v=__DARKLUA_BUNDLE_MODULES.cache.I if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.I=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.H()local v=__DARKLUA_BUNDLE_MODULES.cache.H if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.H=v end return v.c end end
 do local function __modImpl()local ModuleRegistry={}ModuleRegistry.__index=
 ModuleRegistry local _maid=nil local _state={}local _signals={}function
 ModuleRegistry.getModules()return{{name='TeamUtils',loader=(
 __DARKLUA_BUNDLE_MODULES.e())},{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.
-q())},{name='Player',loader=(__DARKLUA_BUNDLE_MODULES.w())},{name='Combat',
-loader=(__DARKLUA_BUNDLE_MODULES.D())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.I())}}end return ModuleRegistry end function
-__DARKLUA_BUNDLE_MODULES.J()local v=__DARKLUA_BUNDLE_MODULES.cache.J if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.J=v end return v.c end end
+k())},{name='Player',loader=(__DARKLUA_BUNDLE_MODULES.r())},{name='Combat',
+loader=(__DARKLUA_BUNDLE_MODULES.C())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.H())}}end return ModuleRegistry end function
+__DARKLUA_BUNDLE_MODULES.I()local v=__DARKLUA_BUNDLE_MODULES.cache.I if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.I=v end return v.c end end
 end local ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:
 GetService('Players')local RunService=game:GetService('RunService')local Logger=
 __DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()local
 FastSignal=__DARKLUA_BUNDLE_MODULES.c()local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.d()local ModuleRegistry=__DARKLUA_BUNDLE_MODULES.J()
+__DARKLUA_BUNDLE_MODULES.d()local ModuleRegistry=__DARKLUA_BUNDLE_MODULES.I()
 local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/build/loader.luau]]
 local CLIENT_MODULE_NAME='Client'local Client={}Client.__index=Client local

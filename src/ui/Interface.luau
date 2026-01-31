@@ -162,13 +162,6 @@ local function _extractKeybindParts(text: string): (string?, string?, string?)
 end
 
 local function _getKeybindListMode(): string
-  local _, options = _getLinoriaGlobals()
-  if options then
-    local option = options.UIKeybindListMode
-    if option and option.Value then
-      _state.keybindListMode = option.Value
-    end
-  end
   return _state.keybindListMode
 end
 
@@ -472,6 +465,12 @@ local function _mount()
   _state.library = library
   _state.themeManager = themeManager
   _state.saveManager = saveManager
+  do
+    local _, options = _getLinoriaGlobals()
+    if options and options.UIKeybindListMode and options.UIKeybindListMode.Value then
+      _state.keybindListMode = options.UIKeybindListMode.Value
+    end
+  end
 
   _installSaveManagerExtensions(saveManager)
 
@@ -505,6 +504,9 @@ local function _mount()
     setKeybindListVisible = _setKeybindListVisible,
     setWatermarkVisible = _setWatermarkVisible,
     updateKeybindList = _updateKeybindList,
+    setKeybindListMode = function(value)
+      _state.keybindListMode = value
+    end,
   })
   MiscTab.Build(tabs, {
     client = _state.client,

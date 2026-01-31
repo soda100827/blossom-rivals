@@ -35,9 +35,6 @@ export type VisualsSettings = {
   skeletonThickness: number,
   textSize: number,
   shouldOutline: boolean,
-  isCustomHitSoundEnabled: boolean,
-  hitSoundId: string,
-  isNoHurtEffectEnabled: boolean,
 }
 
 export type VisualsState = {
@@ -85,9 +82,6 @@ export type VisualsFeature = {
   setTextSize: (self: VisualsFeature, value: number) -> (),
   setOutline: (self: VisualsFeature, isEnabled: boolean) -> (),
   setOverrideCheck: (self: VisualsFeature, check: () -> boolean) -> (),
-  setCustomHitSoundEnabled: (self: VisualsFeature, isEnabled: boolean) -> (),
-  setHitSoundId: (self: VisualsFeature, id: string) -> (),
-  setNoHurtEffectEnabled: (self: VisualsFeature, isEnabled: boolean) -> (),
 }
 
 --// Private state

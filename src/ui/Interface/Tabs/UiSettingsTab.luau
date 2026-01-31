@@ -15,6 +15,7 @@ export type BuildContext = {
   setKeybindListVisible: (boolean) -> (),
   setWatermarkVisible: (boolean) -> (),
   updateKeybindList: () -> (),
+  setKeybindListMode: (string) -> (),
 }
 
 --// Private state
@@ -36,6 +37,7 @@ function UiSettingsTab.Build(tabs: any, context: BuildContext): ()
   local setKeybindListVisible = context.setKeybindListVisible
   local setWatermarkVisible = context.setWatermarkVisible
   local updateKeybindList = context.updateKeybindList
+  local setKeybindListMode = context.setKeybindListMode
 
   local menuGroup = tabs.uiSettings:AddLeftGroupbox("Menu")
   menuGroup:AddButton("Unload", function()
@@ -70,7 +72,8 @@ function UiSettingsTab.Build(tabs: any, context: BuildContext): ()
     Multi = false,
     Text = "Keybind Mode",
     Tooltip = "Filter for the keybind list.",
-    Callback = function()
+    Callback = function(value)
+      setKeybindListMode(value)
       updateKeybindList()
     end,
   })
