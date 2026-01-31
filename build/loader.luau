@@ -1011,7 +1011,9 @@ SilentAim end function __DARKLUA_BUNDLE_MODULES.y()local v=
 __DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
+GetService('RunService')local UserInputService=game:GetService(
+'UserInputService')local VirtualInputManager=game:GetService(
+'VirtualInputManager')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
 PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
 .e()local State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=
 __DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000 local
@@ -1096,39 +1098,46 @@ mouse1press and _state.mouse1release then _state.mouse1press()local
 shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.delay(
 MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn=_state.mouse1release if
 releaseFn then releaseFn()end end)end return true end return false end
-local function _getShootCooldown(equipped)local info=equipped and equipped.Info
-local baseCooldown=(info and info.ShootCooldown)or 0.1 local multiplier=State.
-attackCooldownMultiplier if type(multiplier)=='number'and multiplier>0 and
-multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)end return math.
-max(baseCooldown,0.02)end local function _equippedItemInput(localFighter,
-equipped,inputName)if localFighter and localFighter.Input then localFighter:
-Input(inputName)return end if equipped and equipped.Input then equipped:Input(
-inputName)end end local function _shoot(localFighter)local equipped=
-_ensureGunEquipped(localFighter)if not equipped or not equipped.Input then
-return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if now-
-_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
-_tryMouseShot(equipped)then return end _equippedItemInput(localFighter,equipped,
-'StartShooting')if equipped.Name~='Flamethrower'then task.delay(0.1,function()if
-localFighter.EquippedItem==equipped and equipped.Input then _equippedItemInput(
-localFighter,equipped,'FinishShooting')end end)end end local function
-_applyRagebotSilentAimOverride(isEnabled)if isEnabled then if _state.
-ragebotSavedSilentAimFovRadius==nil then _state.ragebotSavedSilentAimFovRadius=
-State.silentAimFovRadius end State.silentAimFovRadius=math.huge else if _state.
-ragebotSavedSilentAimFovRadius~=nil then State.silentAimFovRadius=_state.
-ragebotSavedSilentAimFovRadius _state.ragebotSavedSilentAimFovRadius=nil end end
-end local function _teleportToTarget(localRoot,targetRoot)localRoot.CFrame=
-targetRoot.CFrame*CFrame.new(TELEPORT_OFFSET)end local function _orbitTarget(
-localRoot,targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or
-DEFAULT_ORBIT_SPEED local orbitRadius=State.ragebotOrbitRadius or
-DEFAULT_ORBIT_RADIUS local angle=os.clock()*orbitSpeed local offset=Vector3.new(
-math.cos(angle),0,math.sin(angle))*orbitRadius local position=targetRoot.
-Position+offset localRoot.CFrame=CFrame.new(position,targetRoot.Position)end
-local function _refreshTarget(localRoot)local now=os.clock()if now-_state.
-lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
-lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
-_getBestTarget(localRoot)end local function _connect()if not _maid then return
-end local connection=RunService.Heartbeat:Connect(function()if not State.
-isRagebotEnabled then _applyRagebotSilentAimOverride(false)return end
+local function _tryVirtualInputShot(equipped)if not VirtualInputManager then
+return false end local mouseLocation=UserInputService:GetMouseLocation()local x=
+math.floor(mouseLocation.X)local y=math.floor(mouseLocation.Y)local ok=pcall(
+function()VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)end)if not
+ok then return false end local shouldRelease=equipped.Name~='Flamethrower'if
+shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function()pcall(function(
+)VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)end)end)end return
+true end local function _getShootCooldown(equipped)local info=equipped and
+equipped.Info local baseCooldown=(info and info.ShootCooldown)or 0.1 local
+multiplier=State.attackCooldownMultiplier if type(multiplier)=='number'and
+multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)
+end return math.max(baseCooldown,0.02)end local function _equippedItemInput(
+localFighter,equipped,inputName)if localFighter and localFighter.Input then
+localFighter:Input(inputName)return end if equipped and equipped.Input then
+equipped:Input(inputName)end end local function _shoot(localFighter)local
+equipped=_ensureGunEquipped(localFighter)if not equipped or not equipped.Input
+then return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if
+now-_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
+_tryVirtualInputShot(equipped)then return end if _tryMouseShot(equipped)then
+return end _equippedItemInput(localFighter,equipped,'StartShooting')if equipped.
+Name~='Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
+equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
+'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
+isEnabled)if isEnabled then if _state.ragebotSavedSilentAimFovRadius==nil then
+_state.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+silentAimFovRadius=math.huge else if _state.ragebotSavedSilentAimFovRadius~=nil
+then State.silentAimFovRadius=_state.ragebotSavedSilentAimFovRadius _state.
+ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
+localRoot,targetRoot)localRoot.CFrame=targetRoot.CFrame*CFrame.new(
+TELEPORT_OFFSET)end local function _orbitTarget(localRoot,targetRoot)local
+orbitSpeed=State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED local orbitRadius=
+State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS local angle=os.clock()*
+orbitSpeed local offset=Vector3.new(math.cos(angle),0,math.sin(angle))*
+orbitRadius local position=targetRoot.Position+offset localRoot.CFrame=CFrame.
+new(position,targetRoot.Position)end local function _refreshTarget(localRoot)
+local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
+return end _state.lastTargetRefresh=now _state.cachedTarget,_state.
+cachedTargetRoot=_getBestTarget(localRoot)end local function _connect()if not
+_maid then return end local connection=RunService.Heartbeat:Connect(function()if
+not State.isRagebotEnabled then _applyRagebotSilentAimOverride(false)return end
 _applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
 not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local

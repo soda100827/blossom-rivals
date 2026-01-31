@@ -3,6 +3,8 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 --// Dependencies (require)
 local ExecutorUtils = require("../../../shared/ExecutorUtils")
@@ -338,6 +340,34 @@ local function _tryMouseShot(equipped: any): boolean
 	return false
 end
 
+local function _tryVirtualInputShot(equipped: any): boolean
+	if not VirtualInputManager then
+		return false
+	end
+
+	local mouseLocation = UserInputService:GetMouseLocation()
+	local x = math.floor(mouseLocation.X)
+	local y = math.floor(mouseLocation.Y)
+
+	local ok = pcall(function()
+		VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 0)
+	end)
+	if not ok then
+		return false
+	end
+
+	local shouldRelease = equipped.Name ~= "Flamethrower"
+	if shouldRelease then
+		task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
+			pcall(function()
+				VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 0)
+			end)
+		end)
+	end
+
+	return true
+end
+
 local function _getShootCooldown(equipped: any): number
 	local info = equipped and equipped.Info
 	local baseCooldown = (info and info.ShootCooldown) or 0.1
@@ -370,6 +400,10 @@ local function _shoot(localFighter: any)
 		return
 	end
 	_state.lastShotAt = now
+
+	if _tryVirtualInputShot(equipped) then
+		return
+	end
 
 	if _tryMouseShot(equipped) then
 		return
