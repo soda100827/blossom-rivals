@@ -88,6 +88,9 @@ function SilentAim.setup(maid: any): ()
 				end
 
 				if not checkcaller() and (_isGunAction() or State.isRagebotShooting) then
+					if State.logger then
+						State.logger:info("[SilentAim] Hook Activated! RagebotTrigger:", State.isRagebotShooting)
+					end
 					-- Hit Chance check
 					if math.random(1, 100) > State.silentHitChance then
 						_state.lastSilentTargetPos = nil

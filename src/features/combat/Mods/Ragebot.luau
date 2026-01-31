@@ -504,6 +504,10 @@ local function _shoot(localFighter: any)
 
 	_forceShootReady(equipped)
 
+	if State.logger then
+		State.logger:info("[Ragebot] Shooting - SilentAim:", State.isSilentAimEnabled, "FOV:", State.silentAimFovRadius)
+	end
+
 	-- Apply Modifications (NoSpread, FastFire) locally
 	local info = equipped.Info
 	local savedSpread, savedAimML, savedQuick

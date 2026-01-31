@@ -990,6 +990,8 @@ State.isUtilityHooked=true local oldRaycast oldRaycast=HookUtils.safeHook(
 utility,'Raycast',function(self,origin,target,distance,filter,...)if not State.
 isSilentAimEnabled then return oldRaycast(self,origin,target,distance,filter,...
 )end if not checkcaller()and(_isGunAction()or State.isRagebotShooting)then if
+State.logger then State.logger:info(
+'[SilentAim] Hook Activated! RagebotTrigger:',State.isRagebotShooting)end if
 math.random(1,100)>State.silentHitChance then _state.lastSilentTargetPos=nil
 return oldRaycast(self,origin,target,distance,filter,...)end local targetPart=
 Targeting.getClosestSilentTarget()local localPlayer=PlayerUtils.getLocalPlayer()
@@ -1150,28 +1152,29 @@ equipped)._is_input_queueing~=nil then(equipped)._is_input_queueing=false end
 end local function _shoot(localFighter)local equipped=_ensureGunEquipped(
 localFighter)if not equipped or not equipped.Input then return end local now=os.
 clock()local cooldown=_getShootCooldown(equipped)if now-_state.lastShotAt<
-cooldown then return end _state.lastShotAt=now _forceShootReady(equipped)local
-info=equipped.Info local savedSpread,savedAimML,savedQuick local savedShootCd,
-savedBurstCd if info then if State.isNoSpreadEnabled then savedSpread=info.
-ShootSpread savedAimML=info.AimSpreadMultiplier savedQuick=info.QuickShotSpread
-info.ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
-QuickShotSpread=0 end State.forcingAim=true end if State.
-attackCooldownMultiplier<100 then savedShootCd=info.ShootCooldown savedBurstCd=
-info.ShootBurstCooldown local mult=State.attackCooldownMultiplier/100 if
-savedShootCd then info.ShootCooldown=savedShootCd*mult end if savedBurstCd then
-info.ShootBurstCooldown=savedBurstCd*mult end end end State.isRagebotShooting=
-true local didShoot=_equippedItemInput(localFighter,equipped,'StartShooting')
-State.isRagebotShooting=false if info then if State.isNoSpreadEnabled then info.
-ShootSpread=savedSpread info.AimSpreadMultiplier=savedAimML if savedQuick~=nil
-then info.QuickShotSpread=savedQuick end State.forcingAim=false end if State.
-attackCooldownMultiplier<100 then if savedShootCd then info.ShootCooldown=
-savedShootCd end if savedBurstCd then info.ShootBurstCooldown=savedBurstCd end
-end end if didShoot and equipped.Name~='Flamethrower'then task.delay(0.1,
-function()if localFighter.EquippedItem==equipped and equipped.Input then
-_equippedItemInput(localFighter,equipped,'FinishShooting')end end)end end
-local function _applyRagebotSilentAimOverride(isEnabled)if isEnabled then if
-State.ragebotSavedSilentAimFovRadius==nil then State.
-ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+cooldown then return end _state.lastShotAt=now _forceShootReady(equipped)if
+State.logger then State.logger:info('[Ragebot] Shooting - SilentAim:',State.
+isSilentAimEnabled,'FOV:',State.silentAimFovRadius)end local info=equipped.Info
+local savedSpread,savedAimML,savedQuick local savedShootCd,savedBurstCd if info
+then if State.isNoSpreadEnabled then savedSpread=info.ShootSpread savedAimML=
+info.AimSpreadMultiplier savedQuick=info.QuickShotSpread info.ShootSpread=0 info
+.AimSpreadMultiplier=0 if info.QuickShotSpread then info.QuickShotSpread=0 end
+State.forcingAim=true end if State.attackCooldownMultiplier<100 then
+savedShootCd=info.ShootCooldown savedBurstCd=info.ShootBurstCooldown local mult=
+State.attackCooldownMultiplier/100 if savedShootCd then info.ShootCooldown=
+savedShootCd*mult end if savedBurstCd then info.ShootBurstCooldown=savedBurstCd*
+mult end end end State.isRagebotShooting=true local didShoot=_equippedItemInput(
+localFighter,equipped,'StartShooting')State.isRagebotShooting=false if info then
+if State.isNoSpreadEnabled then info.ShootSpread=savedSpread info.
+AimSpreadMultiplier=savedAimML if savedQuick~=nil then info.QuickShotSpread=
+savedQuick end State.forcingAim=false end if State.attackCooldownMultiplier<100
+then if savedShootCd then info.ShootCooldown=savedShootCd end if savedBurstCd
+then info.ShootBurstCooldown=savedBurstCd end end end if didShoot and equipped.
+Name~='Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
+equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
+'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
+isEnabled)if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then
+State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
 silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
 then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
