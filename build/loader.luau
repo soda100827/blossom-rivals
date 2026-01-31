@@ -1022,34 +1022,40 @@ DEFAULT_RAGEBOT_OFFSET=Vector3.zero local MOUSE_SHOT_RELEASE_DELAY=0.03 local
 Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals={}local _state=
 {lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,
 lastShotAt=0,mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=
-0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false}local function
-_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
-localPlayer and localPlayer.Character return character and((character:
-FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
-local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
-false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
-=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
-Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
-end return true end local function _isTargetInvincible(targetRoot)if not
-targetRoot then return false end local character=targetRoot.Parent if not
-character or not character:IsA('Model')then return false end local entity=
-character:FindFirstChild('Entity')if entity and entity.Get then local ok,inv=
-pcall(entity.Get,entity,'IsInvincible')if ok and inv~=nil then return inv==true
-end end local isInvincible=character:GetAttribute('IsInvincible')if type(
-isInvincible)=='boolean'then return isInvincible end return false end
-local function _getBestTarget(localRoot)local localPlayer=PlayerUtils.
-getLocalPlayer()if not localPlayer then return nil,nil end if not TeamUtils.
-isInDuel(localPlayer)then return nil,nil end local bestPlayer=nil local bestRoot
-=nil local bestDist=math.huge for _,player in ipairs(Players:GetPlayers())do if
-player==localPlayer then continue end if TeamUtils.isSameTeam(player,localPlayer
-)then continue end if not TeamUtils.isInSameDuel(localPlayer,player)then
-continue end local character=player.Character if not character then continue end
-local root=(character:FindFirstChild('HumanoidRootPart'))local hum=character:
-FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
-continue end local dist=(localRoot.Position-root.Position).Magnitude if dist<
-bestDist then bestDist=dist bestPlayer=player bestRoot=root end end return
-bestPlayer,bestRoot end local function _getLocalFighter()local now=os.clock()if
-now-_state.lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
+0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false,debugNextAt=0}
+local function _getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()
+local character=localPlayer and localPlayer.Character return character and((
+character:FindFirstChild('HumanoidRootPart')))or nil end local function
+_isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if not
+localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
+return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
+local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
+return status=='RoundStarted'end end return true end local function
+_isTargetInvincible(targetRoot)if not targetRoot then return false end local
+character=targetRoot.Parent if not character or not character:IsA('Model')then
+return false end local entity=character:FindFirstChild('Entity')if entity and
+entity.Get then local ok,inv=pcall(entity.Get,entity,'IsInvincible')if ok and
+inv~=nil then if inv==true and State.logger then local now=os.clock()if now>=
+_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+'[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
+inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
+type(isInvincible)=='boolean'then if isInvincible and State.logger then local
+now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.
+logger:info('[Ragebot Debug] Target invincible (Attribute)',character.Name)end
+end return isInvincible end return false end local function _getBestTarget(
+localRoot)local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then
+return nil,nil end if not TeamUtils.isInDuel(localPlayer)then return nil,nil end
+local bestPlayer=nil local bestRoot=nil local bestDist=math.huge for _,player in
+ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
+TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
+isInSameDuel(localPlayer,player)then continue end local character=player.
+Character if not character then continue end local root=(character:
+FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
+'Humanoid')if not root or not hum or hum.Health<=0 then continue end local dist=
+(localRoot.Position-root.Position).Magnitude if dist<bestDist then bestDist=dist
+bestPlayer=player bestRoot=root end end return bestPlayer,bestRoot end
+local function _getLocalFighter()local now=os.clock()if now-_state.
+lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
 fetchFighterController(State.logger)end local fighter=State.fighterController
 and State.fighterController.LocalFighter if fighter and fighter.IsAlive and not
 fighter:IsAlive()then return nil end return fighter end local function
@@ -1115,41 +1121,46 @@ inputName)end end local function _shoot(localFighter)local equipped=
 _ensureGunEquipped(localFighter)if not equipped or not equipped.Input then
 return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if now-
 _state.lastShotAt<cooldown then return end _state.lastShotAt=now if
-_tryMouseShot(equipped)then return end _equippedItemInput(localFighter,equipped,
-'StartShooting')if equipped.Name~='Flamethrower'then task.delay(0.1,function()if
-localFighter.EquippedItem==equipped and equipped.Input then _equippedItemInput(
-localFighter,equipped,'FinishShooting')end end)end end local function
-_hookClientItemInput()if _state.isInputHooked then return end local
-clientItemMod=Helpers.getClientItemModule()if not clientItemMod then return end
-_state.isInputHooked=true local checkcaller=ExecutorUtils.getGlobal(
-'checkcaller')or function()return false end local oldInput oldInput=HookUtils.
-safeHook(clientItemMod,'Input',function(self,inputName,...)if checkcaller()then
-return oldInput(self,inputName,...)end if not State.isRagebotEnabled then return
-oldInput(self,inputName,...)end local wasEquipped=self.IsEquipped if not
-wasEquipped and type(inputName)=='string'and string.sub(inputName,1,5)=='Start'
-then self.IsEquipped=true local result=oldInput(self,inputName,...)self.
-IsEquipped=wasEquipped return result end return oldInput(self,inputName,...)end,
-State.logger,_maid)end local function _applyRagebotSilentAimOverride(isEnabled)
-if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then State.
-ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
-silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
-then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
-ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
-localRoot,targetRoot)local offset=State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
-localRoot.CFrame=targetRoot.CFrame*CFrame.new(offset)end local function
-_orbitTarget(localRoot,targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or
-DEFAULT_ORBIT_SPEED local orbitRadius=State.ragebotOrbitRadius or
-DEFAULT_ORBIT_RADIUS local angle=os.clock()*orbitSpeed local offset=Vector3.new(
-math.cos(angle),0,math.sin(angle))*orbitRadius local position=targetRoot.
-Position+offset localRoot.CFrame=CFrame.new(position,targetRoot.Position)end
-local function _refreshTarget(localRoot)local now=os.clock()if now-_state.
-lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
-lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
-_getBestTarget(localRoot)end local function _connect()if not _maid then return
-end local connection=RunService.Heartbeat:Connect(function()if not State.
-isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.isEngaged
-then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then
-State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
+_tryMouseShot(equipped)then if State.logger and State.isRagebotEnabled then
+local now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1
+State.logger:info('[Ragebot Debug] Shoot via mouse input',equipped.Name)end end
+return end _equippedItemInput(localFighter,equipped,'StartShooting')if State.
+logger and State.isRagebotEnabled then local now=os.clock()if now>=_state.
+debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+'[Ragebot Debug] Shoot via LocalFighter:Input',equipped.Name)end end if equipped
+.Name~='Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem
+==equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
+'FinishShooting')end end)end end local function _hookClientItemInput()if _state.
+isInputHooked then return end local clientItemMod=Helpers.getClientItemModule()
+if not clientItemMod then return end _state.isInputHooked=true local checkcaller
+=ExecutorUtils.getGlobal('checkcaller')or function()return false end local
+oldInput oldInput=HookUtils.safeHook(clientItemMod,'Input',function(self,
+inputName,...)if checkcaller()then return oldInput(self,inputName,...)end if not
+State.isRagebotEnabled then return oldInput(self,inputName,...)end local
+wasEquipped=self.IsEquipped if not wasEquipped and type(inputName)=='string'and
+string.sub(inputName,1,5)=='Start'then self.IsEquipped=true local result=
+oldInput(self,inputName,...)self.IsEquipped=wasEquipped return result end return
+oldInput(self,inputName,...)end,State.logger,_maid)end local function
+_applyRagebotSilentAimOverride(isEnabled)if isEnabled then if State.
+ragebotSavedSilentAimFovRadius==nil then State.ragebotSavedSilentAimFovRadius=
+State.silentAimFovRadius end State.silentAimFovRadius=math.huge else if State.
+ragebotSavedSilentAimFovRadius~=nil then State.silentAimFovRadius=State.
+ragebotSavedSilentAimFovRadius State.ragebotSavedSilentAimFovRadius=nil end end
+end local function _teleportToTarget(localRoot,targetRoot)local offset=State.
+ragebotOffset or DEFAULT_RAGEBOT_OFFSET localRoot.CFrame=targetRoot.CFrame*
+CFrame.new(offset)end local function _orbitTarget(localRoot,targetRoot)local
+orbitSpeed=State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED local orbitRadius=
+State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS local angle=os.clock()*
+orbitSpeed local offset=Vector3.new(math.cos(angle),0,math.sin(angle))*
+orbitRadius local position=targetRoot.Position+offset localRoot.CFrame=CFrame.
+new(position,targetRoot.Position)end local function _refreshTarget(localRoot)
+local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
+return end _state.lastTargetRefresh=now _state.cachedTarget,_state.
+cachedTargetRoot=_getBestTarget(localRoot)end local function _connect()if not
+_maid then return end local connection=RunService.Heartbeat:Connect(function()if
+not State.isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.
+isEngaged then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil
+then State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
 ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
