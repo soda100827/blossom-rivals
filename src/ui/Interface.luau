@@ -194,10 +194,14 @@ local function _updateKeybindList()
       if mode == "Active" then
         isVisible = label.TextColor3 == library.AccentColor
       elseif mode == "Toggle" then
-        local mapName = name or label.Text
-        local toggleId = _state.keybindToggleMap[mapName]
-        local toggle = toggles and toggleId and toggles[toggleId]
-        isVisible = toggle and toggle.Value == true or false
+        if modeText then
+          isVisible = modeText == "Toggle"
+        else
+          local mapName = name or label.Text
+          local toggleId = _state.keybindToggleMap[mapName]
+          local toggle = toggles and toggleId and toggles[toggleId]
+          isVisible = toggle and toggle.Value == true or false
+        end
       end
 
       label.Visible = isVisible

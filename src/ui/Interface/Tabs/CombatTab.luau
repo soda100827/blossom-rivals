@@ -310,6 +310,23 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
     end,
   })
 
+  gunModsGroup:AddSlider("GunModsCooldown", {
+    Text = "Attack Cooldown",
+    Default = 100,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Suffix = "%",
+    Tooltip = "Weapon fire rate cooldown. 1% is near-instant fire rate.",
+    Compact = true,
+    Callback = function(value)
+      local mod = client.Modules.Combat
+      if mod and mod.setAttackCooldownMultiplier then
+        mod:setAttackCooldownMultiplier(value)
+      end
+    end,
+  })
+
   local meleeModsGroup = tabs.combat:AddRightGroupbox("Melee Mods")
 
   meleeModsGroup:AddToggle("MeleeModsAura", {
@@ -324,25 +341,8 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
     end,
   })
 
-  meleeModsGroup:AddSlider("MeleeModsReach", {
-    Text = "Melee Reach",
-    Default = 100,
-    Min = 10,
-    Max = 500,
-    Rounding = 0,
-    Suffix = " studs",
-    Tooltip = "Hit distance for Melee Aura. Higher value increases reach.",
-    Compact = true,
-    Callback = function(value)
-      local mod = client.Modules.Combat
-      if mod and mod.setMeleeAuraReach then
-        mod:setMeleeAuraReach(value)
-      end
-    end,
-  })
-
   meleeModsGroup:AddSlider("MeleeModsCooldown", {
-    Text = "Cooldown",
+    Text = "Attack Cooldown",
     Default = 100,
     Min = 1,
     Max = 100,
@@ -354,6 +354,23 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
       local mod = client.Modules.Combat
       if mod and mod.setAttackCooldownMultiplier then
         mod:setAttackCooldownMultiplier(value)
+      end
+    end,
+  })
+
+  meleeModsGroup:AddSlider("MeleeModsSkillCooldown", {
+    Text = "Skill Cooldown",
+    Default = 100,
+    Min = 1,
+    Max = 100,
+    Rounding = 0,
+    Suffix = "%",
+    Tooltip = "Skill cooldown multiplier. Lower values reduce skill cooldowns.",
+    Compact = true,
+    Callback = function(value)
+      local mod = client.Modules.Combat
+      if mod and mod.setMeleeSkillCooldownMultiplier then
+        mod:setMeleeSkillCooldownMultiplier(value)
       end
     end,
   })

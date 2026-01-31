@@ -1331,22 +1331,26 @@ setNoSpreadEnabled(state)end end})gunModsGroup:AddToggle('GunModsNoMuzzleFlash',
 {Text='No Muzzle Flash',Default=false,Tooltip=
 'Removes the muzzle flash effect when shooting.',Callback=function(state)local
 mod=client.Modules.Combat if mod and mod.setNoMuzzleFlashEnabled then mod:
-setNoMuzzleFlashEnabled(state)end end})local meleeModsGroup=tabs.combat:
-AddRightGroupbox('Melee Mods')meleeModsGroup:AddToggle('MeleeModsAura',{Text=
-'Melee Aura',Default=false,Tooltip='Automatically attacks nearby enemies.',
-Callback=function(state)local mod=client.Modules.Combat if mod and mod.
-setMeleeAuraEnabled then mod:setMeleeAuraEnabled(state)end end})meleeModsGroup:
-AddSlider('MeleeModsReach',{Text='Melee Reach',Default=100,Min=10,Max=500,
-Rounding=0,Suffix=' studs',Tooltip=
-'Hit distance for Melee Aura. Higher value increases reach.',Compact=true,
-Callback=function(value)local mod=client.Modules.Combat if mod and mod.
-setMeleeAuraReach then mod:setMeleeAuraReach(value)end end})meleeModsGroup:
-AddSlider('MeleeModsCooldown',{Text='Cooldown',Default=100,Min=1,Max=100,
-Rounding=0,Suffix='%',Tooltip=
+setNoMuzzleFlashEnabled(state)end end})gunModsGroup:AddSlider('GunModsCooldown',
+{Text='Attack Cooldown',Default=100,Min=1,Max=100,Rounding=0,Suffix='%',Tooltip=
 'Weapon fire rate cooldown. 1% is near-instant fire rate.',Compact=true,Callback
 =function(value)local mod=client.Modules.Combat if mod and mod.
 setAttackCooldownMultiplier then mod:setAttackCooldownMultiplier(value)end end})
-end return CombatTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
+local meleeModsGroup=tabs.combat:AddRightGroupbox('Melee Mods')meleeModsGroup:
+AddToggle('MeleeModsAura',{Text='Melee Aura',Default=false,Tooltip=
+'Automatically attacks nearby enemies.',Callback=function(state)local mod=client
+.Modules.Combat if mod and mod.setMeleeAuraEnabled then mod:setMeleeAuraEnabled(
+state)end end})meleeModsGroup:AddSlider('MeleeModsCooldown',{Text=
+'Attack Cooldown',Default=100,Min=1,Max=100,Rounding=0,Suffix='%',Tooltip=
+'Weapon fire rate cooldown. 1% is near-instant fire rate.',Compact=true,Callback
+=function(value)local mod=client.Modules.Combat if mod and mod.
+setAttackCooldownMultiplier then mod:setAttackCooldownMultiplier(value)end end})
+meleeModsGroup:AddSlider('MeleeModsSkillCooldown',{Text='Skill Cooldown',Default
+=100,Min=1,Max=100,Rounding=0,Suffix='%',Tooltip=
+[[Skill cooldown multiplier. Lower values reduce skill cooldowns.]],Compact=true
+,Callback=function(value)local mod=client.Modules.Combat if mod and mod.
+setMeleeSkillCooldownMultiplier then mod:setMeleeSkillCooldownMultiplier(value)
+end end})end return CombatTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
 __DARKLUA_BUNDLE_MODULES.cache.E if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end do local function
 __modImpl()local VisualsTab={}VisualsTab.__index=VisualsTab local _maid=nil
@@ -1624,21 +1628,22 @@ local xSize=0 for _,label in next,library.KeybindContainer:GetChildren()do if
 label:IsA('TextLabel')then local key,name,modeText=_extractKeybindParts(label.
 Text)if key and name and modeText then label.Text=string.format('[%s] %s (%s)',
 key,name,modeText)end local isVisible=true if mode=='Active'then isVisible=label
-.TextColor3==library.AccentColor elseif mode=='Toggle'then local mapName=name or
-label.Text local toggleId=_state.keybindToggleMap[mapName]local toggle=toggles
-and toggleId and toggles[toggleId]isVisible=toggle and toggle.Value==true or
-false end label.Visible=isVisible if isVisible then ySize+=18 if label.
-TextBounds.X>xSize then xSize=label.TextBounds.X end end end end library.
-KeybindFrame.Size=UDim2.new(0,math.max(xSize+10,210),0,ySize+23)end
-local function _updateControlBindings()if not _state.controlBindings then return
-end local toggles,options=_getLinoriaGlobals()if not toggles or not options then
-end for _,control in ipairs(_state.controlBindings)do local toggle=toggles and
-toggles[control.toggleId]local gate=toggle and toggle.Value==true local isActive
-=false if gate then local keybind=options and options[control.keybindId]if
-keybind and keybind.GetState then isActive=keybind:GetState()else isActive=false
-end end if control.last~=isActive then control.last=isActive control.setter(
-isActive)end end end local function _installSaveManagerExtensions(saveManager)if
-saveManager._blossomBuildConfigSection then return end saveManager.
+.TextColor3==library.AccentColor elseif mode=='Toggle'then if modeText then
+isVisible=modeText=='Toggle'else local mapName=name or label.Text local toggleId
+=_state.keybindToggleMap[mapName]local toggle=toggles and toggleId and toggles[
+toggleId]isVisible=toggle and toggle.Value==true or false end end label.Visible=
+isVisible if isVisible then ySize+=18 if label.TextBounds.X>xSize then xSize=
+label.TextBounds.X end end end end library.KeybindFrame.Size=UDim2.new(0,math.
+max(xSize+10,210),0,ySize+23)end local function _updateControlBindings()if not
+_state.controlBindings then return end local toggles,options=_getLinoriaGlobals(
+)if not toggles or not options then end for _,control in ipairs(_state.
+controlBindings)do local toggle=toggles and toggles[control.toggleId]local gate=
+toggle and toggle.Value==true local isActive=false if gate then local keybind=
+options and options[control.keybindId]if keybind and keybind.GetState then
+isActive=keybind:GetState()else isActive=false end end if control.last~=isActive
+then control.last=isActive control.setter(isActive)end end end local function
+_installSaveManagerExtensions(saveManager)if saveManager.
+_blossomBuildConfigSection then return end saveManager.
 _blossomBuildConfigSection=saveManager.BuildConfigSection saveManager.
 BuildConfigSection=function(self,tab)assert(self.Library,
 'Must set SaveManager.Library')local section=tab:AddRightGroupbox(
@@ -1796,18 +1801,17 @@ repeat clientModule=playerScripts:FindFirstChild(CLIENT_MODULE_NAME)if not(
 clientModule and clientModule:IsA('ModuleScript'))then clientModule=nil task.
 wait(1)end until clientModule local controllersFolder repeat controllersFolder=
 playerScripts:FindFirstChild('Controllers')if not controllersFolder then task.
-wait(1)end until controllersFolder local folder=controllersFolder local
-startTime=os.clock()while true do local isAllLoaded=true local loaded=
-_getLoadedModules()local loadedSet={}local hasLoaded=loaded~=nil if loaded then
-for _,mod in ipairs(loaded)do loadedSet[mod]=true end end local function
-_isLoaded(mod)if not hasLoaded then return true end return loadedSet[mod]==true
-end if hasLoaded and not _isLoaded(clientModule)then isAllLoaded=false else for
-_,child in ipairs(folder:GetChildren())do if child:IsA('ModuleScript')then if
-hasLoaded and not _isLoaded(child)then isAllLoaded=false break end end end end
-if isAllLoaded then break end if os.clock()-startTime>15 then break end task.
-wait(0.5)end end function Client.loadModule(self,name,moduleOrPath)if _modules[
-name]then return end local loader=function()if type(moduleOrPath)=='string'then
-local dynamicRequire=require return dynamicRequire(moduleOrPath)end return
+wait(1)end until controllersFolder local folder=controllersFolder while true do
+local isAllLoaded=true local loaded=_getLoadedModules()local loadedSet={}local
+hasLoaded=loaded~=nil if loaded then for _,mod in ipairs(loaded)do loadedSet[mod
+]=true end end local function _isLoaded(mod)if not hasLoaded then return true
+end return loadedSet[mod]==true end if hasLoaded and not _isLoaded(clientModule)
+then isAllLoaded=false else for _,child in ipairs(folder:GetChildren())do if
+child:IsA('ModuleScript')then if hasLoaded and not _isLoaded(child)then
+isAllLoaded=false break end end end end if isAllLoaded then break end task.wait(
+0.5)end end function Client.loadModule(self,name,moduleOrPath)if _modules[name]
+then return end local loader=function()if type(moduleOrPath)=='string'then local
+dynamicRequire=require return dynamicRequire(moduleOrPath)end return
 moduleOrPath end local success,result=pcall(loader)if success then local
 moduleResult=result _modules[name]=moduleResult local initFn=moduleResult.init
 or moduleResult.Init if initFn then task.spawn(function()(initFn)(moduleResult,
