@@ -89,6 +89,7 @@ export type CombatFeature = {
 	setRagebotOrbitRadius: (self: CombatFeature, radius: number) -> (),
 	setRagebotOrbitSpeed: (self: CombatFeature, speed: number) -> (),
 	setRagebotOffset: (self: CombatFeature, offset: Vector3) -> (),
+	getRagebotOffset: (self: CombatFeature) -> Vector3,
 	setSilentAimFovEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
 	setSilentAimFovRadius: (self: CombatFeature, radius: number) -> (),
 	setSilentAimFovColor: (self: CombatFeature, color: Color3) -> (),

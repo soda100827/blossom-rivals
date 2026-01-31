@@ -18,7 +18,7 @@ local DEFAULT_ORBIT_RADIUS = 100000
 local DEFAULT_ORBIT_SPEED = 12
 local SWAP_WEAPON_COOLDOWN = 0.2
 local TARGET_REFRESH_INTERVAL = 0.05
-local TELEPORT_OFFSET = Vector3.new(0, 0, 2)
+local DEFAULT_RAGEBOT_OFFSET = Vector3.zero
 local MOUSE_SHOT_RELEASE_DELAY = 0.03
 
 --// Types
@@ -433,7 +433,8 @@ local function _applyRagebotSilentAimOverride(isEnabled: boolean)
 end
 
 local function _teleportToTarget(localRoot: BasePart, targetRoot: BasePart)
-	localRoot.CFrame = targetRoot.CFrame * CFrame.new(TELEPORT_OFFSET)
+	local offset = State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
+	localRoot.CFrame = targetRoot.CFrame * CFrame.new(offset)
 end
 
 local function _orbitTarget(localRoot: BasePart, targetRoot: BasePart)

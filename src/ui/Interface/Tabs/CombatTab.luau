@@ -260,6 +260,60 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
 		end,
 	})
 
+	ragebotGroup:AddSlider("RagebotOffsetX", {
+		Text = "Offset X",
+		Default = 0,
+		Min = -10,
+		Max = 10,
+		Rounding = 1,
+		Suffix = " studs",
+		Tooltip = "Ragebot teleport offset on X axis.",
+		Compact = true,
+		Callback = function(value)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotOffset then
+				local current = mod and mod.getRagebotOffset and mod:getRagebotOffset() or Vector3.zero
+				mod:setRagebotOffset(Vector3.new(value, current.Y, current.Z))
+			end
+		end,
+	})
+
+	ragebotGroup:AddSlider("RagebotOffsetY", {
+		Text = "Offset Y",
+		Default = 0,
+		Min = -10,
+		Max = 10,
+		Rounding = 1,
+		Suffix = " studs",
+		Tooltip = "Ragebot teleport offset on Y axis.",
+		Compact = true,
+		Callback = function(value)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotOffset then
+				local current = mod and mod.getRagebotOffset and mod:getRagebotOffset() or Vector3.zero
+				mod:setRagebotOffset(Vector3.new(current.X, value, current.Z))
+			end
+		end,
+	})
+
+	ragebotGroup:AddSlider("RagebotOffsetZ", {
+		Text = "Offset Z",
+		Default = 0,
+		Min = -10,
+		Max = 10,
+		Rounding = 1,
+		Suffix = " studs",
+		Tooltip = "Ragebot teleport offset on Z axis.",
+		Compact = true,
+		Callback = function(value)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotOffset then
+				local current = mod and mod.getRagebotOffset and mod:getRagebotOffset() or Vector3.zero
+				mod:setRagebotOffset(Vector3.new(current.X, current.Y, value))
+			end
+		end,
+	})
+
 	-- Other Settings
 	combatGroup:AddToggle("CombatManipulation", {
 		Text = "Manipulation",

@@ -1019,7 +1019,7 @@ PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
 .e()local State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=
 __DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000 local
 DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
-TARGET_REFRESH_INTERVAL=0.05 local TELEPORT_OFFSET=Vector3.new(0,0,2)local
+TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
 MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
 _maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
 cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
@@ -1126,18 +1126,19 @@ State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
 silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
 then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
-localRoot,targetRoot)localRoot.CFrame=targetRoot.CFrame*CFrame.new(
-TELEPORT_OFFSET)end local function _orbitTarget(localRoot,targetRoot)local
-orbitSpeed=State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED local orbitRadius=
-State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS local angle=os.clock()*
-orbitSpeed local offset=Vector3.new(math.cos(angle),0,math.sin(angle))*
-orbitRadius local position=targetRoot.Position+offset localRoot.CFrame=CFrame.
-new(position,targetRoot.Position)end local function _refreshTarget(localRoot)
-local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
-return end _state.lastTargetRefresh=now _state.cachedTarget,_state.
-cachedTargetRoot=_getBestTarget(localRoot)end local function _connect()if not
-_maid then return end local connection=RunService.Heartbeat:Connect(function()if
-not State.isRagebotEnabled then _applyRagebotSilentAimOverride(false)return end
+localRoot,targetRoot)local offset=State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
+localRoot.CFrame=targetRoot.CFrame*CFrame.new(offset)end local function
+_orbitTarget(localRoot,targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or
+DEFAULT_ORBIT_SPEED local orbitRadius=State.ragebotOrbitRadius or
+DEFAULT_ORBIT_RADIUS local angle=os.clock()*orbitSpeed local offset=Vector3.new(
+math.cos(angle),0,math.sin(angle))*orbitRadius local position=targetRoot.
+Position+offset localRoot.CFrame=CFrame.new(position,targetRoot.Position)end
+local function _refreshTarget(localRoot)local now=os.clock()if now-_state.
+lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
+lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
+_getBestTarget(localRoot)end local function _connect()if not _maid then return
+end local connection=RunService.Heartbeat:Connect(function()if not State.
+isRagebotEnabled then _applyRagebotSilentAimOverride(false)return end
 _applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
 not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
@@ -1377,25 +1378,26 @@ self,slotName)State.ragebotWeaponSlot=slotName end function Combat.
 setRagebotOrbitRadius(self,radius)State.ragebotOrbitRadius=radius end function
 Combat.setRagebotOrbitSpeed(self,speed)State.ragebotOrbitSpeed=speed end
 function Combat.setRagebotOffset(self,offset)State.ragebotOffset=offset end
-function Combat.setSilentAimFovEnabled(self,isEnabled)State.
-isSilentAimFovEnabled=isEnabled end function Combat.setSilentAimFovRadius(self,
-radius)if State.isRagebotEnabled then State.ragebotSavedSilentAimFovRadius=
-radius else State.silentAimFovRadius=radius end end function Combat.
-setSilentAimFovColor(self,color)State.silentAimFovColor=color end function
-Combat.setSilentAimFovTransparency(self,transparency)State.
-silentAimFovTransparency=math.clamp(transparency,0,1)end function Combat.
-setSilentHitChance(self,chance)State.silentHitChance=math.clamp(chance,0,100)end
-function Combat.setTargetPart(self,part)State.targetPart=part end function
-Combat.setManipulationEnabled(self,enabled)State.isManipulationEnabled=enabled
-end function Combat.setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=
-enabled end function Combat.setClosestPositionEnabled(self,enabled)State.
-isClosestPositionEnabled=enabled end function Combat.setClosestPositionWhitelist
-(self,whitelist)State.closestPositionWhitelist=whitelist end function Combat.
-setNoRecoilEnabled(self,isEnabled)State.isNoRecoilEnabled=isEnabled end function
-Combat.setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end
-function Combat.setNoMuzzleFlashEnabled(self,isEnabled)State.
-isNoMuzzleFlashEnabled=isEnabled end function Combat.setAttackCooldownMultiplier
-(self,multiplier)State.attackCooldownMultiplier=multiplier end function Combat.
+function Combat.getRagebotOffset(self)return State.ragebotOffset end function
+Combat.setSilentAimFovEnabled(self,isEnabled)State.isSilentAimFovEnabled=
+isEnabled end function Combat.setSilentAimFovRadius(self,radius)if State.
+isRagebotEnabled then State.ragebotSavedSilentAimFovRadius=radius else State.
+silentAimFovRadius=radius end end function Combat.setSilentAimFovColor(self,
+color)State.silentAimFovColor=color end function Combat.
+setSilentAimFovTransparency(self,transparency)State.silentAimFovTransparency=
+math.clamp(transparency,0,1)end function Combat.setSilentHitChance(self,chance)
+State.silentHitChance=math.clamp(chance,0,100)end function Combat.setTargetPart(
+self,part)State.targetPart=part end function Combat.setManipulationEnabled(self,
+enabled)State.isManipulationEnabled=enabled end function Combat.
+setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=enabled end function
+Combat.setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=
+enabled end function Combat.setClosestPositionWhitelist(self,whitelist)State.
+closestPositionWhitelist=whitelist end function Combat.setNoRecoilEnabled(self,
+isEnabled)State.isNoRecoilEnabled=isEnabled end function Combat.
+setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end function
+Combat.setNoMuzzleFlashEnabled(self,isEnabled)State.isNoMuzzleFlashEnabled=
+isEnabled end function Combat.setAttackCooldownMultiplier(self,multiplier)State.
+attackCooldownMultiplier=multiplier end function Combat.
 setMeleeAttackCooldownEnabled(self,isEnabled)State.isMeleeAttackCooldownEnabled=
 isEnabled end function Combat.setMeleeAttackCooldownMultiplier(self,multiplier)
 State.meleeAttackCooldownMultiplier=multiplier end function Combat.
@@ -1477,8 +1479,24 @@ setRagebotOrbitRadius(value)end end})ragebotGroup:AddSlider('RagebotOrbitSpeed',
 {Text='Orbit Speed',Default=12,Min=1,Max=60,Rounding=0,Suffix='x',Tooltip=
 'Speed of the Ragebot orbit.',Compact=true,Callback=function(value)local mod=
 client.Modules.Combat if mod and mod.setRagebotOrbitSpeed then mod:
-setRagebotOrbitSpeed(value)end end})combatGroup:AddToggle('CombatManipulation',{
-Text='Manipulation',Default=false,Tooltip=
+setRagebotOrbitSpeed(value)end end})ragebotGroup:AddSlider('RagebotOffsetX',{
+Text='Offset X',Default=0,Min=-10,Max=10,Rounding=1,Suffix=' studs',Tooltip=
+'Ragebot teleport offset on X axis.',Compact=true,Callback=function(value)local
+mod=client.Modules.Combat if mod and mod.setRagebotOffset then local current=mod
+and mod.getRagebotOffset and mod:getRagebotOffset()or Vector3.zero mod:
+setRagebotOffset(Vector3.new(value,current.Y,current.Z))end end})ragebotGroup:
+AddSlider('RagebotOffsetY',{Text='Offset Y',Default=0,Min=-10,Max=10,Rounding=1,
+Suffix=' studs',Tooltip='Ragebot teleport offset on Y axis.',Compact=true,
+Callback=function(value)local mod=client.Modules.Combat if mod and mod.
+setRagebotOffset then local current=mod and mod.getRagebotOffset and mod:
+getRagebotOffset()or Vector3.zero mod:setRagebotOffset(Vector3.new(current.X,
+value,current.Z))end end})ragebotGroup:AddSlider('RagebotOffsetZ',{Text=
+'Offset Z',Default=0,Min=-10,Max=10,Rounding=1,Suffix=' studs',Tooltip=
+'Ragebot teleport offset on Z axis.',Compact=true,Callback=function(value)local
+mod=client.Modules.Combat if mod and mod.setRagebotOffset then local current=mod
+and mod.getRagebotOffset and mod:getRagebotOffset()or Vector3.zero mod:
+setRagebotOffset(Vector3.new(current.X,current.Y,value))end end})combatGroup:
+AddToggle('CombatManipulation',{Text='Manipulation',Default=false,Tooltip=
 'Enables manipulation-related combat features.',Callback=function(state)local
 mod=client.Modules.Combat if mod and mod.setManipulationEnabled then mod:
 setManipulationEnabled(state)end end})combatGroup:AddToggle('CombatWallCheck',{

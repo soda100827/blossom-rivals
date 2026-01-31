@@ -220,6 +220,10 @@ function Combat.setRagebotOffset(self: CombatFeature, offset: Vector3): ()
 	State.ragebotOffset = offset
 end
 
+function Combat.getRagebotOffset(self: CombatFeature): Vector3
+	return State.ragebotOffset
+end
+
 function Combat.setSilentAimFovEnabled(self: CombatFeature, isEnabled: boolean): ()
 	State.isSilentAimFovEnabled = isEnabled
 end
