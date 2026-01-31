@@ -63,6 +63,7 @@ export type CombatState = {
 	mouseDeltaSensitivity: number?,
 	ragebotSavedSilentAimEnabled: boolean?,
 	ragebotSavedAttackCooldownMultiplier: number?,
+	ragebotSavedSilentAimFovRadius: number?,
 }
 
 export type CombatVisuals = {

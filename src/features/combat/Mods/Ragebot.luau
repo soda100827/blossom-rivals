@@ -38,7 +38,6 @@ local _state = {
 	mouse1press = nil :: (() -> ())?,
 	mouse1release = nil :: (() -> ())?,
 	mouse1click = nil :: (() -> ())?,
-	ragebotSavedSilentAimFovRadius = nil :: number?,
 	lastWeaponSwapAt = 0,
 	isSwapReloadActive = false,
 }
@@ -421,14 +420,14 @@ end
 
 local function _applyRagebotSilentAimOverride(isEnabled: boolean)
 	if isEnabled then
-		if _state.ragebotSavedSilentAimFovRadius == nil then
-			_state.ragebotSavedSilentAimFovRadius = State.silentAimFovRadius
+		if State.ragebotSavedSilentAimFovRadius == nil then
+			State.ragebotSavedSilentAimFovRadius = State.silentAimFovRadius
 		end
 		State.silentAimFovRadius = math.huge
 	else
-		if _state.ragebotSavedSilentAimFovRadius ~= nil then
-			State.silentAimFovRadius = _state.ragebotSavedSilentAimFovRadius
-			_state.ragebotSavedSilentAimFovRadius = nil
+		if State.ragebotSavedSilentAimFovRadius ~= nil then
+			State.silentAimFovRadius = State.ragebotSavedSilentAimFovRadius
+			State.ragebotSavedSilentAimFovRadius = nil
 		end
 	end
 end

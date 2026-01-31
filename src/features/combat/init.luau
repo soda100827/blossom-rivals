@@ -157,7 +157,12 @@ function Combat.setWallCheckEnabled(self: CombatFeature, isEnabled: boolean): ()
 end
 
 function Combat.setSilentAimEnabled(self: CombatFeature, isEnabled: boolean): ()
-	State.isSilentAimEnabled = isEnabled
+	if State.isRagebotEnabled then
+		State.ragebotSavedSilentAimEnabled = isEnabled
+		State.isSilentAimEnabled = true
+	else
+		State.isSilentAimEnabled = isEnabled
+	end
 	if not isEnabled then
 		State.silentTarget = nil
 		State.silentTargetLostAt = nil
@@ -216,7 +221,11 @@ function Combat.setSilentAimFovEnabled(self: CombatFeature, isEnabled: boolean):
 end
 
 function Combat.setSilentAimFovRadius(self: CombatFeature, radius: number): ()
-	State.silentAimFovRadius = radius
+	if State.isRagebotEnabled then
+		State.ragebotSavedSilentAimFovRadius = radius
+	else
+		State.silentAimFovRadius = radius
+	end
 end
 
 function Combat.setSilentAimFovColor(self: CombatFeature, color: Color3): ()
