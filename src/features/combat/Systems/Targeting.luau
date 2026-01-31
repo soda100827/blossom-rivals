@@ -158,6 +158,16 @@ local function _getTargetStateWithMouse(
   return true, bestPart, isAnyOnScreen, shortestDist
 end
 
+local function _getWorldDistanceSq(localCharacter: Model?, character: Model?): number
+  local localRoot = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") :: BasePart?
+  local targetRoot = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
+  if not localRoot or not targetRoot then
+    return math.huge
+  end
+  local delta = localRoot.Position - targetRoot.Position
+  return (delta.X * delta.X) + (delta.Y * delta.Y) + (delta.Z * delta.Z)
+end
+
 --// Public API
 function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
   _refreshCaches()
@@ -283,10 +293,11 @@ function Targeting.getClosestSilentTarget(): BasePart?
   end
 
   local closest: BasePart? = nil
-  local closestDistSq = State.silentAimFovRadius * State.silentAimFovRadius
+  local closestDistSq = if State.isRagebotEnabled then math.huge else State.silentAimFovRadius * State.silentAimFovRadius
   local mouseLocation = _getMouseLocation()
   local closestOnScreen = false
   local closestName = "" :: string
+  local localCharacter = localPlayer.Character
 
   for _, entity in ipairs(CollectionService:GetTagged("Entity")) do
     if entity == localPlayer.Character or entity.Name == localPlayer.Name then
@@ -315,9 +326,13 @@ function Targeting.getClosestSilentTarget(): BasePart?
       continue
     end
 
-    if distSq < closestDistSq then
+    local scoreDistSq = distSq
+    if not isAnyOnScreen and State.isRagebotEnabled then
+      scoreDistSq = _getWorldDistanceSq(localCharacter, entity :: Model)
+    end
+    if scoreDistSq < closestDistSq then
       closest = bestPart
-      closestDistSq = distSq
+      closestDistSq = scoreDistSq
       closestOnScreen = isAnyOnScreen
       local player = Players:GetPlayerFromCharacter(entity :: Model)
       if player then
