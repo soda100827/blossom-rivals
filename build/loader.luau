@@ -1122,26 +1122,35 @@ return false end local function _getShootCooldown(equipped)local info=equipped
 and equipped.Info local baseCooldown=(info and info.ShootCooldown)or 0.1 local
 multiplier=State.attackCooldownMultiplier if type(multiplier)=='number'and
 multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)
-end return math.max(baseCooldown,0.02)end local function _equippedItemInput(
+end return math.max(baseCooldown,0.02)end local function _safeCallInput(obj,
+inputName)if not obj or not obj.Input then return nil end local set_identity=
+ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.getGlobal(
+'set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
+'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
+set_identity and get_identity then local old=get_identity()set_identity(2)local
+success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)
+if not success then if State.logger then State.logger:warn(
+'[Ragebot] SafeInput failed:',result)end return nil end return result else
+return obj:Input(inputName)end end local function _equippedItemInput(
 localFighter,equipped,inputName)if equipped and equipped.Input then local
 wasEquipped=equipped.IsEquipped local isSpoofNeeded=not wasEquipped and type(
 inputName)=='string'and string.sub(inputName,1,5)=='Start'if isSpoofNeeded then
-equipped.IsEquipped=true end local ok=equipped:Input(inputName)if isSpoofNeeded
-then equipped.IsEquipped=wasEquipped end if State.logger and State.
-isRagebotEnabled then local now=os.clock()if now>=_state.debugNextAt then _state
-.debugNextAt=now+1 State.logger:info('[Ragebot Debug] EquippedItem:Input',
+equipped.IsEquipped=true end local ok=_safeCallInput(equipped,inputName)if
+isSpoofNeeded then equipped.IsEquipped=wasEquipped end if State.logger and State
+.isRagebotEnabled then local now=os.clock()if now>=_state.debugNextAt then
+_state.debugNextAt=now+1 State.logger:info('[Ragebot Debug] EquippedItem:Input',
 inputName,ok==true,_getItemDebugState(equipped))end end if ok==true then return
-true end end if localFighter and localFighter.Input then local ok=localFighter:
-Input(inputName)if State.logger and State.isRagebotEnabled then local now=os.
-clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.logger:
-info('[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end return ok==
-true end return false end local function _forceShootReady(equipped)if not
-equipped then return end if _isReloading(equipped)then return end local ammo=
-_getAmmo(equipped)if type(ammo)=='number'and ammo<=0 then return end if(equipped
-)._shoot_cooldown~=nil then(equipped)._shoot_cooldown=0 end if(equipped).
-_shoot_cooldown_no_ammo~=nil then(equipped)._shoot_cooldown_no_ammo=0 end if(
-equipped)._is_input_queueing~=nil then(equipped)._is_input_queueing=false end
-end local function _shoot(localFighter)local equipped=_ensureGunEquipped(
+true end end if localFighter and localFighter.Input then local ok=
+_safeCallInput(localFighter,inputName)if State.logger and State.isRagebotEnabled
+then local now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+
+1 State.logger:info('[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end
+end return ok==true end return false end local function _forceShootReady(
+equipped)if not equipped then return end if _isReloading(equipped)then return
+end local ammo=_getAmmo(equipped)if type(ammo)=='number'and ammo<=0 then return
+end if(equipped)._shoot_cooldown~=nil then(equipped)._shoot_cooldown=0 end if(
+equipped)._shoot_cooldown_no_ammo~=nil then(equipped)._shoot_cooldown_no_ammo=0
+end if(equipped)._is_input_queueing~=nil then(equipped)._is_input_queueing=false
+end end local function _shoot(localFighter)local equipped=_ensureGunEquipped(
 localFighter)if not equipped or not equipped.Input then return end local now=os.
 clock()local cooldown=_getShootCooldown(equipped)if now-_state.lastShotAt<
 cooldown then return end _state.lastShotAt=now _forceShootReady(equipped)local

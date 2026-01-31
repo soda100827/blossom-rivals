@@ -419,6 +419,34 @@ local function _getShootCooldown(equipped: any): number
 	return math.max(baseCooldown, 0.02)
 end
 
+local function _safeCallInput(obj: any, inputName: string): any
+	if not obj or not obj.Input then
+		return nil
+	end
+
+	-- Attempt to lower identity to bypass "require" checks in game modules for high-identity threads
+	local set_identity = ExecutorUtils.getGlobal("setthreadidentity") or ExecutorUtils.getGlobal("set_thread_identity")
+	local get_identity = ExecutorUtils.getGlobal("getthreadidentity") or ExecutorUtils.getGlobal("get_thread_identity")
+
+	if set_identity and get_identity then
+		local old = get_identity()
+		set_identity(2)
+		local success, result = pcall(function()
+			return obj:Input(inputName)
+		end)
+		set_identity(old)
+		if not success then
+			if State.logger then
+				State.logger:warn("[Ragebot] SafeInput failed:", result)
+			end
+			return nil
+		end
+		return result
+	else
+		return obj:Input(inputName)
+	end
+end
+
 local function _equippedItemInput(localFighter: any, equipped: any, inputName: string)
 	if equipped and equipped.Input then
 		local wasEquipped = equipped.IsEquipped
@@ -428,7 +456,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 			equipped.IsEquipped = true
 		end
 
-		local ok = equipped:Input(inputName)
+		local ok = _safeCallInput(equipped, inputName)
 
 		if isSpoofNeeded then
 			equipped.IsEquipped = wasEquipped
@@ -450,7 +478,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 		end
 	end
 	if localFighter and localFighter.Input then
-		local ok = localFighter:Input(inputName)
+		local ok = _safeCallInput(localFighter, inputName)
 		if State.logger and State.isRagebotEnabled then
 			local now = os.clock()
 			if now >= _state.debugNextAt then
