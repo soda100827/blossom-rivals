@@ -405,90 +405,89 @@ isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
 isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
 100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
 isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
-isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,meleeAuraReach=100,target=
-nil,silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,
-silentAimFovCircle=nil,cameraController=nil,fighterController=nil,isRemoteHooked
-=false,isUtilityHooked=false,isCameraShakerHooked=false,isGunModsHooked=false,
-isInputLocked=false,mouseBehavior=nil,mouseDeltaSensitivity=nil}return _state
-end function __DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.
-n if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v
-.c end end do local function __modImpl()local Players=game:GetService('Players')
-local UserInputService=game:GetService('UserInputService')local
-ReplicatedStorage=game:GetService('ReplicatedStorage')local PlayerUtils=
-__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.n()local
-Constants=__DARKLUA_BUNDLE_MODULES.m()local Helpers={}Helpers.__index=Helpers
-local _maid=nil local _signals={}local _state={}function Helpers.getUtility()
-local modules=ReplicatedStorage:WaitForChild('Modules',5)if not modules then
-return nil end local utility=modules:WaitForChild('Utility',5)if not utility
-then return nil end local success,result=pcall(function()local dynamicRequire=
-require return dynamicRequire(utility)end)return success and result or nil end
-function Helpers.getGameplayUtility()local modules=ReplicatedStorage:
+isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,target=nil,silentTarget=nil
+,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
+cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
+false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
+mouseBehavior=nil,mouseDeltaSensitivity=nil}return _state end function
+__DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+UserInputService=game:GetService('UserInputService')local ReplicatedStorage=game
+:GetService('ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()
+local State=__DARKLUA_BUNDLE_MODULES.n()local Constants=__DARKLUA_BUNDLE_MODULES
+.m()local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}
+local _state={}function Helpers.getUtility()local modules=ReplicatedStorage:
 WaitForChild('Modules',5)if not modules then return nil end local utility=
-modules:WaitForChild('GameplayUtility',5)if not utility then return nil end
-local success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(utility)end)return success and result or nil end function Helpers
-.getCameraShaker()local localPlayer=Players.LocalPlayer if not localPlayer then
-return nil end local playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if
-not playerScripts then return nil end local modules=playerScripts:WaitForChild(
-'Modules',5)if not modules then return nil end local cameraShaker=modules:
-WaitForChild('CameraShaker',5)if not cameraShaker then return nil end local
+modules:WaitForChild('Utility',5)if not utility then return nil end local
 success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(cameraShaker)end)return success and result or nil end function
-Helpers.applyInputLock(isLocked)if isLocked and State.smoothness<Constants.
-MAX_SMOOTHNESS then return end if isLocked==State.isInputLocked then return end
-if isLocked then if State.mouseBehavior==nil then State.mouseBehavior=
-UserInputService.MouseBehavior end if State.mouseDeltaSensitivity==nil then
-State.mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity end
-UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter UserInputService.
-MouseDeltaSensitivity=0 else local restoreBehavior=State.mouseBehavior or Enum.
-MouseBehavior.Default local restoreSensitivity=State.mouseDeltaSensitivity or 1
-UserInputService.MouseBehavior=restoreBehavior UserInputService.
-MouseDeltaSensitivity=restoreSensitivity State.mouseBehavior=nil State.
-mouseDeltaSensitivity=nil end State.isInputLocked=isLocked end function Helpers.
-isMaxSmoothness()return State.smoothness>=Constants.MAX_SMOOTHNESS end function
-Helpers.fetchCameraController(logger)if State.cameraController then return end
-local player=PlayerUtils.getLocalPlayer()if not player then return end local
-playerScripts=player:WaitForChild('PlayerScripts')if not playerScripts then
-return end local controllers=playerScripts:WaitForChild('Controllers')if not
-controllers then return end local camControllerScript=controllers:WaitForChild(
-'CameraController')if camControllerScript and camControllerScript:IsA(
-'ModuleScript')then local success,result=pcall(function()local dynamicRequire=
-require return dynamicRequire(camControllerScript)end)if success then State.
-cameraController=result else if logger then logger:error(
-'Failed CameraController',result)end end end end function Helpers.
-fetchFighterController(logger)if State.fighterController then return end local
-player=PlayerUtils.getLocalPlayer()if not player then return end local
-playerScripts=player:WaitForChild('PlayerScripts',10)if not playerScripts then
-return end local controllers=playerScripts:WaitForChild('Controllers',10)if not
-controllers then return end local fighterControllerScript=controllers:
-WaitForChild('FighterController',5)if fighterControllerScript and
-fighterControllerScript:IsA('ModuleScript')then local success,result=pcall(
-function()local dynamicRequire=require return dynamicRequire(
-fighterControllerScript)end)if success then State.fighterController=result end
-end end function Helpers.getGunModule()local player=PlayerUtils.getLocalPlayer()
-if not player then return nil end local playerScripts=player:WaitForChild(
-'PlayerScripts',5)if not playerScripts then return nil end local modules=
-playerScripts:WaitForChild('Modules',5)if not modules then return nil end local
-itemTypes=modules:WaitForChild('ItemTypes',5)if not itemTypes then return nil
-end local gun=itemTypes:WaitForChild('Gun',5)if not gun then return nil end
+dynamicRequire(utility)end)return success and result or nil end function Helpers
+.getGameplayUtility()local modules=ReplicatedStorage:WaitForChild('Modules',5)if
+not modules then return nil end local utility=modules:WaitForChild(
+'GameplayUtility',5)if not utility then return nil end local success,result=
+pcall(function()local dynamicRequire=require return dynamicRequire(utility)end)
+return success and result or nil end function Helpers.getCameraShaker()local
+localPlayer=Players.LocalPlayer if not localPlayer then return nil end local
+playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
+then return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return nil end local cameraShaker=modules:WaitForChild(
+'CameraShaker',5)if not cameraShaker then return nil end local success,result=
+pcall(function()local dynamicRequire=require return dynamicRequire(cameraShaker)
+end)return success and result or nil end function Helpers.applyInputLock(
+isLocked)if isLocked and State.smoothness<Constants.MAX_SMOOTHNESS then return
+end if isLocked==State.isInputLocked then return end if isLocked then if State.
+mouseBehavior==nil then State.mouseBehavior=UserInputService.MouseBehavior end
+if State.mouseDeltaSensitivity==nil then State.mouseDeltaSensitivity=
+UserInputService.MouseDeltaSensitivity end UserInputService.MouseBehavior=Enum.
+MouseBehavior.LockCenter UserInputService.MouseDeltaSensitivity=0 else local
+restoreBehavior=State.mouseBehavior or Enum.MouseBehavior.Default local
+restoreSensitivity=State.mouseDeltaSensitivity or 1 UserInputService.
+MouseBehavior=restoreBehavior UserInputService.MouseDeltaSensitivity=
+restoreSensitivity State.mouseBehavior=nil State.mouseDeltaSensitivity=nil end
+State.isInputLocked=isLocked end function Helpers.isMaxSmoothness()return State.
+smoothness>=Constants.MAX_SMOOTHNESS end function Helpers.fetchCameraController(
+logger)if State.cameraController then return end local player=PlayerUtils.
+getLocalPlayer()if not player then return end local playerScripts=player:
+WaitForChild('PlayerScripts')if not playerScripts then return end local
+controllers=playerScripts:WaitForChild('Controllers')if not controllers then
+return end local camControllerScript=controllers:WaitForChild('CameraController'
+)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
+success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(camControllerScript)end)if success then State.cameraController=
+result else if logger then logger:error('Failed CameraController',result)end end
+end end function Helpers.fetchFighterController(logger)if State.
+fighterController then return end local player=PlayerUtils.getLocalPlayer()if
+not player then return end local playerScripts=player:WaitForChild(
+'PlayerScripts',10)if not playerScripts then return end local controllers=
+playerScripts:WaitForChild('Controllers',10)if not controllers then return end
+local fighterControllerScript=controllers:WaitForChild('FighterController',5)if
+fighterControllerScript and fighterControllerScript:IsA('ModuleScript')then
 local success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(gun)end)return success and result or nil end function Helpers.
-getClientItemModule()local player=PlayerUtils.getLocalPlayer()if not player then
-return nil end local playerScripts=player:WaitForChild('PlayerScripts',5)if not
-playerScripts then return nil end local modules=playerScripts:WaitForChild(
-'Modules',5)if not modules then return nil end local clientReplicatedClasses=
-modules:WaitForChild('ClientReplicatedClasses',5)if not clientReplicatedClasses
-then return nil end local clientFighter=clientReplicatedClasses:WaitForChild(
-'ClientFighter',5)if not clientFighter then return nil end local clientItem=
-clientFighter:WaitForChild('ClientItem',5)if not clientItem then return nil end
-local success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(clientItem)end)return success and result or nil end function
-Helpers.getViewModelModule()local player=PlayerUtils.getLocalPlayer()if not
-player then return nil end local playerScripts=player:WaitForChild(
-'PlayerScripts',5)if not playerScripts then return nil end local modules=
-playerScripts:WaitForChild('Modules',5)if not modules then return nil end local
-clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses',5)if not
-clientReplicatedClasses then return nil end local clientFighter=
+dynamicRequire(fighterControllerScript)end)if success then State.
+fighterController=result end end end function Helpers.getGunModule()local player
+=PlayerUtils.getLocalPlayer()if not player then return nil end local
+playerScripts=player:WaitForChild('PlayerScripts',5)if not playerScripts then
+return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return nil end local itemTypes=modules:WaitForChild('ItemTypes',5)
+if not itemTypes then return nil end local gun=itemTypes:WaitForChild('Gun',5)if
+not gun then return nil end local success,result=pcall(function()local
+dynamicRequire=require return dynamicRequire(gun)end)return success and result
+or nil end function Helpers.getClientItemModule()local player=PlayerUtils.
+getLocalPlayer()if not player then return nil end local playerScripts=player:
+WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
+modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
+end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
+,5)if not clientReplicatedClasses then return nil end local clientFighter=
+clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
+return nil end local clientItem=clientFighter:WaitForChild('ClientItem',5)if not
+clientItem then return nil end local success,result=pcall(function()local
+dynamicRequire=require return dynamicRequire(clientItem)end)return success and
+result or nil end function Helpers.getViewModelModule()local player=PlayerUtils.
+getLocalPlayer()if not player then return nil end local playerScripts=player:
+WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
+modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
+end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
+,5)if not clientReplicatedClasses then return nil end local clientFighter=
 clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
 return nil end local clientItemScript=clientFighter:WaitForChild('ClientItem',5)
 if not clientItemScript then return nil end local viewModel=clientItemScript:
@@ -1119,10 +1118,8 @@ HookUtils.safeHook(meleeMod,'StartShooting',function(self,...)if not
 checkcaller()then local info=(self).Info if State.isMeleeAuraEnabled then(self).
 _attack_cooldown=0(self)._equip_cooldown=0 end local originalCooldown=info.
 AttackCooldown info.AttackCooldown=originalCooldown*(State.
-meleeAttackCooldownMultiplier/100)local originalReach=info.AttackReach if State.
-isMeleeAuraEnabled then info.AttackReach=State.meleeAuraReach end local result=
-table.pack(oldStartShooting(self,...))info.AttackCooldown=originalCooldown info.
-AttackReach=originalReach return table.unpack(result)end return
+meleeAttackCooldownMultiplier/100)local result=table.pack(oldStartShooting(self,
+...))info.AttackCooldown=originalCooldown return table.unpack(result)end return
 oldStartShooting(self,...)end,State.logger,_maid)local oldCanQuickAttack
 oldCanQuickAttack=HookUtils.safeHook(meleeMod,'CanQuickAttack',function(self,...
 )if not checkcaller()and State.isMeleeAuraEnabled then return true end return
@@ -1246,8 +1243,7 @@ isEnabled end function Combat.setMeleeSkillCooldownMultiplier(self,multiplier)
 State.meleeSkillCooldownMultiplier=multiplier end function Combat.
 setMeleeAuraEnabled(self,isEnabled)State.isMeleeAuraEnabled=isEnabled end
 function Combat.setTeleportAuraEnabled(self,isEnabled)State.
-isTeleportAuraEnabled=isEnabled end function Combat.setMeleeAuraReach(self,reach
-)State.meleeAuraReach=reach end return Combat end function
+isTeleportAuraEnabled=isEnabled end return Combat end function
 __DARKLUA_BUNDLE_MODULES.D()local v=__DARKLUA_BUNDLE_MODULES.cache.D if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end
 do local function __modImpl()local CombatTab={}CombatTab.__index=CombatTab local
@@ -1344,9 +1340,9 @@ state)end end})meleeModsGroup:AddSlider('MeleeModsCooldown',{Text=
 'Attack Cooldown',Default=100,Min=1,Max=100,Rounding=0,Suffix='%',Tooltip=
 'Weapon fire rate cooldown. 1% is near-instant fire rate.',Compact=true,Callback
 =function(value)local mod=client.Modules.Combat if mod and mod.
-setAttackCooldownMultiplier then mod:setAttackCooldownMultiplier(value)end end})
-meleeModsGroup:AddSlider('MeleeModsSkillCooldown',{Text='Skill Cooldown',Default
-=100,Min=1,Max=100,Rounding=0,Suffix='%',Tooltip=
+setMeleeAttackCooldownMultiplier then mod:setMeleeAttackCooldownMultiplier(value
+)end end})meleeModsGroup:AddSlider('MeleeModsSkillCooldown',{Text=
+'Skill Cooldown',Default=100,Min=1,Max=100,Rounding=0,Suffix='%',Tooltip=
 [[Skill cooldown multiplier. Lower values reduce skill cooldowns.]],Compact=true
 ,Callback=function(value)local mod=client.Modules.Combat if mod and mod.
 setMeleeSkillCooldownMultiplier then mod:setMeleeSkillCooldownMultiplier(value)

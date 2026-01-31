@@ -241,8 +241,4 @@ function Combat.setTeleportAuraEnabled(self: CombatFeature, isEnabled: boolean):
   State.isTeleportAuraEnabled = isEnabled
 end
 
-function Combat.setMeleeAuraReach(self: CombatFeature, reach: number): ()
-  State.meleeAuraReach = reach
-end
-
 return Combat

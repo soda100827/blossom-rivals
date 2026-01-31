@@ -352,8 +352,8 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
     Compact = true,
     Callback = function(value)
       local mod = client.Modules.Combat
-      if mod and mod.setAttackCooldownMultiplier then
-        mod:setAttackCooldownMultiplier(value)
+      if mod and mod.setMeleeAttackCooldownMultiplier then
+        mod:setMeleeAttackCooldownMultiplier(value)
       end
     end,
   })

@@ -38,7 +38,6 @@ export type CombatState = {
   meleeSkillCooldownMultiplier: number,
   isMeleeAuraEnabled: boolean,
   isTeleportAuraEnabled: boolean,
-  meleeAuraReach: number,
   -- Internal
   forcingAim: boolean?,
   target: Player?,
@@ -93,7 +92,6 @@ export type CombatFeature = {
   setMeleeSkillCooldownMultiplier: (self: CombatFeature, multiplier: number) -> (),
   setMeleeAuraEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
   setTeleportAuraEnabled: (self: CombatFeature, isEnabled: boolean) -> (),
-  setMeleeAuraReach: (self: CombatFeature, reach: number) -> (),
 }
 
 --// Private state

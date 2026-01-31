@@ -118,17 +118,10 @@ function MeleeMods.setup(maid: any): ()
           local originalCooldown: number = info.AttackCooldown
           info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
 
-          -- Reach manipulation (Always apply reach during Aura)
-          local originalReach = info.AttackReach
-          if State.isMeleeAuraEnabled then
-            info.AttackReach = State.meleeAuraReach -- Configurable reach
-          end
-
           local result = table.pack(oldStartShooting(self, ...))
 
           -- Restore
           info.AttackCooldown = originalCooldown
-          info.AttackReach = originalReach
 
           return table.unpack(result)
         end

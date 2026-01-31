@@ -53,7 +53,6 @@ local _state: Types.CombatState = {
   meleeSkillCooldownMultiplier = 100,
   isMeleeAuraEnabled = false,
   isTeleportAuraEnabled = false,
-  meleeAuraReach = 100,
   target = nil,
   silentTarget = nil,
   targetLostAt = nil,
