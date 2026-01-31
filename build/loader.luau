@@ -993,13 +993,15 @@ SilentAim end function __DARKLUA_BUNDLE_MODULES.y()local v=
 __DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.u()
-local Helpers=__DARKLUA_BUNDLE_MODULES.v()local ORBIT_RADIUS=100000 local
-ORBIT_SPEED=12 local TARGET_REFRESH_INTERVAL=0.05 local TELEPORT_OFFSET=Vector3.
-new(0,0,2)local Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals
-={}local _state={lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,
-cachedTargetRoot=nil}local function _getLocalRoot()local localPlayer=PlayerUtils
+GetService('RunService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
+.e()local State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=
+__DARKLUA_BUNDLE_MODULES.v()local ORBIT_RADIUS=100000 local ORBIT_SPEED=12 local
+TARGET_REFRESH_INTERVAL=0.05 local TELEPORT_OFFSET=Vector3.new(0,0,2)local
+MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
+_maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
+cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
+=nil,mouse1click=nil}local function _getLocalRoot()local localPlayer=PlayerUtils
 .getLocalPlayer()local character=localPlayer and localPlayer.Character return
 character and((character:FindFirstChild('HumanoidRootPart')))or nil end
 local function _isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if
@@ -1035,31 +1037,50 @@ true end if info.ShootCooldown~=nil or info.AmmoType~=nil then return true end
 return false end local function _ensureGunEquipped(localFighter)if not
 localFighter then return nil end local equipped=localFighter.EquippedItem if
 _isGunItem(equipped)then return equipped end return nil end local function
-_shoot(localFighter)local equipped=_ensureGunEquipped(localFighter)if not
-equipped or not equipped.Input then return end equipped:Input('StartShooting')if
-equipped.Name~='Flamethrower'then task.delay(0.1,function()if localFighter.
-EquippedItem==equipped and equipped.Input then equipped:Input('FinishShooting')
-end end)end end local function _teleportToTarget(localRoot,targetRoot)localRoot.
-CFrame=targetRoot.CFrame*CFrame.new(TELEPORT_OFFSET)end local function
-_orbitTarget(localRoot,targetRoot)local angle=os.clock()*ORBIT_SPEED local
-offset=Vector3.new(math.cos(angle),0,math.sin(angle))*ORBIT_RADIUS local
-position=targetRoot.Position+offset localRoot.CFrame=CFrame.new(position,
-targetRoot.Position)end local function _refreshTarget(localRoot)local now=os.
-clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end
-_state.lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
-_getBestTarget(localRoot)end local function _connect()if not _maid then return
-end local connection=RunService.RenderStepped:Connect(function()if not State.
-isRagebotEnabled then return end if not _isRoundStarted()then return end if not
-State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
-attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
-localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
-_getLocalFighter()if not localFighter then return end _refreshTarget(localRoot)
-local targetRoot=_state.cachedTargetRoot if not targetRoot then return end local
-equipped=_ensureGunEquipped(localFighter)if equipped and _isReloading(equipped)
-then _orbitTarget(localRoot,targetRoot)return end _teleportToTarget(localRoot,
-targetRoot)if equipped then _shoot(localFighter)end end)_maid:GiveTask(
-connection)end function Ragebot.setup(maid)_maid=maid _connect()end return
-Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
+_refreshInputFunctions()if _state.mouse1press or _state.mouse1click then return
+end _state.mouse1press=ExecutorUtils.getGlobal('mouse1press')_state.
+mouse1release=ExecutorUtils.getGlobal('mouse1release')_state.mouse1click=
+ExecutorUtils.getGlobal('mouse1click')end local function _tryMouseShot(equipped)
+_refreshInputFunctions()if _state.mouse1click then _state.mouse1click()return
+true end if _state.mouse1press and _state.mouse1release then _state.mouse1press(
+)local shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.
+delay(MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn=_state.mouse1release if
+releaseFn then releaseFn()end end)end return true end return false end
+local function _getShootCooldown(equipped)local info=equipped and equipped.Info
+local baseCooldown=(info and info.ShootCooldown)or 0.1 local multiplier=State.
+attackCooldownMultiplier if type(multiplier)=='number'and multiplier>0 and
+multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)end return math.
+max(baseCooldown,0.02)end local function _equippedItemInput(localFighter,
+equipped,inputName)if localFighter and localFighter.Input then localFighter:
+Input(inputName)return end if equipped and equipped.Input then equipped:Input(
+inputName)end end local function _shoot(localFighter)local equipped=
+_ensureGunEquipped(localFighter)if not equipped or not equipped.Input then
+return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if now-
+_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
+_tryMouseShot(equipped)then return end _equippedItemInput(localFighter,equipped,
+'StartShooting')if equipped.Name~='Flamethrower'then task.delay(0.1,function()if
+localFighter.EquippedItem==equipped and equipped.Input then _equippedItemInput(
+localFighter,equipped,'FinishShooting')end end)end end local function
+_teleportToTarget(localRoot,targetRoot)localRoot.CFrame=targetRoot.CFrame*CFrame
+.new(TELEPORT_OFFSET)end local function _orbitTarget(localRoot,targetRoot)local
+angle=os.clock()*ORBIT_SPEED local offset=Vector3.new(math.cos(angle),0,math.
+sin(angle))*ORBIT_RADIUS local position=targetRoot.Position+offset localRoot.
+CFrame=CFrame.new(position,targetRoot.Position)end local function _refreshTarget
+(localRoot)local now=os.clock()if now-_state.lastTargetRefresh<
+TARGET_REFRESH_INTERVAL then return end _state.lastTargetRefresh=now _state.
+cachedTarget,_state.cachedTargetRoot=_getBestTarget(localRoot)end local function
+_connect()if not _maid then return end local connection=RunService.RenderStepped
+:Connect(function()if not State.isRagebotEnabled then return end if not
+_isRoundStarted()then return end if not State.isSilentAimEnabled then State.
+isSilentAimEnabled=true end if State.attackCooldownMultiplier>1 then State.
+attackCooldownMultiplier=1 end local localRoot=_getLocalRoot()if not localRoot
+then return end local localFighter=_getLocalFighter()if not localFighter then
+return end _refreshTarget(localRoot)local targetRoot=_state.cachedTargetRoot if
+not targetRoot then return end local equipped=_ensureGunEquipped(localFighter)if
+equipped and _isReloading(equipped)then _orbitTarget(localRoot,targetRoot)return
+end _teleportToTarget(localRoot,targetRoot)if equipped then _shoot(localFighter)
+end end)_maid:GiveTask(connection)end function Ragebot.setup(maid)_maid=maid
+_connect()end return Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
 __DARKLUA_BUNDLE_MODULES.cache.z if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end do local function
 __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=

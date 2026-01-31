@@ -5,6 +5,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 --// Dependencies (require)
+local ExecutorUtils = require("../../../shared/ExecutorUtils")
 local PlayerUtils = require("../../../shared/PlayerUtils")
 local TeamUtils = require("../../../shared/TeamUtils")
 local State = require("../State")
@@ -15,6 +16,7 @@ local ORBIT_RADIUS = 100000
 local ORBIT_SPEED = 12
 local TARGET_REFRESH_INTERVAL = 0.05
 local TELEPORT_OFFSET = Vector3.new(0, 0, 2)
+local MOUSE_SHOT_RELEASE_DELAY = 0.03
 
 --// Types
 
@@ -29,6 +31,10 @@ local _state = {
 	lastFighterFetch = 0,
 	cachedTarget = nil :: Player?,
 	cachedTargetRoot = nil :: BasePart?,
+	lastShotAt = 0,
+	mouse1press = nil :: (() -> ())?,
+	mouse1release = nil :: (() -> ())?,
+	mouse1click = nil :: (() -> ())?,
 }
 
 --// Private helpers
@@ -173,17 +179,82 @@ local function _ensureGunEquipped(localFighter: any): any
 	return nil
 end
 
+local function _refreshInputFunctions()
+	if _state.mouse1press or _state.mouse1click then
+		return
+	end
+	_state.mouse1press = ExecutorUtils.getGlobal("mouse1press")
+	_state.mouse1release = ExecutorUtils.getGlobal("mouse1release")
+	_state.mouse1click = ExecutorUtils.getGlobal("mouse1click")
+end
+
+local function _tryMouseShot(equipped: any): boolean
+	_refreshInputFunctions()
+
+	if _state.mouse1click then
+		_state.mouse1click()
+		return true
+	end
+
+	if _state.mouse1press and _state.mouse1release then
+		_state.mouse1press()
+		local shouldRelease = equipped.Name ~= "Flamethrower"
+		if shouldRelease then
+			task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
+				local releaseFn = _state.mouse1release
+				if releaseFn then
+					releaseFn()
+				end
+			end)
+		end
+		return true
+	end
+
+	return false
+end
+
+local function _getShootCooldown(equipped: any): number
+	local info = equipped and equipped.Info
+	local baseCooldown = (info and info.ShootCooldown) or 0.1
+	local multiplier = State.attackCooldownMultiplier
+	if type(multiplier) == "number" and multiplier > 0 and multiplier < 100 then
+		baseCooldown = baseCooldown * (multiplier / 100)
+	end
+	return math.max(baseCooldown, 0.02)
+end
+
+local function _equippedItemInput(localFighter: any, equipped: any, inputName: string)
+	if localFighter and localFighter.Input then
+		localFighter:Input(inputName)
+		return
+	end
+	if equipped and equipped.Input then
+		equipped:Input(inputName)
+	end
+end
+
 local function _shoot(localFighter: any)
 	local equipped = _ensureGunEquipped(localFighter)
 	if not equipped or not equipped.Input then
 		return
 	end
 
-	equipped:Input("StartShooting")
+	local now = os.clock()
+	local cooldown = _getShootCooldown(equipped)
+	if now - _state.lastShotAt < cooldown then
+		return
+	end
+	_state.lastShotAt = now
+
+	if _tryMouseShot(equipped) then
+		return
+	end
+
+	_equippedItemInput(localFighter, equipped, "StartShooting")
 	if equipped.Name ~= "Flamethrower" then
 		task.delay(0.1, function()
 			if localFighter.EquippedItem == equipped and equipped.Input then
-				equipped:Input("FinishShooting")
+				_equippedItemInput(localFighter, equipped, "FinishShooting")
 			end
 		end)
 	end
