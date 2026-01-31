@@ -222,6 +222,37 @@ local function _isOutOfAmmo(item: any): boolean
 	return false
 end
 
+local function _getItemDebugState(item: any): string
+	if not item then
+		return "item=nil"
+	end
+
+	local ammo = _getAmmo(item)
+	local isReloading = _isReloading(item)
+	local isEquipping = false
+	local okEquipping, equippingValue = pcall(function()
+		if item.IsEquipping then
+			return item:IsEquipping()
+		end
+		return false
+	end)
+	if okEquipping then
+		isEquipping = equippingValue == true
+	end
+
+	local shootCooldown = (item :: any)._shoot_cooldown
+	local reloadCooldown = (item :: any)._reload_cooldown
+
+	return string.format(
+		"ammo=%s reload=%s equipping=%s shootCd=%s reloadCd=%s",
+		tostring(ammo),
+		tostring(isReloading),
+		tostring(isEquipping),
+		tostring(shootCooldown),
+		tostring(reloadCooldown)
+	)
+end
+
 local function _isGunItem(equipped: any): boolean
 	if not equipped then
 		return false
@@ -395,7 +426,12 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 			local now = os.clock()
 			if now >= _state.debugNextAt then
 				_state.debugNextAt = now + 1
-				State.logger:info("[Ragebot Debug] EquippedItem:Input", inputName, ok == true)
+				State.logger:info(
+					"[Ragebot Debug] EquippedItem:Input",
+					inputName,
+					ok == true,
+					_getItemDebugState(equipped)
+				)
 			end
 		end
 		if ok == true then

@@ -1070,59 +1070,68 @@ value=pcall(function()if item.Get then return item:Get('Ammo')end return nil end
 )if ok and type(value)=='number'then return value end local ammoField=(item).
 Ammo if type(ammoField)=='number'then return ammoField end return nil end
 local function _isOutOfAmmo(item)local ammo=_getAmmo(item)if type(ammo)==
-'number'then return ammo<=0 end return false end local function _isGunItem(
-equipped)if not equipped then return false end local info=equipped.Info if not
-info then return false end if info.Type=='Gun'then return true end if info.Class
-=='Primary'or info.Class=='Secondary'then return true end if info.ShootCooldown
-~=nil or info.AmmoType~=nil then return true end return false end local function
-_ensureGunEquipped(localFighter)if not localFighter then return nil end local
-equipped=localFighter.EquippedItem if _isGunItem(equipped)then return equipped
-end return nil end local function _getDesiredWeaponSlot()if State.
-ragebotWeaponSlot=='Secondary'then return 2 end return 1 end local function
-_getItemBySlot(localFighter,slot)local items=localFighter and localFighter.Items
-if type(items)=='table'then return items[slot]end return nil end local function
-_ensureDesiredWeapon(localFighter)if not localFighter or not localFighter.
-EquipItem then return end local desiredSlot=_getDesiredWeaponSlot()local
-equipped=localFighter.EquippedItem if equipped and _isGunItem(equipped)then
-local currentSlot=(equipped).Slot if currentSlot==desiredSlot then return end
-end pcall(function()localFighter:EquipItem(desiredSlot)end)end local function
-_tryStartReload(item)if not item or not item.Input then return end if
-_isReloading(item)then return end pcall(function()item:Input('StartReloading')
-end)end local function _swapWeaponOnReload(localFighter)if not State.
-isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
-lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
-localFighter.EquipItem then return end local mainSlot=_getDesiredWeaponSlot()
-local offSlot=if mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(
-localFighter,mainSlot)local offItem=_getItemBySlot(localFighter,offSlot)if not
-mainItem then return end local equipped=localFighter.EquippedItem if
-_isOutOfAmmo(mainItem)then _tryStartReload(mainItem)if offItem and equipped~=
-offItem then _state.lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(
-offSlot)end)end _state.isSwapReloadActive=true return end if _state.
-isSwapReloadActive then if equipped~=mainItem then _state.lastWeaponSwapAt=now
-pcall(function()localFighter:EquipItem(mainSlot)end)end _state.
-isSwapReloadActive=false end end local function _refreshInputFunctions()if
-_state.mouse1press or _state.mouse1click then return end _state.mouse1press=
-ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
-getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
-'mouse1click')end local function _tryMouseShot(equipped)_refreshInputFunctions()
-if _state.mouse1click then _state.mouse1click()return true end if _state.
-mouse1press and _state.mouse1release then _state.mouse1press()local
-shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.delay(
-MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn=_state.mouse1release if
-releaseFn then releaseFn()end end)end return true end return false end
-local function _getShootCooldown(equipped)local info=equipped and equipped.Info
-local baseCooldown=(info and info.ShootCooldown)or 0.1 local multiplier=State.
-attackCooldownMultiplier if type(multiplier)=='number'and multiplier>0 and
-multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)end return math.
-max(baseCooldown,0.02)end local function _equippedItemInput(localFighter,
-equipped,inputName)if equipped and equipped.Input then local ok=equipped:Input(
-inputName)if State.logger and State.isRagebotEnabled then local now=os.clock()if
-now>=_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
-'[Ragebot Debug] EquippedItem:Input',inputName,ok==true)end end if ok==true then
-return end end if localFighter and localFighter.Input then local ok=localFighter
-:Input(inputName)if State.logger and State.isRagebotEnabled then local now=os.
-clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.logger:
-info('[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end end end
+'number'then return ammo<=0 end return false end local function
+_getItemDebugState(item)if not item then return'item=nil'end local ammo=
+_getAmmo(item)local isReloading=_isReloading(item)local isEquipping=false local
+okEquipping,equippingValue=pcall(function()if item.IsEquipping then return item:
+IsEquipping()end return false end)if okEquipping then isEquipping=equippingValue
+==true end local shootCooldown=(item)._shoot_cooldown local reloadCooldown=(item
+)._reload_cooldown return string.format(
+'ammo=%s reload=%s equipping=%s shootCd=%s reloadCd=%s',tostring(ammo),tostring(
+isReloading),tostring(isEquipping),tostring(shootCooldown),tostring(
+reloadCooldown))end local function _isGunItem(equipped)if not equipped then
+return false end local info=equipped.Info if not info then return false end if
+info.Type=='Gun'then return true end if info.Class=='Primary'or info.Class==
+'Secondary'then return true end if info.ShootCooldown~=nil or info.AmmoType~=nil
+then return true end return false end local function _ensureGunEquipped(
+localFighter)if not localFighter then return nil end local equipped=localFighter
+.EquippedItem if _isGunItem(equipped)then return equipped end return nil end
+local function _getDesiredWeaponSlot()if State.ragebotWeaponSlot=='Secondary'
+then return 2 end return 1 end local function _getItemBySlot(localFighter,slot)
+local items=localFighter and localFighter.Items if type(items)=='table'then
+return items[slot]end return nil end local function _ensureDesiredWeapon(
+localFighter)if not localFighter or not localFighter.EquipItem then return end
+local desiredSlot=_getDesiredWeaponSlot()local equipped=localFighter.
+EquippedItem if equipped and _isGunItem(equipped)then local currentSlot=(
+equipped).Slot if currentSlot==desiredSlot then return end end pcall(function()
+localFighter:EquipItem(desiredSlot)end)end local function _tryStartReload(item)
+if not item or not item.Input then return end if _isReloading(item)then return
+end pcall(function()item:Input('StartReloading')end)end local function
+_swapWeaponOnReload(localFighter)if not State.isRagebotSwapWeaponOnReload then
+return end local now=os.clock()if now-_state.lastWeaponSwapAt<
+SWAP_WEAPON_COOLDOWN then return end if not localFighter or not localFighter.
+EquipItem then return end local mainSlot=_getDesiredWeaponSlot()local offSlot=if
+mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(localFighter,mainSlot)
+local offItem=_getItemBySlot(localFighter,offSlot)if not mainItem then return
+end local equipped=localFighter.EquippedItem if _isOutOfAmmo(mainItem)then
+_tryStartReload(mainItem)if offItem and equipped~=offItem then _state.
+lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(offSlot)end)end
+_state.isSwapReloadActive=true return end if _state.isSwapReloadActive then if
+equipped~=mainItem then _state.lastWeaponSwapAt=now pcall(function()localFighter
+:EquipItem(mainSlot)end)end _state.isSwapReloadActive=false end end
+local function _refreshInputFunctions()if _state.mouse1press or _state.
+mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
+'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
+_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
+_tryMouseShot(equipped)_refreshInputFunctions()if _state.mouse1click then _state
+.mouse1click()return true end if _state.mouse1press and _state.mouse1release
+then _state.mouse1press()local shouldRelease=equipped.Name~='Flamethrower'if
+shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn
+=_state.mouse1release if releaseFn then releaseFn()end end)end return true end
+return false end local function _getShootCooldown(equipped)local info=equipped
+and equipped.Info local baseCooldown=(info and info.ShootCooldown)or 0.1 local
+multiplier=State.attackCooldownMultiplier if type(multiplier)=='number'and
+multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)
+end return math.max(baseCooldown,0.02)end local function _equippedItemInput(
+localFighter,equipped,inputName)if equipped and equipped.Input then local ok=
+equipped:Input(inputName)if State.logger and State.isRagebotEnabled then local
+now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.
+logger:info('[Ragebot Debug] EquippedItem:Input',inputName,ok==true,
+_getItemDebugState(equipped))end end if ok==true then return end end if
+localFighter and localFighter.Input then local ok=localFighter:Input(inputName)
+if State.logger and State.isRagebotEnabled then local now=os.clock()if now>=
+_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+'[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end end end
 local function _shoot(localFighter)local equipped=_ensureGunEquipped(
 localFighter)if not equipped or not equipped.Input then return end local now=os.
 clock()local cooldown=_getShootCooldown(equipped)if now-_state.lastShotAt<
