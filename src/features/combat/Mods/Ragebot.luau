@@ -3,12 +3,11 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-
-local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local UserInputService = game:GetService("UserInputService")
 
 --// Dependencies (require)
 local ExecutorUtils = require("../../../shared/ExecutorUtils")
-local HookUtils = require("../../../shared/HookUtils")
 local PlayerUtils = require("../../../shared/PlayerUtils")
 local TeamUtils = require("../../../shared/TeamUtils")
 local State = require("../State")
@@ -83,8 +82,8 @@ local function _isTargetInvincible(targetRoot: BasePart?): boolean
 		return false
 	end
 	local entity = character:FindFirstChild("Entity")
-	if entity and entity.Get then
-		local ok, inv = pcall(entity.Get, entity, "IsInvincible")
+	if entity and (entity :: any).Get then
+		local ok, inv = pcall((entity :: any).Get, entity, "IsInvincible")
 		if ok and inv ~= nil then
 			if inv == true and State.logger then
 				local now = os.clock()
@@ -408,6 +407,20 @@ local function _tryMouseShot(equipped: any): boolean
 		return true
 	end
 
+	-- Fallback to VirtualInputManager
+	if VirtualInputManager and UserInputService then
+		local pos = UserInputService:GetMouseLocation()
+		local x, y = pos.X, pos.Y
+		VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
+		local shouldRelease = equipped.Name ~= "Flamethrower"
+		if shouldRelease then
+			task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
+				VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
+			end)
+		end
+		return true
+	end
+
 	return false
 end
 
@@ -421,34 +434,6 @@ local function _getShootCooldown(equipped: any): number
 	return math.max(baseCooldown, 0.02)
 end
 
-local function _safeCallInput(obj: any, inputName: string): any
-	if not obj or not obj.Input then
-		return nil
-	end
-
-	-- Attempt to lower identity to bypass "require" checks in game modules for high-identity threads
-	local set_identity = ExecutorUtils.getGlobal("setthreadidentity") or ExecutorUtils.getGlobal("set_thread_identity")
-	local get_identity = ExecutorUtils.getGlobal("getthreadidentity") or ExecutorUtils.getGlobal("get_thread_identity")
-
-	if set_identity and get_identity then
-		local old = get_identity()
-		set_identity(2)
-		local success, result = pcall(function()
-			return obj:Input(inputName)
-		end)
-		set_identity(old)
-		if not success then
-			if State.logger then
-				State.logger:warn("[Ragebot] SafeInput failed:", result)
-			end
-			return nil
-		end
-		return result
-	else
-		return obj:Input(inputName)
-	end
-end
-
 local function _equippedItemInput(localFighter: any, equipped: any, inputName: string)
 	if equipped and equipped.Input then
 		local wasEquipped = equipped.IsEquipped
@@ -458,7 +443,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 			equipped.IsEquipped = true
 		end
 
-		local ok = _safeCallInput(equipped, inputName)
+		local ok = equipped:Input(inputName)
 
 		if isSpoofNeeded then
 			equipped.IsEquipped = wasEquipped
@@ -480,7 +465,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 		end
 	end
 	if localFighter and localFighter.Input then
-		local ok = _safeCallInput(localFighter, inputName)
+		local ok = localFighter:Input(inputName)
 		if State.logger and State.isRagebotEnabled then
 			local now = os.clock()
 			if now >= _state.debugNextAt then
@@ -564,30 +549,7 @@ local function _shoot(localFighter: any)
 		end
 	end
 
-	-- Camera Spoof for 360 Hit
-	local targetRoot = _state.cachedTargetRoot
-	local currentCamera = Workspace.CurrentCamera
-	local savedCFrame
-
-	if targetRoot and currentCamera then
-		savedCFrame = currentCamera.CFrame
-		local aimPos = targetRoot.Position
-		local myPos = currentCamera.CFrame.Position
-		-- Ensure we don't lookAt identical position (creates NaN)
-		if (aimPos - myPos).Magnitude > 0.1 then
-			currentCamera.CFrame = CFrame.lookAt(myPos, aimPos)
-		else
-			-- If super close, just use target's rotation (to face where they face) or generic offset
-			currentCamera.CFrame = targetRoot.CFrame
-		end
-	end
-
-	local didShoot = _equippedItemInput(localFighter, equipped, "StartShooting")
-
-	-- Restore Camera
-	if savedCFrame and currentCamera then
-		currentCamera.CFrame = savedCFrame
-	end
+	local didShoot = _tryMouseShot(equipped)
 
 	-- Restore Modifications
 	if info then
@@ -608,14 +570,6 @@ local function _shoot(localFighter: any)
 				info.ShootBurstCooldown = savedBurstCd
 			end
 		end
-	end
-
-	if didShoot and equipped.Name ~= "Flamethrower" then
-		task.delay(0.1, function()
-			if localFighter.EquippedItem == equipped and equipped.Input then
-				_equippedItemInput(localFighter, equipped, "FinishShooting")
-			end
-		end)
 	end
 end
 
