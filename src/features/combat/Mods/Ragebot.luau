@@ -388,12 +388,28 @@ local function _getShootCooldown(equipped: any): number
 end
 
 local function _equippedItemInput(localFighter: any, equipped: any, inputName: string)
-	if localFighter and localFighter.Input then
-		localFighter:Input(inputName)
-		return
-	end
 	if equipped and equipped.Input then
-		equipped:Input(inputName)
+		local ok = equipped:Input(inputName)
+		if State.logger and State.isRagebotEnabled then
+			local now = os.clock()
+			if now >= _state.debugNextAt then
+				_state.debugNextAt = now + 1
+				State.logger:info("[Ragebot Debug] EquippedItem:Input", inputName, ok == true)
+			end
+		end
+		if ok == true then
+			return
+		end
+	end
+	if localFighter and localFighter.Input then
+		local ok = localFighter:Input(inputName)
+		if State.logger and State.isRagebotEnabled then
+			local now = os.clock()
+			if now >= _state.debugNextAt then
+				_state.debugNextAt = now + 1
+				State.logger:info("[Ragebot Debug] LocalFighter:Input", inputName, ok == true)
+			end
+		end
 	end
 end
 
