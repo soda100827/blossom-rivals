@@ -1141,11 +1141,13 @@ Controllers=PlayerScripts:WaitForChild('Controllers')local
 FighterControllerModule=require(Controllers:WaitForChild('FighterController'))
 local Ragebot={}Ragebot.__index=Ragebot local function getLocalFighter()return
 FighterControllerModule.LocalFighter end local function getEquippedWeapon(
-fighter)if not fighter then return nil end for _,v in pairs(fighter)do if type(v
-)=='table'and v.IsEquipped==true and v.ViewModel then return v end end if
-fighter.Inventory then for _,item in pairs(fighter.Inventory)do if item.
-IsEquipped then return item end end end if fighter.Items then for _,item in
-pairs(fighter.Items)do if item.IsEquipped then return item end end end return
+fighter)if not fighter then return nil end local potentialLists={fighter.
+Inventory,fighter.Items}if fighter.Data then table.insert(potentialLists,fighter
+.Data.Inventory)end for _,list in pairs(potentialLists)do if type(list)=='table'
+then for _,item in pairs(list)do if type(item)=='table'and item.IsEquipped==true
+then return item end end end end for _,v in pairs(fighter)do if type(v)=='table'
+then local success,isEquipped=pcall(function()return v.IsEquipped end)if success
+and isEquipped==true then if v.ViewModel then return v end end end end return
 nil end local function isSameTeam(playerA,playerB)if playerA==playerB then
 return true end local teamA=playerA:GetAttribute('TeamID')local teamB=playerB:
 GetAttribute('TeamID')if teamA and teamB and teamA==teamB then return true end

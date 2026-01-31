@@ -39,26 +39,34 @@ local function getEquippedWeapon(fighter: any)
 		return nil
 	end
 
-	-- Strategy 1: Search top-level items
-	for _, v in pairs(fighter) do
-		if type(v) == "table" and v.IsEquipped == true and v.ViewModel then -- ViewModel check ensures it's an Item
-			return v
-		end
+	-- Strategy 1: Check known inventory locations first (Safer & Faster)
+	local potentialLists = { fighter.Inventory, fighter.Items }
+	if fighter.Data then
+		table.insert(potentialLists, fighter.Data.Inventory)
 	end
 
-	-- Strategy 2: Check Inventory/Items tables
-	if fighter.Inventory then
-		for _, item in pairs(fighter.Inventory) do
-			if item.IsEquipped then
-				return item
+	for _, list in pairs(potentialLists) do
+		if type(list) == "table" then
+			for _, item in pairs(list) do
+				if type(item) == "table" and item.IsEquipped == true then
+					return item
+				end
 			end
 		end
 	end
 
-	if fighter.Items then
-		for _, item in pairs(fighter.Items) do
-			if item.IsEquipped then
-				return item
+	-- Strategy 2: Search top-level items with safety check
+	for _, v in pairs(fighter) do
+		if type(v) == "table" then
+			-- Use pcall to avoid errors when indexing strict objects (like Signals) that error on missing members
+			local success, isEquipped = pcall(function()
+				return v.IsEquipped
+			end)
+
+			if success and isEquipped == true then
+				if v.ViewModel then -- Additional check to ensure it's likely an Item
+					return v
+				end
 			end
 		end
 	end
