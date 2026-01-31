@@ -165,8 +165,8 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
 		end,
 	})
 
-	-- Ragebot Section
-	combatGroup:AddToggle("RagebotEnabled", {
+	local ragebotGroup = tabs.combat:AddRightGroupbox("Ragebot")
+	local ragebotToggle = ragebotGroup:AddToggle("RagebotEnabled", {
 		Text = "Ragebot",
 		Default = false,
 		Tooltip = "Teleports to duel targets and auto-shoots (forces Silent Aim + min cooldown).",
@@ -174,6 +174,88 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
 			local mod = client.Modules.Combat
 			if mod and mod.setRagebotEnabled then
 				mod:setRagebotEnabled(state)
+			end
+			updateControlBindings()
+		end,
+	})
+	ragebotToggle:AddKeyPicker("RagebotKeybind", {
+		Default = "MouseButton2",
+		NoUI = false,
+		Text = "Ragebot",
+		SyncToggleState = false,
+		Callback = function()
+			updateControlBindings()
+		end,
+	})
+
+	ragebotGroup:AddToggle("RagebotSwapWeaponOnReload", {
+		Text = "Swap Weapon On Reload",
+		Default = false,
+		Tooltip = "Swaps between primary and secondary when reloading.",
+		Callback = function(state)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotSwapWeaponOnReload then
+				mod:setRagebotSwapWeaponOnReload(state)
+			end
+		end,
+	})
+
+	ragebotGroup:AddToggle("RagebotOrbitEnabled", {
+		Text = "Orbit",
+		Default = true,
+		Tooltip = "Orbits targets while reloading.",
+		Callback = function(state)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotOrbitEnabled then
+				mod:setRagebotOrbitEnabled(state)
+			end
+		end,
+	})
+
+	ragebotGroup:AddDropdown("RagebotWeaponSlot", {
+		Values = { "Primary", "Secondary" },
+		Default = 1,
+		Multi = false,
+		Text = "Ragebot Weapon",
+		Tooltip = "Weapon slot for Ragebot.",
+		Callback = function(value)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotWeaponSlot then
+				mod:setRagebotWeaponSlot(value)
+			end
+		end,
+	})
+
+	ragebotGroup:AddSlider("RagebotOrbitRadius", {
+		Text = "Orbit Radius",
+		Default = 100000,
+		Min = 10,
+		Max = 200000,
+		Rounding = 0,
+		Suffix = " studs",
+		Tooltip = "Radius of the Ragebot orbit.",
+		Compact = true,
+		Callback = function(value)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotOrbitRadius then
+				mod:setRagebotOrbitRadius(value)
+			end
+		end,
+	})
+
+	ragebotGroup:AddSlider("RagebotOrbitSpeed", {
+		Text = "Orbit Speed",
+		Default = 12,
+		Min = 1,
+		Max = 60,
+		Rounding = 0,
+		Suffix = "x",
+		Tooltip = "Speed of the Ragebot orbit.",
+		Compact = true,
+		Callback = function(value)
+			local mod = client.Modules.Combat
+			if mod and mod.setRagebotOrbitSpeed then
+				mod:setRagebotOrbitSpeed(value)
 			end
 		end,
 	})

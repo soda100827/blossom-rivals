@@ -191,6 +191,26 @@ function Combat.setRagebotEnabled(self: CombatFeature, isEnabled: boolean): ()
 	end
 end
 
+function Combat.setRagebotOrbitEnabled(self: CombatFeature, isEnabled: boolean): ()
+	State.isRagebotOrbitEnabled = isEnabled
+end
+
+function Combat.setRagebotSwapWeaponOnReload(self: CombatFeature, isEnabled: boolean): ()
+	State.isRagebotSwapWeaponOnReload = isEnabled
+end
+
+function Combat.setRagebotWeaponSlot(self: CombatFeature, slotName: string): ()
+	State.ragebotWeaponSlot = slotName
+end
+
+function Combat.setRagebotOrbitRadius(self: CombatFeature, radius: number): ()
+	State.ragebotOrbitRadius = radius
+end
+
+function Combat.setRagebotOrbitSpeed(self: CombatFeature, speed: number): ()
+	State.ragebotOrbitSpeed = speed
+end
+
 function Combat.setSilentAimFovEnabled(self: CombatFeature, isEnabled: boolean): ()
 	State.isSilentAimFovEnabled = isEnabled
 end

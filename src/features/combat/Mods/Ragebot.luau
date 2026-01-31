@@ -12,8 +12,9 @@ local State = require("../State")
 local Helpers = require("../Utils/Helpers")
 
 --// Constants
-local ORBIT_RADIUS = 100000
-local ORBIT_SPEED = 12
+local DEFAULT_ORBIT_RADIUS = 100000
+local DEFAULT_ORBIT_SPEED = 12
+local SWAP_WEAPON_COOLDOWN = 0.2
 local TARGET_REFRESH_INTERVAL = 0.05
 local TELEPORT_OFFSET = Vector3.new(0, 0, 2)
 local MOUSE_SHOT_RELEASE_DELAY = 0.03
@@ -35,6 +36,8 @@ local _state = {
 	mouse1press = nil :: (() -> ())?,
 	mouse1release = nil :: (() -> ())?,
 	mouse1click = nil :: (() -> ())?,
+	ragebotSavedSilentAimFovRadius = nil :: number?,
+	lastWeaponSwapAt = 0,
 }
 
 --// Private helpers
@@ -179,6 +182,52 @@ local function _ensureGunEquipped(localFighter: any): any
 	return nil
 end
 
+local function _getDesiredWeaponSlot(): number
+	if State.ragebotWeaponSlot == "Secondary" then
+		return 2
+	end
+	return 1
+end
+
+local function _ensureDesiredWeapon(localFighter: any)
+	if not localFighter or not localFighter.EquipItem then
+		return
+	end
+	local desiredSlot = _getDesiredWeaponSlot()
+	local equipped = localFighter.EquippedItem
+	if equipped and _isGunItem(equipped) then
+		local currentSlot = (equipped :: any).Slot
+		if currentSlot == desiredSlot then
+			return
+		end
+	end
+	pcall(function()
+		localFighter:EquipItem(desiredSlot)
+	end)
+end
+
+local function _swapWeaponOnReload(localFighter: any)
+	if not State.isRagebotSwapWeaponOnReload then
+		return
+	end
+	local now = os.clock()
+	if now - _state.lastWeaponSwapAt < SWAP_WEAPON_COOLDOWN then
+		return
+	end
+	_state.lastWeaponSwapAt = now
+
+	if not localFighter or not localFighter.EquipItem then
+		return
+	end
+
+	local equipped = localFighter.EquippedItem
+	local currentSlot = (equipped :: any) and (equipped :: any).Slot
+	local swapSlot = if currentSlot == 2 then 1 else 2
+	pcall(function()
+		localFighter:EquipItem(swapSlot)
+	end)
+end
+
 local function _refreshInputFunctions()
 	if _state.mouse1press or _state.mouse1click then
 		return
@@ -260,13 +309,29 @@ local function _shoot(localFighter: any)
 	end
 end
 
+local function _applyRagebotSilentAimOverride(isEnabled: boolean)
+	if isEnabled then
+		if _state.ragebotSavedSilentAimFovRadius == nil then
+			_state.ragebotSavedSilentAimFovRadius = State.silentAimFovRadius
+		end
+		State.silentAimFovRadius = math.huge
+	else
+		if _state.ragebotSavedSilentAimFovRadius ~= nil then
+			State.silentAimFovRadius = _state.ragebotSavedSilentAimFovRadius
+			_state.ragebotSavedSilentAimFovRadius = nil
+		end
+	end
+end
+
 local function _teleportToTarget(localRoot: BasePart, targetRoot: BasePart)
 	localRoot.CFrame = targetRoot.CFrame * CFrame.new(TELEPORT_OFFSET)
 end
 
 local function _orbitTarget(localRoot: BasePart, targetRoot: BasePart)
-	local angle = os.clock() * ORBIT_SPEED
-	local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * ORBIT_RADIUS
+	local orbitSpeed = State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED
+	local orbitRadius = State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS
+	local angle = os.clock() * orbitSpeed
+	local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * orbitRadius
 	local position = targetRoot.Position + offset
 	localRoot.CFrame = CFrame.new(position, targetRoot.Position)
 end
@@ -285,10 +350,12 @@ local function _connect()
 		return
 	end
 
-	local connection = RunService.RenderStepped:Connect(function()
+	local connection = RunService.Heartbeat:Connect(function()
 		if not State.isRagebotEnabled then
+			_applyRagebotSilentAimOverride(false)
 			return
 		end
+		_applyRagebotSilentAimOverride(true)
 		if not _isRoundStarted() then
 			return
 		end
@@ -310,6 +377,8 @@ local function _connect()
 			return
 		end
 
+		_ensureDesiredWeapon(localFighter)
+
 		_refreshTarget(localRoot)
 		local targetRoot = _state.cachedTargetRoot
 		if not targetRoot then
@@ -318,7 +387,10 @@ local function _connect()
 
 		local equipped = _ensureGunEquipped(localFighter)
 		if equipped and _isReloading(equipped) then
-			_orbitTarget(localRoot, targetRoot)
+			_swapWeaponOnReload(localFighter)
+			if State.isRagebotOrbitEnabled then
+				_orbitTarget(localRoot, targetRoot)
+			end
 			return
 		end
 

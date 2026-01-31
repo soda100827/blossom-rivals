@@ -157,15 +157,6 @@ local function _getTargetStateWithMouse(
   return true, bestPart, isAnyOnScreen, shortestDist
 end
 
-local function _getWorldDistance(localCharacter: Model?, character: Model?): number
-  local localRoot = localCharacter and localCharacter:FindFirstChild("HumanoidRootPart") :: BasePart?
-  local targetRoot = character and character:FindFirstChild("HumanoidRootPart") :: BasePart?
-  if not localRoot or not targetRoot then
-    return math.huge
-  end
-  return (localRoot.Position - targetRoot.Position).Magnitude
-end
-
 --// Public API
 function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean, number)
   _refreshCaches()
@@ -175,7 +166,7 @@ function Targeting.getTargetState(player: Player): (boolean, BasePart?, boolean,
   return _getTargetStateWithMouse(localPlayer, player, camera, mouseLocation)
 end
 
-function Targeting.getBestTarget(radius: number, allowOffscreen: boolean?): Player?
+function Targeting.getBestTarget(radius: number): Player?
   _refreshCaches()
   local localPlayer = PlayerUtils.getLocalPlayer()
   if not TeamUtils.isInDuel(localPlayer) then
@@ -183,7 +174,6 @@ function Targeting.getBestTarget(radius: number, allowOffscreen: boolean?): Play
   end
   local camera = _getCamera()
   local mouseLocation = _getMouseLocation()
-  local localCharacter = localPlayer.Character
 
   local bestTarget: Player? = nil
   local shortestDistance = radius
@@ -194,22 +184,15 @@ function Targeting.getBestTarget(radius: number, allowOffscreen: boolean?): Play
     end
     local isValid, headPart, onScreen, distance =
       _getTargetStateWithMouse(localPlayer, player, camera, mouseLocation)
-    if not isValid or not headPart then
-      continue
-    end
-    if not onScreen and not allowOffscreen then
+    if not isValid or not headPart or not onScreen then
       continue
     end
 
-    local scoreDistance = distance
-    if not onScreen and allowOffscreen then
-      scoreDistance = _getWorldDistance(localCharacter, player.Character)
-    end
-    if scoreDistance > radius then
+    if distance > radius then
       continue
     end
-    if scoreDistance < shortestDistance then
-      shortestDistance = scoreDistance
+    if distance < shortestDistance then
+      shortestDistance = distance
       bestTarget = player
     end
   end
@@ -255,13 +238,14 @@ end
 
 function Targeting.resolveSilentTarget(): Player?
   if State.silentTarget then
+    local dropRadius = State.silentAimFovRadius * Constants.TARGET_DROP_FOV_MULTIPLIER
     _refreshCaches()
     local camera = _getCamera()
     local localPlayer = PlayerUtils.getLocalPlayer()
     local mouseLocation = _getMouseLocation()
     local isValid, headPart, onScreen, distance =
       _getTargetStateWithMouse(localPlayer, State.silentTarget, camera, mouseLocation)
-    if isValid and headPart then
+    if isValid and headPart and onScreen and distance <= dropRadius then
       State.silentTargetLostAt = nil
       return State.silentTarget
     end
@@ -283,7 +267,7 @@ function Targeting.resolveSilentTarget(): Player?
       State.silentTarget = nil
     end
   end
-  local newTarget = Targeting.getBestTarget(math.huge, true)
+  local newTarget = Targeting.getBestTarget(State.silentAimFovRadius)
   State.silentTarget = newTarget
   return newTarget
 end
@@ -292,28 +276,14 @@ function Targeting.getClosestSilentTarget(): BasePart?
   _refreshCaches()
   local camera = _getCamera()
   local localPlayer = PlayerUtils.getLocalPlayer()
-  local localCharacter = localPlayer.Character
 
   if not TeamUtils.isInDuel(localPlayer) then
     return nil
   end
 
   local closest: BasePart? = nil
-  local closestDistSq = math.huge
+  local closestDistSq = State.silentAimFovRadius * State.silentAimFovRadius
   local mouseLocation = _getMouseLocation()
-
-  if State.silentTarget then
-    local character = State.silentTarget.Character
-    if character then
-      local hum = character:FindFirstChildOfClass("Humanoid")
-      if hum and hum.Health > 0 then
-        local bestPart = _getBestPartForCharacter(character, camera, localCharacter, mouseLocation)
-        if bestPart then
-          return bestPart
-        end
-      end
-    end
-  end
 
   for _, entity in ipairs(CollectionService:GetTagged("Entity")) do
     if entity == localPlayer.Character or entity.Name == localPlayer.Name then
@@ -333,20 +303,15 @@ function Targeting.getClosestSilentTarget(): BasePart?
       continue
     end
 
-    local bestPart, _, distSq =
-      _getBestPartForCharacter(entity :: Model, camera, localCharacter, mouseLocation)
-    if not bestPart then
+    local bestPart, isAnyOnScreen, distSq =
+      _getBestPartForCharacter(entity :: Model, camera, localPlayer.Character, mouseLocation)
+    if not isAnyOnScreen or not bestPart then
       continue
     end
 
-    local scoreDistSq = distSq
-    if scoreDistSq == math.huge then
-      local worldDistance = _getWorldDistance(localCharacter, entity :: Model)
-      scoreDistSq = worldDistance * worldDistance
-    end
-    if scoreDistSq < closestDistSq then
+    if distSq < closestDistSq then
       closest = bestPart
-      closestDistSq = scoreDistSq
+      closestDistSq = distSq
     end
   end
   return closest
