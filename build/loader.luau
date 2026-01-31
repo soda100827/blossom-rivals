@@ -1023,67 +1023,68 @@ TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
 MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
 _maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
 cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
-=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false}local function
-_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
-localPlayer and localPlayer.Character return character and((character:
-FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
-local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
-false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
-=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
-Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
-end return true end local function _getBestTarget(localRoot)local localPlayer=
-PlayerUtils.getLocalPlayer()if not localPlayer then return nil,nil end if not
-TeamUtils.isInDuel(localPlayer)then return nil,nil end local bestPlayer=nil
-local bestRoot=nil local bestDist=math.huge for _,player in ipairs(Players:
-GetPlayers())do if player==localPlayer then continue end if TeamUtils.
-isSameTeam(player,localPlayer)then continue end if not TeamUtils.isInSameDuel(
-localPlayer,player)then continue end local character=player.Character if not
-character then continue end local root=(character:FindFirstChild(
-'HumanoidRootPart'))local hum=character:FindFirstChildOfClass('Humanoid')if not
-root or not hum or hum.Health<=0 then continue end local dist=(localRoot.
-Position-root.Position).Magnitude if dist<bestDist then bestDist=dist bestPlayer
-=player bestRoot=root end end return bestPlayer,bestRoot end local function
-_getLocalFighter()local now=os.clock()if now-_state.lastFighterFetch>=0.25 then
-_state.lastFighterFetch=now Helpers.fetchFighterController(State.logger)end
-local fighter=State.fighterController and State.fighterController.LocalFighter
-if fighter and fighter.IsAlive and not fighter:IsAlive()then return nil end
-return fighter end local function _isReloading(item)if not item then return
-false end local isOk,value=pcall(function()if item.Get then return item:Get(
-'IsReloading')end return nil end)if isOk and value~=nil then return value==true
-end local reloadCooldown=(item)._reload_cooldown if type(reloadCooldown)==
-'number'and reloadCooldown>tick()then return true end local isReloadingValue=(
-item)._is_reloading or(item).IsReloading if type(isReloadingValue)=='boolean'
-then return isReloadingValue end return false end local function _getAmmo(item)
-if not item then return nil end local ok,value=pcall(function()if item.Get then
-return item:Get('Ammo')end return nil end)if ok and type(value)=='number'then
-return value end local ammoField=(item).Ammo if type(ammoField)=='number'then
-return ammoField end return nil end local function _isOutOfAmmo(item)local ammo=
-_getAmmo(item)if type(ammo)=='number'then return ammo<=0 end return false end
-local function _isGunItem(equipped)if not equipped then return false end local
-info=equipped.Info if not info then return false end if info.Type=='Gun'then
-return true end if info.Class=='Primary'or info.Class=='Secondary'then return
-true end if info.ShootCooldown~=nil or info.AmmoType~=nil then return true end
-return false end local function _ensureGunEquipped(localFighter)if not
-localFighter then return nil end local equipped=localFighter.EquippedItem if
-_isGunItem(equipped)then return equipped end return nil end local function
-_getDesiredWeaponSlot()if State.ragebotWeaponSlot=='Secondary'then return 2 end
-return 1 end local function _getItemBySlot(localFighter,slot)local items=
-localFighter and localFighter.Items if type(items)=='table'then return items[
-slot]end return nil end local function _ensureDesiredWeapon(localFighter)if not
-localFighter or not localFighter.EquipItem then return end local desiredSlot=
-_getDesiredWeaponSlot()local equipped=localFighter.EquippedItem if equipped and
-_isGunItem(equipped)then local currentSlot=(equipped).Slot if currentSlot==
-desiredSlot then return end end pcall(function()localFighter:EquipItem(
-desiredSlot)end)end local function _tryStartReload(item)if not item or not item.
-Input then return end if _isReloading(item)then return end pcall(function()item:
-Input('StartReloading')end)end local function _swapWeaponOnReload(localFighter)
-if not State.isRagebotSwapWeaponOnReload then return end local now=os.clock()if
-now-_state.lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not
-localFighter or not localFighter.EquipItem then return end local mainSlot=
-_getDesiredWeaponSlot()local offSlot=if mainSlot==2 then 1 else 2 local mainItem
-=_getItemBySlot(localFighter,mainSlot)local offItem=_getItemBySlot(localFighter,
-offSlot)if not mainItem then return end local equipped=localFighter.EquippedItem
-if _isOutOfAmmo(mainItem)then _tryStartReload(mainItem)if offItem and equipped~=
+=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
+}local function _getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()
+local character=localPlayer and localPlayer.Character return character and((
+character:FindFirstChild('HumanoidRootPart')))or nil end local function
+_isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if not
+localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
+return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
+local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
+return status=='RoundStarted'end end return true end local function
+_getBestTarget(localRoot)local localPlayer=PlayerUtils.getLocalPlayer()if not
+localPlayer then return nil,nil end if not TeamUtils.isInDuel(localPlayer)then
+return nil,nil end local bestPlayer=nil local bestRoot=nil local bestDist=math.
+huge for _,player in ipairs(Players:GetPlayers())do if player==localPlayer then
+continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end if not
+TeamUtils.isInSameDuel(localPlayer,player)then continue end local character=
+player.Character if not character then continue end local root=(character:
+FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
+'Humanoid')if not root or not hum or hum.Health<=0 then continue end local dist=
+(localRoot.Position-root.Position).Magnitude if dist<bestDist then bestDist=dist
+bestPlayer=player bestRoot=root end end return bestPlayer,bestRoot end
+local function _getLocalFighter()local now=os.clock()if now-_state.
+lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
+fetchFighterController(State.logger)end local fighter=State.fighterController
+and State.fighterController.LocalFighter if fighter and fighter.IsAlive and not
+fighter:IsAlive()then return nil end return fighter end local function
+_isReloading(item)if not item then return false end local isOk,value=pcall(
+function()if item.Get then return item:Get('IsReloading')end return nil end)if
+isOk and value~=nil then return value==true end local reloadCooldown=(item).
+_reload_cooldown if type(reloadCooldown)=='number'and reloadCooldown>tick()then
+return true end local isReloadingValue=(item)._is_reloading or(item).IsReloading
+if type(isReloadingValue)=='boolean'then return isReloadingValue end return
+false end local function _getAmmo(item)if not item then return nil end local ok,
+value=pcall(function()if item.Get then return item:Get('Ammo')end return nil end
+)if ok and type(value)=='number'then return value end local ammoField=(item).
+Ammo if type(ammoField)=='number'then return ammoField end return nil end
+local function _isOutOfAmmo(item)local ammo=_getAmmo(item)if type(ammo)==
+'number'then return ammo<=0 end return false end local function _isGunItem(
+equipped)if not equipped then return false end local info=equipped.Info if not
+info then return false end if info.Type=='Gun'then return true end if info.Class
+=='Primary'or info.Class=='Secondary'then return true end if info.ShootCooldown
+~=nil or info.AmmoType~=nil then return true end return false end local function
+_ensureGunEquipped(localFighter)if not localFighter then return nil end local
+equipped=localFighter.EquippedItem if _isGunItem(equipped)then return equipped
+end return nil end local function _getDesiredWeaponSlot()if State.
+ragebotWeaponSlot=='Secondary'then return 2 end return 1 end local function
+_getItemBySlot(localFighter,slot)local items=localFighter and localFighter.Items
+if type(items)=='table'then return items[slot]end return nil end local function
+_ensureDesiredWeapon(localFighter)if not localFighter or not localFighter.
+EquipItem then return end local desiredSlot=_getDesiredWeaponSlot()local
+equipped=localFighter.EquippedItem if equipped and _isGunItem(equipped)then
+local currentSlot=(equipped).Slot if currentSlot==desiredSlot then return end
+end pcall(function()localFighter:EquipItem(desiredSlot)end)end local function
+_tryStartReload(item)if not item or not item.Input then return end if
+_isReloading(item)then return end pcall(function()item:Input('StartReloading')
+end)end local function _swapWeaponOnReload(localFighter)if not State.
+isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
+lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
+localFighter.EquipItem then return end local mainSlot=_getDesiredWeaponSlot()
+local offSlot=if mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(
+localFighter,mainSlot)local offItem=_getItemBySlot(localFighter,offSlot)if not
+mainItem then return end local equipped=localFighter.EquippedItem if
+_isOutOfAmmo(mainItem)then _tryStartReload(mainItem)if offItem and equipped~=
 offItem then _state.lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(
 offSlot)end)end _state.isSwapReloadActive=true return end if _state.
 isSwapReloadActive then if equipped~=mainItem then _state.lastWeaponSwapAt=now
@@ -1138,7 +1139,13 @@ lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
 lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
 _getBestTarget(localRoot)end local function _connect()if not _maid then return
 end local connection=RunService.Heartbeat:Connect(function()if not State.
-isRagebotEnabled then _applyRagebotSilentAimOverride(false)return end
+isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.isEngaged
+then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then
+State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
+ragebotSavedSilentAimEnabled=nil end if State.
+ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
+State.ragebotSavedAttackCooldownMultiplier State.
+ragebotSavedAttackCooldownMultiplier=nil end end return end
 _applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
 not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
@@ -1146,7 +1153,18 @@ localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
 _getLocalFighter()if not localFighter then return end if not State.
 isRagebotSwapWeaponOnReload and not _state.isSwapReloadActive then
 _ensureDesiredWeapon(localFighter)end _refreshTarget(localRoot)local targetRoot=
-_state.cachedTargetRoot if not targetRoot then return end local equipped=
+_state.cachedTargetRoot if not targetRoot then if _state.isEngaged then _state.
+isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then State.
+isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
+ragebotSavedSilentAimEnabled=nil end if State.
+ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
+State.ragebotSavedAttackCooldownMultiplier State.
+ragebotSavedAttackCooldownMultiplier=nil end end return end if not _state.
+isEngaged then _state.isEngaged=true if State.ragebotSavedSilentAimEnabled==nil
+then State.ragebotSavedSilentAimEnabled=State.isSilentAimEnabled end if State.
+ragebotSavedAttackCooldownMultiplier==nil then State.
+ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end State.
+isSilentAimEnabled=true State.attackCooldownMultiplier=1 end local equipped=
 _ensureGunEquipped(localFighter)_swapWeaponOnReload(localFighter)if equipped and
 _isReloading(equipped)then if State.isRagebotOrbitEnabled then _orbitTarget(
 localRoot,targetRoot)end return end _teleportToTarget(localRoot,targetRoot)if
@@ -1361,23 +1379,15 @@ isEnabled State.isSilentAimEnabled=true else State.isSilentAimEnabled=isEnabled
 end if not isEnabled then State.silentTarget=nil State.silentTargetLostAt=nil
 end end function Combat.setRagebotEnabled(self,isEnabled)if State.
 isRagebotEnabled==isEnabled then return end State.isRagebotEnabled=isEnabled if
-isEnabled then if State.ragebotSavedSilentAimEnabled==nil then State.
-ragebotSavedSilentAimEnabled=State.isSilentAimEnabled end if State.
-ragebotSavedAttackCooldownMultiplier==nil then State.
-ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end State.
-isSilentAimEnabled=true State.attackCooldownMultiplier=1 else if State.
-ragebotSavedSilentAimEnabled~=nil then State.isSilentAimEnabled=State.
-ragebotSavedSilentAimEnabled State.ragebotSavedSilentAimEnabled=nil end if State
-.ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
-State.ragebotSavedAttackCooldownMultiplier State.
-ragebotSavedAttackCooldownMultiplier=nil end end end function Combat.
-setRagebotOrbitEnabled(self,isEnabled)State.isRagebotOrbitEnabled=isEnabled end
-function Combat.setRagebotSwapWeaponOnReload(self,isEnabled)State.
-isRagebotSwapWeaponOnReload=isEnabled end function Combat.setRagebotWeaponSlot(
-self,slotName)State.ragebotWeaponSlot=slotName end function Combat.
-setRagebotOrbitRadius(self,radius)State.ragebotOrbitRadius=radius end function
-Combat.setRagebotOrbitSpeed(self,speed)State.ragebotOrbitSpeed=speed end
-function Combat.setRagebotOffset(self,offset)State.ragebotOffset=offset end
+not isEnabled then State.ragebotSavedSilentAimEnabled=nil State.
+ragebotSavedAttackCooldownMultiplier=nil State.ragebotSavedSilentAimFovRadius=
+nil end end function Combat.setRagebotOrbitEnabled(self,isEnabled)State.
+isRagebotOrbitEnabled=isEnabled end function Combat.setRagebotSwapWeaponOnReload
+(self,isEnabled)State.isRagebotSwapWeaponOnReload=isEnabled end function Combat.
+setRagebotWeaponSlot(self,slotName)State.ragebotWeaponSlot=slotName end function
+Combat.setRagebotOrbitRadius(self,radius)State.ragebotOrbitRadius=radius end
+function Combat.setRagebotOrbitSpeed(self,speed)State.ragebotOrbitSpeed=speed
+end function Combat.setRagebotOffset(self,offset)State.ragebotOffset=offset end
 function Combat.getRagebotOffset(self)return State.ragebotOffset end function
 Combat.setSilentAimFovEnabled(self,isEnabled)State.isSilentAimFovEnabled=
 isEnabled end function Combat.setSilentAimFovRadius(self,radius)if State.

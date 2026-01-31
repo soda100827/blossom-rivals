@@ -40,6 +40,7 @@ local _state = {
 	mouse1click = nil :: (() -> ())?,
 	lastWeaponSwapAt = 0,
 	isSwapReloadActive = false,
+	isEngaged = false,
 }
 
 --// Private helpers
@@ -463,6 +464,17 @@ local function _connect()
 	local connection = RunService.Heartbeat:Connect(function()
 		if not State.isRagebotEnabled then
 			_applyRagebotSilentAimOverride(false)
+			if _state.isEngaged then
+				_state.isEngaged = false
+				if State.ragebotSavedSilentAimEnabled ~= nil then
+					State.isSilentAimEnabled = State.ragebotSavedSilentAimEnabled
+					State.ragebotSavedSilentAimEnabled = nil
+				end
+				if State.ragebotSavedAttackCooldownMultiplier ~= nil then
+					State.attackCooldownMultiplier = State.ragebotSavedAttackCooldownMultiplier
+					State.ragebotSavedAttackCooldownMultiplier = nil
+				end
+			end
 			return
 		end
 		_applyRagebotSilentAimOverride(true)
@@ -494,7 +506,30 @@ local function _connect()
 		_refreshTarget(localRoot)
 		local targetRoot = _state.cachedTargetRoot
 		if not targetRoot then
+			if _state.isEngaged then
+				_state.isEngaged = false
+				if State.ragebotSavedSilentAimEnabled ~= nil then
+					State.isSilentAimEnabled = State.ragebotSavedSilentAimEnabled
+					State.ragebotSavedSilentAimEnabled = nil
+				end
+				if State.ragebotSavedAttackCooldownMultiplier ~= nil then
+					State.attackCooldownMultiplier = State.ragebotSavedAttackCooldownMultiplier
+					State.ragebotSavedAttackCooldownMultiplier = nil
+				end
+			end
 			return
+		end
+
+		if not _state.isEngaged then
+			_state.isEngaged = true
+			if State.ragebotSavedSilentAimEnabled == nil then
+				State.ragebotSavedSilentAimEnabled = State.isSilentAimEnabled
+			end
+			if State.ragebotSavedAttackCooldownMultiplier == nil then
+				State.ragebotSavedAttackCooldownMultiplier = State.attackCooldownMultiplier
+			end
+			State.isSilentAimEnabled = true
+			State.attackCooldownMultiplier = 1
 		end
 
 		local equipped = _ensureGunEquipped(localFighter)

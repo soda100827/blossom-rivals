@@ -174,25 +174,10 @@ function Combat.setRagebotEnabled(self: CombatFeature, isEnabled: boolean): ()
 		return
 	end
 	State.isRagebotEnabled = isEnabled
-
-	if isEnabled then
-		if State.ragebotSavedSilentAimEnabled == nil then
-			State.ragebotSavedSilentAimEnabled = State.isSilentAimEnabled
-		end
-		if State.ragebotSavedAttackCooldownMultiplier == nil then
-			State.ragebotSavedAttackCooldownMultiplier = State.attackCooldownMultiplier
-		end
-		State.isSilentAimEnabled = true
-		State.attackCooldownMultiplier = 1
-	else
-		if State.ragebotSavedSilentAimEnabled ~= nil then
-			State.isSilentAimEnabled = State.ragebotSavedSilentAimEnabled
-			State.ragebotSavedSilentAimEnabled = nil
-		end
-		if State.ragebotSavedAttackCooldownMultiplier ~= nil then
-			State.attackCooldownMultiplier = State.ragebotSavedAttackCooldownMultiplier
-			State.ragebotSavedAttackCooldownMultiplier = nil
-		end
+	if not isEnabled then
+		State.ragebotSavedSilentAimEnabled = nil
+		State.ragebotSavedAttackCooldownMultiplier = nil
+		State.ragebotSavedSilentAimFovRadius = nil
 	end
 end
 
