@@ -78,6 +78,7 @@ local _state: Types.CombatState = {
 	ragebotSavedSilentAimEnabled = nil,
 	ragebotSavedAttackCooldownMultiplier = nil,
 	ragebotSavedSilentAimFovRadius = nil,
+	isRagebotShooting = false,
 }
 
 --// Private helpers

@@ -721,9 +721,9 @@ isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,target=nil,silentTarget=nil
 cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
 false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
 mouseBehavior=nil,mouseDeltaSensitivity=nil,ragebotSavedSilentAimEnabled=nil,
-ragebotSavedAttackCooldownMultiplier=nil,ragebotSavedSilentAimFovRadius=nil}
-return _state end function __DARKLUA_BUNDLE_MODULES.u()local v=
-__DARKLUA_BUNDLE_MODULES.cache.u if not v then v={c=__modImpl()}
+ragebotSavedAttackCooldownMultiplier=nil,ragebotSavedSilentAimFovRadius=nil,
+isRagebotShooting=false}return _state end function __DARKLUA_BUNDLE_MODULES.u()
+local v=__DARKLUA_BUNDLE_MODULES.cache.u if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local UserInputService=game:
 GetService('UserInputService')local ReplicatedStorage=game:GetService(
@@ -987,19 +987,19 @@ local utility=Helpers.getUtility()if utility and not State.isUtilityHooked then
 State.isUtilityHooked=true local oldRaycast oldRaycast=HookUtils.safeHook(
 utility,'Raycast',function(self,origin,target,distance,filter,...)if not State.
 isSilentAimEnabled then return oldRaycast(self,origin,target,distance,filter,...
-)end if not checkcaller()and _isGunAction()then if math.random(1,100)>State.
-silentHitChance then _state.lastSilentTargetPos=nil return oldRaycast(self,
-origin,target,distance,filter,...)end local targetPart=Targeting.
-getClosestSilentTarget()local localPlayer=PlayerUtils.getLocalPlayer()local
-localChar=localPlayer and localPlayer.Character if targetPart and localChar and
-not targetPart:IsDescendantOf(localChar)then local newOrigin=origin _state.
-lastSilentTargetPos=targetPart.Position _state.lastSilentOrigin=newOrigin return
-oldRaycast(self,newOrigin,targetPart.Position,distance,filter,...)end end _state
-.lastSilentTargetPos=nil _state.lastSilentOrigin=nil return oldRaycast(self,
-origin,target,distance,filter,...)end,State.logger,_maid)local oldEncode
-oldEncode=HookUtils.safeHook(utility,'EncodeCFrame',function(self,cf)if not
-checkcaller()and State.isSilentAimEnabled and _state.lastSilentTargetPos and
-_isGunAction()then local originPos=cf.Position local newCF=CFrame.lookAt(
+)end if not checkcaller()and(_isGunAction()or State.isRagebotShooting)then if
+math.random(1,100)>State.silentHitChance then _state.lastSilentTargetPos=nil
+return oldRaycast(self,origin,target,distance,filter,...)end local targetPart=
+Targeting.getClosestSilentTarget()local localPlayer=PlayerUtils.getLocalPlayer()
+local localChar=localPlayer and localPlayer.Character if targetPart and
+localChar and not targetPart:IsDescendantOf(localChar)then local newOrigin=
+origin _state.lastSilentTargetPos=targetPart.Position _state.lastSilentOrigin=
+newOrigin return oldRaycast(self,newOrigin,targetPart.Position,distance,filter,
+...)end end _state.lastSilentTargetPos=nil _state.lastSilentOrigin=nil return
+oldRaycast(self,origin,target,distance,filter,...)end,State.logger,_maid)local
+oldEncode oldEncode=HookUtils.safeHook(utility,'EncodeCFrame',function(self,cf)
+if not checkcaller()and State.isSilentAimEnabled and _state.lastSilentTargetPos
+and _isGunAction()then local originPos=cf.Position local newCF=CFrame.lookAt(
 originPos,(_state.lastSilentTargetPos))return oldEncode(self,newCF)end return
 oldEncode(self,cf)end,State.logger,_maid)end local cameraShaker=Helpers.
 getCameraShaker()if cameraShaker and not State.isCameraShakerHooked then State.
@@ -1157,18 +1157,19 @@ QuickShotSpread=0 end State.forcingAim=true end if State.
 attackCooldownMultiplier<100 then savedShootCd=info.ShootCooldown savedBurstCd=
 info.ShootBurstCooldown local mult=State.attackCooldownMultiplier/100 if
 savedShootCd then info.ShootCooldown=savedShootCd*mult end if savedBurstCd then
-info.ShootBurstCooldown=savedBurstCd*mult end end end local didShoot=
-_equippedItemInput(localFighter,equipped,'StartShooting')if info then if State.
-isNoSpreadEnabled then info.ShootSpread=savedSpread info.AimSpreadMultiplier=
-savedAimML if savedQuick~=nil then info.QuickShotSpread=savedQuick end State.
-forcingAim=false end if State.attackCooldownMultiplier<100 then if savedShootCd
-then info.ShootCooldown=savedShootCd end if savedBurstCd then info.
-ShootBurstCooldown=savedBurstCd end end end if didShoot and equipped.Name~=
-'Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
-equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
-'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
-isEnabled)if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then
-State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+info.ShootBurstCooldown=savedBurstCd*mult end end end State.isRagebotShooting=
+true local didShoot=_equippedItemInput(localFighter,equipped,'StartShooting')
+State.isRagebotShooting=false if info then if State.isNoSpreadEnabled then info.
+ShootSpread=savedSpread info.AimSpreadMultiplier=savedAimML if savedQuick~=nil
+then info.QuickShotSpread=savedQuick end State.forcingAim=false end if State.
+attackCooldownMultiplier<100 then if savedShootCd then info.ShootCooldown=
+savedShootCd end if savedBurstCd then info.ShootBurstCooldown=savedBurstCd end
+end end if didShoot and equipped.Name~='Flamethrower'then task.delay(0.1,
+function()if localFighter.EquippedItem==equipped and equipped.Input then
+_equippedItemInput(localFighter,equipped,'FinishShooting')end end)end end
+local function _applyRagebotSilentAimOverride(isEnabled)if isEnabled then if
+State.ragebotSavedSilentAimFovRadius==nil then State.
+ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
 silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
 then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(

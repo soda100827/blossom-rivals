@@ -537,7 +537,9 @@ local function _shoot(localFighter: any)
 		end
 	end
 
+	State.isRagebotShooting = true
 	local didShoot = _equippedItemInput(localFighter, equipped, "StartShooting")
+	State.isRagebotShooting = false
 
 	-- Restore Modifications
 	if info then

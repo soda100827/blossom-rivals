@@ -87,7 +87,7 @@ function SilentAim.setup(maid: any): ()
 					return oldRaycast(self, origin, target, distance, filter, ...)
 				end
 
-				if not checkcaller() and _isGunAction() then
+				if not checkcaller() and (_isGunAction() or State.isRagebotShooting) then
 					-- Hit Chance check
 					if math.random(1, 100) > State.silentHitChance then
 						_state.lastSilentTargetPos = nil
