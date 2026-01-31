@@ -410,25 +410,7 @@ local function _shoot(localFighter: any)
 	end
 	_state.lastShotAt = now
 
-	if _tryMouseShot(equipped) then
-		if State.logger and State.isRagebotEnabled then
-			local now = os.clock()
-			if now >= _state.debugNextAt then
-				_state.debugNextAt = now + 1
-				State.logger:info("[Ragebot Debug] Shoot via mouse input", equipped.Name)
-			end
-		end
-		return
-	end
-
 	_equippedItemInput(localFighter, equipped, "StartShooting")
-	if State.logger and State.isRagebotEnabled then
-		local now = os.clock()
-		if now >= _state.debugNextAt then
-			_state.debugNextAt = now + 1
-			State.logger:info("[Ragebot Debug] Shoot via LocalFighter:Input", equipped.Name)
-		end
-	end
 	if equipped.Name ~= "Flamethrower" then
 		task.delay(0.1, function()
 			if localFighter.EquippedItem == equipped and equipped.Input then

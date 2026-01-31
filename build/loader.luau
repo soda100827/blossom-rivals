@@ -1120,16 +1120,10 @@ Input(inputName)return end if equipped and equipped.Input then equipped:Input(
 inputName)end end local function _shoot(localFighter)local equipped=
 _ensureGunEquipped(localFighter)if not equipped or not equipped.Input then
 return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if now-
-_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
-_tryMouseShot(equipped)then if State.logger and State.isRagebotEnabled then
-local now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1
-State.logger:info('[Ragebot Debug] Shoot via mouse input',equipped.Name)end end
-return end _equippedItemInput(localFighter,equipped,'StartShooting')if State.
-logger and State.isRagebotEnabled then local now=os.clock()if now>=_state.
-debugNextAt then _state.debugNextAt=now+1 State.logger:info(
-'[Ragebot Debug] Shoot via LocalFighter:Input',equipped.Name)end end if equipped
-.Name~='Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem
-==equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
+_state.lastShotAt<cooldown then return end _state.lastShotAt=now
+_equippedItemInput(localFighter,equipped,'StartShooting')if equipped.Name~=
+'Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
+equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
 'FinishShooting')end end)end end local function _hookClientItemInput()if _state.
 isInputHooked then return end local clientItemMod=Helpers.getClientItemModule()
 if not clientItemMod then return end _state.isInputHooked=true local checkcaller
