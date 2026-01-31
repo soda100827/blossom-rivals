@@ -41,6 +41,7 @@ local _state = {
 	isSwapReloadActive = false,
 	isEngaged = false,
 	isInputHooked = false,
+	isUseItemHooked = false,
 	debugNextAt = 0,
 }
 
@@ -471,6 +472,78 @@ local function _hookClientItemInput()
 	end, State.logger, _maid)
 end
 
+local function _hookClientFighterUseItem()
+	if _state.isUseItemHooked then
+		return
+	end
+	local localPlayer = PlayerUtils.getLocalPlayer()
+	if not localPlayer then
+		return
+	end
+	local playerScripts = localPlayer:WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return
+	end
+	local clientFighterModule = modules:WaitForChild("ClientReplicatedClasses", 5)
+	if not clientFighterModule then
+		return
+	end
+	local clientFighter = clientFighterModule:WaitForChild("ClientFighter", 5)
+	if not clientFighter then
+		return
+	end
+	local clientItem = clientFighter:WaitForChild("ClientItem", 5)
+	if not clientItem then
+		return
+	end
+
+	local ok, clientItemMod = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(clientItem)
+	end)
+	if not ok or not clientItemMod then
+		return
+	end
+
+	_state.isUseItemHooked = true
+
+	local checkcaller = ExecutorUtils.getGlobal("checkcaller") or function()
+		return false
+	end
+
+	local oldInput
+	oldInput = HookUtils.safeHook(clientItemMod, "Input", function(self, inputName, ...)
+		if checkcaller() then
+			return oldInput(self, inputName, ...)
+		end
+		if not State.isRagebotEnabled then
+			return oldInput(self, inputName, ...)
+		end
+		if type(inputName) ~= "string" then
+			return oldInput(self, inputName, ...)
+		end
+
+		local wasEquipped = self.IsEquipped
+		local wasLocal = self.ClientFighter and self.ClientFighter.Player == Players.LocalPlayer
+		if not wasLocal then
+			return oldInput(self, inputName, ...)
+		end
+
+		if not wasEquipped and string.sub(inputName, 1, 5) == "Start" then
+			self.IsEquipped = true
+		end
+
+		local result = oldInput(self, inputName, ...)
+
+		self.IsEquipped = wasEquipped
+		return result
+	end, State.logger, _maid)
+end
+
 local function _applyRagebotSilentAimOverride(isEnabled: boolean)
 	if isEnabled then
 		if State.ragebotSavedSilentAimFovRadius == nil then
@@ -531,6 +604,7 @@ local function _connect()
 		end
 		_applyRagebotSilentAimOverride(true)
 		_hookClientItemInput()
+		_hookClientFighterUseItem()
 		if not _isRoundStarted() then
 			return
 		end
