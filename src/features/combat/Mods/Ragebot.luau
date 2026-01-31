@@ -3,11 +3,10 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 --// Dependencies (require)
 local ExecutorUtils = require("../../../shared/ExecutorUtils")
+local HookUtils = require("../../../shared/HookUtils")
 local PlayerUtils = require("../../../shared/PlayerUtils")
 local TeamUtils = require("../../../shared/TeamUtils")
 local State = require("../State")
@@ -41,6 +40,7 @@ local _state = {
 	lastWeaponSwapAt = 0,
 	isSwapReloadActive = false,
 	isEngaged = false,
+	isInputHooked = false,
 }
 
 --// Private helpers
@@ -362,34 +362,6 @@ local function _tryMouseShot(equipped: any): boolean
 	return false
 end
 
-local function _tryVirtualInputShot(equipped: any): boolean
-	if not VirtualInputManager then
-		return false
-	end
-
-	local mouseLocation = UserInputService:GetMouseLocation()
-	local x = math.floor(mouseLocation.X)
-	local y = math.floor(mouseLocation.Y)
-
-	local ok = pcall(function()
-		VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 0)
-	end)
-	if not ok then
-		return false
-	end
-
-	local shouldRelease = equipped.Name ~= "Flamethrower"
-	if shouldRelease then
-		task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
-			pcall(function()
-				VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 0)
-			end)
-		end)
-	end
-
-	return true
-end
-
 local function _getShootCooldown(equipped: any): number
 	local info = equipped and equipped.Info
 	local baseCooldown = (info and info.ShootCooldown) or 0.1
@@ -423,10 +395,6 @@ local function _shoot(localFighter: any)
 	end
 	_state.lastShotAt = now
 
-	if _tryVirtualInputShot(equipped) then
-		return
-	end
-
 	if _tryMouseShot(equipped) then
 		return
 	end
@@ -439,6 +407,41 @@ local function _shoot(localFighter: any)
 			end
 		end)
 	end
+end
+
+local function _hookClientItemInput()
+	if _state.isInputHooked then
+		return
+	end
+	local clientItemMod = Helpers.getClientItemModule()
+	if not clientItemMod then
+		return
+	end
+	_state.isInputHooked = true
+
+	local checkcaller = ExecutorUtils.getGlobal("checkcaller") or function()
+		return false
+	end
+
+	local oldInput
+	oldInput = HookUtils.safeHook(clientItemMod, "Input", function(self, inputName, ...)
+		if checkcaller() then
+			return oldInput(self, inputName, ...)
+		end
+		if not State.isRagebotEnabled then
+			return oldInput(self, inputName, ...)
+		end
+
+		local wasEquipped = self.IsEquipped
+		if not wasEquipped and type(inputName) == "string" and string.sub(inputName, 1, 5) == "Start" then
+			self.IsEquipped = true
+			local result = oldInput(self, inputName, ...)
+			self.IsEquipped = wasEquipped
+			return result
+		end
+
+		return oldInput(self, inputName, ...)
+	end, State.logger, _maid)
 end
 
 local function _applyRagebotSilentAimOverride(isEnabled: boolean)
@@ -500,6 +503,7 @@ local function _connect()
 			return
 		end
 		_applyRagebotSilentAimOverride(true)
+		_hookClientItemInput()
 		if not _isRoundStarted() then
 			return
 		end

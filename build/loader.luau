@@ -1012,46 +1012,44 @@ SilentAim end function __DARKLUA_BUNDLE_MODULES.y()local v=
 __DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local UserInputService=game:GetService(
-'UserInputService')local VirtualInputManager=game:GetService(
-'VirtualInputManager')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
-.e()local State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=
-__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000 local
-DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
-TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
-MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
-_maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
-cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
-=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
-}local function _getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()
-local character=localPlayer and localPlayer.Character return character and((
-character:FindFirstChild('HumanoidRootPart')))or nil end local function
-_isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if not
-localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
-return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
-local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
-return status=='RoundStarted'end end return true end local function
-_isTargetInvincible(targetRoot)if not targetRoot then return false end local
-character=targetRoot.Parent if not character or not character:IsA('Model')then
-return false end local entity=character:FindFirstChild('Entity')if entity and
-entity.Get then local ok,inv=pcall(entity.Get,entity,'IsInvincible')if ok and
-inv~=nil then return inv==true end end local isInvincible=character:
-GetAttribute('IsInvincible')if type(isInvincible)=='boolean'then return
-isInvincible end return false end local function _getBestTarget(localRoot)local
-localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return nil,nil
-end if not TeamUtils.isInDuel(localPlayer)then return nil,nil end local
-bestPlayer=nil local bestRoot=nil local bestDist=math.huge for _,player in
-ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
-TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
-isInSameDuel(localPlayer,player)then continue end local character=player.
-Character if not character then continue end local root=(character:
-FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
-'Humanoid')if not root or not hum or hum.Health<=0 then continue end local dist=
-(localRoot.Position-root.Position).Magnitude if dist<bestDist then bestDist=dist
-bestPlayer=player bestRoot=root end end return bestPlayer,bestRoot end
-local function _getLocalFighter()local now=os.clock()if now-_state.
-lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
+GetService('RunService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
+HookUtils=__DARKLUA_BUNDLE_MODULES.p()local PlayerUtils=__DARKLUA_BUNDLE_MODULES
+.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=
+__DARKLUA_BUNDLE_MODULES.u()local Helpers=__DARKLUA_BUNDLE_MODULES.v()local
+DEFAULT_ORBIT_RADIUS=100000 local DEFAULT_ORBIT_SPEED=12 local
+SWAP_WEAPON_COOLDOWN=0.2 local TARGET_REFRESH_INTERVAL=0.05 local
+DEFAULT_RAGEBOT_OFFSET=Vector3.zero local MOUSE_SHOT_RELEASE_DELAY=0.03 local
+Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals={}local _state=
+{lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,
+lastShotAt=0,mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=
+0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false}local function
+_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
+localPlayer and localPlayer.Character return character and((character:
+FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
+local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
+false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
+=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
+Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
+end return true end local function _isTargetInvincible(targetRoot)if not
+targetRoot then return false end local character=targetRoot.Parent if not
+character or not character:IsA('Model')then return false end local entity=
+character:FindFirstChild('Entity')if entity and entity.Get then local ok,inv=
+pcall(entity.Get,entity,'IsInvincible')if ok and inv~=nil then return inv==true
+end end local isInvincible=character:GetAttribute('IsInvincible')if type(
+isInvincible)=='boolean'then return isInvincible end return false end
+local function _getBestTarget(localRoot)local localPlayer=PlayerUtils.
+getLocalPlayer()if not localPlayer then return nil,nil end if not TeamUtils.
+isInDuel(localPlayer)then return nil,nil end local bestPlayer=nil local bestRoot
+=nil local bestDist=math.huge for _,player in ipairs(Players:GetPlayers())do if
+player==localPlayer then continue end if TeamUtils.isSameTeam(player,localPlayer
+)then continue end if not TeamUtils.isInSameDuel(localPlayer,player)then
+continue end local character=player.Character if not character then continue end
+local root=(character:FindFirstChild('HumanoidRootPart'))local hum=character:
+FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
+continue end local dist=(localRoot.Position-root.Position).Magnitude if dist<
+bestDist then bestDist=dist bestPlayer=player bestRoot=root end end return
+bestPlayer,bestRoot end local function _getLocalFighter()local now=os.clock()if
+now-_state.lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
 fetchFighterController(State.logger)end local fighter=State.fighterController
 and State.fighterController.LocalFighter if fighter and fighter.IsAlive and not
 fighter:IsAlive()then return nil end return fighter end local function
@@ -1106,31 +1104,34 @@ mouse1press and _state.mouse1release then _state.mouse1press()local
 shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.delay(
 MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn=_state.mouse1release if
 releaseFn then releaseFn()end end)end return true end return false end
-local function _tryVirtualInputShot(equipped)if not VirtualInputManager then
-return false end local mouseLocation=UserInputService:GetMouseLocation()local x=
-math.floor(mouseLocation.X)local y=math.floor(mouseLocation.Y)local ok=pcall(
-function()VirtualInputManager:SendMouseButtonEvent(x,y,0,true,game,0)end)if not
-ok then return false end local shouldRelease=equipped.Name~='Flamethrower'if
-shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function()pcall(function(
-)VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,0)end)end)end return
-true end local function _getShootCooldown(equipped)local info=equipped and
-equipped.Info local baseCooldown=(info and info.ShootCooldown)or 0.1 local
-multiplier=State.attackCooldownMultiplier if type(multiplier)=='number'and
-multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)
-end return math.max(baseCooldown,0.02)end local function _equippedItemInput(
-localFighter,equipped,inputName)if localFighter and localFighter.Input then
-localFighter:Input(inputName)return end if equipped and equipped.Input then
-equipped:Input(inputName)end end local function _shoot(localFighter)local
-equipped=_ensureGunEquipped(localFighter)if not equipped or not equipped.Input
-then return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if
-now-_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
-_tryVirtualInputShot(equipped)then return end if _tryMouseShot(equipped)then
-return end _equippedItemInput(localFighter,equipped,'StartShooting')if equipped.
-Name~='Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
-equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
-'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
-isEnabled)if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then
-State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+local function _getShootCooldown(equipped)local info=equipped and equipped.Info
+local baseCooldown=(info and info.ShootCooldown)or 0.1 local multiplier=State.
+attackCooldownMultiplier if type(multiplier)=='number'and multiplier>0 and
+multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)end return math.
+max(baseCooldown,0.02)end local function _equippedItemInput(localFighter,
+equipped,inputName)if localFighter and localFighter.Input then localFighter:
+Input(inputName)return end if equipped and equipped.Input then equipped:Input(
+inputName)end end local function _shoot(localFighter)local equipped=
+_ensureGunEquipped(localFighter)if not equipped or not equipped.Input then
+return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if now-
+_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
+_tryMouseShot(equipped)then return end _equippedItemInput(localFighter,equipped,
+'StartShooting')if equipped.Name~='Flamethrower'then task.delay(0.1,function()if
+localFighter.EquippedItem==equipped and equipped.Input then _equippedItemInput(
+localFighter,equipped,'FinishShooting')end end)end end local function
+_hookClientItemInput()if _state.isInputHooked then return end local
+clientItemMod=Helpers.getClientItemModule()if not clientItemMod then return end
+_state.isInputHooked=true local checkcaller=ExecutorUtils.getGlobal(
+'checkcaller')or function()return false end local oldInput oldInput=HookUtils.
+safeHook(clientItemMod,'Input',function(self,inputName,...)if checkcaller()then
+return oldInput(self,inputName,...)end if not State.isRagebotEnabled then return
+oldInput(self,inputName,...)end local wasEquipped=self.IsEquipped if not
+wasEquipped and type(inputName)=='string'and string.sub(inputName,1,5)=='Start'
+then self.IsEquipped=true local result=oldInput(self,inputName,...)self.
+IsEquipped=wasEquipped return result end return oldInput(self,inputName,...)end,
+State.logger,_maid)end local function _applyRagebotSilentAimOverride(isEnabled)
+if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then State.
+ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
 silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
 then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
@@ -1153,18 +1154,18 @@ ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end
-_applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
-not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
-attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
-localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
-_getLocalFighter()if not localFighter then return end if not State.
-isRagebotSwapWeaponOnReload and not _state.isSwapReloadActive then
-_ensureDesiredWeapon(localFighter)end _refreshTarget(localRoot)local targetRoot=
-_state.cachedTargetRoot if not targetRoot then if _state.isEngaged then _state.
-isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then State.
-isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
-ragebotSavedSilentAimEnabled=nil end if State.
-ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
+_applyRagebotSilentAimOverride(true)_hookClientItemInput()if not
+_isRoundStarted()then return end if not State.isSilentAimEnabled then State.
+isSilentAimEnabled=true end if State.attackCooldownMultiplier>1 then State.
+attackCooldownMultiplier=1 end local localRoot=_getLocalRoot()if not localRoot
+then return end local localFighter=_getLocalFighter()if not localFighter then
+return end if not State.isRagebotSwapWeaponOnReload and not _state.
+isSwapReloadActive then _ensureDesiredWeapon(localFighter)end _refreshTarget(
+localRoot)local targetRoot=_state.cachedTargetRoot if not targetRoot then if
+_state.isEngaged then _state.isEngaged=false if State.
+ragebotSavedSilentAimEnabled~=nil then State.isSilentAimEnabled=State.
+ragebotSavedSilentAimEnabled State.ragebotSavedSilentAimEnabled=nil end if State
+.ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end if
 _isTargetInvincible(targetRoot)then return end if not _state.isEngaged then
