@@ -369,6 +369,7 @@ local function _swapWeaponOnReload(localFighter: any)
 
 	-- Check for Low Ammo OR Reloading state to force swap
 	if _isOutOfAmmo(equipped) or _isReloading(equipped) then
+		-- CRITICAL: Start reload on CURRENT weapon FIRST, so it reloads in background while we use the other gun
 		_tryStartReload(equipped)
 
 		local currentSlot = (equipped :: any).Slot
