@@ -1012,31 +1012,32 @@ end)end end end end)end return SilentAim end function __DARKLUA_BUNDLE_MODULES.y
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
 GetService('RunService')local VirtualInputManager=game:GetService(
-'VirtualInputManager')local UserInputService=game:GetService('UserInputService')
-local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local PlayerUtils=
-__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local
-State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=__DARKLUA_BUNDLE_MODULES.v()
-local DEFAULT_ORBIT_RADIUS=100000 local DEFAULT_ORBIT_SPEED=12 local
-SWAP_WEAPON_COOLDOWN=0.2 local TARGET_REFRESH_INTERVAL=0.05 local
-DEFAULT_RAGEBOT_OFFSET=Vector3.zero local MOUSE_SHOT_RELEASE_DELAY=0.03 local
-Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals={}local _state=
-{lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,
-lastShotAt=0,mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=
-0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false,isUseItemHooked=
-false,debugNextAt=0}local function _getLocalRoot()local localPlayer=PlayerUtils.
-getLocalPlayer()local character=localPlayer and localPlayer.Character return
-character and((character:FindFirstChild('HumanoidRootPart')))or nil end
-local function _isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if
-not localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
-return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
-local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
-return status=='RoundStarted'end end return true end local function
-_isTargetInvincible(targetRoot)if not targetRoot then return false end local
-character=targetRoot.Parent if not character or not character:IsA('Model')then
-return false end local entity=character:FindFirstChild('Entity')if entity and(
-entity).Get then local ok,inv=pcall((entity).Get,entity,'IsInvincible')if ok and
-inv~=nil then if inv==true and State.logger then local now=os.clock()if now>=
-_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+'VirtualInputManager')local VirtualUser=game:GetService('VirtualUser')local
+UserInputService=game:GetService('UserInputService')local ExecutorUtils=
+__DARKLUA_BUNDLE_MODULES.d()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.u()
+local Helpers=__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000
+local DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
+TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
+MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
+_maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
+cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
+=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
+,isInputHooked=false,isUseItemHooked=false,debugNextAt=0}local function
+_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
+localPlayer and localPlayer.Character return character and((character:
+FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
+local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
+false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
+=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
+Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
+end return true end local function _isTargetInvincible(targetRoot)if not
+targetRoot then return false end local character=targetRoot.Parent if not
+character or not character:IsA('Model')then return false end local entity=
+character:FindFirstChild('Entity')if entity and(entity).Get then local ok,inv=
+pcall((entity).Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true
+and State.logger then local now=os.clock()if now>=_state.debugNextAt then _state
+.debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
 inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
 type(isInvincible)=='boolean'then if isInvincible and State.logger then local
@@ -1118,7 +1119,11 @@ _tryMouseShot(equipped)_refreshInputFunctions()if _state.mouse1click then _state
 then _state.mouse1press()local shouldRelease=equipped.Name~='Flamethrower'if
 shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn
 =_state.mouse1release if releaseFn then releaseFn()end end)end return true end
-if VirtualInputManager and UserInputService then local pos=UserInputService:
+if VirtualUser and UserInputService then local pos=UserInputService:
+GetMouseLocation()VirtualUser:CaptureController()VirtualUser:ClickButton1(pos)
+local shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.
+delay(MOUSE_SHOT_RELEASE_DELAY,function()end)end return true end if
+VirtualInputManager and UserInputService then local pos=UserInputService:
 GetMouseLocation()local x,y=pos.X,pos.Y VirtualInputManager:
 SendMouseButtonEvent(x,y,0,true,game,1)local shouldRelease=equipped.Name~=
 'Flamethrower'if shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function

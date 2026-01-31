@@ -4,6 +4,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
+local VirtualUser = game:GetService("VirtualUser")
 local UserInputService = game:GetService("UserInputService")
 
 --// Dependencies (require)
@@ -402,6 +403,21 @@ local function _tryMouseShot(equipped: any): boolean
 				if releaseFn then
 					releaseFn()
 				end
+			end)
+		end
+		return true
+	end
+
+	-- Fallback to VirtualUser (Better for background execution)
+	if VirtualUser and UserInputService then
+		local pos = UserInputService:GetMouseLocation()
+		VirtualUser:CaptureController()
+		VirtualUser:ClickButton1(pos)
+		local shouldRelease = equipped.Name ~= "Flamethrower"
+		if shouldRelease then
+			task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
+				-- VirtualUser handles click (Down+Up) usually, but we can ensure release if needed or rely on ClickButton1
+				-- ClickButton1 is a full click. Protocol complete.
 			end)
 		end
 		return true
