@@ -714,10 +714,10 @@ isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
 100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
 isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
 isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,isRagebotEnabled=false,
-ragebotTarget=nil,ragebotHomeCFrame=nil,target=nil,silentTarget=nil,targetLostAt
-=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
-cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
-false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
+ragebotTarget=nil,target=nil,silentTarget=nil,targetLostAt=nil,
+silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,cameraController=nil
+,fighterController=nil,isRemoteHooked=false,isUtilityHooked=false,
+isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
 mouseBehavior=nil,mouseDeltaSensitivity=nil}return _state end function
 __DARKLUA_BUNDLE_MODULES.u()local v=__DARKLUA_BUNDLE_MODULES.cache.u if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end
@@ -1135,58 +1135,51 @@ end end do local function __modImpl()local Players=game:GetService('Players')
 local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=
 __DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.v()local
 State=__DARKLUA_BUNDLE_MODULES.u()local TARGET_REFRESH_INTERVAL=0.5 local
-UNDERGROUND_OFFSET=Vector3.new(0,-50,0)local TELEPORT_OFFSET=CFrame.new(0,0,-2)
-local Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals={}local
-_state={lastTargetRefresh=0}local function _isRoundStarted()local duel=TeamUtils
-.getLocalDuel()if not duel or not duel.Get then return false end local ok,status
-=pcall(duel.Get,duel,'Status')if not ok then return false end return status==
-'RoundStarted'end local function _getValidTarget(localPlayer)local localChar=
-localPlayer.Character local localRoot=localChar and localChar:FindFirstChild(
-'HumanoidRootPart')if not localRoot then return nil end local closest=nil local
-closestDist=math.huge for _,player in ipairs(Players:GetPlayers())do if player==
-localPlayer then continue end if not TeamUtils.isInSameDuel(localPlayer,player)
-then continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end
-local character=player.Character local humanoid=character and character:
-FindFirstChildOfClass('Humanoid')local root=character and character:
-FindFirstChild('HumanoidRootPart')if not character or not humanoid or not root
-or humanoid.Health<=0 then continue end local distance=(root.Position-localRoot.
-Position).Magnitude if distance<closestDist then closestDist=distance closest=
-player end end return closest end local function _refreshTarget(localPlayer)
-local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
-return State.ragebotTarget end _state.lastTargetRefresh=now local target=State.
-ragebotTarget if target then if not TeamUtils.isInSameDuel(localPlayer,target)
-then target=nil elseif TeamUtils.isSameTeam(target,localPlayer)then target=nil
-else local char=target.Character local hum=char and char:FindFirstChildOfClass(
-'Humanoid')if not char or not hum or hum.Health<=0 then target=nil end end end
-if not target then target=_getValidTarget(localPlayer)end State.ragebotTarget=
-target return target end local function _isReloading(item)local reloadCooldown=
-item and item._reload_cooldown if type(reloadCooldown)=='number'and tick()<
-reloadCooldown then return true end if item and item.IsEquipping and item:
-IsEquipping()then return true end local equipCooldown=item and item.
-_equip_cooldown if type(equipCooldown)=='number'and tick()<equipCooldown then
-return true end return false end local function _autoShoot(localFighter)local
-equipped=localFighter and localFighter.EquippedItem if not equipped then return
-end if equipped.Input then equipped:Input('StartShooting')return end if equipped
-.StartShooting then equipped:StartShooting()end end function Ragebot.setup(maid)
-_maid=maid end function Ragebot.update()if not State.isRagebotEnabled then
-return end local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer or
-not TeamUtils.isInDuel(localPlayer)then State.ragebotTarget=nil return end local
-localChar=localPlayer.Character local localRoot=localChar and localChar:
-FindFirstChild('HumanoidRootPart')local localHumanoid=localChar and localChar:
+TELEPORT_OFFSET=CFrame.new(0,2,-2)local Ragebot={}Ragebot.__index=Ragebot local
+_maid=nil local _signals={}local _state={lastTargetRefresh=0}local function
+_isRoundStarted()local duel=TeamUtils.getLocalDuel()if not duel or not duel.Get
+then return false end local ok,status=pcall(duel.Get,duel,'Status')if not ok
+then return false end return status=='RoundStarted'end local function
+_getValidTarget(localPlayer)local localChar=localPlayer.Character local
+localRoot=localChar and(localChar:FindFirstChild('HumanoidRootPart'))if not
+localRoot then return nil end local closest=nil local closestDist=math.huge for
+_,player in ipairs(Players:GetPlayers())do if player==localPlayer then continue
+end if not TeamUtils.isInSameDuel(localPlayer,player)then continue end if
+TeamUtils.isSameTeam(player,localPlayer)then continue end local character=player
+.Character local humanoid=character and character:FindFirstChildOfClass(
+'Humanoid')local root=character and(character:FindFirstChild('HumanoidRootPart')
+)if not character or not humanoid or not root or humanoid.Health<=0 then
+continue end local distance=(root.Position-localRoot.Position).Magnitude if
+distance<closestDist then closestDist=distance closest=player end end return
+closest end local function _refreshTarget(localPlayer)local now=os.clock()if now
+-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then return State.
+ragebotTarget end _state.lastTargetRefresh=now local target=State.ragebotTarget
+if target then if not TeamUtils.isInSameDuel(localPlayer,target)then target=nil
+elseif TeamUtils.isSameTeam(target,localPlayer)then target=nil else local char=
+target.Character local hum=char and char:FindFirstChildOfClass('Humanoid')if not
+char or not hum or hum.Health<=0 then target=nil end end end if not target then
+target=_getValidTarget(localPlayer)end State.ragebotTarget=target return target
+end local function _autoShoot(localFighter)local equipped=localFighter and
+localFighter.EquippedItem if not equipped then return end if equipped.Input then
+equipped:Input('StartShooting')return end if equipped.StartShooting then
+equipped:StartShooting()end end function Ragebot.setup(maid)_maid=maid end
+function Ragebot.update()if not State.isRagebotEnabled then return end local
+localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer or not TeamUtils.
+isInDuel(localPlayer)then State.ragebotTarget=nil return end local localChar=
+localPlayer.Character local localRoot=localChar and(localChar:FindFirstChild(
+'HumanoidRootPart'))local localHumanoid=localChar and localChar:
 FindFirstChildOfClass('Humanoid')if not localRoot or not localHumanoid or
 localHumanoid.Health<=0 then return end Helpers.fetchFighterController(State.
 logger)local localFighter=State.fighterController and State.fighterController.
-LocalFighter if localFighter and _isReloading(localFighter.EquippedItem)then if
-not State.ragebotHomeCFrame then State.ragebotHomeCFrame=localRoot.CFrame end
-localRoot.CFrame=State.ragebotHomeCFrame*CFrame.new(UNDERGROUND_OFFSET)return
-end if State.ragebotHomeCFrame then localRoot.CFrame=State.ragebotHomeCFrame
-State.ragebotHomeCFrame=nil end if not _isRoundStarted()then return end local
-target=_refreshTarget(localPlayer)if not target then return end local targetChar
-=target.Character local targetRoot=targetChar and targetChar:FindFirstChild(
-'HumanoidRootPart')if not targetRoot then return end localRoot.CFrame=targetRoot
-.CFrame*TELEPORT_OFFSET if localFighter then _autoShoot(localFighter)end end
-return Ragebot end function __DARKLUA_BUNDLE_MODULES.B()local v=
-__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
+LocalFighter if not _isRoundStarted()then return end local target=
+_refreshTarget(localPlayer)if not target then return end local targetChar=target
+.Character local targetRoot=targetChar and(targetChar:FindFirstChild(
+'HumanoidRootPart'))if not targetRoot then return end localRoot.CFrame=
+targetRoot.CFrame*TELEPORT_OFFSET local camOrigin=localRoot.Position+Vector3.
+new(0,1.5,0)local lookCFrame=CFrame.lookAt(camOrigin,targetRoot.Position)
+workspace.CurrentCamera.CFrame=lookCFrame if localFighter then _autoShoot(
+localFighter)end end return Ragebot end function __DARKLUA_BUNDLE_MODULES.B()
+local v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end do local function
 __modImpl()local UserInputService=game:GetService('UserInputService')local State
 =__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()local
@@ -1279,15 +1272,15 @@ setMeleeAuraEnabled(self,isEnabled)State.isMeleeAuraEnabled=isEnabled end
 function Combat.setTeleportAuraEnabled(self,isEnabled)State.
 isTeleportAuraEnabled=isEnabled end function Combat.setRagebotEnabled(self,
 isEnabled)State.isRagebotEnabled=isEnabled if not isEnabled then State.
-ragebotTarget=nil State.ragebotHomeCFrame=nil end end return Combat end function
-__DARKLUA_BUNDLE_MODULES.D()local v=__DARKLUA_BUNDLE_MODULES.cache.D if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end
-do local function __modImpl()local CombatTab={}CombatTab.__index=CombatTab local
-_maid=nil local _state={}local _signals={}function CombatTab.Build(tabs,context)
-local client=context.client local updateControlBindings=context.
-updateControlBindings local combatGroup=tabs.combat:AddLeftGroupbox('Combat')
-local silentAimToggle=combatGroup:AddToggle('SilentAimEnabled',{Text=
-'Silent Aim',Default=false,Tooltip=
+ragebotTarget=nil end end return Combat end function __DARKLUA_BUNDLE_MODULES.D(
+)local v=__DARKLUA_BUNDLE_MODULES.cache.D if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end do local function
+__modImpl()local CombatTab={}CombatTab.__index=CombatTab local _maid=nil local
+_state={}local _signals={}function CombatTab.Build(tabs,context)local client=
+context.client local updateControlBindings=context.updateControlBindings local
+combatGroup=tabs.combat:AddLeftGroupbox('Combat')local silentAimToggle=
+combatGroup:AddToggle('SilentAimEnabled',{Text='Silent Aim',Default=false,
+Tooltip=
 [[Redirects shots toward the closest valid target within your silent FOV.]],
 Callback=function()updateControlBindings()end})silentAimToggle:AddKeyPicker(
 'SilentAimKeybind',{Default='MouseButton2',NoUI=false,Text='Silent Aim',

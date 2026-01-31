@@ -55,7 +55,6 @@ local _state: Types.CombatState = {
   isTeleportAuraEnabled = false,
   isRagebotEnabled = false,
   ragebotTarget = nil,
-  ragebotHomeCFrame = nil,
   target = nil,
   silentTarget = nil,
   targetLostAt = nil,

@@ -251,7 +251,6 @@ function Combat.setRagebotEnabled(self: CombatFeature, isEnabled: boolean): ()
   State.isRagebotEnabled = isEnabled
   if not isEnabled then
     State.ragebotTarget = nil
-    State.ragebotHomeCFrame = nil
   end
 end
 

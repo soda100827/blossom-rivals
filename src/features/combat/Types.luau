@@ -40,7 +40,6 @@ export type CombatState = {
   isTeleportAuraEnabled: boolean,
   isRagebotEnabled: boolean,
   ragebotTarget: Player?,
-  ragebotHomeCFrame: CFrame?,
   -- Internal
   forcingAim: boolean?,
   target: Player?,
