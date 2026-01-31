@@ -1109,17 +1109,11 @@ isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
 lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
 localFighter.EquipItem then return end local equipped=localFighter.EquippedItem
 if not equipped or not _isGunItem(equipped)then return end if _isOutOfAmmo(
-equipped)then local currentSlot=(equipped).Slot local primarySlot=1 local
-secondarySlot=2 if currentSlot==primarySlot then _tryStartReload(equipped)if now
--_state.lastReloadAttemptAt>3 then if State.logger then State.logger:info(
-[[[Ragebot Swap] Primary Dry (No Reserves). Swapping to Secondary.]])end local
-otherItem=_getItemBySlot(localFighter,secondarySlot)if otherItem then _state.
-lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(secondarySlot)end)
-end end elseif currentSlot==secondarySlot then if State.logger then State.logger
-:info('[Ragebot Swap] Secondary Empty. Swapping BACK to Primary.')end local
-otherItem=_getItemBySlot(localFighter,primarySlot)if otherItem then _state.
-returnedToPrimary=true _state.lastWeaponSwapAt=now pcall(function()localFighter:
-EquipItem(primarySlot)end)end else _tryStartReload(equipped)end end end
+equipped)then _tryStartReload(equipped)local currentSlot=(equipped).Slot local
+otherSlot=(currentSlot==1)and 2 or 1 if State.logger then State.logger:info(
+'[Ragebot Swap] Mag Empty. Swapping to slot:',otherSlot)end local otherItem=
+_getItemBySlot(localFighter,otherSlot)if otherItem then _state.lastWeaponSwapAt=
+now pcall(function()localFighter:EquipItem(otherSlot)end)end end end
 local function _refreshInputFunctions()if _state.mouse1press or _state.
 mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
 'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')

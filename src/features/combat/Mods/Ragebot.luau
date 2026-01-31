@@ -361,43 +361,21 @@ local function _swapWeaponOnReload(localFighter: any)
 	end
 
 	if _isOutOfAmmo(equipped) then
+		_tryStartReload(equipped)
+
 		local currentSlot = (equipped :: any).Slot
-		local primarySlot = 1 -- Assuming 1 is Primary
-		local secondarySlot = 2
+		local otherSlot = (currentSlot == 1) and 2 or 1
 
-		if currentSlot == primarySlot then
-			-- Primary: Reload and stay until dry
-			_tryStartReload(equipped)
+		if State.logger then
+			State.logger:info("[Ragebot Swap] Mag Empty. Swapping to slot:", otherSlot)
+		end
 
-			-- If we tried reloading recently and still empty after 3 seconds, assume dry.
-			if now - _state.lastReloadAttemptAt > 3.0 then
-				if State.logger then
-					State.logger:info("[Ragebot Swap] Primary Dry (No Reserves). Swapping to Secondary.")
-				end
-				local otherItem = _getItemBySlot(localFighter, secondarySlot)
-				if otherItem then
-					_state.lastWeaponSwapAt = now
-					pcall(function()
-						localFighter:EquipItem(secondarySlot)
-					end)
-				end
-			end
-		elseif currentSlot == secondarySlot then
-			-- Secondary: Always swap back to Primary after 1 mag
-			if State.logger then
-				State.logger:info("[Ragebot Swap] Secondary Empty. Swapping BACK to Primary.")
-			end
-			local otherItem = _getItemBySlot(localFighter, primarySlot)
-			if otherItem then
-				_state.returnedToPrimary = true -- Flag that we are returning (used to reset reload timer if needed, though simpler now)
-				_state.lastWeaponSwapAt = now
-				pcall(function()
-					localFighter:EquipItem(primarySlot)
-				end)
-			end
-		else
-			-- Unknown slot. Just reload.
-			_tryStartReload(equipped)
+		local otherItem = _getItemBySlot(localFighter, otherSlot)
+		if otherItem then
+			_state.lastWeaponSwapAt = now
+			pcall(function()
+				localFighter:EquipItem(otherSlot)
+			end)
 		end
 	end
 end
