@@ -869,22 +869,30 @@ isAnyOnScreen,shortestDistSq=_getBestPartForCharacter(character,camera,
 localPlayer.Character,mouseLocation)if not bestPart then return false,nil,false,
 math.huge end local shortestDist=if shortestDistSq==math.huge then math.huge
 else math.sqrt(shortestDistSq)return true,bestPart,isAnyOnScreen,shortestDist
-end function Targeting.getTargetState(player)_refreshCaches()local camera=
+end local function _getWorldDistance(localCharacter,character)local localRoot=
+localCharacter and(localCharacter:FindFirstChild('HumanoidRootPart'))local
+targetRoot=character and(character:FindFirstChild('HumanoidRootPart'))if not
+localRoot or not targetRoot then return math.huge end return(localRoot.Position-
+targetRoot.Position).Magnitude end function Targeting.getTargetState(player)
+_refreshCaches()local camera=_getCamera()local localPlayer=PlayerUtils.
+getLocalPlayer()local mouseLocation=_getMouseLocation()return
+_getTargetStateWithMouse(localPlayer,player,camera,mouseLocation)end function
+Targeting.getBestTarget(radius,allowOffscreen)_refreshCaches()local localPlayer=
+PlayerUtils.getLocalPlayer()if not TeamUtils.isInDuel(localPlayer)then return
+nil end local camera=_getCamera()local mouseLocation=_getMouseLocation()local
+localCharacter=localPlayer.Character local bestTarget=nil local shortestDistance
+=radius for _,player in ipairs(Players:GetPlayers())do if player==localPlayer
+then continue end local isValid,headPart,onScreen,distance=
+_getTargetStateWithMouse(localPlayer,player,camera,mouseLocation)if not isValid
+or not headPart then continue end if not onScreen and not allowOffscreen then
+continue end local scoreDistance=distance if not onScreen and allowOffscreen
+then scoreDistance=_getWorldDistance(localCharacter,player.Character)end if
+scoreDistance>radius then continue end if scoreDistance<shortestDistance then
+shortestDistance=scoreDistance bestTarget=player end end return bestTarget end
+function Targeting.resolveTarget()if State.target then local dropRadius=State.
+fovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER _refreshCaches()local camera=
 _getCamera()local localPlayer=PlayerUtils.getLocalPlayer()local mouseLocation=
-_getMouseLocation()return _getTargetStateWithMouse(localPlayer,player,camera,
-mouseLocation)end function Targeting.getBestTarget(radius)_refreshCaches()local
-localPlayer=PlayerUtils.getLocalPlayer()if not TeamUtils.isInDuel(localPlayer)
-then return nil end local camera=_getCamera()local mouseLocation=
-_getMouseLocation()local bestTarget=nil local shortestDistance=radius for _,
-player in ipairs(Players:GetPlayers())do if player==localPlayer then continue
-end local isValid,headPart,onScreen,distance=_getTargetStateWithMouse(
-localPlayer,player,camera,mouseLocation)if not isValid or not headPart or not
-onScreen then continue end if distance>radius then continue end if distance<
-shortestDistance then shortestDistance=distance bestTarget=player end end return
-bestTarget end function Targeting.resolveTarget()if State.target then local
-dropRadius=State.fovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER _refreshCaches()
-local camera=_getCamera()local localPlayer=PlayerUtils.getLocalPlayer()local
-mouseLocation=_getMouseLocation()local isValid,headPart,onScreen,distance=
+_getMouseLocation()local isValid,headPart,onScreen,distance=
 _getTargetStateWithMouse(localPlayer,State.target,camera,mouseLocation)if
 isValid and headPart and onScreen and distance<=dropRadius then State.
 targetLostAt=nil return State.target end if not isValid or not headPart then
@@ -894,73 +902,78 @@ targetLostAt=now end if now-(targetLostAt)<Constants.TARGET_DROP_DELAY then
 return State.target end State.targetLostAt=nil State.target=nil end end local
 newTarget=Targeting.getBestTarget(State.fovRadius)State.target=newTarget return
 newTarget end function Targeting.resolveSilentTarget()if State.silentTarget then
-local dropRadius=State.silentAimFovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER
 _refreshCaches()local camera=_getCamera()local localPlayer=PlayerUtils.
 getLocalPlayer()local mouseLocation=_getMouseLocation()local isValid,headPart,
 onScreen,distance=_getTargetStateWithMouse(localPlayer,State.silentTarget,camera
-,mouseLocation)if isValid and headPart and onScreen and distance<=dropRadius
-then State.silentTargetLostAt=nil return State.silentTarget end if not isValid
-or not headPart then State.silentTargetLostAt=nil State.silentTarget=nil else
-local now=os.clock()local silentTargetLostAt=State.silentTargetLostAt if not
-silentTargetLostAt then silentTargetLostAt=now State.silentTargetLostAt=now end
-if now-(silentTargetLostAt)<Constants.TARGET_DROP_DELAY then return State.
-silentTarget end State.silentTargetLostAt=nil State.silentTarget=nil end end
-local newTarget=Targeting.getBestTarget(State.silentAimFovRadius)State.
-silentTarget=newTarget return newTarget end function Targeting.
-getClosestSilentTarget()_refreshCaches()local camera=_getCamera()local
-localPlayer=PlayerUtils.getLocalPlayer()if not TeamUtils.isInDuel(localPlayer)
-then return nil end local closest=nil local closestDistSq=State.
-silentAimFovRadius*State.silentAimFovRadius local mouseLocation=
-_getMouseLocation()for _,entity in ipairs(CollectionService:GetTagged('Entity'))
-do if entity==localPlayer.Character or entity.Name==localPlayer.Name then
-continue end local player=Players:GetPlayerFromCharacter(entity)if player and
-not TeamUtils.isInSameDuel(localPlayer,player)then continue end if player and
-TeamUtils.isSameTeam(player,localPlayer)then continue end local hum=entity:
-FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
-local bestPart,isAnyOnScreen,distSq=_getBestPartForCharacter(entity,camera,
-localPlayer.Character,mouseLocation)if not isAnyOnScreen or not bestPart then
-continue end if distSq<closestDistSq then closest=bestPart closestDistSq=distSq
-end end return closest end return Targeting end function
-__DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c end end
-do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-State=__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()
-local Helpers=__DARKLUA_BUNDLE_MODULES.v()local Aimbot={}Aimbot.__index=Aimbot
-local _maid=nil local _signals={}local _state={}function Aimbot.aimAt(target,
-bestPart,deltaTime)if not target.Character then return end local targetPos=(
-bestPart).Position local camera=PlayerUtils.getCamera()local currentCFrame=
-camera.CFrame local lookAtCFrame=CFrame.lookAt(currentCFrame.Position,targetPos)
-if not State.cameraController or not State.cameraController.SetRotation then
-local alpha=1 if not Helpers.isMaxSmoothness()then local speed=Constants.
-MIN_AIM_SPEED+(1-State.smoothness)*(Constants.MAX_AIM_SPEED-Constants.
-MIN_AIM_SPEED)alpha=1-math.exp(-speed*deltaTime)end camera.CFrame=currentCFrame:
-Lerp(lookAtCFrame,alpha)return end local x,y,_=lookAtCFrame:ToOrientation()local
-targetRotation=Vector2.new(x,y)if Helpers.isMaxSmoothness()then State.
-cameraController:SetRotation(targetRotation)elseif State.smoothness>0 then local
-currentRot=(State.cameraController.Rotation)local speed=Constants.MIN_AIM_SPEED+
-(1-State.smoothness)*(Constants.MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)local
-alpha=1-math.exp(-speed*deltaTime)local newRot=currentRot:Lerp(targetRotation,
-alpha)State.cameraController:SetRotation(newRot)else State.cameraController:
-SetRotation(targetRotation)end end return Aimbot end function
-__DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end
-do local function __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
-local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local PlayerUtils=
+,mouseLocation)if isValid and headPart then State.silentTargetLostAt=nil return
+State.silentTarget end if not isValid or not headPart then State.
+silentTargetLostAt=nil State.silentTarget=nil else local now=os.clock()local
+silentTargetLostAt=State.silentTargetLostAt if not silentTargetLostAt then
+silentTargetLostAt=now State.silentTargetLostAt=now end if now-(
+silentTargetLostAt)<Constants.TARGET_DROP_DELAY then return State.silentTarget
+end State.silentTargetLostAt=nil State.silentTarget=nil end end local newTarget=
+Targeting.getBestTarget(math.huge,true)State.silentTarget=newTarget return
+newTarget end function Targeting.getClosestSilentTarget()_refreshCaches()local
+camera=_getCamera()local localPlayer=PlayerUtils.getLocalPlayer()local
+localCharacter=localPlayer.Character if not TeamUtils.isInDuel(localPlayer)then
+return nil end local closest=nil local closestDistSq=math.huge local
+mouseLocation=_getMouseLocation()if State.silentTarget then local character=
+State.silentTarget.Character if character then local hum=character:
+FindFirstChildOfClass('Humanoid')if hum and hum.Health>0 then local bestPart=
+_getBestPartForCharacter(character,camera,localCharacter,mouseLocation)if
+bestPart then return bestPart end end end end for _,entity in ipairs(
+CollectionService:GetTagged('Entity'))do if entity==localPlayer.Character or
+entity.Name==localPlayer.Name then continue end local player=Players:
+GetPlayerFromCharacter(entity)if player and not TeamUtils.isInSameDuel(
+localPlayer,player)then continue end if player and TeamUtils.isSameTeam(player,
+localPlayer)then continue end local hum=entity:FindFirstChildOfClass('Humanoid')
+if not hum or hum.Health<=0 then continue end local bestPart,_,distSq=
+_getBestPartForCharacter(entity,camera,localCharacter,mouseLocation)if not
+bestPart then continue end local scoreDistSq=distSq if scoreDistSq==math.huge
+then local worldDistance=_getWorldDistance(localCharacter,entity)scoreDistSq=
+worldDistance*worldDistance end if scoreDistSq<closestDistSq then closest=
+bestPart closestDistSq=scoreDistSq end end return closest end return Targeting
+end function __DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.
+w if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v
+.c end end do local function __modImpl()local PlayerUtils=
 __DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.u()local
-Helpers=__DARKLUA_BUNDLE_MODULES.v()local Targeting=__DARKLUA_BUNDLE_MODULES.w()
-local SilentAim={}SilentAim.__index=SilentAim local _maid=nil local _signals={}
-local _state={lastSilentTargetPos=nil,lastSilentOrigin=nil}local function
-_isGunAction()local debugGlobal=ExecutorUtils.getGlobal('debug')local traceback=
-debugGlobal and debugGlobal.traceback or debug.traceback local stack=traceback()
-return(stack:find('StartShooting')or stack:find('GetEntitiesFromRaycast')or
-stack:find('_LocalTracers')or stack:find('_ImpactMarker'))~=nil end function
-SilentAim.isGunAction()return _isGunAction()end function SilentAim.setup(maid)
-_maid=maid local hookfunction=ExecutorUtils.getGlobal('hookfunction')or
-ExecutorUtils.getGlobal('replaceclosure')local checkcaller=ExecutorUtils.
-getGlobal('checkcaller')or function()return false end local newcclosure=
-ExecutorUtils.getGlobal('newcclosure')or function(f)return f end if not
-hookfunction then if State.logger and((State.logger)).warnUnsupported then((
-State.logger)):warnUnsupported('hookfunction')else State.logger:warn(
+Constants=__DARKLUA_BUNDLE_MODULES.t()local Helpers=__DARKLUA_BUNDLE_MODULES.v()
+local Aimbot={}Aimbot.__index=Aimbot local _maid=nil local _signals={}local
+_state={}function Aimbot.aimAt(target,bestPart,deltaTime)if not target.Character
+then return end local targetPos=(bestPart).Position local camera=PlayerUtils.
+getCamera()local currentCFrame=camera.CFrame local lookAtCFrame=CFrame.lookAt(
+currentCFrame.Position,targetPos)if not State.cameraController or not State.
+cameraController.SetRotation then local alpha=1 if not Helpers.isMaxSmoothness()
+then local speed=Constants.MIN_AIM_SPEED+(1-State.smoothness)*(Constants.
+MAX_AIM_SPEED-Constants.MIN_AIM_SPEED)alpha=1-math.exp(-speed*deltaTime)end
+camera.CFrame=currentCFrame:Lerp(lookAtCFrame,alpha)return end local x,y,_=
+lookAtCFrame:ToOrientation()local targetRotation=Vector2.new(x,y)if Helpers.
+isMaxSmoothness()then State.cameraController:SetRotation(targetRotation)elseif
+State.smoothness>0 then local currentRot=(State.cameraController.Rotation)local
+speed=Constants.MIN_AIM_SPEED+(1-State.smoothness)*(Constants.MAX_AIM_SPEED-
+Constants.MIN_AIM_SPEED)local alpha=1-math.exp(-speed*deltaTime)local newRot=
+currentRot:Lerp(targetRotation,alpha)State.cameraController:SetRotation(newRot)
+else State.cameraController:SetRotation(targetRotation)end end return Aimbot end
+function __DARKLUA_BUNDLE_MODULES.x()local v=__DARKLUA_BUNDLE_MODULES.cache.x if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c
+end end do local function __modImpl()local ExecutorUtils=
+__DARKLUA_BUNDLE_MODULES.d()local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.u()
+local Helpers=__DARKLUA_BUNDLE_MODULES.v()local Targeting=
+__DARKLUA_BUNDLE_MODULES.w()local SilentAim={}SilentAim.__index=SilentAim local
+_maid=nil local _signals={}local _state={lastSilentTargetPos=nil,
+lastSilentOrigin=nil}local function _isGunAction()local debugGlobal=
+ExecutorUtils.getGlobal('debug')local traceback=debugGlobal and debugGlobal.
+traceback or debug.traceback local stack=traceback()return(stack:find(
+'StartShooting')or stack:find('GetEntitiesFromRaycast')or stack:find(
+'_LocalTracers')or stack:find('_ImpactMarker'))~=nil end function SilentAim.
+isGunAction()return _isGunAction()end function SilentAim.setup(maid)_maid=maid
+local hookfunction=ExecutorUtils.getGlobal('hookfunction')or ExecutorUtils.
+getGlobal('replaceclosure')local checkcaller=ExecutorUtils.getGlobal(
+'checkcaller')or function()return false end local newcclosure=ExecutorUtils.
+getGlobal('newcclosure')or function(f)return f end if not hookfunction then if
+State.logger and((State.logger)).warnUnsupported then((State.logger)):
+warnUnsupported('hookfunction')else State.logger:warn(
 [[This executor does not support 'hookfunction'. Some features may not work as expected.]]
 )end return end local isRunning=true if _maid then _maid:GiveTask(function()
 isRunning=false end)end task.spawn(function()if not isRunning then return end
