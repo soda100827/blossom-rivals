@@ -861,82 +861,84 @@ _checkPart(p)end end else local p=character:FindFirstChild(State.targetPart)or
 character:FindFirstChild('Head')if p then _checkPart(p)end end return bestPart,
 isAnyOnScreen,shortestDistSq end local function _getTargetStateWithMouse(
 localPlayer,player,camera,mouseLocation)if player==localPlayer then return false
-,nil,false,math.huge end if not TeamUtils.isInSameDuel(localPlayer,player)then
-return false,nil,false,math.huge end if TeamUtils.isSameTeam(player,localPlayer)
-then return false,nil,false,math.huge end local character=player.Character if
-not character then return false,nil,false,math.huge end local humanoid=character
-:FindFirstChildOfClass('Humanoid')if not humanoid or humanoid.Health<=0 then
-return false,nil,false,math.huge end if character:FindFirstChildOfClass(
-'ForceField')then return false,nil,false,math.huge end local bestPart,
-isAnyOnScreen,shortestDistSq=_getBestPartForCharacter(character,camera,
-localPlayer.Character,mouseLocation)if not bestPart then return false,nil,false,
-math.huge end local shortestDist=if shortestDistSq==math.huge then math.huge
-else math.sqrt(shortestDistSq)return true,bestPart,isAnyOnScreen,shortestDist
-end local function _getWorldDistanceSq(localCharacter,character)local localRoot=
-localCharacter and(localCharacter:FindFirstChild('HumanoidRootPart'))local
-targetRoot=character and(character:FindFirstChild('HumanoidRootPart'))if not
-localRoot or not targetRoot then return math.huge end local delta=localRoot.
-Position-targetRoot.Position return(delta.X*delta.X)+(delta.Y*delta.Y)+(delta.Z*
-delta.Z)end function Targeting.getTargetState(player)_refreshCaches()local
-camera=_getCamera()local localPlayer=PlayerUtils.getLocalPlayer()local
-mouseLocation=_getMouseLocation()return _getTargetStateWithMouse(localPlayer,
-player,camera,mouseLocation)end function Targeting.getBestTarget(radius)
-_refreshCaches()local localPlayer=PlayerUtils.getLocalPlayer()if not TeamUtils.
-isInDuel(localPlayer)then return nil end local camera=_getCamera()local
-mouseLocation=_getMouseLocation()local bestTarget=nil local shortestDistance=
-radius for _,player in ipairs(Players:GetPlayers())do if player==localPlayer
-then continue end local isValid,headPart,onScreen,distance=
-_getTargetStateWithMouse(localPlayer,player,camera,mouseLocation)if not isValid
-or not headPart or not onScreen then continue end if distance>radius then
-continue end if distance<shortestDistance then shortestDistance=distance
-bestTarget=player end end return bestTarget end function Targeting.resolveTarget
-()if State.target then local dropRadius=State.fovRadius*Constants.
-TARGET_DROP_FOV_MULTIPLIER _refreshCaches()local camera=_getCamera()local
-localPlayer=PlayerUtils.getLocalPlayer()local mouseLocation=_getMouseLocation()
-local isValid,headPart,onScreen,distance=_getTargetStateWithMouse(localPlayer,
-State.target,camera,mouseLocation)if isValid and headPart and onScreen and
-distance<=dropRadius then State.targetLostAt=nil return State.target end if not
-isValid or not headPart then State.targetLostAt=nil State.target=nil else local
-now=os.clock()local targetLostAt=State.targetLostAt if not targetLostAt then
-targetLostAt=now State.targetLostAt=now end if now-(targetLostAt)<Constants.
-TARGET_DROP_DELAY then return State.target end State.targetLostAt=nil State.
-target=nil end end local newTarget=Targeting.getBestTarget(State.fovRadius)State
-.target=newTarget return newTarget end function Targeting.resolveSilentTarget()
-if State.silentTarget then local dropRadius=State.silentAimFovRadius*Constants.
-TARGET_DROP_FOV_MULTIPLIER _refreshCaches()local camera=_getCamera()local
-localPlayer=PlayerUtils.getLocalPlayer()local mouseLocation=_getMouseLocation()
-local isValid,headPart,onScreen,distance=_getTargetStateWithMouse(localPlayer,
-State.silentTarget,camera,mouseLocation)if isValid and headPart and onScreen and
-distance<=dropRadius then State.silentTargetLostAt=nil return State.silentTarget
-end if not isValid or not headPart then State.silentTargetLostAt=nil State.
-silentTarget=nil else local now=os.clock()local silentTargetLostAt=State.
-silentTargetLostAt if not silentTargetLostAt then silentTargetLostAt=now State.
-silentTargetLostAt=now end if now-(silentTargetLostAt)<Constants.
-TARGET_DROP_DELAY then return State.silentTarget end State.silentTargetLostAt=
-nil State.silentTarget=nil end end local newTarget=Targeting.getBestTarget(State
-.silentAimFovRadius)State.silentTarget=newTarget return newTarget end function
-Targeting.getClosestSilentTarget()_refreshCaches()local camera=_getCamera()local
-localPlayer=PlayerUtils.getLocalPlayer()if not TeamUtils.isInDuel(localPlayer)
-then return nil end local closest=nil local closestDistSq=if State.
-isRagebotEnabled then math.huge else State.silentAimFovRadius*State.
-silentAimFovRadius local mouseLocation=_getMouseLocation()local closestOnScreen=
-false local closestName=''local localCharacter=localPlayer.Character for _,
-entity in ipairs(CollectionService:GetTagged('Entity'))do if entity==localPlayer
-.Character or entity.Name==localPlayer.Name then continue end local player=
-Players:GetPlayerFromCharacter(entity)if player and not TeamUtils.isInSameDuel(
-localPlayer,player)then continue end if player and TeamUtils.isSameTeam(player,
-localPlayer)then continue end local hum=entity:FindFirstChildOfClass('Humanoid')
-if not hum or hum.Health<=0 then continue end local bestPart,isAnyOnScreen,
-distSq=_getBestPartForCharacter(entity,camera,localPlayer.Character,
-mouseLocation)if not bestPart then continue end if not isAnyOnScreen and not
-State.isRagebotEnabled then continue end local scoreDistSq=distSq if not
-isAnyOnScreen and State.isRagebotEnabled then scoreDistSq=_getWorldDistanceSq(
-localCharacter,entity)end if scoreDistSq<closestDistSq then closest=bestPart
-closestDistSq=scoreDistSq closestOnScreen=isAnyOnScreen local player=Players:
-GetPlayerFromCharacter(entity)if player then closestName=player.Name else
-closestName=entity.Name end end end if State.isRagebotEnabled and State.
-isSilentAimEnabled and State.logger then local now=os.clock()if now>=_state.
-debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+,nil,false,math.huge end if not State.isRagebotEnabled then if not TeamUtils.
+isInSameDuel(localPlayer,player)then return false,nil,false,math.huge end if
+TeamUtils.isSameTeam(player,localPlayer)then return false,nil,false,math.huge
+end end local character=player.Character if not character then return false,nil,
+false,math.huge end local humanoid=character:FindFirstChildOfClass('Humanoid')if
+not humanoid or humanoid.Health<=0 then return false,nil,false,math.huge end if
+character:FindFirstChildOfClass('ForceField')then return false,nil,false,math.
+huge end local bestPart,isAnyOnScreen,shortestDistSq=_getBestPartForCharacter(
+character,camera,localPlayer.Character,mouseLocation)if not bestPart then return
+false,nil,false,math.huge end local shortestDist=if shortestDistSq==math.huge
+then math.huge else math.sqrt(shortestDistSq)return true,bestPart,isAnyOnScreen,
+shortestDist end local function _getWorldDistanceSq(localCharacter,character)
+local localRoot=localCharacter and(localCharacter:FindFirstChild(
+'HumanoidRootPart'))local targetRoot=character and(character:FindFirstChild(
+'HumanoidRootPart'))if not localRoot or not targetRoot then return math.huge end
+local delta=localRoot.Position-targetRoot.Position return(delta.X*delta.X)+(
+delta.Y*delta.Y)+(delta.Z*delta.Z)end function Targeting.getTargetState(player)
+_refreshCaches()local camera=_getCamera()local localPlayer=PlayerUtils.
+getLocalPlayer()local mouseLocation=_getMouseLocation()return
+_getTargetStateWithMouse(localPlayer,player,camera,mouseLocation)end function
+Targeting.getBestTarget(radius)_refreshCaches()local localPlayer=PlayerUtils.
+getLocalPlayer()if not State.isRagebotEnabled and not TeamUtils.isInDuel(
+localPlayer)then return nil end local camera=_getCamera()local mouseLocation=
+_getMouseLocation()local bestTarget=nil local shortestDistance=radius for _,
+player in ipairs(Players:GetPlayers())do if player==localPlayer then continue
+end local isValid,headPart,onScreen,distance=_getTargetStateWithMouse(
+localPlayer,player,camera,mouseLocation)if not isValid or not headPart or not
+onScreen then continue end if distance>radius then continue end if distance<
+shortestDistance then shortestDistance=distance bestTarget=player end end return
+bestTarget end function Targeting.resolveTarget()if State.target then local
+dropRadius=State.fovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER _refreshCaches()
+local camera=_getCamera()local localPlayer=PlayerUtils.getLocalPlayer()local
+mouseLocation=_getMouseLocation()local isValid,headPart,onScreen,distance=
+_getTargetStateWithMouse(localPlayer,State.target,camera,mouseLocation)if
+isValid and headPart and onScreen and distance<=dropRadius then State.
+targetLostAt=nil return State.target end if not isValid or not headPart then
+State.targetLostAt=nil State.target=nil else local now=os.clock()local
+targetLostAt=State.targetLostAt if not targetLostAt then targetLostAt=now State.
+targetLostAt=now end if now-(targetLostAt)<Constants.TARGET_DROP_DELAY then
+return State.target end State.targetLostAt=nil State.target=nil end end local
+newTarget=Targeting.getBestTarget(State.fovRadius)State.target=newTarget return
+newTarget end function Targeting.resolveSilentTarget()if State.silentTarget then
+local dropRadius=State.silentAimFovRadius*Constants.TARGET_DROP_FOV_MULTIPLIER
+_refreshCaches()local camera=_getCamera()local localPlayer=PlayerUtils.
+getLocalPlayer()local mouseLocation=_getMouseLocation()local isValid,headPart,
+onScreen,distance=_getTargetStateWithMouse(localPlayer,State.silentTarget,camera
+,mouseLocation)if isValid and headPart and onScreen and distance<=dropRadius
+then State.silentTargetLostAt=nil return State.silentTarget end if not isValid
+or not headPart then State.silentTargetLostAt=nil State.silentTarget=nil else
+local now=os.clock()local silentTargetLostAt=State.silentTargetLostAt if not
+silentTargetLostAt then silentTargetLostAt=now State.silentTargetLostAt=now end
+if now-(silentTargetLostAt)<Constants.TARGET_DROP_DELAY then return State.
+silentTarget end State.silentTargetLostAt=nil State.silentTarget=nil end end
+local newTarget=Targeting.getBestTarget(State.silentAimFovRadius)State.
+silentTarget=newTarget return newTarget end function Targeting.
+getClosestSilentTarget()_refreshCaches()local camera=_getCamera()local
+localPlayer=PlayerUtils.getLocalPlayer()if not State.isRagebotEnabled and not
+TeamUtils.isInDuel(localPlayer)then return nil end local closest=nil local
+closestDistSq=if State.isRagebotEnabled then math.huge else State.
+silentAimFovRadius*State.silentAimFovRadius local mouseLocation=
+_getMouseLocation()local closestOnScreen=false local closestName=''local
+localCharacter=localPlayer.Character for _,entity in ipairs(CollectionService:
+GetTagged('Entity'))do if entity==localPlayer.Character or entity.Name==
+localPlayer.Name then continue end local player=Players:GetPlayerFromCharacter(
+entity)if not State.isRagebotEnabled then if player and not TeamUtils.
+isInSameDuel(localPlayer,player)then continue end if player and TeamUtils.
+isSameTeam(player,localPlayer)then continue end end local hum=entity:
+FindFirstChildOfClass('Humanoid')if not hum or hum.Health<=0 then continue end
+local bestPart,isAnyOnScreen,distSq=_getBestPartForCharacter(entity,camera,
+localPlayer.Character,mouseLocation)if not bestPart then continue end if not
+isAnyOnScreen and not State.isRagebotEnabled then continue end local scoreDistSq
+=distSq if not isAnyOnScreen and State.isRagebotEnabled then scoreDistSq=
+_getWorldDistanceSq(localCharacter,entity)end if scoreDistSq<closestDistSq then
+closest=bestPart closestDistSq=scoreDistSq closestOnScreen=isAnyOnScreen local
+player=Players:GetPlayerFromCharacter(entity)if player then closestName=player.
+Name else closestName=entity.Name end end end if State.isRagebotEnabled and
+State.isSilentAimEnabled and State.logger then local now=os.clock()if now>=
+_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] Silent target',closestName~=''and closestName or'nil',
 'onScreen',closestOnScreen)end end return closest end return Targeting end
 function __DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if

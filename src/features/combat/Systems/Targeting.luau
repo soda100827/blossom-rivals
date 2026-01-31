@@ -125,11 +125,15 @@ local function _getTargetStateWithMouse(
 	if player == localPlayer then
 		return false, nil, false, math.huge
 	end
-	if not TeamUtils.isInSameDuel(localPlayer, player) then
-		return false, nil, false, math.huge
-	end
-	if TeamUtils.isSameTeam(player, localPlayer) then
-		return false, nil, false, math.huge
+
+	-- Skip Team/Duel checks if Ragebot is enabled (Ragebot users want to kill everyone)
+	if not State.isRagebotEnabled then
+		if not TeamUtils.isInSameDuel(localPlayer, player) then
+			return false, nil, false, math.huge
+		end
+		if TeamUtils.isSameTeam(player, localPlayer) then
+			return false, nil, false, math.huge
+		end
 	end
 
 	local character = player.Character
@@ -180,7 +184,7 @@ end
 function Targeting.getBestTarget(radius: number): Player?
 	_refreshCaches()
 	local localPlayer = PlayerUtils.getLocalPlayer()
-	if not TeamUtils.isInDuel(localPlayer) then
+	if not State.isRagebotEnabled and not TeamUtils.isInDuel(localPlayer) then
 		return nil
 	end
 	local camera = _getCamera()
@@ -288,7 +292,7 @@ function Targeting.getClosestSilentTarget(): BasePart?
 	local camera = _getCamera()
 	local localPlayer = PlayerUtils.getLocalPlayer()
 
-	if not TeamUtils.isInDuel(localPlayer) then
+	if not State.isRagebotEnabled and not TeamUtils.isInDuel(localPlayer) then
 		return nil
 	end
 
@@ -307,11 +311,13 @@ function Targeting.getClosestSilentTarget(): BasePart?
 		end
 
 		local player = Players:GetPlayerFromCharacter(entity :: Model)
-		if player and not TeamUtils.isInSameDuel(localPlayer, player) then
-			continue
-		end
-		if player and TeamUtils.isSameTeam(player, localPlayer) then
-			continue
+		if not State.isRagebotEnabled then
+			if player and not TeamUtils.isInSameDuel(localPlayer, player) then
+				continue
+			end
+			if player and TeamUtils.isSameTeam(player, localPlayer) then
+				continue
+			end
 		end
 
 		local hum = entity:FindFirstChildOfClass("Humanoid")
