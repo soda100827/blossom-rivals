@@ -500,7 +500,63 @@ local function _shoot(localFighter: any)
 	_state.lastShotAt = now
 
 	_forceShootReady(equipped)
+
+	-- Apply Modifications (NoSpread, FastFire) locally
+	local info = equipped.Info
+	local savedSpread, savedAimML, savedQuick
+	local savedShootCd, savedBurstCd
+
+	if info then
+		if State.isNoSpreadEnabled then
+			savedSpread = info.ShootSpread
+			savedAimML = info.AimSpreadMultiplier
+			savedQuick = info.QuickShotSpread
+
+			info.ShootSpread = 0
+			info.AimSpreadMultiplier = 0
+			if info.QuickShotSpread then
+				info.QuickShotSpread = 0
+			end
+			State.forcingAim = true
+		end
+
+		if State.attackCooldownMultiplier < 100 then
+			savedShootCd = info.ShootCooldown
+			savedBurstCd = info.ShootBurstCooldown
+
+			local mult = State.attackCooldownMultiplier / 100
+			if savedShootCd then
+				info.ShootCooldown = savedShootCd * mult
+			end
+			if savedBurstCd then
+				info.ShootBurstCooldown = savedBurstCd * mult
+			end
+		end
+	end
+
 	local didShoot = _equippedItemInput(localFighter, equipped, "StartShooting")
+
+	-- Restore Modifications
+	if info then
+		if State.isNoSpreadEnabled then
+			info.ShootSpread = savedSpread
+			info.AimSpreadMultiplier = savedAimML
+			if savedQuick ~= nil then
+				info.QuickShotSpread = savedQuick
+			end
+			State.forcingAim = false
+		end
+
+		if State.attackCooldownMultiplier < 100 then
+			if savedShootCd then
+				info.ShootCooldown = savedShootCd
+			end
+			if savedBurstCd then
+				info.ShootBurstCooldown = savedBurstCd
+			end
+		end
+	end
+
 	if didShoot and equipped.Name ~= "Flamethrower" then
 		task.delay(0.1, function()
 			if localFighter.EquippedItem == equipped and equipped.Input then
@@ -509,8 +565,6 @@ local function _shoot(localFighter: any)
 		end)
 	end
 end
-
-
 
 local function _applyRagebotSilentAimOverride(isEnabled: boolean)
 	if isEnabled then

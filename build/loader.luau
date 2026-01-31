@@ -1145,30 +1145,44 @@ end local function _shoot(localFighter)local equipped=_ensureGunEquipped(
 localFighter)if not equipped or not equipped.Input then return end local now=os.
 clock()local cooldown=_getShootCooldown(equipped)if now-_state.lastShotAt<
 cooldown then return end _state.lastShotAt=now _forceShootReady(equipped)local
-didShoot=_equippedItemInput(localFighter,equipped,'StartShooting')if didShoot
-and equipped.Name~='Flamethrower'then task.delay(0.1,function()if localFighter.
-EquippedItem==equipped and equipped.Input then _equippedItemInput(localFighter,
-equipped,'FinishShooting')end end)end end local function
-_applyRagebotSilentAimOverride(isEnabled)if isEnabled then if State.
-ragebotSavedSilentAimFovRadius==nil then State.ragebotSavedSilentAimFovRadius=
-State.silentAimFovRadius end State.silentAimFovRadius=math.huge else if State.
-ragebotSavedSilentAimFovRadius~=nil then State.silentAimFovRadius=State.
-ragebotSavedSilentAimFovRadius State.ragebotSavedSilentAimFovRadius=nil end end
-end local function _teleportToTarget(localRoot,targetRoot)local offset=State.
-ragebotOffset or DEFAULT_RAGEBOT_OFFSET localRoot.CFrame=targetRoot.CFrame*
-CFrame.new(offset)end local function _orbitTarget(localRoot,targetRoot)local
-orbitSpeed=State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED local orbitRadius=
-State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS local angle=os.clock()*
-orbitSpeed local offset=Vector3.new(math.cos(angle),0,math.sin(angle))*
-orbitRadius local position=targetRoot.Position+offset localRoot.CFrame=CFrame.
-new(position,targetRoot.Position)end local function _refreshTarget(localRoot)
-local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
-return end _state.lastTargetRefresh=now _state.cachedTarget,_state.
-cachedTargetRoot=_getBestTarget(localRoot)end local function _connect()if not
-_maid then return end local connection=RunService.Heartbeat:Connect(function()if
-not State.isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.
-isEngaged then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil
-then State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
+info=equipped.Info local savedSpread,savedAimML,savedQuick local savedShootCd,
+savedBurstCd if info then if State.isNoSpreadEnabled then savedSpread=info.
+ShootSpread savedAimML=info.AimSpreadMultiplier savedQuick=info.QuickShotSpread
+info.ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
+QuickShotSpread=0 end State.forcingAim=true end if State.
+attackCooldownMultiplier<100 then savedShootCd=info.ShootCooldown savedBurstCd=
+info.ShootBurstCooldown local mult=State.attackCooldownMultiplier/100 if
+savedShootCd then info.ShootCooldown=savedShootCd*mult end if savedBurstCd then
+info.ShootBurstCooldown=savedBurstCd*mult end end end local didShoot=
+_equippedItemInput(localFighter,equipped,'StartShooting')if info then if State.
+isNoSpreadEnabled then info.ShootSpread=savedSpread info.AimSpreadMultiplier=
+savedAimML if savedQuick~=nil then info.QuickShotSpread=savedQuick end State.
+forcingAim=false end if State.attackCooldownMultiplier<100 then if savedShootCd
+then info.ShootCooldown=savedShootCd end if savedBurstCd then info.
+ShootBurstCooldown=savedBurstCd end end end if didShoot and equipped.Name~=
+'Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
+equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
+'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
+isEnabled)if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then
+State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
+then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
+ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
+localRoot,targetRoot)local offset=State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
+localRoot.CFrame=targetRoot.CFrame*CFrame.new(offset)end local function
+_orbitTarget(localRoot,targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or
+DEFAULT_ORBIT_SPEED local orbitRadius=State.ragebotOrbitRadius or
+DEFAULT_ORBIT_RADIUS local angle=os.clock()*orbitSpeed local offset=Vector3.new(
+math.cos(angle),0,math.sin(angle))*orbitRadius local position=targetRoot.
+Position+offset localRoot.CFrame=CFrame.new(position,targetRoot.Position)end
+local function _refreshTarget(localRoot)local now=os.clock()if now-_state.
+lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
+lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
+_getBestTarget(localRoot)end local function _connect()if not _maid then return
+end local connection=RunService.Heartbeat:Connect(function()if not State.
+isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.isEngaged
+then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then
+State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
 ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
@@ -1227,46 +1241,13 @@ key)if not checkcaller()and State.isNoSpreadEnabled and key=='IsAiming'and State
 end local gunMod=Helpers.getGunModule()if gunMod then local oldIsFullyAiming
 oldIsFullyAiming=HookUtils.safeHook(gunMod,'IsFullyAiming',function(self,...)if
 not checkcaller()and State.isNoSpreadEnabled and State.forcingAim then return
-true end return oldIsFullyAiming(self,...)end,State.logger,_maid)local
-oldStartShooting oldStartShooting=HookUtils.safeHook(gunMod,'StartShooting',
-function(self,...)if checkcaller()then return oldStartShooting(self,...)end
-local selfAny=self local savedShootCooldown=selfAny._shoot_cooldown local
-savedReloadCooldown=selfAny._reload_cooldown local savedEquipCooldown=selfAny.
-_equip_cooldown local savedNoAmmoCooldown=selfAny._shoot_cooldown_no_ammo if
-State.isRagebotEnabled then selfAny._shoot_cooldown=0 selfAny._reload_cooldown=0
-selfAny._equip_cooldown=0 selfAny._shoot_cooldown_no_ammo=0 end local info=self.
-Info local infoStr=tostring(info)if not _state.oldShootCooldowns[infoStr..
-'_Shoot']then _state.oldShootCooldowns[infoStr..'_Shoot']=info.ShootCooldown end
-if not _state.oldShootCooldowns[infoStr..'_Burst']then _state.oldShootCooldowns[
-infoStr..'_Burst']=info.ShootBurstCooldown end if not _state.oldShootCooldowns[
-infoStr..'_Spread']then _state.oldShootCooldowns[infoStr..'_Spread']=info.
-ShootSpread end if not _state.oldShootCooldowns[infoStr..'_AimML']then _state.
-oldShootCooldowns[infoStr..'_AimML']=info.AimSpreadMultiplier end if not _state.
-oldShootCooldowns[infoStr..'_Quick']then _state.oldShootCooldowns[infoStr..
-'_Quick']=info.QuickShotSpread end local origShoot=_state.oldShootCooldowns[
-infoStr..'_Shoot']local origBurst=_state.oldShootCooldowns[infoStr..'_Burst']
-local origSpread=_state.oldShootCooldowns[infoStr..'_Spread']local origAimML=
-_state.oldShootCooldowns[infoStr..'_AimML']local origQuick=_state.
-oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled then info.
-ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
-QuickShotSpread=0 end State.forcingAim=true end if State.
-attackCooldownMultiplier<100 then info.ShootCooldown=origShoot*(State.
-attackCooldownMultiplier/100)if info.ShootBurstCooldown then info.
-ShootBurstCooldown=origBurst*(State.attackCooldownMultiplier/100)end end local
-returns={oldStartShooting(self,...)}State.forcingAim=false if State.
-isRagebotEnabled then selfAny._shoot_cooldown=savedShootCooldown selfAny.
-_reload_cooldown=savedReloadCooldown selfAny._equip_cooldown=savedEquipCooldown
-selfAny._shoot_cooldown_no_ammo=savedNoAmmoCooldown end info.ShootCooldown=
-origShoot if info.ShootBurstCooldown then info.ShootBurstCooldown=origBurst end
-info.ShootSpread=origSpread info.AimSpreadMultiplier=origAimML if info.
-QuickShotSpread then info.QuickShotSpread=origQuick end if State.
-isNoSpreadEnabled and#returns>=4 then returns[4]=true end return unpack(returns)
-end,State.logger,_maid)end State.isGunModsHooked=true end)end return GunMods end
-function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
-end end do local function __modImpl()local Players=game:GetService('Players')
-local State=__DARKLUA_BUNDLE_MODULES.u()local TeamUtils=__DARKLUA_BUNDLE_MODULES
-.e()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local ExecutorUtils=
+true end return oldIsFullyAiming(self,...)end,State.logger,_maid)end State.
+isGunModsHooked=true end)end return GunMods end function
+__DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local State
+=__DARKLUA_BUNDLE_MODULES.u()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local ExecutorUtils=
 __DARKLUA_BUNDLE_MODULES.d()local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local
 Helpers=__DARKLUA_BUNDLE_MODULES.v()local AURA_UPDATE_INTERVAL=0.03 local
 AURA_IDLE_INTERVAL=0.15 local MeleeMods={}MeleeMods.__index=MeleeMods local
