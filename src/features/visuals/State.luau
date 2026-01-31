@@ -11,7 +11,9 @@ local Types = require("./Types")
 --// Types
 
 --// Private state
-local State: Types.VisualsState = {
+local _maid = nil :: any
+local _signals = {}
+local _state: Types.VisualsState = {
   client = nil :: any,
   logger = nil :: any,
   isEnabled = false,
@@ -19,7 +21,7 @@ local State: Types.VisualsState = {
   highlights = {},
   settings = table.clone(Constants.DEFAULT_SETTINGS),
   overrideCheck = nil,
-  wasEspEnabled = false,
+  isEspPreviouslyEnabled = false,
   lastSkeletonUpdate = 0,
   lastTextUpdate = 0,
 }
@@ -27,4 +29,4 @@ local State: Types.VisualsState = {
 --// Private helpers
 
 --// Public API
-return State
+return _state

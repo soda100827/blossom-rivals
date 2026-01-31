@@ -9,9 +9,8 @@
 --// Types
 export type Module = {
 	init: ((self: Module, client: any) -> ())?,
-	cleanup: ((self: Module) -> ())?,
 	Init: ((self: Module, client: any) -> ())?,
-	Cleanup: ((self: Module) -> ())?,
+	Destroy: ((self: Module) -> ())?,
 	[string]: unknown,
 }
 

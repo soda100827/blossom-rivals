@@ -10,8 +10,8 @@ local Workspace = game:GetService("Workspace")
 
 --// Types
 export type PlayerUtils = {
-	getLocalPlayer: () -> Player?,
-	getCamera: () -> Camera,
+  getLocalPlayer: () -> Player?,
+  getCamera: () -> Camera,
 }
 
 --// Private state
@@ -26,15 +26,15 @@ local _signals = {}
 
 --// Public API
 function PlayerUtils.getLocalPlayer(): Player?
-	return Players.LocalPlayer
+  return Players.LocalPlayer
 end
 
 function PlayerUtils.getCamera(): Camera
-	local camera = Workspace.CurrentCamera
-	if not camera then
-		camera = Workspace:WaitForChild("Camera") :: Camera
-	end
-	return camera
+  local camera = Workspace.CurrentCamera
+  if not camera then
+    camera = Workspace:WaitForChild("Camera") :: Camera
+  end
+  return camera
 end
 
 return PlayerUtils

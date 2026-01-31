@@ -8,11 +8,11 @@
 
 --// Types
 export type DrawingObject = {
-	Remove: (self: DrawingObject) -> (),
+  Remove: (self: DrawingObject) -> (),
 }
 
 export type DrawingLibrary = {
-	new: (class: string) -> DrawingObject,
+  new: (class: string) -> DrawingObject,
 }
 
 --// Private state

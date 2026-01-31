@@ -335,8 +335,8 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
     Compact = true,
     Callback = function(value)
       local mod = client.Modules.Combat
-      if mod and mod.setMeleeReach then
-        mod:setMeleeReach(value)
+      if mod and mod.setMeleeAuraReach then
+        mod:setMeleeAuraReach(value)
       end
     end,
   })

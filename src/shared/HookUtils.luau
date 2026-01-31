@@ -9,7 +9,7 @@ local ExecutorUtils = require("./ExecutorUtils")
 
 --// Types
 export type HookUtils = {
-	safeHook: (targetTable: any, targetKey: string, replacement: any, logger: any, maid: any) -> any,
+  safeHook: (targetTable: any, targetKey: string, replacement: any, logger: any, maid: any) -> any,
 }
 
 --// Private state
@@ -24,62 +24,62 @@ local _signals = {}
 
 --// Public API
 function HookUtils.safeHook(targetTable: any, targetKey: string, replacement: any, logger: any, maid: any): any
-	local targetFunc = targetTable[targetKey]
-	if not targetFunc or type(targetFunc) ~= "function" then
-		return nil
-	end
+  local targetFunc = targetTable[targetKey]
+  if not targetFunc or type(targetFunc) ~= "function" then
+    return nil
+  end
 
-	local hookfunction = ExecutorUtils.getGlobal("hookfunction") or ExecutorUtils.getGlobal("replaceclosure")
-	local newcclosure = ExecutorUtils.getGlobal("newcclosure") or function(f)
-		return f
-	end
+  local hookfunction = ExecutorUtils.getGlobal("hookfunction") or ExecutorUtils.getGlobal("replaceclosure")
+  local newcclosure = ExecutorUtils.getGlobal("newcclosure") or function(f)
+    return f
+  end
 
-	-- Ensure replacement is wrapped
-	local wrapped = newcclosure(replacement)
+  -- Ensure replacement is wrapped
+  local wrapped = newcclosure(replacement)
 
-	if hookfunction then
-		local success, old = pcall(function()
-			return hookfunction(targetFunc, wrapped)
-		end)
-		if success then
-			if maid then
-				maid:GiveTask(function()
-					local restoreHook = ExecutorUtils.getGlobal("hookfunction")
-						or ExecutorUtils.getGlobal("replaceclosure")
-					if restoreHook then
-						pcall(function()
-							restoreHook(targetFunc, old)
-						end)
-					else
-						targetTable[targetKey] = old
-					end
-				end)
-			end
-			return old
-		end
-		if logger and logger.warnUnsupported then
-			logger:warnUnsupported("hookfunction")
-		elseif logger then
-			logger:warn("This executor does not support 'hookfunction'. Some features may not work as expected.")
-		end
-	else
-		if logger and logger.warnUnsupported then
-			logger:warnUnsupported("hookfunction")
-		elseif logger then
-			logger:warn("This executor does not support 'hookfunction'. Some features may not work as expected.")
-		end
-	end
+  if hookfunction then
+    local success, old = pcall(function()
+      return hookfunction(targetFunc, wrapped)
+    end)
+    if success then
+      if maid then
+        maid:GiveTask(function()
+          local restoreHook = ExecutorUtils.getGlobal("hookfunction")
+            or ExecutorUtils.getGlobal("replaceclosure")
+          if restoreHook then
+            pcall(function()
+              restoreHook(targetFunc, old)
+            end)
+          else
+            targetTable[targetKey] = old
+          end
+        end)
+      end
+      return old
+    end
+    if logger and logger.warnUnsupported then
+      logger:warnUnsupported("hookfunction")
+    elseif logger then
+      logger:warn("This executor does not support 'hookfunction'. Some features may not work as expected.")
+    end
+  else
+    if logger and logger.warnUnsupported then
+      logger:warnUnsupported("hookfunction")
+    elseif logger then
+      logger:warn("This executor does not support 'hookfunction'. Some features may not work as expected.")
+    end
+  end
 
-	-- Fallback
-	targetTable[targetKey] = wrapped
-	if maid then
-		maid:GiveTask(function()
-			if targetTable[targetKey] == wrapped then
-				targetTable[targetKey] = targetFunc
-			end
-		end)
-	end
-	return targetFunc
+  -- Fallback
+  targetTable[targetKey] = wrapped
+  if maid then
+    maid:GiveTask(function()
+      if targetTable[targetKey] == wrapped then
+        targetTable[targetKey] = targetFunc
+      end
+    end)
+  end
+  return targetFunc
 end
 
 return HookUtils
