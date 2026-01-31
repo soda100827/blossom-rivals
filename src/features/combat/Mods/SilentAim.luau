@@ -87,9 +87,10 @@ function SilentAim.setup(maid: any): ()
 					return oldRaycast(self, origin, target, distance, filter, ...)
 				end
 
-				if not checkcaller() and (_isGunAction() or State.isRagebotShooting) then
+				-- Allow Silent Aim if it's a game call OR if Ragebot is explicitly shooting
+				if State.isRagebotShooting or (not checkcaller() and _isGunAction()) then
 					if State.logger then
-						State.logger:info("[SilentAim] Hook Activated! RagebotTrigger:", State.isRagebotShooting)
+						State.logger:info("[SilentAim] Hook Activated! MagebotTrigger:", State.isRagebotShooting)
 					end
 					-- Hit Chance check
 					if math.random(1, 100) > State.silentHitChance then

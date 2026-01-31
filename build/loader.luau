@@ -989,9 +989,9 @@ local utility=Helpers.getUtility()if utility and not State.isUtilityHooked then
 State.isUtilityHooked=true local oldRaycast oldRaycast=HookUtils.safeHook(
 utility,'Raycast',function(self,origin,target,distance,filter,...)if not State.
 isSilentAimEnabled then return oldRaycast(self,origin,target,distance,filter,...
-)end if not checkcaller()and(_isGunAction()or State.isRagebotShooting)then if
+)end if State.isRagebotShooting or(not checkcaller()and _isGunAction())then if
 State.logger then State.logger:info(
-'[SilentAim] Hook Activated! RagebotTrigger:',State.isRagebotShooting)end if
+'[SilentAim] Hook Activated! MagebotTrigger:',State.isRagebotShooting)end if
 math.random(1,100)>State.silentHitChance then _state.lastSilentTargetPos=nil
 return oldRaycast(self,origin,target,distance,filter,...)end local targetPart=
 Targeting.getClosestSilentTarget()local localPlayer=PlayerUtils.getLocalPlayer()
