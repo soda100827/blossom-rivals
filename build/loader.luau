@@ -1073,7 +1073,9 @@ if type(isReloadingValue)=='boolean'then return isReloadingValue end return
 false end local function _getAmmo(item)if not item then return nil end local ok,
 value=pcall(function()if item.Get then return item:Get('Ammo')end return nil end
 )if ok and type(value)=='number'then return value end local ammoField=(item).
-Ammo if type(ammoField)=='number'then return ammoField end return nil end
+Ammo or(item).Clip or(item).Magazine or(item).CurrentAmmo or(item).Bullets if
+type(ammoField)=='number'then return ammoField end if(item).State and type((item
+).State.Ammo)=='number'then return(item).State.Ammo end return nil end
 local function _isOutOfAmmo(item)local ammo=_getAmmo(item)if type(ammo)==
 'number'then return ammo<=0 end return false end local function
 _getItemDebugState(item)if not item then return'item=nil'end local ammo=
@@ -1109,26 +1111,26 @@ isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
 lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
 localFighter.EquipItem then return end local equipped=localFighter.EquippedItem
 if not equipped or not _isGunItem(equipped)then return end if _isOutOfAmmo(
-equipped)then _tryStartReload(equipped)local currentSlot=(equipped).Slot local
-otherSlot=(currentSlot==1)and 2 or 1 if State.logger then State.logger:info(
-'[Ragebot Swap] Mag Empty. Swapping to slot:',otherSlot)end local otherItem=
-_getItemBySlot(localFighter,otherSlot)if otherItem then _state.lastWeaponSwapAt=
-now pcall(function()localFighter:EquipItem(otherSlot)end)end end end
-local function _refreshInputFunctions()if _state.mouse1press or _state.
-mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
-'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
-_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
-_safeCallInput(obj,inputName)if not obj or not obj.Input then return nil end
-local set_identity=ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.
-getGlobal('set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
-'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
-set_identity and get_identity then local old=get_identity()set_identity(2)local
-success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)
-if not success then if State.logger then State.logger:warn(
-'[Ragebot] SafeInput failed:',result)end return nil end return result else
-return obj:Input(inputName)end end local function _getShootCooldown(equipped)
-local info=equipped and equipped.Info local baseCooldown=(info and info.
-ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
+equipped)or _isReloading(equipped)then _tryStartReload(equipped)local
+currentSlot=(equipped).Slot local otherSlot=(currentSlot==1)and 2 or 1 if State.
+logger then State.logger:info('[Ragebot Swap] Mag Empty. Swapping to slot:',
+otherSlot)end local otherItem=_getItemBySlot(localFighter,otherSlot)if otherItem
+then _state.lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(
+otherSlot)end)end end end local function _refreshInputFunctions()if _state.
+mouse1press or _state.mouse1click then return end _state.mouse1press=
+ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
+getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
+'mouse1click')end local function _safeCallInput(obj,inputName)if not obj or not
+obj.Input then return nil end local set_identity=ExecutorUtils.getGlobal(
+'setthreadidentity')or ExecutorUtils.getGlobal('set_thread_identity')local
+get_identity=ExecutorUtils.getGlobal('getthreadidentity')or ExecutorUtils.
+getGlobal('get_thread_identity')if set_identity and get_identity then local old=
+get_identity()set_identity(2)local success,result=pcall(function()return obj:
+Input(inputName)end)set_identity(old)if not success then if State.logger then
+State.logger:warn('[Ragebot] SafeInput failed:',result)end return nil end return
+result else return obj:Input(inputName)end end local function _getShootCooldown(
+equipped)local info=equipped and equipped.Info local baseCooldown=(info and info
+.ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
 multiplier)=='number'and multiplier>0 and multiplier<100 then baseCooldown=
 baseCooldown*(multiplier/100)end return math.max(baseCooldown,0.02)end
 local function _equippedItemInput(localFighter,equipped,inputName)if equipped

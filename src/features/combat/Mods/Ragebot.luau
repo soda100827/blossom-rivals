@@ -211,8 +211,15 @@ local function _getAmmo(item: any): number?
 		return value
 	end
 	local ammoField = (item :: any).Ammo
+		or (item :: any).Clip
+		or (item :: any).Magazine
+		or (item :: any).CurrentAmmo
+		or (item :: any).Bullets
 	if type(ammoField) == "number" then
 		return ammoField
+	end
+	if (item :: any).State and type((item :: any).State.Ammo) == "number" then
+		return (item :: any).State.Ammo
 	end
 	return nil
 end
@@ -360,7 +367,8 @@ local function _swapWeaponOnReload(localFighter: any)
 		return
 	end
 
-	if _isOutOfAmmo(equipped) then
+	-- Check for Low Ammo OR Reloading state to force swap
+	if _isOutOfAmmo(equipped) or _isReloading(equipped) then
 		_tryStartReload(equipped)
 
 		local currentSlot = (equipped :: any).Slot
