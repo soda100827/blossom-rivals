@@ -1011,13 +1011,12 @@ end)end end end end)end return SilentAim end function __DARKLUA_BUNDLE_MODULES.y
 ()local v=__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local VirtualInputManager=game:GetService(
-'VirtualInputManager')local VirtualUser=game:GetService('VirtualUser')local
-UserInputService=game:GetService('UserInputService')local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.d()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
-TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.u()
-local Helpers=__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000
-local DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
+GetService('RunService')local UserInputService=game:GetService(
+'UserInputService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
+.e()local State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=
+__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000 local
+DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
 TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
 MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
 _maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
@@ -1114,37 +1113,31 @@ local function _refreshInputFunctions()if _state.mouse1press or _state.
 mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
 'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
 _state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
-_tryMouseShot(equipped)_refreshInputFunctions()if _state.mouse1click then _state
-.mouse1click()return true end if _state.mouse1press and _state.mouse1release
-then _state.mouse1press()local shouldRelease=equipped.Name~='Flamethrower'if
-shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn
-=_state.mouse1release if releaseFn then releaseFn()end end)end return true end
-if VirtualUser and UserInputService then local pos=UserInputService:
-GetMouseLocation()VirtualUser:CaptureController()VirtualUser:ClickButton1(pos)
-local shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.
-delay(MOUSE_SHOT_RELEASE_DELAY,function()end)end return true end if
-VirtualInputManager and UserInputService then local pos=UserInputService:
-GetMouseLocation()local x,y=pos.X,pos.Y VirtualInputManager:
-SendMouseButtonEvent(x,y,0,true,game,1)local shouldRelease=equipped.Name~=
-'Flamethrower'if shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function
-()VirtualInputManager:SendMouseButtonEvent(x,y,0,false,game,1)end)end return
-true end return false end local function _getShootCooldown(equipped)local info=
-equipped and equipped.Info local baseCooldown=(info and info.ShootCooldown)or
-0.1 local multiplier=State.attackCooldownMultiplier if type(multiplier)==
-'number'and multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(
-multiplier/100)end return math.max(baseCooldown,0.02)end local function
-_equippedItemInput(localFighter,equipped,inputName)if equipped and equipped.
-Input then local wasEquipped=equipped.IsEquipped local isSpoofNeeded=not
-wasEquipped and type(inputName)=='string'and string.sub(inputName,1,5)=='Start'
-if isSpoofNeeded then equipped.IsEquipped=true end local ok=equipped:Input(
-inputName)if isSpoofNeeded then equipped.IsEquipped=wasEquipped end if State.
+_safeCallInput(obj,inputName)if not obj or not obj.Input then return nil end
+local set_identity=ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.
+getGlobal('set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
+'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
+set_identity and get_identity then local old=get_identity()set_identity(2)local
+success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)
+if not success then if State.logger then State.logger:warn(
+'[Ragebot] SafeInput failed:',result)end return nil end return result else
+return obj:Input(inputName)end end local function _getShootCooldown(equipped)
+local info=equipped and equipped.Info local baseCooldown=(info and info.
+ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
+multiplier)=='number'and multiplier>0 and multiplier<100 then baseCooldown=
+baseCooldown*(multiplier/100)end return math.max(baseCooldown,0.02)end
+local function _equippedItemInput(localFighter,equipped,inputName)if equipped
+and equipped.Input then local wasEquipped=equipped.IsEquipped local
+isSpoofNeeded=not wasEquipped and type(inputName)=='string'and string.sub(
+inputName,1,5)=='Start'if isSpoofNeeded then equipped.IsEquipped=true end local
+ok=_safeCallInput(equipped,inputName)if isSpoofNeeded then equipped.IsEquipped=
+wasEquipped end if State.logger and State.isRagebotEnabled then local now=os.
+clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.logger:
+info('[Ragebot Debug] EquippedItem:Input',inputName,ok==true,_getItemDebugState(
+equipped))end end if ok==true then return true end end if localFighter and
+localFighter.Input then local ok=_safeCallInput(localFighter,inputName)if State.
 logger and State.isRagebotEnabled then local now=os.clock()if now>=_state.
 debugNextAt then _state.debugNextAt=now+1 State.logger:info(
-'[Ragebot Debug] EquippedItem:Input',inputName,ok==true,_getItemDebugState(
-equipped))end end if ok==true then return true end end if localFighter and
-localFighter.Input then local ok=localFighter:Input(inputName)if State.logger
-and State.isRagebotEnabled then local now=os.clock()if now>=_state.debugNextAt
-then _state.debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end return ok==true
 end return false end local function _forceShootReady(equipped)if not equipped
 then return end if _isReloading(equipped)then return end local ammo=_getAmmo(
@@ -1165,14 +1158,17 @@ attackCooldownMultiplier<100 then savedShootCd=info.ShootCooldown savedBurstCd=
 info.ShootBurstCooldown local mult=State.attackCooldownMultiplier/100 if
 savedShootCd then info.ShootCooldown=savedShootCd*mult end if savedBurstCd then
 info.ShootBurstCooldown=savedBurstCd*mult end end end local didShoot=
-_tryMouseShot(equipped)if info then if State.isNoSpreadEnabled then info.
-ShootSpread=savedSpread info.AimSpreadMultiplier=savedAimML if savedQuick~=nil
-then info.QuickShotSpread=savedQuick end State.forcingAim=false end if State.
-attackCooldownMultiplier<100 then if savedShootCd then info.ShootCooldown=
-savedShootCd end if savedBurstCd then info.ShootBurstCooldown=savedBurstCd end
-end end end local function _applyRagebotSilentAimOverride(isEnabled)if isEnabled
-then if State.ragebotSavedSilentAimFovRadius==nil then State.
-ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+_equippedItemInput(localFighter,equipped,'StartShooting')if info then if State.
+isNoSpreadEnabled then info.ShootSpread=savedSpread info.AimSpreadMultiplier=
+savedAimML if savedQuick~=nil then info.QuickShotSpread=savedQuick end State.
+forcingAim=false end if State.attackCooldownMultiplier<100 then if savedShootCd
+then info.ShootCooldown=savedShootCd end if savedBurstCd then info.
+ShootBurstCooldown=savedBurstCd end end end if didShoot and equipped.Name~=
+'Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
+equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
+'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
+isEnabled)if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then
+State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
 silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
 then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(

@@ -3,8 +3,6 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local VirtualUser = game:GetService("VirtualUser")
 local UserInputService = game:GetService("UserInputService")
 
 --// Dependencies (require)
@@ -386,58 +384,32 @@ local function _refreshInputFunctions()
 	_state.mouse1click = ExecutorUtils.getGlobal("mouse1click")
 end
 
-local function _tryMouseShot(equipped: any): boolean
-	_refreshInputFunctions()
-
-	if _state.mouse1click then
-		_state.mouse1click()
-		return true
+local function _safeCallInput(obj: any, inputName: string): any
+	if not obj or not obj.Input then
+		return nil
 	end
 
-	if _state.mouse1press and _state.mouse1release then
-		_state.mouse1press()
-		local shouldRelease = equipped.Name ~= "Flamethrower"
-		if shouldRelease then
-			task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
-				local releaseFn = _state.mouse1release
-				if releaseFn then
-					releaseFn()
-				end
-			end)
+	-- Attempt to lower identity to bypass "require" checks in game modules for high-identity threads
+	local set_identity = ExecutorUtils.getGlobal("setthreadidentity") or ExecutorUtils.getGlobal("set_thread_identity")
+	local get_identity = ExecutorUtils.getGlobal("getthreadidentity") or ExecutorUtils.getGlobal("get_thread_identity")
+
+	if set_identity and get_identity then
+		local old = get_identity()
+		set_identity(2)
+		local success, result = pcall(function()
+			return obj:Input(inputName)
+		end)
+		set_identity(old)
+		if not success then
+			if State.logger then
+				State.logger:warn("[Ragebot] SafeInput failed:", result)
+			end
+			return nil
 		end
-		return true
+		return result
+	else
+		return obj:Input(inputName)
 	end
-
-	-- Fallback to VirtualUser (Better for background execution)
-	if VirtualUser and UserInputService then
-		local pos = UserInputService:GetMouseLocation()
-		VirtualUser:CaptureController()
-		VirtualUser:ClickButton1(pos)
-		local shouldRelease = equipped.Name ~= "Flamethrower"
-		if shouldRelease then
-			task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
-				-- VirtualUser handles click (Down+Up) usually, but we can ensure release if needed or rely on ClickButton1
-				-- ClickButton1 is a full click. Protocol complete.
-			end)
-		end
-		return true
-	end
-
-	-- Fallback to VirtualInputManager
-	if VirtualInputManager and UserInputService then
-		local pos = UserInputService:GetMouseLocation()
-		local x, y = pos.X, pos.Y
-		VirtualInputManager:SendMouseButtonEvent(x, y, 0, true, game, 1)
-		local shouldRelease = equipped.Name ~= "Flamethrower"
-		if shouldRelease then
-			task.delay(MOUSE_SHOT_RELEASE_DELAY, function()
-				VirtualInputManager:SendMouseButtonEvent(x, y, 0, false, game, 1)
-			end)
-		end
-		return true
-	end
-
-	return false
 end
 
 local function _getShootCooldown(equipped: any): number
@@ -459,7 +431,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 			equipped.IsEquipped = true
 		end
 
-		local ok = equipped:Input(inputName)
+		local ok = _safeCallInput(equipped, inputName)
 
 		if isSpoofNeeded then
 			equipped.IsEquipped = wasEquipped
@@ -481,7 +453,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 		end
 	end
 	if localFighter and localFighter.Input then
-		local ok = localFighter:Input(inputName)
+		local ok = _safeCallInput(localFighter, inputName)
 		if State.logger and State.isRagebotEnabled then
 			local now = os.clock()
 			if now >= _state.debugNextAt then
@@ -565,7 +537,7 @@ local function _shoot(localFighter: any)
 		end
 	end
 
-	local didShoot = _tryMouseShot(equipped)
+	local didShoot = _equippedItemInput(localFighter, equipped, "StartShooting")
 
 	-- Restore Modifications
 	if info then
@@ -586,6 +558,14 @@ local function _shoot(localFighter: any)
 				info.ShootBurstCooldown = savedBurstCd
 			end
 		end
+	end
+
+	if didShoot and equipped.Name ~= "Flamethrower" then
+		task.delay(0.1, function()
+			if localFighter.EquippedItem == equipped and equipped.Input then
+				_equippedItemInput(localFighter, equipped, "FinishShooting")
+			end
+		end)
 	end
 end
 
