@@ -140,32 +140,33 @@ local function _isReloading(item: any): boolean
 	return false
 end
 
+local function _isGunItem(equipped: any): boolean
+	if not equipped then
+		return false
+	end
+	local info = equipped.Info
+	if not info then
+		return false
+	end
+	if info.Type == "Gun" then
+		return true
+	end
+	if info.Class == "Primary" or info.Class == "Secondary" then
+		return true
+	end
+	if info.ShootCooldown ~= nil or info.AmmoType ~= nil then
+		return true
+	end
+	return false
+end
+
 local function _ensureGunEquipped(localFighter: any): any
 	if not localFighter then
 		return nil
 	end
 
 	local equipped = localFighter.EquippedItem
-	if equipped and equipped.Info and equipped.Info.IsGun then
-		return equipped
-	end
-
-	if localFighter.EquipItem then
-		pcall(function()
-			localFighter:EquipItem(1)
-		end)
-		equipped = localFighter.EquippedItem
-		if equipped and equipped.Info and equipped.Info.IsGun then
-			return equipped
-		end
-
-		pcall(function()
-			localFighter:EquipItem(2)
-		end)
-		equipped = localFighter.EquippedItem
-	end
-
-	if equipped and equipped.Info and equipped.Info.IsGun then
+	if _isGunItem(equipped) then
 		return equipped
 	end
 
@@ -245,17 +246,15 @@ local function _connect()
 		end
 
 		local equipped = _ensureGunEquipped(localFighter)
-		if not equipped then
-			return
-		end
-
-		if _isReloading(equipped) then
+		if equipped and _isReloading(equipped) then
 			_orbitTarget(localRoot, targetRoot)
 			return
 		end
 
 		_teleportToTarget(localRoot, targetRoot)
-		_shoot(localFighter)
+		if equipped then
+			_shoot(localFighter)
+		end
 	end)
 	_maid:GiveTask(connection)
 end
