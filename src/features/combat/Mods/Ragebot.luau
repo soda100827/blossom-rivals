@@ -3,198 +3,267 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+
+--// Dependencies (require)
+local PlayerUtils = require("../../../shared/PlayerUtils")
+local TeamUtils = require("../../../shared/TeamUtils")
+local State = require("../State")
+local Helpers = require("../Utils/Helpers")
 
 --// Constants
-local RAGE_HEIGHT = 7 -- Above target
-local TARGET_RADIUS = 99999
+local ORBIT_RADIUS = 100000
+local ORBIT_SPEED = 12
+local TARGET_REFRESH_INTERVAL = 0.05
+local TELEPORT_OFFSET = Vector3.new(0, 0, 2)
 
---// Dependencies
-local State = require("../State")
-local SilentAim = require("./SilentAim")
-
--- local TeamUtils = require("../../../shared/TeamUtils") -- Temporarily disabled due to bundle loader error
-
---// Helper Variables
-local LocalPlayer = Players.LocalPlayer
-local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts")
-local Controllers = PlayerScripts:WaitForChild("Controllers")
-
---// Controller Access
-local FighterControllerModule = require(Controllers:WaitForChild("FighterController"))
+--// Types
 
 --// Private state
 local Ragebot = {}
 Ragebot.__index = Ragebot
 
---// Utilities
+local _maid = nil :: any
+local _signals = {}
+local _state = {
+	lastTargetRefresh = 0,
+	lastFighterFetch = 0,
+	cachedTarget = nil :: Player?,
+	cachedTargetRoot = nil :: BasePart?,
+}
 
-local function getLocalFighter()
-	return FighterControllerModule.LocalFighter
+--// Private helpers
+local function _getLocalRoot(): BasePart?
+	local localPlayer = PlayerUtils.getLocalPlayer()
+	local character = localPlayer and localPlayer.Character
+	return character and (character:FindFirstChild("HumanoidRootPart") :: BasePart?) or nil
 end
 
-local function getEquippedWeapon(fighter: any)
-	if not fighter then
+local function _isRoundStarted(): boolean
+	local localPlayer = PlayerUtils.getLocalPlayer()
+	if not localPlayer then
+		return false
+	end
+	if not TeamUtils.isInDuel(localPlayer) then
+		return false
+	end
+
+	local duel = TeamUtils.getLocalDuel()
+	if duel and duel.Get then
+		local isOk, status = pcall(duel.Get, duel, "Status")
+		if isOk and status ~= nil then
+			return status == "RoundStarted"
+		end
+	end
+
+	return true
+end
+
+local function _getBestTarget(localRoot: BasePart): (Player?, BasePart?)
+	local localPlayer = PlayerUtils.getLocalPlayer()
+	if not localPlayer then
+		return nil, nil
+	end
+	if not TeamUtils.isInDuel(localPlayer) then
+		return nil, nil
+	end
+
+	local bestPlayer: Player? = nil
+	local bestRoot: BasePart? = nil
+	local bestDist = math.huge
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player == localPlayer then
+			continue
+		end
+		if TeamUtils.isSameTeam(player, localPlayer) then
+			continue
+		end
+		if not TeamUtils.isInSameDuel(localPlayer, player) then
+			continue
+		end
+
+		local character = player.Character
+		if not character then
+			continue
+		end
+		local root = character:FindFirstChild("HumanoidRootPart") :: BasePart?
+		local hum = character:FindFirstChildOfClass("Humanoid")
+		if not root or not hum or hum.Health <= 0 then
+			continue
+		end
+
+		local dist = (localRoot.Position - root.Position).Magnitude
+		if dist < bestDist then
+			bestDist = dist
+			bestPlayer = player
+			bestRoot = root
+		end
+	end
+
+	return bestPlayer, bestRoot
+end
+
+local function _getLocalFighter(): any
+	local now = os.clock()
+	if now - _state.lastFighterFetch >= 0.25 then
+		_state.lastFighterFetch = now
+		Helpers.fetchFighterController(State.logger)
+	end
+	return State.fighterController and State.fighterController.LocalFighter
+end
+
+local function _isReloading(item: any): boolean
+	if not item then
+		return false
+	end
+
+	local isOk, value = pcall(function()
+		if item.Get then
+			return item:Get("IsReloading")
+		end
 		return nil
+	end)
+	if isOk and value ~= nil then
+		return value == true
 	end
 
-	-- Strategy 1: Check known inventory locations first (Safer & Faster)
-	local potentialLists = { fighter.Inventory, fighter.Items }
-	if fighter.Data then
-		table.insert(potentialLists, fighter.Data.Inventory)
-	end
-
-	for _, list in pairs(potentialLists) do
-		if type(list) == "table" then
-			for _, item in pairs(list) do
-				if type(item) == "table" and item.IsEquipped == true then
-					return item
-				end
-			end
-		end
-	end
-
-	-- Strategy 2: Search top-level items with safety check
-	for _, v in pairs(fighter) do
-		if type(v) == "table" then
-			-- Use pcall to avoid errors when indexing strict objects (like Signals) that error on missing members
-			local success, isEquipped = pcall(function()
-				return v.IsEquipped
-			end)
-
-			if success and isEquipped == true then
-				if v.ViewModel then -- Additional check to ensure it's likely an Item
-					return v
-				end
-			end
-		end
-	end
-
-	return nil
-end
-
-local function isSameTeam(playerA: Player, playerB: Player)
-	if playerA == playerB then
+	local reloadCooldown = (item :: any)._reload_cooldown
+	if type(reloadCooldown) == "number" and reloadCooldown > tick() then
 		return true
 	end
 
-	local teamA = playerA:GetAttribute("TeamID")
-	local teamB = playerB:GetAttribute("TeamID")
-
-	if teamA and teamB and teamA == teamB then
-		return true
-	end
-
-	if playerA.Team and playerB.Team and playerA.Team == playerB.Team then
-		return true
+	local isReloadingValue = (item :: any)._is_reloading or (item :: any).IsReloading
+	if type(isReloadingValue) == "boolean" then
+		return isReloadingValue
 	end
 
 	return false
 end
 
-local function findTarget(localFighter: any)
-	local closest = nil
-	local closestDist = TARGET_RADIUS
-
-	local myRoot = localFighter.Entity and localFighter.Entity.RootPart
-	if not myRoot then
+local function _ensureGunEquipped(localFighter: any): any
+	if not localFighter then
 		return nil
 	end
 
-	for _, fighter in pairs(FighterControllerModule.Objects) do
-		if fighter == localFighter then
-			continue
-		end
-
-		-- Check validity
-		if not fighter.Entity or not fighter.Entity.RootPart or not fighter.Entity.Humanoid then
-			continue
-		end
-		if fighter.Entity.Humanoid.Health <= 0 then
-			continue
-		end
-
-		-- Check Team
-		local fighterPlayer = fighter.Player
-		if fighterPlayer then
-			if isSameTeam(LocalPlayer, fighterPlayer) then
-				continue
-			end
-		end
-
-		local dist = (myRoot.Position - fighter.Entity.RootPart.Position).Magnitude
-		if dist < closestDist then
-			closestDist = dist
-			closest = fighter
-		end
+	local equipped = localFighter.EquippedItem
+	if equipped and equipped.Info and equipped.Info.IsGun then
+		return equipped
 	end
 
-	return closest
+	if localFighter.EquipItem then
+		pcall(function()
+			localFighter:EquipItem(1)
+		end)
+		equipped = localFighter.EquippedItem
+		if equipped and equipped.Info and equipped.Info.IsGun then
+			return equipped
+		end
+
+		pcall(function()
+			localFighter:EquipItem(2)
+		end)
+		equipped = localFighter.EquippedItem
+	end
+
+	if equipped and equipped.Info and equipped.Info.IsGun then
+		return equipped
+	end
+
+	return nil
 end
 
---// Public API
-function Ragebot.setup(maid: any)
-	-- Initialize Silent Aim Hooks
-	SilentAim.setup(maid)
-
-	-- Ragebot Loop
-	maid:GiveTask(RunService.Heartbeat:Connect(function()
-		Ragebot.update()
-	end))
-end
-
-function Ragebot.update()
-	local localFighter = getLocalFighter()
-	if not localFighter or not localFighter.Entity or not localFighter.Entity.RootPart then
+local function _shoot(localFighter: any)
+	local equipped = _ensureGunEquipped(localFighter)
+	if not equipped or not equipped.Input then
 		return
 	end
 
-	-- Force Enable Silent Aim State for Ragebot
-	State.isSilentAimEnabled = true
-	State.silentHitChance = 100
-	State.silentAimFovRadius = math.huge -- Ignore FOV limit
-
-	local weapon = getEquippedWeapon(localFighter)
-	local target = findTarget(localFighter)
-
-	if target and target.Entity and target.Entity.RootPart then
-		local targetRoot = target.Entity.RootPart
-		local myRoot = localFighter.Entity.RootPart
-
-		-- 1. Teleport Logic
-		-- Position above target
-		local approachCFrame = CFrame.new(targetRoot.Position + Vector3.new(0, RAGE_HEIGHT, 0))
-		-- Use LookAt so character faces target (helps targeting logic)
-		local lookAtCFrame = CFrame.lookAt(approachCFrame.Position, targetRoot.Position)
-
-		myRoot.CFrame = lookAtCFrame
-		myRoot.Velocity = Vector3.zero
-		myRoot.AssemblyLinearVelocity = Vector3.zero
-
-		-- Sync Camera to LookAt (Ensures 'OnScreen' check in Silent Aim passes)
-		if Workspace.CurrentCamera then
-			Workspace.CurrentCamera.CFrame = lookAtCFrame
-		end
-
-		-- 2. Shooting Logic
-		if weapon then
-			-- Bypass Cooldowns locally
-			if weapon._shoot_cooldown then
-				weapon._shoot_cooldown = 0
+	equipped:Input("StartShooting")
+	if equipped.Name ~= "Flamethrower" then
+		task.delay(0.1, function()
+			if localFighter.EquippedItem == equipped and equipped.Input then
+				equipped:Input("FinishShooting")
 			end
-			if weapon._shoot_cooldown_no_ammo then
-				weapon._shoot_cooldown_no_ammo = 0
-			end
-			if weapon._burst_count then
-				weapon._burst_count = 0
-			end
-
-			-- Trigger "StartShooting"
-			-- SilentAim hooks (Raycast/EncodeCFrame) will handle the actual aiming correction
-			weapon:Input("StartShooting")
-		end
+		end)
 	end
+end
+
+local function _teleportToTarget(localRoot: BasePart, targetRoot: BasePart)
+	localRoot.CFrame = targetRoot.CFrame * CFrame.new(TELEPORT_OFFSET)
+end
+
+local function _orbitTarget(localRoot: BasePart, targetRoot: BasePart)
+	local angle = os.clock() * ORBIT_SPEED
+	local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * ORBIT_RADIUS
+	local position = targetRoot.Position + offset
+	localRoot.CFrame = CFrame.new(position, targetRoot.Position)
+end
+
+local function _refreshTarget(localRoot: BasePart)
+	local now = os.clock()
+	if now - _state.lastTargetRefresh < TARGET_REFRESH_INTERVAL then
+		return
+	end
+	_state.lastTargetRefresh = now
+	_state.cachedTarget, _state.cachedTargetRoot = _getBestTarget(localRoot)
+end
+
+local function _connect()
+	if not _maid then
+		return
+	end
+
+	local connection = RunService.RenderStepped:Connect(function()
+		if not State.isRagebotEnabled then
+			return
+		end
+		if not _isRoundStarted() then
+			return
+		end
+
+		if not State.isSilentAimEnabled then
+			State.isSilentAimEnabled = true
+		end
+		if State.attackCooldownMultiplier > 1 then
+			State.attackCooldownMultiplier = 1
+		end
+
+		local localRoot = _getLocalRoot()
+		if not localRoot then
+			return
+		end
+
+		local localFighter = _getLocalFighter()
+		if not localFighter then
+			return
+		end
+
+		_refreshTarget(localRoot)
+		local targetRoot = _state.cachedTargetRoot
+		if not targetRoot then
+			return
+		end
+
+		local equipped = _ensureGunEquipped(localFighter)
+		if not equipped then
+			return
+		end
+
+		if _isReloading(equipped) then
+			_orbitTarget(localRoot, targetRoot)
+			return
+		end
+
+		_teleportToTarget(localRoot, targetRoot)
+		_shoot(localFighter)
+	end)
+	_maid:GiveTask(connection)
+end
+
+--// Public API
+function Ragebot.setup(maid: any): ()
+	_maid = maid
+	_connect()
 end
 
 return Ragebot
