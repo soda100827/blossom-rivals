@@ -1012,31 +1012,32 @@ SilentAim end function __DARKLUA_BUNDLE_MODULES.y()local v=
 __DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
-HookUtils=__DARKLUA_BUNDLE_MODULES.p()local PlayerUtils=__DARKLUA_BUNDLE_MODULES
-.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=
-__DARKLUA_BUNDLE_MODULES.u()local Helpers=__DARKLUA_BUNDLE_MODULES.v()local
-DEFAULT_ORBIT_RADIUS=100000 local DEFAULT_ORBIT_SPEED=12 local
-SWAP_WEAPON_COOLDOWN=0.2 local TARGET_REFRESH_INTERVAL=0.05 local
-DEFAULT_RAGEBOT_OFFSET=Vector3.zero local MOUSE_SHOT_RELEASE_DELAY=0.03 local
-Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals={}local _state=
-{lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,
-lastShotAt=0,mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=
-0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false,isUseItemHooked=
-false,debugNextAt=0}local function _getLocalRoot()local localPlayer=PlayerUtils.
-getLocalPlayer()local character=localPlayer and localPlayer.Character return
-character and((character:FindFirstChild('HumanoidRootPart')))or nil end
-local function _isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if
-not localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
-return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
-local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
-return status=='RoundStarted'end end return true end local function
-_isTargetInvincible(targetRoot)if not targetRoot then return false end local
-character=targetRoot.Parent if not character or not character:IsA('Model')then
-return false end local entity=character:FindFirstChild('Entity')if entity and
-entity.Get then local ok,inv=pcall(entity.Get,entity,'IsInvincible')if ok and
-inv~=nil then if inv==true and State.logger then local now=os.clock()if now>=
-_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+GetService('RunService')local Workspace=game:GetService('Workspace')local
+ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=
+__DARKLUA_BUNDLE_MODULES.p()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.u()
+local Helpers=__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000
+local DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
+TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
+MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
+_maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
+cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
+=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
+,isInputHooked=false,isUseItemHooked=false,debugNextAt=0}local function
+_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
+localPlayer and localPlayer.Character return character and((character:
+FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
+local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
+false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
+=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
+Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
+end return true end local function _isTargetInvincible(targetRoot)if not
+targetRoot then return false end local character=targetRoot.Parent if not
+character or not character:IsA('Model')then return false end local entity=
+character:FindFirstChild('Entity')if entity and entity.Get then local ok,inv=
+pcall(entity.Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true and
+State.logger then local now=os.clock()if now>=_state.debugNextAt then _state.
+debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
 inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
 type(isInvincible)=='boolean'then if isInvincible and State.logger then local
@@ -1162,8 +1163,14 @@ QuickShotSpread=0 end State.forcingAim=true end if State.
 attackCooldownMultiplier<100 then savedShootCd=info.ShootCooldown savedBurstCd=
 info.ShootBurstCooldown local mult=State.attackCooldownMultiplier/100 if
 savedShootCd then info.ShootCooldown=savedShootCd*mult end if savedBurstCd then
-info.ShootBurstCooldown=savedBurstCd*mult end end end local didShoot=
-_equippedItemInput(localFighter,equipped,'StartShooting')if info then if State.
+info.ShootBurstCooldown=savedBurstCd*mult end end end local targetRoot=_state.
+cachedTargetRoot local currentCamera=Workspace.CurrentCamera local savedCFrame
+if targetRoot and currentCamera then savedCFrame=currentCamera.CFrame local
+aimPos=targetRoot.Position local myPos=currentCamera.CFrame.Position if(aimPos-
+myPos).Magnitude>0.1 then currentCamera.CFrame=CFrame.lookAt(myPos,aimPos)else
+currentCamera.CFrame=targetRoot.CFrame end end local didShoot=
+_equippedItemInput(localFighter,equipped,'StartShooting')if savedCFrame and
+currentCamera then currentCamera.CFrame=savedCFrame end if info then if State.
 isNoSpreadEnabled then info.ShootSpread=savedSpread info.AimSpreadMultiplier=
 savedAimML if savedQuick~=nil then info.QuickShotSpread=savedQuick end State.
 forcingAim=false end if State.attackCooldownMultiplier<100 then if savedShootCd

@@ -4,6 +4,8 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
+local Workspace = game:GetService("Workspace")
+
 --// Dependencies (require)
 local ExecutorUtils = require("../../../shared/ExecutorUtils")
 local HookUtils = require("../../../shared/HookUtils")
@@ -562,7 +564,30 @@ local function _shoot(localFighter: any)
 		end
 	end
 
+	-- Camera Spoof for 360 Hit
+	local targetRoot = _state.cachedTargetRoot
+	local currentCamera = Workspace.CurrentCamera
+	local savedCFrame
+
+	if targetRoot and currentCamera then
+		savedCFrame = currentCamera.CFrame
+		local aimPos = targetRoot.Position
+		local myPos = currentCamera.CFrame.Position
+		-- Ensure we don't lookAt identical position (creates NaN)
+		if (aimPos - myPos).Magnitude > 0.1 then
+			currentCamera.CFrame = CFrame.lookAt(myPos, aimPos)
+		else
+			-- If super close, just use target's rotation (to face where they face) or generic offset
+			currentCamera.CFrame = targetRoot.CFrame
+		end
+	end
+
 	local didShoot = _equippedItemInput(localFighter, equipped, "StartShooting")
+
+	-- Restore Camera
+	if savedCFrame and currentCamera then
+		currentCamera.CFrame = savedCFrame
+	end
 
 	-- Restore Modifications
 	if info then
