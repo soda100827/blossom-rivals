@@ -336,6 +336,9 @@ local function _tryStartReload(item: any)
 	pcall(function()
 		item:Input("StartReloading")
 		_state.lastReloadAttemptAt = os.clock()
+		if State.logger then
+			State.logger:info("[Ragebot] Started Reloading:", item.Name)
+		end
 	end)
 end
 
@@ -368,6 +371,9 @@ local function _swapWeaponOnReload(localFighter: any)
 
 			-- If we tried reloading recently and still empty after 3 seconds, assume dry.
 			if now - _state.lastReloadAttemptAt > 3.0 then
+				if State.logger then
+					State.logger:info("[Ragebot Swap] Primary Dry (No Reserves). Swapping to Secondary.")
+				end
 				local otherItem = _getItemBySlot(localFighter, secondarySlot)
 				if otherItem then
 					_state.lastWeaponSwapAt = now
@@ -378,6 +384,9 @@ local function _swapWeaponOnReload(localFighter: any)
 			end
 		elseif currentSlot == secondarySlot then
 			-- Secondary: Always swap back to Primary after 1 mag
+			if State.logger then
+				State.logger:info("[Ragebot Swap] Secondary Empty. Swapping BACK to Primary.")
+			end
 			local otherItem = _getItemBySlot(localFighter, primarySlot)
 			if otherItem then
 				_state.returnedToPrimary = true -- Flag that we are returning (used to reset reload timer if needed, though simpler now)

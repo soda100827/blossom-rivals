@@ -1102,35 +1102,39 @@ isRagebotSwapWeaponOnReload then return end local currentSlot=(equipped).Slot if
 currentSlot==desiredSlot then return end end pcall(function()localFighter:
 EquipItem(desiredSlot)end)end local function _tryStartReload(item)if not item or
 not item.Input then return end if _isReloading(item)then return end pcall(
-function()item:Input('StartReloading')_state.lastReloadAttemptAt=os.clock()end)
-end local function _swapWeaponOnReload(localFighter)if not State.
+function()item:Input('StartReloading')_state.lastReloadAttemptAt=os.clock()if
+State.logger then State.logger:info('[Ragebot] Started Reloading:',item.Name)end
+end)end local function _swapWeaponOnReload(localFighter)if not State.
 isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
 lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
 localFighter.EquipItem then return end local equipped=localFighter.EquippedItem
 if not equipped or not _isGunItem(equipped)then return end if _isOutOfAmmo(
 equipped)then local currentSlot=(equipped).Slot local primarySlot=1 local
 secondarySlot=2 if currentSlot==primarySlot then _tryStartReload(equipped)if now
--_state.lastReloadAttemptAt>3 then local otherItem=_getItemBySlot(localFighter,
-secondarySlot)if otherItem then _state.lastWeaponSwapAt=now pcall(function()
-localFighter:EquipItem(secondarySlot)end)end end elseif currentSlot==
-secondarySlot then local otherItem=_getItemBySlot(localFighter,primarySlot)if
-otherItem then _state.returnedToPrimary=true _state.lastWeaponSwapAt=now pcall(
-function()localFighter:EquipItem(primarySlot)end)end else _tryStartReload(
-equipped)end end end local function _refreshInputFunctions()if _state.
-mouse1press or _state.mouse1click then return end _state.mouse1press=
-ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
-getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
-'mouse1click')end local function _safeCallInput(obj,inputName)if not obj or not
-obj.Input then return nil end local set_identity=ExecutorUtils.getGlobal(
-'setthreadidentity')or ExecutorUtils.getGlobal('set_thread_identity')local
-get_identity=ExecutorUtils.getGlobal('getthreadidentity')or ExecutorUtils.
-getGlobal('get_thread_identity')if set_identity and get_identity then local old=
-get_identity()set_identity(2)local success,result=pcall(function()return obj:
-Input(inputName)end)set_identity(old)if not success then if State.logger then
-State.logger:warn('[Ragebot] SafeInput failed:',result)end return nil end return
-result else return obj:Input(inputName)end end local function _getShootCooldown(
-equipped)local info=equipped and equipped.Info local baseCooldown=(info and info
-.ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
+-_state.lastReloadAttemptAt>3 then if State.logger then State.logger:info(
+[[[Ragebot Swap] Primary Dry (No Reserves). Swapping to Secondary.]])end local
+otherItem=_getItemBySlot(localFighter,secondarySlot)if otherItem then _state.
+lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(secondarySlot)end)
+end end elseif currentSlot==secondarySlot then if State.logger then State.logger
+:info('[Ragebot Swap] Secondary Empty. Swapping BACK to Primary.')end local
+otherItem=_getItemBySlot(localFighter,primarySlot)if otherItem then _state.
+returnedToPrimary=true _state.lastWeaponSwapAt=now pcall(function()localFighter:
+EquipItem(primarySlot)end)end else _tryStartReload(equipped)end end end
+local function _refreshInputFunctions()if _state.mouse1press or _state.
+mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
+'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
+_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
+_safeCallInput(obj,inputName)if not obj or not obj.Input then return nil end
+local set_identity=ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.
+getGlobal('set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
+'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
+set_identity and get_identity then local old=get_identity()set_identity(2)local
+success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)
+if not success then if State.logger then State.logger:warn(
+'[Ragebot] SafeInput failed:',result)end return nil end return result else
+return obj:Input(inputName)end end local function _getShootCooldown(equipped)
+local info=equipped and equipped.Info local baseCooldown=(info and info.
+ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
 multiplier)=='number'and multiplier>0 and multiplier<100 then baseCooldown=
 baseCooldown*(multiplier/100)end return math.max(baseCooldown,0.02)end
 local function _equippedItemInput(localFighter,equipped,inputName)if equipped
