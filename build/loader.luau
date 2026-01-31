@@ -1133,8 +1133,8 @@ function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
 end end do local function __modImpl()local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')local Workspace=game:GetService(
-'Workspace')local RAGE_HEIGHT=7 local TARGET_RADIUS=99999 local State=require(
-script.Parent.Parent.State)local SilentAim=require(script.Parent.SilentAim)local
+'Workspace')local RAGE_HEIGHT=7 local TARGET_RADIUS=99999 local State=
+__DARKLUA_BUNDLE_MODULES.u()local SilentAim=__DARKLUA_BUNDLE_MODULES.y()local
 TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local LocalPlayer=Players.LocalPlayer
 local PlayerScripts=LocalPlayer:WaitForChild('PlayerScripts')local Controllers=
 PlayerScripts:WaitForChild('Controllers')local FighterControllerModule=require(

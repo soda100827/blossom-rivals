@@ -10,8 +10,8 @@ local RAGE_HEIGHT = 7 -- Above target
 local TARGET_RADIUS = 99999
 
 --// Dependencies
-local State = require(script.Parent.Parent.State)
-local SilentAim = require(script.Parent.SilentAim)
+local State = require("../State")
+local SilentAim = require("./SilentAim")
 
 local TeamUtils = require("../../../shared/TeamUtils")
 
