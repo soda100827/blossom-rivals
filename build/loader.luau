@@ -1032,13 +1032,20 @@ localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
 return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
 local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
 return status=='RoundStarted'end end return true end local function
-_getBestTarget(localRoot)local localPlayer=PlayerUtils.getLocalPlayer()if not
-localPlayer then return nil,nil end if not TeamUtils.isInDuel(localPlayer)then
-return nil,nil end local bestPlayer=nil local bestRoot=nil local bestDist=math.
-huge for _,player in ipairs(Players:GetPlayers())do if player==localPlayer then
-continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end if not
-TeamUtils.isInSameDuel(localPlayer,player)then continue end local character=
-player.Character if not character then continue end local root=(character:
+_isTargetInvincible(targetRoot)if not targetRoot then return false end local
+character=targetRoot.Parent if not character or not character:IsA('Model')then
+return false end local entity=character:FindFirstChild('Entity')if entity and
+entity.Get then local ok,inv=pcall(entity.Get,entity,'IsInvincible')if ok and
+inv~=nil then return inv==true end end local isInvincible=character:
+GetAttribute('IsInvincible')if type(isInvincible)=='boolean'then return
+isInvincible end return false end local function _getBestTarget(localRoot)local
+localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return nil,nil
+end if not TeamUtils.isInDuel(localPlayer)then return nil,nil end local
+bestPlayer=nil local bestRoot=nil local bestDist=math.huge for _,player in
+ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
+TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
+isInSameDuel(localPlayer,player)then continue end local character=player.
+Character if not character then continue end local root=(character:
 FindFirstChild('HumanoidRootPart'))local hum=character:FindFirstChildOfClass(
 'Humanoid')if not root or not hum or hum.Health<=0 then continue end local dist=
 (localRoot.Position-root.Position).Magnitude if dist<bestDist then bestDist=dist
@@ -1159,9 +1166,10 @@ isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
 ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
-ragebotSavedAttackCooldownMultiplier=nil end end return end if not _state.
-isEngaged then _state.isEngaged=true if State.ragebotSavedSilentAimEnabled==nil
-then State.ragebotSavedSilentAimEnabled=State.isSilentAimEnabled end if State.
+ragebotSavedAttackCooldownMultiplier=nil end end return end if
+_isTargetInvincible(targetRoot)then return end if not _state.isEngaged then
+_state.isEngaged=true if State.ragebotSavedSilentAimEnabled==nil then State.
+ragebotSavedSilentAimEnabled=State.isSilentAimEnabled end if State.
 ragebotSavedAttackCooldownMultiplier==nil then State.
 ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end State.
 isSilentAimEnabled=true State.attackCooldownMultiplier=1 end local equipped=

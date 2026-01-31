@@ -70,6 +70,28 @@ local function _isRoundStarted(): boolean
 	return true
 end
 
+local function _isTargetInvincible(targetRoot: BasePart?): boolean
+	if not targetRoot then
+		return false
+	end
+	local character = targetRoot.Parent
+	if not character or not character:IsA("Model") then
+		return false
+	end
+	local entity = character:FindFirstChild("Entity")
+	if entity and entity.Get then
+		local ok, inv = pcall(entity.Get, entity, "IsInvincible")
+		if ok and inv ~= nil then
+			return inv == true
+		end
+	end
+	local isInvincible = character:GetAttribute("IsInvincible")
+	if type(isInvincible) == "boolean" then
+		return isInvincible
+	end
+	return false
+end
+
 local function _getBestTarget(localRoot: BasePart): (Player?, BasePart?)
 	local localPlayer = PlayerUtils.getLocalPlayer()
 	if not localPlayer then
@@ -517,6 +539,9 @@ local function _connect()
 					State.ragebotSavedAttackCooldownMultiplier = nil
 				end
 			end
+			return
+		end
+		if _isTargetInvincible(targetRoot) then
 			return
 		end
 
