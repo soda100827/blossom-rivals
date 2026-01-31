@@ -119,7 +119,11 @@ local function _getLocalFighter(): any
 		_state.lastFighterFetch = now
 		Helpers.fetchFighterController(State.logger)
 	end
-	return State.fighterController and State.fighterController.LocalFighter
+	local fighter = State.fighterController and State.fighterController.LocalFighter
+	if fighter and fighter.IsAlive and not fighter:IsAlive() then
+		return nil
+	end
+	return fighter
 end
 
 local function _isReloading(item: any): boolean

@@ -1026,69 +1026,71 @@ continue end local dist=(localRoot.Position-root.Position).Magnitude if dist<
 bestDist then bestDist=dist bestPlayer=player bestRoot=root end end return
 bestPlayer,bestRoot end local function _getLocalFighter()local now=os.clock()if
 now-_state.lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
-fetchFighterController(State.logger)end return State.fighterController and State
-.fighterController.LocalFighter end local function _isReloading(item)if not item
-then return false end local isOk,value=pcall(function()if item.Get then return
-item:Get('IsReloading')end return nil end)if isOk and value~=nil then return
-value==true end local reloadCooldown=(item)._reload_cooldown if type(
-reloadCooldown)=='number'and reloadCooldown>tick()then return true end local
-isReloadingValue=(item)._is_reloading or(item).IsReloading if type(
-isReloadingValue)=='boolean'then return isReloadingValue end return false end
-local function _getAmmo(item)if not item then return nil end local ok,value=
-pcall(function()if item.Get then return item:Get('Ammo')end return nil end)if ok
-and type(value)=='number'then return value end local ammoField=(item).Ammo if
-type(ammoField)=='number'then return ammoField end return nil end local function
-_isOutOfAmmo(item)local ammo=_getAmmo(item)if type(ammo)=='number'then return
-ammo<=0 end return false end local function _isGunItem(equipped)if not equipped
-then return false end local info=equipped.Info if not info then return false end
-if info.Type=='Gun'then return true end if info.Class=='Primary'or info.Class==
-'Secondary'then return true end if info.ShootCooldown~=nil or info.AmmoType~=nil
-then return true end return false end local function _ensureGunEquipped(
-localFighter)if not localFighter then return nil end local equipped=localFighter
-.EquippedItem if _isGunItem(equipped)then return equipped end return nil end
-local function _getDesiredWeaponSlot()if State.ragebotWeaponSlot=='Secondary'
-then return 2 end return 1 end local function _getItemBySlot(localFighter,slot)
-local items=localFighter and localFighter.Items if type(items)=='table'then
-return items[slot]end return nil end local function _ensureDesiredWeapon(
-localFighter)if not localFighter or not localFighter.EquipItem then return end
-local desiredSlot=_getDesiredWeaponSlot()local equipped=localFighter.
-EquippedItem if equipped and _isGunItem(equipped)then local currentSlot=(
-equipped).Slot if currentSlot==desiredSlot then return end end pcall(function()
-localFighter:EquipItem(desiredSlot)end)end local function _tryStartReload(item)
-if not item or not item.Input then return end if _isReloading(item)then return
-end pcall(function()item:Input('StartReloading')end)end local function
-_swapWeaponOnReload(localFighter)if not State.isRagebotSwapWeaponOnReload then
-return end local now=os.clock()if now-_state.lastWeaponSwapAt<
-SWAP_WEAPON_COOLDOWN then return end if not localFighter or not localFighter.
-EquipItem then return end local mainSlot=_getDesiredWeaponSlot()local offSlot=if
-mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(localFighter,mainSlot)
-local offItem=_getItemBySlot(localFighter,offSlot)if not mainItem then return
-end local equipped=localFighter.EquippedItem if _isOutOfAmmo(mainItem)then
-_tryStartReload(mainItem)if offItem and equipped~=offItem then _state.
-lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(offSlot)end)end
-_state.isSwapReloadActive=true return end if _state.isSwapReloadActive then if
-equipped~=mainItem then _state.lastWeaponSwapAt=now pcall(function()localFighter
-:EquipItem(mainSlot)end)end _state.isSwapReloadActive=false end end
-local function _refreshInputFunctions()if _state.mouse1press or _state.
-mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
-'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
-_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
-_tryMouseShot(equipped)_refreshInputFunctions()if _state.mouse1click then _state
-.mouse1click()return true end if _state.mouse1press and _state.mouse1release
-then _state.mouse1press()local shouldRelease=equipped.Name~='Flamethrower'if
-shouldRelease then task.delay(MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn
-=_state.mouse1release if releaseFn then releaseFn()end end)end return true end
-return false end local function _getShootCooldown(equipped)local info=equipped
-and equipped.Info local baseCooldown=(info and info.ShootCooldown)or 0.1 local
-multiplier=State.attackCooldownMultiplier if type(multiplier)=='number'and
-multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)
-end return math.max(baseCooldown,0.02)end local function _equippedItemInput(
-localFighter,equipped,inputName)if localFighter and localFighter.Input then
-localFighter:Input(inputName)return end if equipped and equipped.Input then
-equipped:Input(inputName)end end local function _shoot(localFighter)local
-equipped=_ensureGunEquipped(localFighter)if not equipped or not equipped.Input
-then return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if
-now-_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
+fetchFighterController(State.logger)end local fighter=State.fighterController
+and State.fighterController.LocalFighter if fighter and fighter.IsAlive and not
+fighter:IsAlive()then return nil end return fighter end local function
+_isReloading(item)if not item then return false end local isOk,value=pcall(
+function()if item.Get then return item:Get('IsReloading')end return nil end)if
+isOk and value~=nil then return value==true end local reloadCooldown=(item).
+_reload_cooldown if type(reloadCooldown)=='number'and reloadCooldown>tick()then
+return true end local isReloadingValue=(item)._is_reloading or(item).IsReloading
+if type(isReloadingValue)=='boolean'then return isReloadingValue end return
+false end local function _getAmmo(item)if not item then return nil end local ok,
+value=pcall(function()if item.Get then return item:Get('Ammo')end return nil end
+)if ok and type(value)=='number'then return value end local ammoField=(item).
+Ammo if type(ammoField)=='number'then return ammoField end return nil end
+local function _isOutOfAmmo(item)local ammo=_getAmmo(item)if type(ammo)==
+'number'then return ammo<=0 end return false end local function _isGunItem(
+equipped)if not equipped then return false end local info=equipped.Info if not
+info then return false end if info.Type=='Gun'then return true end if info.Class
+=='Primary'or info.Class=='Secondary'then return true end if info.ShootCooldown
+~=nil or info.AmmoType~=nil then return true end return false end local function
+_ensureGunEquipped(localFighter)if not localFighter then return nil end local
+equipped=localFighter.EquippedItem if _isGunItem(equipped)then return equipped
+end return nil end local function _getDesiredWeaponSlot()if State.
+ragebotWeaponSlot=='Secondary'then return 2 end return 1 end local function
+_getItemBySlot(localFighter,slot)local items=localFighter and localFighter.Items
+if type(items)=='table'then return items[slot]end return nil end local function
+_ensureDesiredWeapon(localFighter)if not localFighter or not localFighter.
+EquipItem then return end local desiredSlot=_getDesiredWeaponSlot()local
+equipped=localFighter.EquippedItem if equipped and _isGunItem(equipped)then
+local currentSlot=(equipped).Slot if currentSlot==desiredSlot then return end
+end pcall(function()localFighter:EquipItem(desiredSlot)end)end local function
+_tryStartReload(item)if not item or not item.Input then return end if
+_isReloading(item)then return end pcall(function()item:Input('StartReloading')
+end)end local function _swapWeaponOnReload(localFighter)if not State.
+isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
+lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
+localFighter.EquipItem then return end local mainSlot=_getDesiredWeaponSlot()
+local offSlot=if mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(
+localFighter,mainSlot)local offItem=_getItemBySlot(localFighter,offSlot)if not
+mainItem then return end local equipped=localFighter.EquippedItem if
+_isOutOfAmmo(mainItem)then _tryStartReload(mainItem)if offItem and equipped~=
+offItem then _state.lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(
+offSlot)end)end _state.isSwapReloadActive=true return end if _state.
+isSwapReloadActive then if equipped~=mainItem then _state.lastWeaponSwapAt=now
+pcall(function()localFighter:EquipItem(mainSlot)end)end _state.
+isSwapReloadActive=false end end local function _refreshInputFunctions()if
+_state.mouse1press or _state.mouse1click then return end _state.mouse1press=
+ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
+getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
+'mouse1click')end local function _tryMouseShot(equipped)_refreshInputFunctions()
+if _state.mouse1click then _state.mouse1click()return true end if _state.
+mouse1press and _state.mouse1release then _state.mouse1press()local
+shouldRelease=equipped.Name~='Flamethrower'if shouldRelease then task.delay(
+MOUSE_SHOT_RELEASE_DELAY,function()local releaseFn=_state.mouse1release if
+releaseFn then releaseFn()end end)end return true end return false end
+local function _getShootCooldown(equipped)local info=equipped and equipped.Info
+local baseCooldown=(info and info.ShootCooldown)or 0.1 local multiplier=State.
+attackCooldownMultiplier if type(multiplier)=='number'and multiplier>0 and
+multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)end return math.
+max(baseCooldown,0.02)end local function _equippedItemInput(localFighter,
+equipped,inputName)if localFighter and localFighter.Input then localFighter:
+Input(inputName)return end if equipped and equipped.Input then equipped:Input(
+inputName)end end local function _shoot(localFighter)local equipped=
+_ensureGunEquipped(localFighter)if not equipped or not equipped.Input then
+return end local now=os.clock()local cooldown=_getShootCooldown(equipped)if now-
+_state.lastShotAt<cooldown then return end _state.lastShotAt=now if
 _tryMouseShot(equipped)then return end _equippedItemInput(localFighter,equipped,
 'StartShooting')if equipped.Name~='Flamethrower'then task.delay(0.1,function()if
 localFighter.EquippedItem==equipped and equipped.Input then _equippedItemInput(
