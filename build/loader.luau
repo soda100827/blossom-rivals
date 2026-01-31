@@ -1123,19 +1123,22 @@ and equipped.Info local baseCooldown=(info and info.ShootCooldown)or 0.1 local
 multiplier=State.attackCooldownMultiplier if type(multiplier)=='number'and
 multiplier>0 and multiplier<100 then baseCooldown=baseCooldown*(multiplier/100)
 end return math.max(baseCooldown,0.02)end local function _equippedItemInput(
-localFighter,equipped,inputName)if equipped and equipped.Input then local ok=
-equipped:Input(inputName)if State.logger and State.isRagebotEnabled then local
-now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.
-logger:info('[Ragebot Debug] EquippedItem:Input',inputName,ok==true,
-_getItemDebugState(equipped))end end if ok==true then return true end end if
-localFighter and localFighter.Input then local ok=localFighter:Input(inputName)
-if State.logger and State.isRagebotEnabled then local now=os.clock()if now>=
-_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
-'[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end return ok==true
-end return false end local function _forceShootReady(equipped)if not equipped
-then return end if _isReloading(equipped)then return end local ammo=_getAmmo(
-equipped)if type(ammo)=='number'and ammo<=0 then return end if(equipped).
-_shoot_cooldown~=nil then(equipped)._shoot_cooldown=0 end if(equipped).
+localFighter,equipped,inputName)if equipped and equipped.Input then local
+wasEquipped=equipped.IsEquipped local isSpoofNeeded=not wasEquipped and type(
+inputName)=='string'and string.sub(inputName,1,5)=='Start'if isSpoofNeeded then
+equipped.IsEquipped=true end local ok=equipped:Input(inputName)if isSpoofNeeded
+then equipped.IsEquipped=wasEquipped end if State.logger and State.
+isRagebotEnabled then local now=os.clock()if now>=_state.debugNextAt then _state
+.debugNextAt=now+1 State.logger:info('[Ragebot Debug] EquippedItem:Input',
+inputName,ok==true,_getItemDebugState(equipped))end end if ok==true then return
+true end end if localFighter and localFighter.Input then local ok=localFighter:
+Input(inputName)if State.logger and State.isRagebotEnabled then local now=os.
+clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.logger:
+info('[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end return ok==
+true end return false end local function _forceShootReady(equipped)if not
+equipped then return end if _isReloading(equipped)then return end local ammo=
+_getAmmo(equipped)if type(ammo)=='number'and ammo<=0 then return end if(equipped
+)._shoot_cooldown~=nil then(equipped)._shoot_cooldown=0 end if(equipped).
 _shoot_cooldown_no_ammo~=nil then(equipped)._shoot_cooldown_no_ammo=0 end if(
 equipped)._is_input_queueing~=nil then(equipped)._is_input_queueing=false end
 end local function _shoot(localFighter)local equipped=_ensureGunEquipped(
@@ -1145,38 +1148,7 @@ cooldown then return end _state.lastShotAt=now _forceShootReady(equipped)local
 didShoot=_equippedItemInput(localFighter,equipped,'StartShooting')if didShoot
 and equipped.Name~='Flamethrower'then task.delay(0.1,function()if localFighter.
 EquippedItem==equipped and equipped.Input then _equippedItemInput(localFighter,
-equipped,'FinishShooting')end end)end end local function _hookClientItemInput()
-if _state.isInputHooked then return end local clientItemMod=Helpers.
-getClientItemModule()if not clientItemMod then return end _state.isInputHooked=
-true local checkcaller=ExecutorUtils.getGlobal('checkcaller')or function()return
-false end local oldInput oldInput=HookUtils.safeHook(clientItemMod,'Input',
-function(self,inputName,...)if checkcaller()then return oldInput(self,inputName,
-...)end if not State.isRagebotEnabled then return oldInput(self,inputName,...)
-end local wasEquipped=self.IsEquipped if not wasEquipped and type(inputName)==
-'string'and string.sub(inputName,1,5)=='Start'then self.IsEquipped=true local
-result=oldInput(self,inputName,...)self.IsEquipped=wasEquipped return result end
-return oldInput(self,inputName,...)end,State.logger,_maid)end local function
-_hookClientFighterUseItem()if _state.isUseItemHooked then return end local
-localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return end local
-playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
-then return end local modules=playerScripts:WaitForChild('Modules',5)if not
-modules then return end local clientFighterModule=modules:WaitForChild(
-'ClientReplicatedClasses',5)if not clientFighterModule then return end local
-clientFighter=clientFighterModule:WaitForChild('ClientFighter',5)if not
-clientFighter then return end local clientItem=clientFighter:WaitForChild(
-'ClientItem',5)if not clientItem then return end local ok,clientItemMod=pcall(
-function()local dynamicRequire=require return dynamicRequire(clientItem)end)if
-not ok or not clientItemMod then return end _state.isUseItemHooked=true local
-checkcaller=ExecutorUtils.getGlobal('checkcaller')or function()return false end
-local oldInput oldInput=HookUtils.safeHook(clientItemMod,'Input',function(self,
-inputName,...)if checkcaller()then return oldInput(self,inputName,...)end if not
-State.isRagebotEnabled then return oldInput(self,inputName,...)end if type(
-inputName)~='string'then return oldInput(self,inputName,...)end local
-wasEquipped=self.IsEquipped local wasLocal=self.ClientFighter and self.
-ClientFighter.Player==Players.LocalPlayer if not wasLocal then return oldInput(
-self,inputName,...)end if not wasEquipped and string.sub(inputName,1,5)=='Start'
-then self.IsEquipped=true end local result=oldInput(self,inputName,...)self.
-IsEquipped=wasEquipped return result end,State.logger,_maid)end local function
+equipped,'FinishShooting')end end)end end local function
 _applyRagebotSilentAimOverride(isEnabled)if isEnabled then if State.
 ragebotSavedSilentAimFovRadius==nil then State.ragebotSavedSilentAimFovRadius=
 State.silentAimFovRadius end State.silentAimFovRadius=math.huge else if State.
@@ -1201,9 +1173,8 @@ ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end
-_applyRagebotSilentAimOverride(true)_hookClientItemInput()
-_hookClientFighterUseItem()if not _isRoundStarted()then return end if not State.
-isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
+_applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
+not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
 localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
 _getLocalFighter()if not localFighter then return end if not State.
