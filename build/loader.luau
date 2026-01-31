@@ -157,31 +157,32 @@ fighters then return fighters[player]or fighters[player.UserId]or fighters[
 tostring(player.UserId)]end return nil end function TeamUtils.getPlayerTeamId(
 player)local controller=_getFighterController()local fighter=
 _getFighterForPlayer(controller,player)local fighterTeam=_getTeamFromFighter(
-fighter,player)return fighterTeam end function TeamUtils.isSameTeam(playerA,
-playerB)if playerA==playerB then return true end local teamA=TeamUtils.
-getPlayerTeamId(playerA)if teamA==nil then return false end local teamB=
-TeamUtils.getPlayerTeamId(playerB)if teamB==nil then return false end return
-_areTeamsEqual(teamA,teamB)end function TeamUtils.isInDuel(player)local
-controller=_getFighterController()local fighter=_getFighterForPlayer(controller,
-player)return _getFighterIsInDuel(fighter)end function TeamUtils.isInSameDuel(
-playerA,playerB)local localPlayer=Players.LocalPlayer if localPlayer and(playerA
-==localPlayer or playerB==localPlayer)then if not TeamUtils.isInDuel(localPlayer
-)then return false end end local localDuel=_getLocalDuel()if localDuel and
-localDuel.GetDueler then local okA,duelerA=pcall(localDuel.GetDueler,localDuel,
-playerA)if not okA or not duelerA then return false end local okB,duelerB=pcall(
-localDuel.GetDueler,localDuel,playerB)if not okB or not duelerB then return
-false end return true end local controller=_getFighterController()local fighterA
-=_getFighterForPlayer(controller,playerA)local fighterB=_getFighterForPlayer(
-controller,playerB)if not fighterA or not fighterB then return false end if not
-_getFighterIsInDuel(fighterA)or not _getFighterIsInDuel(fighterB)then return
-false end local matchA=fighterA.Match or fighterA.MatchID or fighterA.MatchId or
-fighterA._match local matchB=fighterB.Match or fighterB.MatchID or fighterB.
-MatchId or fighterB._match if matchA and matchB and matchA==matchB then return
-true end local charA=playerA.Character local charB=playerB.Character if charA
-and charB and charA.Parent==charB.Parent and charA.Parent~=Workspace then return
-true end return false end function TeamUtils.init(self,_client)_maid=Maid.new()
-_connect()end function TeamUtils.Destroy(self)if _maid then _maid:DoCleaning()
-end _fighterController=nil _duelController=nil end return TeamUtils end function
+fighter,player)return fighterTeam end function TeamUtils.getLocalDuel()return
+_getLocalDuel()end function TeamUtils.isSameTeam(playerA,playerB)if playerA==
+playerB then return true end local teamA=TeamUtils.getPlayerTeamId(playerA)if
+teamA==nil then return false end local teamB=TeamUtils.getPlayerTeamId(playerB)
+if teamB==nil then return false end return _areTeamsEqual(teamA,teamB)end
+function TeamUtils.isInDuel(player)local controller=_getFighterController()local
+fighter=_getFighterForPlayer(controller,player)return _getFighterIsInDuel(
+fighter)end function TeamUtils.isInSameDuel(playerA,playerB)local localPlayer=
+Players.LocalPlayer if localPlayer and(playerA==localPlayer or playerB==
+localPlayer)then if not TeamUtils.isInDuel(localPlayer)then return false end end
+local localDuel=_getLocalDuel()if localDuel and localDuel.GetDueler then local
+okA,duelerA=pcall(localDuel.GetDueler,localDuel,playerA)if not okA or not
+duelerA then return false end local okB,duelerB=pcall(localDuel.GetDueler,
+localDuel,playerB)if not okB or not duelerB then return false end return true
+end local controller=_getFighterController()local fighterA=_getFighterForPlayer(
+controller,playerA)local fighterB=_getFighterForPlayer(controller,playerB)if not
+fighterA or not fighterB then return false end if not _getFighterIsInDuel(
+fighterA)or not _getFighterIsInDuel(fighterB)then return false end local matchA=
+fighterA.Match or fighterA.MatchID or fighterA.MatchId or fighterA._match local
+matchB=fighterB.Match or fighterB.MatchID or fighterB.MatchId or fighterB._match
+if matchA and matchB and matchA==matchB then return true end local charA=playerA
+.Character local charB=playerB.Character if charA and charB and charA.Parent==
+charB.Parent and charA.Parent~=Workspace then return true end return false end
+function TeamUtils.init(self,_client)_maid=Maid.new()_connect()end function
+TeamUtils.Destroy(self)if _maid then _maid:DoCleaning()end _fighterController=
+nil _duelController=nil end return TeamUtils end function
 __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
 do local function __modImpl()local Players=game:GetService('Players')local
@@ -193,15 +194,15 @@ WaitForChild('Camera'))end return camera end return PlayerUtils end function
 __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES.cache.f if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end
 do local function __modImpl()local ESP_RENDER_INTERVAL=1/60 local
-ESP_SKELETON_INTERVAL=1/60 local ESP_TEXT_INTERVAL=1/60 local Constants={
-DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false
-,shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
-shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,
-boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,
-1,1),distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),
-healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),
-nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),
-distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
+ESP_SKELETON_INTERVAL=1/60 local ESP_TEXT_INTERVAL=1/60 local ESP_SMOOTH_ALPHA=
+0.25 local Constants={DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames=true,
+shouldShowWeapon=false,shouldShowDistance=false,shouldShowBoxes=true,
+shouldShowSkeleton=false,shouldShowHealthbar=false,shouldShowHighlight=false,
+shouldShowTeammates=true,boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),
+weaponColor=Color3.new(1,1,1),distanceColor=Color3.new(1,1,1),skeletonColor=
+Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.
+new(0,0,0),nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,
+0),distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
 skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
 highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
 12,shouldOutline=true},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
@@ -211,78 +212,80 @@ highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
 'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
 'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
 },ESP_RENDER_INTERVAL=ESP_RENDER_INTERVAL,ESP_SKELETON_INTERVAL=
-ESP_SKELETON_INTERVAL,ESP_TEXT_INTERVAL=ESP_TEXT_INTERVAL}return Constants end
-function __DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c
-end end do local function __modImpl()return{}end function
-__DARKLUA_BUNDLE_MODULES.h()local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end
-do local function __modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.g()local
-Types=__DARKLUA_BUNDLE_MODULES.h()local _maid=nil local _signals={}local _state=
-{client=nil,logger=nil,isEnabled=false,drawings={},highlights={},settings=table.
-clone(Constants.DEFAULT_SETTINGS),overrideCheck=nil,isEspPreviouslyEnabled=false
-,lastSkeletonUpdate=0,lastTextUpdate=0}return _state end function
-__DARKLUA_BUNDLE_MODULES.i()local v=__DARKLUA_BUNDLE_MODULES.cache.i if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.i=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local PlayerUtils=
+ESP_SKELETON_INTERVAL,ESP_TEXT_INTERVAL=ESP_TEXT_INTERVAL,ESP_SMOOTH_ALPHA=
+ESP_SMOOTH_ALPHA}return Constants end function __DARKLUA_BUNDLE_MODULES.g()local
+v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
+__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.h()local v=
+__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end do local function
+__modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.g()local Types=
+__DARKLUA_BUNDLE_MODULES.h()local _maid=nil local _signals={}local _state={
+client=nil,logger=nil,isEnabled=false,drawings={},highlights={},smoothCache={},
+settings=table.clone(Constants.DEFAULT_SETTINGS),overrideCheck=nil,
+isEspPreviouslyEnabled=false,lastSkeletonUpdate=0,lastTextUpdate=0}return _state
+end function __DARKLUA_BUNDLE_MODULES.i()local v=__DARKLUA_BUNDLE_MODULES.cache.
+i if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.i=v end return v
+.c end end do local function __modImpl()local Players=game:GetService('Players')
+local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local PlayerUtils=
 __DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local
 Constants=__DARKLUA_BUNDLE_MODULES.g()local State=__DARKLUA_BUNDLE_MODULES.i()
 local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}local
 _state={}local function _setGroupVisible(group,isVisible)for _,drawing in pairs(
 group)do if type(drawing)=='table'then for _,line in pairs(drawing)do line.
 Visible=isVisible end else drawing.Visible=isVisible end end end local function
-_updateSkeleton(skeletonLines,skeletonOutlineLines,character)local camera=
-PlayerUtils.getCamera()local lineIndex=1 for _,pair in ipairs(Constants.
-R15_JOINTS)do local p1=character:FindFirstChild(pair[1])local p2=character:
-FindFirstChild(pair[2])if p1 and p2 and p1:IsA('BasePart')and p2:IsA('BasePart')
-then local v1,o1=camera:WorldToViewportPoint(p1.Position)local v2,o2=camera:
-WorldToViewportPoint(p2.Position)if o1 and o2 then local outline=
-skeletonOutlineLines[lineIndex]if outline then outline.From=Vector2.new(v1.X,v1.
-Y)outline.To=Vector2.new(v2.X,v2.Y)outline.Color=State.settings.
-skeletonOutlineColor outline.Thickness=State.settings.skeletonThickness+2
-outline.Visible=true outline.ZIndex=1 end local line=skeletonLines[lineIndex]if
-line then line.From=Vector2.new(v1.X,v1.Y)line.To=Vector2.new(v2.X,v2.Y)line.
-Color=State.settings.skeletonColor line.Thickness=State.settings.
-skeletonThickness line.Visible=true line.ZIndex=2 lineIndex+=1 end end end end
-for i=lineIndex,#skeletonLines do skeletonLines[i].Visible=false end for i=
-lineIndex,#skeletonOutlineLines do skeletonOutlineLines[i].Visible=false end end
-function Helpers.clearDrawings()for player,group in pairs(State.drawings)do for
-_,drawing in pairs(group)do if type(drawing)=='table'then for _,line in pairs(
-drawing)do line:Remove()end else drawing:Remove()end end State.drawings[player]=
-nil end end function Helpers.clearHighlights()for player,highlight in pairs(
-State.highlights)do if highlight~=nil then(highlight):Destroy()end State.
-highlights[player]=nil end end function Helpers.clearAll()Helpers.clearDrawings(
-)Helpers.clearHighlights()end function Helpers.removePlayer(player)local group=
-State.drawings[player]if group then for _,drawing in pairs(group)do if type(
-drawing)=='table'then for _,line in pairs(drawing)do line:Remove()end else
-drawing:Remove()end end State.drawings[player]=nil end local highlight=State.
-highlights[player]if highlight~=nil then(highlight):Destroy()State.highlights[
-player]=nil end end function Helpers.ensurePlayerDrawings(player)local existing=
-State.drawings[player]if existing then return existing end local lib=
-ExecutorUtils.getDrawingLib()if not lib then return nil end local group={name=
-lib.new('Text'),weapon=lib.new('Text'),distance=lib.new('Text'),boxOutline=lib.
-new('Square'),box=lib.new('Square'),healthbarOutline=lib.new('Square'),healthbar
-=lib.new('Square'),skeleton={},skeletonOutline={}}for _,key in ipairs({'name',
-'weapon','distance'})do group[key].Center=true group[key].Outline=true group[key
-].Visible=false end for _,key in ipairs({'box','boxOutline','healthbar',
-'healthbarOutline'})do group[key].Visible=false group[key].Filled=false end
-group.healthbar.Filled=true group.healthbarOutline.Filled=true for _=1,16 do
-local line=lib.new('Line')line.Visible=false table.insert(group.skeleton,line)
-local outline=lib.new('Line')outline.Visible=false table.insert(group.
-skeletonOutline,outline)end State.drawings[player]=group return group end
-function Helpers.updateHighlight(player,character)if not State.settings.
-shouldShowHighlight then local highlight=State.highlights[player]if highlight
-then highlight:Destroy()State.highlights[player]=nil end return end local
-highlight=State.highlights[player]if not highlight then local created=Instance.
-new('Highlight')created.Name='BlossomHighlight'created.FillTransparency=0.5
-created.OutlineTransparency=0 created.Parent=game:GetService('CoreGui')State.
-highlights[player]=created highlight=created end if not highlight then return
-end local activeHighlight=highlight local adornee=character if adornee:IsA(
-'Model')then local rootPart=adornee:FindFirstChild('HumanoidRootPart')if
-rootPart and rootPart:IsA('BasePart')then adornee=rootPart end end if
-activeHighlight.Adornee~=adornee then activeHighlight.Adornee=adornee end
-activeHighlight.FillColor=State.settings.highlightFill activeHighlight.
+_lerpVector2(a,b,alpha)return a:Lerp(b,alpha)end local function _updateSkeleton(
+skeletonLines,skeletonOutlineLines,character)local camera=PlayerUtils.getCamera(
+)local lineIndex=1 for _,pair in ipairs(Constants.R15_JOINTS)do local p1=
+character:FindFirstChild(pair[1])local p2=character:FindFirstChild(pair[2])if p1
+and p2 and p1:IsA('BasePart')and p2:IsA('BasePart')then local v1,o1=camera:
+WorldToViewportPoint(p1.Position)local v2,o2=camera:WorldToViewportPoint(p2.
+Position)if o1 and o2 then local outline=skeletonOutlineLines[lineIndex]if
+outline then outline.From=Vector2.new(v1.X,v1.Y)outline.To=Vector2.new(v2.X,v2.Y
+)outline.Color=State.settings.skeletonOutlineColor outline.Thickness=State.
+settings.skeletonThickness+2 outline.Visible=true outline.ZIndex=1 end local
+line=skeletonLines[lineIndex]if line then line.From=Vector2.new(v1.X,v1.Y)line.
+To=Vector2.new(v2.X,v2.Y)line.Color=State.settings.skeletonColor line.Thickness=
+State.settings.skeletonThickness line.Visible=true line.ZIndex=2 lineIndex+=1
+end end end end for i=lineIndex,#skeletonLines do skeletonLines[i].Visible=false
+end for i=lineIndex,#skeletonOutlineLines do skeletonOutlineLines[i].Visible=
+false end end function Helpers.clearDrawings()for player,group in pairs(State.
+drawings)do for _,drawing in pairs(group)do if type(drawing)=='table'then for _,
+line in pairs(drawing)do line:Remove()end else drawing:Remove()end end State.
+drawings[player]=nil State.smoothCache[player]=nil end end function Helpers.
+clearHighlights()for player,highlight in pairs(State.highlights)do if highlight
+~=nil then(highlight):Destroy()end State.highlights[player]=nil State.
+smoothCache[player]=nil end end function Helpers.clearAll()Helpers.
+clearDrawings()Helpers.clearHighlights()end function Helpers.removePlayer(player
+)local group=State.drawings[player]if group then for _,drawing in pairs(group)do
+if type(drawing)=='table'then for _,line in pairs(drawing)do line:Remove()end
+else drawing:Remove()end end State.drawings[player]=nil end local highlight=
+State.highlights[player]if highlight~=nil then(highlight):Destroy()State.
+highlights[player]=nil end State.smoothCache[player]=nil end function Helpers.
+ensurePlayerDrawings(player)local existing=State.drawings[player]if existing
+then return existing end local lib=ExecutorUtils.getDrawingLib()if not lib then
+return nil end local group={name=lib.new('Text'),weapon=lib.new('Text'),distance
+=lib.new('Text'),boxOutline=lib.new('Square'),box=lib.new('Square'),
+healthbarOutline=lib.new('Square'),healthbar=lib.new('Square'),skeleton={},
+skeletonOutline={}}for _,key in ipairs({'name','weapon','distance'})do group[key
+].Center=true group[key].Outline=true group[key].Visible=false end for _,key in
+ipairs({'box','boxOutline','healthbar','healthbarOutline'})do group[key].Visible
+=false group[key].Filled=false end group.healthbar.Filled=true group.
+healthbarOutline.Filled=true for _=1,16 do local line=lib.new('Line')line.
+Visible=false table.insert(group.skeleton,line)local outline=lib.new('Line')
+outline.Visible=false table.insert(group.skeletonOutline,outline)end State.
+drawings[player]=group return group end function Helpers.updateHighlight(player,
+character)if not State.settings.shouldShowHighlight then local highlight=State.
+highlights[player]if highlight then highlight:Destroy()State.highlights[player]=
+nil end return end local highlight=State.highlights[player]if not highlight then
+local created=Instance.new('Highlight')created.Name='BlossomHighlight'created.
+FillTransparency=0.5 created.OutlineTransparency=0 created.Parent=game:
+GetService('CoreGui')State.highlights[player]=created highlight=created end if
+not highlight then return end local activeHighlight=highlight local adornee=
+character if adornee:IsA('Model')then local rootPart=adornee:FindFirstChild(
+'HumanoidRootPart')if rootPart and rootPart:IsA('BasePart')then adornee=rootPart
+end end if activeHighlight.Adornee~=adornee then activeHighlight.Adornee=adornee
+end activeHighlight.FillColor=State.settings.highlightFill activeHighlight.
 OutlineColor=State.settings.highlightOutline activeHighlight.Enabled=true end
 function Helpers.render()local settings=State.settings local overrideCheck=State
 .overrideCheck if overrideCheck and not overrideCheck()then if State.
@@ -316,106 +319,116 @@ local legPos=camera:WorldToViewportPoint(rootPart.Position-Vector3.new(0,3,0))
 local headPos=camera:WorldToViewportPoint(rootPart.Position+Vector3.new(0,2,0))
 local height=math.abs(headPos.Y-legPos.Y)*1.5 local width=height*0.6 local
 boxPos=Vector2.new(rootPos.X-width/2,rootPos.Y-height/2)local boxSize=Vector2.
-new(width,height)if settings.shouldShowBoxes then group.boxOutline.Size=boxSize
-group.boxOutline.Position=boxPos group.boxOutline.Color=settings.boxOutlineColor
-group.boxOutline.Thickness=settings.boxThickness+2 group.boxOutline.Visible=true
-group.boxOutline.ZIndex=1 group.box.Size=boxSize group.box.Position=boxPos group
-.box.Color=settings.boxColor group.box.Thickness=settings.boxThickness group.box
-.Visible=true group.box.ZIndex=2 else group.box.Visible=false group.boxOutline.
-Visible=false end if settings.shouldShowHealthbar then local healthPerc=math.
-clamp(humanoid.Health/humanoid.MaxHealth,0,1)local barHeight=height*healthPerc
-group.healthbarOutline.Size=Vector2.new(4,height+2)group.healthbarOutline.
-Position=Vector2.new(boxPos.X-6,boxPos.Y-1)group.healthbarOutline.Color=settings
-.healthbarOutlineColor group.healthbarOutline.Filled=true group.healthbarOutline
-.Visible=true group.healthbarOutline.ZIndex=1 group.healthbar.Size=Vector2.new(2
-,barHeight)group.healthbar.Position=Vector2.new(boxPos.X-5,boxPos.Y+(height-
-barHeight))group.healthbar.Color=settings.healthbarColor:Lerp(Color3.new(1,0,0),
-1-healthPerc)group.healthbar.Filled=true group.healthbar.Visible=true group.
-healthbar.ZIndex=2 else group.healthbar.Visible=false group.healthbarOutline.
-Visible=false end if shouldUpdateText then local textOffset=0 if settings.
-shouldShowNames then group.name.Text=player.DisplayName or player.Name group.
-name.Size=settings.textSize group.name.Color=settings.textColor group.name.
-Outline=settings.shouldOutline group.name.OutlineColor=settings.nameOutlineColor
-group.name.Position=Vector2.new(rootPos.X,boxPos.Y-settings.textSize-2)group.
-name.Visible=true else group.name.Visible=false end if settings.shouldShowWeapon
-then local tool=character:FindFirstChildOfClass('Tool')if tool then group.weapon
-.Text=tool.Name group.weapon.Size=settings.textSize group.weapon.Color=settings.
-weaponColor group.weapon.Outline=settings.shouldOutline group.weapon.
-OutlineColor=settings.weaponOutlineColor group.weapon.Position=Vector2.new(
-rootPos.X,boxPos.Y+height+2+textOffset)group.weapon.Visible=true textOffset+=
-settings.textSize else group.weapon.Visible=false end else group.weapon.Visible=
-false end if settings.shouldShowDistance then group.distance.Text=tostring(math.
-floor(distance))..' studs'group.distance.Size=settings.textSize group.distance.
-Color=settings.distanceColor group.distance.Outline=settings.shouldOutline group
-.distance.OutlineColor=settings.distanceOutlineColor group.distance.Position=
-Vector2.new(rootPos.X,boxPos.Y+height+2+textOffset)group.distance.Visible=true
-textOffset+=settings.textSize else group.distance.Visible=false end end if
-settings.shouldShowSkeleton then if shouldUpdateSkeleton then _updateSkeleton(
-group.skeleton,group.skeletonOutline,character)end else for _,line in pairs(
-group.skeleton)do line.Visible=false end for _,line in pairs(group.
-skeletonOutline)do line.Visible=false end end end end return Helpers end
-function __DARKLUA_BUNDLE_MODULES.j()local v=__DARKLUA_BUNDLE_MODULES.cache.j if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.j=v end return v.c
-end end do local function __modImpl()local Players=game:GetService('Players')
-local RunService=game:GetService('RunService')local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.d()local Maid=(__DARKLUA_BUNDLE_MODULES.a())local
-Helpers=__DARKLUA_BUNDLE_MODULES.j()local State=__DARKLUA_BUNDLE_MODULES.i()
-local Types=__DARKLUA_BUNDLE_MODULES.h()local Constants=__DARKLUA_BUNDLE_MODULES
-.g()local ESP_RENDER_INTERVAL=Constants.ESP_RENDER_INTERVAL local Visuals={}
-Visuals.__index=Visuals local _maid=nil local _signals={}local _state={
-lastRender=0}local function _connect()_maid:DoCleaning()local removeConn=Players
-.PlayerRemoving:Connect(function(player)Helpers.removePlayer(player)end)_maid:
-GiveTask(removeConn)local renderConn=RunService.RenderStepped:Connect(function()
-local now=os.clock()if now-_state.lastRender<ESP_RENDER_INTERVAL then return end
-_state.lastRender=now Helpers.render()end)_maid:GiveTask(renderConn)end
-local function _enable()if not ExecutorUtils.getDrawingLib()then State.isEnabled
-=false return end _connect()end local function _disable()_maid:DoCleaning()
-Helpers.clearAll()end function Visuals.init(self,client)State.client=client
-State.logger=client.Logger _maid=Maid.new()end function Visuals.Destroy(self)
-State.isEnabled=false _disable()end function Visuals.toggle(self,isEnabled)if
-State.isEnabled==isEnabled then return end State.isEnabled=isEnabled if
-isEnabled then _enable()else _disable()end end function Visuals.setEspEnabled(
-self,isEnabled)State.settings.isEspEnabled=isEnabled if not isEnabled then
-Helpers.clearAll()end end function Visuals.setShowNames(self,shouldShow)State.
-settings.shouldShowNames=shouldShow end function Visuals.setShowWeapon(self,
-shouldShow)State.settings.shouldShowWeapon=shouldShow end function Visuals.
-setShowDistance(self,shouldShow)State.settings.shouldShowDistance=shouldShow end
-function Visuals.setShowBoxes(self,shouldShow)State.settings.shouldShowBoxes=
-shouldShow end function Visuals.setShowSkeleton(self,shouldShow)State.settings.
-shouldShowSkeleton=shouldShow end function Visuals.setShowHealthbar(self,
-shouldShow)State.settings.shouldShowHealthbar=shouldShow end function Visuals.
-setShowHighlight(self,shouldShow)State.settings.shouldShowHighlight=shouldShow
-if not shouldShow then Helpers.clearHighlights()end end function Visuals.
-setShowTeammates(self,shouldShow)State.settings.shouldShowTeammates=shouldShow
-end function Visuals.setBoxColor(self,color)State.settings.boxColor=color end
-function Visuals.setTextColor(self,color)State.settings.textColor=color end
-function Visuals.setWeaponColor(self,color)State.settings.weaponColor=color end
-function Visuals.setDistanceColor(self,color)State.settings.distanceColor=color
-end function Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=
-color end function Visuals.setHealthbarColor(self,color)State.settings.
-healthbarColor=color end function Visuals.setHealthbarOutlineColor(self,color)
-State.settings.healthbarOutlineColor=color end function Visuals.
-setNameOutlineColor(self,color)State.settings.nameOutlineColor=color end
-function Visuals.setWeaponOutlineColor(self,color)State.settings.
-weaponOutlineColor=color end function Visuals.setDistanceOutlineColor(self,color
-)State.settings.distanceOutlineColor=color end function Visuals.
-setBoxOutlineColor(self,color)State.settings.boxOutlineColor=color end function
-Visuals.setSkeletonOutlineColor(self,color)State.settings.skeletonOutlineColor=
-color end function Visuals.setHighlightFill(self,color)State.settings.
-highlightFill=color end function Visuals.setHighlightOutline(self,color)State.
-settings.highlightOutline=color end function Visuals.setBoxThickness(self,value)
-State.settings.boxThickness=value end function Visuals.setSkeletonThickness(self
-,value)State.settings.skeletonThickness=value end function Visuals.setTextSize(
-self,value)State.settings.textSize=value end function Visuals.setOutline(self,
-isEnabled)State.settings.shouldOutline=isEnabled end function Visuals.
-setOverrideCheck(self,check)State.overrideCheck=check end return Visuals end
-function __DARKLUA_BUNDLE_MODULES.k()local v=__DARKLUA_BUNDLE_MODULES.cache.k if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.k=v end return v.c
-end end do local function __modImpl()local Constants={DEFAULT_FLY_SPEED=50,
-INPUT_MAP={[Enum.KeyCode.W]='forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]=
-'left',[Enum.KeyCode.D]='right',[Enum.KeyCode.Space]='up',[Enum.KeyCode.
-LeftControl]='down'}}return Constants end function __DARKLUA_BUNDLE_MODULES.l()
-local v=__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
+new(width,height)local smooth=State.smoothCache[player]if not smooth then smooth
+={rootPos=Vector2.new(rootPos.X,rootPos.Y),boxPos=boxPos,boxSize=boxSize}State.
+smoothCache[player]=smooth end local alpha=Constants.ESP_SMOOTH_ALPHA smooth.
+rootPos=_lerpVector2(smooth.rootPos,Vector2.new(rootPos.X,rootPos.Y),alpha)
+smooth.boxPos=_lerpVector2(smooth.boxPos,boxPos,alpha)smooth.boxSize=
+_lerpVector2(smooth.boxSize,boxSize,alpha)local smoothedRootPos=smooth.rootPos
+local smoothedBoxPos=smooth.boxPos local smoothedBoxSize=smooth.boxSize if
+settings.shouldShowBoxes then group.boxOutline.Size=smoothedBoxSize group.
+boxOutline.Position=smoothedBoxPos group.boxOutline.Color=settings.
+boxOutlineColor group.boxOutline.Thickness=settings.boxThickness+2 group.
+boxOutline.Visible=true group.boxOutline.ZIndex=1 group.box.Size=smoothedBoxSize
+group.box.Position=smoothedBoxPos group.box.Color=settings.boxColor group.box.
+Thickness=settings.boxThickness group.box.Visible=true group.box.ZIndex=2 else
+group.box.Visible=false group.boxOutline.Visible=false end if settings.
+shouldShowHealthbar then local healthPerc=math.clamp(humanoid.Health/humanoid.
+MaxHealth,0,1)local barHeight=smoothedBoxSize.Y*healthPerc group.
+healthbarOutline.Size=Vector2.new(4,smoothedBoxSize.Y+2)group.healthbarOutline.
+Position=Vector2.new(smoothedBoxPos.X-6,smoothedBoxPos.Y-1)group.
+healthbarOutline.Color=settings.healthbarOutlineColor group.healthbarOutline.
+Filled=true group.healthbarOutline.Visible=true group.healthbarOutline.ZIndex=1
+group.healthbar.Size=Vector2.new(2,barHeight)group.healthbar.Position=Vector2.
+new(smoothedBoxPos.X-5,smoothedBoxPos.Y+(smoothedBoxSize.Y-barHeight))group.
+healthbar.Color=settings.healthbarColor:Lerp(Color3.new(1,0,0),1-healthPerc)
+group.healthbar.Filled=true group.healthbar.Visible=true group.healthbar.ZIndex=
+2 else group.healthbar.Visible=false group.healthbarOutline.Visible=false end if
+shouldUpdateText then local textOffset=0 if settings.shouldShowNames then group.
+name.Text=player.DisplayName or player.Name group.name.Size=settings.textSize
+group.name.Color=settings.textColor group.name.Outline=settings.shouldOutline
+group.name.OutlineColor=settings.nameOutlineColor group.name.Position=Vector2.
+new(smoothedRootPos.X,smoothedBoxPos.Y-settings.textSize-2)group.name.Visible=
+true else group.name.Visible=false end if settings.shouldShowWeapon then local
+tool=character:FindFirstChildOfClass('Tool')if tool then group.weapon.Text=tool.
+Name group.weapon.Size=settings.textSize group.weapon.Color=settings.weaponColor
+group.weapon.Outline=settings.shouldOutline group.weapon.OutlineColor=settings.
+weaponOutlineColor group.weapon.Position=Vector2.new(smoothedRootPos.X,
+smoothedBoxPos.Y+smoothedBoxSize.Y+2+textOffset)group.weapon.Visible=true
+textOffset+=settings.textSize else group.weapon.Visible=false end else group.
+weapon.Visible=false end if settings.shouldShowDistance then group.distance.Text
+=tostring(math.floor(distance))..' studs'group.distance.Size=settings.textSize
+group.distance.Color=settings.distanceColor group.distance.Outline=settings.
+shouldOutline group.distance.OutlineColor=settings.distanceOutlineColor group.
+distance.Position=Vector2.new(smoothedRootPos.X,smoothedBoxPos.Y+smoothedBoxSize
+.Y+2+textOffset)group.distance.Visible=true textOffset+=settings.textSize else
+group.distance.Visible=false end end if settings.shouldShowSkeleton then if
+shouldUpdateSkeleton then _updateSkeleton(group.skeleton,group.skeletonOutline,
+character)end else for _,line in pairs(group.skeleton)do line.Visible=false end
+for _,line in pairs(group.skeletonOutline)do line.Visible=false end end end end
+return Helpers end function __DARKLUA_BUNDLE_MODULES.j()local v=
+__DARKLUA_BUNDLE_MODULES.cache.j if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.j=v end return v.c end end do local function
+__modImpl()local Players=game:GetService('Players')local RunService=game:
+GetService('RunService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local Helpers=__DARKLUA_BUNDLE_MODULES.j()
+local State=__DARKLUA_BUNDLE_MODULES.i()local Types=__DARKLUA_BUNDLE_MODULES.h()
+local Constants=__DARKLUA_BUNDLE_MODULES.g()local ESP_RENDER_INTERVAL=Constants.
+ESP_RENDER_INTERVAL local Visuals={}Visuals.__index=Visuals local _maid=nil
+local _signals={}local _state={lastRender=0}local function _connect()_maid:
+DoCleaning()local removeConn=Players.PlayerRemoving:Connect(function(player)
+Helpers.removePlayer(player)end)_maid:GiveTask(removeConn)local renderConn=
+RunService.RenderStepped:Connect(function()local now=os.clock()if now-_state.
+lastRender<ESP_RENDER_INTERVAL then return end _state.lastRender=now Helpers.
+render()end)_maid:GiveTask(renderConn)end local function _enable()if not
+ExecutorUtils.getDrawingLib()then State.isEnabled=false return end _connect()end
+local function _disable()_maid:DoCleaning()Helpers.clearAll()end function
+Visuals.init(self,client)State.client=client State.logger=client.Logger _maid=
+Maid.new()end function Visuals.Destroy(self)State.isEnabled=false _disable()end
+function Visuals.toggle(self,isEnabled)if State.isEnabled==isEnabled then return
+end State.isEnabled=isEnabled if isEnabled then _enable()else _disable()end end
+function Visuals.setEspEnabled(self,isEnabled)State.settings.isEspEnabled=
+isEnabled if not isEnabled then Helpers.clearAll()end end function Visuals.
+setShowNames(self,shouldShow)State.settings.shouldShowNames=shouldShow end
+function Visuals.setShowWeapon(self,shouldShow)State.settings.shouldShowWeapon=
+shouldShow end function Visuals.setShowDistance(self,shouldShow)State.settings.
+shouldShowDistance=shouldShow end function Visuals.setShowBoxes(self,shouldShow)
+State.settings.shouldShowBoxes=shouldShow end function Visuals.setShowSkeleton(
+self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end function
+Visuals.setShowHealthbar(self,shouldShow)State.settings.shouldShowHealthbar=
+shouldShow end function Visuals.setShowHighlight(self,shouldShow)State.settings.
+shouldShowHighlight=shouldShow if not shouldShow then Helpers.clearHighlights()
+end end function Visuals.setShowTeammates(self,shouldShow)State.settings.
+shouldShowTeammates=shouldShow end function Visuals.setBoxColor(self,color)State
+.settings.boxColor=color end function Visuals.setTextColor(self,color)State.
+settings.textColor=color end function Visuals.setWeaponColor(self,color)State.
+settings.weaponColor=color end function Visuals.setDistanceColor(self,color)
+State.settings.distanceColor=color end function Visuals.setSkeletonColor(self,
+color)State.settings.skeletonColor=color end function Visuals.setHealthbarColor(
+self,color)State.settings.healthbarColor=color end function Visuals.
+setHealthbarOutlineColor(self,color)State.settings.healthbarOutlineColor=color
+end function Visuals.setNameOutlineColor(self,color)State.settings.
+nameOutlineColor=color end function Visuals.setWeaponOutlineColor(self,color)
+State.settings.weaponOutlineColor=color end function Visuals.
+setDistanceOutlineColor(self,color)State.settings.distanceOutlineColor=color end
+function Visuals.setBoxOutlineColor(self,color)State.settings.boxOutlineColor=
+color end function Visuals.setSkeletonOutlineColor(self,color)State.settings.
+skeletonOutlineColor=color end function Visuals.setHighlightFill(self,color)
+State.settings.highlightFill=color end function Visuals.setHighlightOutline(self
+,color)State.settings.highlightOutline=color end function Visuals.
+setBoxThickness(self,value)State.settings.boxThickness=value end function
+Visuals.setSkeletonThickness(self,value)State.settings.skeletonThickness=value
+end function Visuals.setTextSize(self,value)State.settings.textSize=value end
+function Visuals.setOutline(self,isEnabled)State.settings.shouldOutline=
+isEnabled end function Visuals.setOverrideCheck(self,check)State.overrideCheck=
+check end return Visuals end function __DARKLUA_BUNDLE_MODULES.k()local v=
+__DARKLUA_BUNDLE_MODULES.cache.k if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.k=v end return v.c end end do local function
+__modImpl()local Constants={DEFAULT_FLY_SPEED=50,INPUT_MAP={[Enum.KeyCode.W]=
+'forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]='left',[Enum.KeyCode.D]=
+'right',[Enum.KeyCode.Space]='up',[Enum.KeyCode.LeftControl]='down'}}return
+Constants end function __DARKLUA_BUNDLE_MODULES.l()local v=
+__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.l=v end return v.c end end do local function
 __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.m()local v=
 __DARKLUA_BUNDLE_MODULES.cache.m if not v then v={c=__modImpl()}
@@ -700,8 +713,9 @@ isClosestPositionEnabled=true,closestPositionWhitelist={'Head','UpperTorso',
 isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=
 100,isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
 isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
-isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,target=nil,silentTarget=nil
-,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
+isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,isRagebotEnabled=false,
+ragebotTarget=nil,ragebotHomeCFrame=nil,target=nil,silentTarget=nil,targetLostAt
+=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
 cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
 false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
 mouseBehavior=nil,mouseDeltaSensitivity=nil}return _state end function
@@ -1117,53 +1131,111 @@ task.wait(if State.isMeleeAuraEnabled or State.isTeleportAuraEnabled then
 AURA_UPDATE_INTERVAL else AURA_IDLE_INTERVAL)end end)end return MeleeMods end
 function __DARKLUA_BUNDLE_MODULES.A()local v=__DARKLUA_BUNDLE_MODULES.cache.A if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.A=v end return v.c
-end end do local function __modImpl()local UserInputService=game:GetService(
-'UserInputService')local State=__DARKLUA_BUNDLE_MODULES.u()local Constants=
-__DARKLUA_BUNDLE_MODULES.t()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
-local Visuals={}local _maid=nil local _signals={}local _state={}local function
-_updateCircle(circleId,isEnabled,radius,color,transparency,mouseLocation)local
-lib=ExecutorUtils.getDrawingLib()if not lib then return end local stateAny=State
-local circle=stateAny[circleId]if isEnabled then if not circle then circle=lib.
-new('Circle')stateAny[circleId]=circle end local c=circle c.Thickness=Constants.
-FOV_CIRCLE_THICKNESS c.NumSides=Constants.FOV_CIRCLE_NUM_SIDES c.Filled=false c.
-Color=color c.Transparency=math.clamp(transparency,0,1)c.ZIndex=2 c.Position=
-mouseLocation c.Radius=radius c.Visible=true else local c=circle if c then c.
-Visible=false end end end function Visuals.updateFovCircle()local mouseLocation=
-UserInputService:GetMouseLocation()_updateCircle('fovCircle',State.isFovEnabled,
-State.fovRadius,State.fovColor,State.fovTransparency,mouseLocation)
-_updateCircle('silentAimFovCircle',State.isSilentAimFovEnabled,State.
-silentAimFovRadius,State.silentAimFovColor,State.silentAimFovTransparency,
-mouseLocation)end return Visuals end function __DARKLUA_BUNDLE_MODULES.B()local
-v=__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
+end end do local function __modImpl()local Players=game:GetService('Players')
+local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=
+__DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.v()local
+State=__DARKLUA_BUNDLE_MODULES.u()local TARGET_REFRESH_INTERVAL=0.5 local
+UNDERGROUND_OFFSET=Vector3.new(0,-50,0)local TELEPORT_OFFSET=CFrame.new(0,0,-2)
+local Ragebot={}Ragebot.__index=Ragebot local _maid=nil local _signals={}local
+_state={lastTargetRefresh=0}local function _isRoundStarted()local duel=TeamUtils
+.getLocalDuel()if not duel or not duel.Get then return false end local ok,status
+=pcall(duel.Get,duel,'Status')if not ok then return false end return status==
+'RoundStarted'end local function _getValidTarget(localPlayer)local localChar=
+localPlayer.Character local localRoot=localChar and localChar:FindFirstChild(
+'HumanoidRootPart')if not localRoot then return nil end local closest=nil local
+closestDist=math.huge for _,player in ipairs(Players:GetPlayers())do if player==
+localPlayer then continue end if not TeamUtils.isInSameDuel(localPlayer,player)
+then continue end if TeamUtils.isSameTeam(player,localPlayer)then continue end
+local character=player.Character local humanoid=character and character:
+FindFirstChildOfClass('Humanoid')local root=character and character:
+FindFirstChild('HumanoidRootPart')if not character or not humanoid or not root
+or humanoid.Health<=0 then continue end local distance=(root.Position-localRoot.
+Position).Magnitude if distance<closestDist then closestDist=distance closest=
+player end end return closest end local function _refreshTarget(localPlayer)
+local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
+return State.ragebotTarget end _state.lastTargetRefresh=now local target=State.
+ragebotTarget if target then if not TeamUtils.isInSameDuel(localPlayer,target)
+then target=nil elseif TeamUtils.isSameTeam(target,localPlayer)then target=nil
+else local char=target.Character local hum=char and char:FindFirstChildOfClass(
+'Humanoid')if not char or not hum or hum.Health<=0 then target=nil end end end
+if not target then target=_getValidTarget(localPlayer)end State.ragebotTarget=
+target return target end local function _isReloading(item)local reloadCooldown=
+item and item._reload_cooldown if type(reloadCooldown)=='number'and tick()<
+reloadCooldown then return true end if item and item.IsEquipping and item:
+IsEquipping()then return true end local equipCooldown=item and item.
+_equip_cooldown if type(equipCooldown)=='number'and tick()<equipCooldown then
+return true end return false end local function _autoShoot(localFighter)local
+equipped=localFighter and localFighter.EquippedItem if not equipped then return
+end if equipped.Input then equipped:Input('StartShooting')return end if equipped
+.StartShooting then equipped:StartShooting()end end function Ragebot.setup(maid)
+_maid=maid end function Ragebot.update()if not State.isRagebotEnabled then
+return end local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer or
+not TeamUtils.isInDuel(localPlayer)then State.ragebotTarget=nil return end local
+localChar=localPlayer.Character local localRoot=localChar and localChar:
+FindFirstChild('HumanoidRootPart')local localHumanoid=localChar and localChar:
+FindFirstChildOfClass('Humanoid')if not localRoot or not localHumanoid or
+localHumanoid.Health<=0 then return end Helpers.fetchFighterController(State.
+logger)local localFighter=State.fighterController and State.fighterController.
+LocalFighter if localFighter and _isReloading(localFighter.EquippedItem)then if
+not State.ragebotHomeCFrame then State.ragebotHomeCFrame=localRoot.CFrame end
+localRoot.CFrame=State.ragebotHomeCFrame*CFrame.new(UNDERGROUND_OFFSET)return
+end if State.ragebotHomeCFrame then localRoot.CFrame=State.ragebotHomeCFrame
+State.ragebotHomeCFrame=nil end if not _isRoundStarted()then return end local
+target=_refreshTarget(localPlayer)if not target then return end local targetChar
+=target.Character local targetRoot=targetChar and targetChar:FindFirstChild(
+'HumanoidRootPart')if not targetRoot then return end localRoot.CFrame=targetRoot
+.CFrame*TELEPORT_OFFSET if localFighter then _autoShoot(localFighter)end end
+return Ragebot end function __DARKLUA_BUNDLE_MODULES.B()local v=
+__DARKLUA_BUNDLE_MODULES.cache.B if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.B=v end return v.c end end do local function
-__modImpl()local RunService=game:GetService('RunService')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.u()local
+__modImpl()local UserInputService=game:GetService('UserInputService')local State
+=__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()local
+ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local Visuals={}local _maid=nil local
+_signals={}local _state={}local function _updateCircle(circleId,isEnabled,radius
+,color,transparency,mouseLocation)local lib=ExecutorUtils.getDrawingLib()if not
+lib then return end local stateAny=State local circle=stateAny[circleId]if
+isEnabled then if not circle then circle=lib.new('Circle')stateAny[circleId]=
+circle end local c=circle c.Thickness=Constants.FOV_CIRCLE_THICKNESS c.NumSides=
+Constants.FOV_CIRCLE_NUM_SIDES c.Filled=false c.Color=color c.Transparency=math.
+clamp(transparency,0,1)c.ZIndex=2 c.Position=mouseLocation c.Radius=radius c.
+Visible=true else local c=circle if c then c.Visible=false end end end function
+Visuals.updateFovCircle()local mouseLocation=UserInputService:GetMouseLocation()
+_updateCircle('fovCircle',State.isFovEnabled,State.fovRadius,State.fovColor,
+State.fovTransparency,mouseLocation)_updateCircle('silentAimFovCircle',State.
+isSilentAimFovEnabled,State.silentAimFovRadius,State.silentAimFovColor,State.
+silentAimFovTransparency,mouseLocation)end return Visuals end function
+__DARKLUA_BUNDLE_MODULES.C()local v=__DARKLUA_BUNDLE_MODULES.cache.C if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end
+do local function __modImpl()local RunService=game:GetService('RunService')local
+Maid=(__DARKLUA_BUNDLE_MODULES.a())local State=__DARKLUA_BUNDLE_MODULES.u()local
 Constants=__DARKLUA_BUNDLE_MODULES.t()local Helpers=__DARKLUA_BUNDLE_MODULES.v()
 local Targeting=__DARKLUA_BUNDLE_MODULES.w()local Aimbot=
 __DARKLUA_BUNDLE_MODULES.x()local Types=__DARKLUA_BUNDLE_MODULES.s()local
 SilentAim=(__DARKLUA_BUNDLE_MODULES.y())local GunMods=(__DARKLUA_BUNDLE_MODULES.
-z())local MeleeMods=(__DARKLUA_BUNDLE_MODULES.A())local Visuals=(
-__DARKLUA_BUNDLE_MODULES.B())local Combat={}Combat.__index=Combat local _maid=
-nil local _signals={}local _state={}local function _connect()_maid:DoCleaning()
-task.spawn(function()Helpers.fetchCameraController(State.logger)end)SilentAim.
-setup(_maid)GunMods.setup(_maid)MeleeMods.setup(_maid)RunService:
-BindToRenderStep(Constants.AIMBOT_RENDER_STEP_NAME,Enum.RenderPriority.Camera.
-Value+1,function(deltaTime)Visuals.updateFovCircle()if State.isAimbotEnabled
-then local target=Targeting.resolveTarget()if target then local _isValid,
-_bestPart,_anyOnScreen,_shortestDist=Targeting.getTargetState(target)if _isValid
-and _bestPart then Helpers.applyInputLock(true)Aimbot.aimAt(target,_bestPart,
-deltaTime)else Helpers.applyInputLock(false)end else Helpers.applyInputLock(
-false)end else State.target=nil Helpers.applyInputLock(false)end if State.
-isSilentAimEnabled then Targeting.resolveSilentTarget()else State.silentTarget=
-nil end end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(Constants.
-AIMBOT_RENDER_STEP_NAME)end)end local function _disconnect()if State.fovCircle
-then pcall(function()((State.fovCircle)):Remove()end)State.fovCircle=nil end if
-State.silentAimFovCircle then pcall(function()((State.silentAimFovCircle)):
-Remove()end)State.silentAimFovCircle=nil end State.target=nil State.silentTarget
-=nil State.targetLostAt=nil State.silentTargetLostAt=nil Helpers.applyInputLock(
-false)_maid:DoCleaning()end function Combat.init(self,client)State.client=client
-State.logger=client.Logger _maid=Maid.new()_connect()end function Combat.Destroy
-(self)State.isAimbotEnabled=false _disconnect()State.isRemoteHooked=false State.
+z())local MeleeMods=(__DARKLUA_BUNDLE_MODULES.A())local Ragebot=(
+__DARKLUA_BUNDLE_MODULES.B())local Visuals=(__DARKLUA_BUNDLE_MODULES.C())local
+Combat={}Combat.__index=Combat local _maid=nil local _signals={}local _state={}
+local function _connect()_maid:DoCleaning()task.spawn(function()Helpers.
+fetchCameraController(State.logger)end)SilentAim.setup(_maid)GunMods.setup(_maid
+)MeleeMods.setup(_maid)Ragebot.setup(_maid)RunService:BindToRenderStep(Constants
+.AIMBOT_RENDER_STEP_NAME,Enum.RenderPriority.Camera.Value+1,function(deltaTime)
+Visuals.updateFovCircle()if State.isAimbotEnabled then local target=Targeting.
+resolveTarget()if target then local _isValid,_bestPart,_anyOnScreen,
+_shortestDist=Targeting.getTargetState(target)if _isValid and _bestPart then
+Helpers.applyInputLock(true)Aimbot.aimAt(target,_bestPart,deltaTime)else Helpers
+.applyInputLock(false)end else Helpers.applyInputLock(false)end else State.
+target=nil Helpers.applyInputLock(false)end if State.isSilentAimEnabled then
+Targeting.resolveSilentTarget()else State.silentTarget=nil end if State.
+isRagebotEnabled then Ragebot.update()end end)_maid:GiveTask(function()
+RunService:UnbindFromRenderStep(Constants.AIMBOT_RENDER_STEP_NAME)end)end
+local function _disconnect()if State.fovCircle then pcall(function()((State.
+fovCircle)):Remove()end)State.fovCircle=nil end if State.silentAimFovCircle then
+pcall(function()((State.silentAimFovCircle)):Remove()end)State.
+silentAimFovCircle=nil end State.target=nil State.silentTarget=nil State.
+targetLostAt=nil State.silentTargetLostAt=nil Helpers.applyInputLock(false)_maid
+:DoCleaning()end function Combat.init(self,client)State.client=client State.
+logger=client.Logger _maid=Maid.new()_connect()end function Combat.Destroy(self)
+State.isAimbotEnabled=false _disconnect()State.isRemoteHooked=false State.
 isUtilityHooked=false State.isCameraShakerHooked=false State.isGunModsHooked=
 false end function Combat.setAimbotEnabled(self,isEnabled)if State.
 isAimbotEnabled==isEnabled then return end State.isAimbotEnabled=isEnabled if
@@ -1205,9 +1277,11 @@ isEnabled end function Combat.setMeleeSkillCooldownMultiplier(self,multiplier)
 State.meleeSkillCooldownMultiplier=multiplier end function Combat.
 setMeleeAuraEnabled(self,isEnabled)State.isMeleeAuraEnabled=isEnabled end
 function Combat.setTeleportAuraEnabled(self,isEnabled)State.
-isTeleportAuraEnabled=isEnabled end return Combat end function
-__DARKLUA_BUNDLE_MODULES.C()local v=__DARKLUA_BUNDLE_MODULES.cache.C if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.C=v end return v.c end end
+isTeleportAuraEnabled=isEnabled end function Combat.setRagebotEnabled(self,
+isEnabled)State.isRagebotEnabled=isEnabled if not isEnabled then State.
+ragebotTarget=nil State.ragebotHomeCFrame=nil end end return Combat end function
+__DARKLUA_BUNDLE_MODULES.D()local v=__DARKLUA_BUNDLE_MODULES.cache.D if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end
 do local function __modImpl()local CombatTab={}CombatTab.__index=CombatTab local
 _maid=nil local _state={}local _signals={}function CombatTab.Build(tabs,context)
 local client=context.client local updateControlBindings=context.
@@ -1278,15 +1352,21 @@ selectedNames,name)end end mod:setClosestPositionWhitelist(selectedNames)end end
 Default=1,Multi=false,Text='Target Part',Tooltip=
 'Static target part when Closest Position is off',Callback=function(value)local
 mod=client.Modules.Combat if mod and mod.setTargetPart then mod:setTargetPart(
-value)end end})local gunModsGroup=tabs.combat:AddRightGroupbox('Gun Mods')
-gunModsGroup:AddToggle('GunModsNoRecoil',{Text='No Recoil',Default=false,Tooltip
-='Eliminates weapon recoil.',Callback=function(state)local mod=client.Modules.
-Combat if mod and mod.setNoRecoilEnabled then mod:setNoRecoilEnabled(state)end
-end})gunModsGroup:AddToggle('GunModsNoSpread',{Text='No Spread',Default=false,
-Tooltip='Eliminates weapon bullet spread.',Callback=function(state)local mod=
-client.Modules.Combat if mod and mod.setNoSpreadEnabled then mod:
-setNoSpreadEnabled(state)end end})gunModsGroup:AddToggle('GunModsNoMuzzleFlash',
-{Text='No Muzzle Flash',Default=false,Tooltip=
+value)end end})local ragebotGroup=tabs.combat:AddRightGroupbox('Ragebot')local
+ragebotToggle=ragebotGroup:AddToggle('CombatRagebotEnabled',{Text='Ragebot',
+Default=false,Tooltip=
+'Teleports to a duel target and auto fires on round start.',Callback=function()
+updateControlBindings()end})ragebotToggle:AddKeyPicker('CombatRagebotKeybind',{
+Default='X',NoUI=false,Text='Ragebot',SyncToggleState=false,Callback=function()
+updateControlBindings()end})local gunModsGroup=tabs.combat:AddRightGroupbox(
+'Gun Mods')gunModsGroup:AddToggle('GunModsNoRecoil',{Text='No Recoil',Default=
+false,Tooltip='Eliminates weapon recoil.',Callback=function(state)local mod=
+client.Modules.Combat if mod and mod.setNoRecoilEnabled then mod:
+setNoRecoilEnabled(state)end end})gunModsGroup:AddToggle('GunModsNoSpread',{Text
+='No Spread',Default=false,Tooltip='Eliminates weapon bullet spread.',Callback=
+function(state)local mod=client.Modules.Combat if mod and mod.setNoSpreadEnabled
+then mod:setNoSpreadEnabled(state)end end})gunModsGroup:AddToggle(
+'GunModsNoMuzzleFlash',{Text='No Muzzle Flash',Default=false,Tooltip=
 'Removes the muzzle flash effect when shooting.',Callback=function(state)local
 mod=client.Modules.Combat if mod and mod.setNoMuzzleFlashEnabled then mod:
 setNoMuzzleFlashEnabled(state)end end})gunModsGroup:AddSlider('GunModsCooldown',
@@ -1308,9 +1388,9 @@ setMeleeAttackCooldownMultiplier then mod:setMeleeAttackCooldownMultiplier(value
 [[Skill cooldown multiplier. Lower values reduce skill cooldowns.]],Compact=true
 ,Callback=function(value)local mod=client.Modules.Combat if mod and mod.
 setMeleeSkillCooldownMultiplier then mod:setMeleeSkillCooldownMultiplier(value)
-end end})end return CombatTab end function __DARKLUA_BUNDLE_MODULES.D()local v=
-__DARKLUA_BUNDLE_MODULES.cache.D if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.D=v end return v.c end end do local function
+end end})end return CombatTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
+__DARKLUA_BUNDLE_MODULES.cache.E if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end do local function
 __modImpl()local VisualsTab={}VisualsTab.__index=VisualsTab local _maid=nil
 local _state={}local _signals={}function VisualsTab.Build(tabs,context)local
 client=context.client local espGroup=tabs.visuals:AddLeftGroupbox('ESP')espGroup
@@ -1398,9 +1478,9 @@ setSkeletonThickness then mod:setSkeletonThickness(value)end end})espGroup:
 AddSlider('ESPTextSize',{Text='Text Size',Default=12,Min=10,Max=24,Rounding=0,
 Tooltip='Size of ESP text.',Compact=true,Callback=function(value)local mod=
 client.Modules.Visuals if mod and mod.setTextSize then mod:setTextSize(value)end
-end})end return VisualsTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
-__DARKLUA_BUNDLE_MODULES.cache.E if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end do local function
+end})end return VisualsTab end function __DARKLUA_BUNDLE_MODULES.F()local v=
+__DARKLUA_BUNDLE_MODULES.cache.F if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.F=v end return v.c end end do local function
 __modImpl()local UiSettingsTab={}UiSettingsTab.__index=UiSettingsTab local _maid
 =nil local _state={}local _signals={}function UiSettingsTab.Build(tabs,context)
 local library=context.library local themeManager=context.themeManager local
@@ -1426,8 +1506,8 @@ GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
 SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
 'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
 uiSettings)themeManager:ApplyToTab(tabs.uiSettings)end return UiSettingsTab end
-function __DARKLUA_BUNDLE_MODULES.F()local v=__DARKLUA_BUNDLE_MODULES.cache.F if
-not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.F=v end return v.c
+function __DARKLUA_BUNDLE_MODULES.G()local v=__DARKLUA_BUNDLE_MODULES.cache.G if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.G=v end return v.c
 end end do local function __modImpl()local MiscTab={}MiscTab.__index=MiscTab
 local _maid=nil local _state={}local _signals={}function MiscTab.Build(tabs,
 context)local client=context.client local library=context.library local
@@ -1491,39 +1571,42 @@ setSoundSpammerEnabled(state)end end})exploitsGroup:AddDropdown(
 Text='Sound',Tooltip='The sound to spam.',Callback=function(value)local mod=
 client.Modules.Player if mod and mod.setSoundSpammerType then mod:
 setSoundSpammerType(value)end end})context.setKeybindToggleMap({['Silent Aim']=
-'SilentAimEnabled',['Aimbot']='CombatAimbotEnabled',['Fly']='PlayerFly',[
-'Noclip']='PlayerNoclip',['Walk Speed']='PlayerWalkSpeedEnabled',['Jump Power']=
-'PlayerJumpPowerEnabled'})context.setControlBindings({{toggleId=
-'CombatAimbotEnabled',keybindId='CombatAimbotKeybind',last=nil,setter=function(
-active)local mod=client.Modules.Combat if mod and mod.setAimbotEnabled then mod:
-setAimbotEnabled(active)end end},{toggleId='PlayerFly',keybindId=
-'PlayerFlyKeybind',last=nil,setter=function(active)local mod=client.Modules.
-Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(active)end end},{
-toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=nil,setter=function
-(active)local mod=client.Modules.Player if mod and mod.setNoclipEnabled then mod
-:setNoclipEnabled(active)end end},{toggleId='PlayerWalkSpeedEnabled',keybindId=
-'PlayerWalkSpeedKeybind',last=nil,setter=function(active)local mod=client.
-Modules.Player if mod and mod.setWalkSpeedEnabled then mod:setWalkSpeedEnabled(
-active)end end},{toggleId='PlayerJumpPowerEnabled',keybindId=
-'PlayerJumpPowerKeybind',last=nil,setter=function(active)local mod=client.
-Modules.Player if mod and mod.setJumpPowerEnabled then mod:setJumpPowerEnabled(
-active)end end},{toggleId='SilentAimEnabled',keybindId='SilentAimKeybind',last=
-nil,setter=function(active)local mod=client.Modules.Combat if mod and mod.
-setSilentAimEnabled then mod:setSilentAimEnabled(active)end end}})local
-miscGroup=tabs.misc:AddLeftGroupbox('Auto Load')miscGroup:AddToggle(
-'TeleportQueue',{Text='Auto Load',Default=false,Tooltip=
-'Auto-load Blossom after teleport.',Callback=function(enabled)client:
+'SilentAimEnabled',['Aimbot']='CombatAimbotEnabled',['Ragebot']=
+'CombatRagebotEnabled',['Fly']='PlayerFly',['Noclip']='PlayerNoclip',[
+'Walk Speed']='PlayerWalkSpeedEnabled',['Jump Power']='PlayerJumpPowerEnabled'})
+context.setControlBindings({{toggleId='CombatAimbotEnabled',keybindId=
+'CombatAimbotKeybind',last=nil,setter=function(active)local mod=client.Modules.
+Combat if mod and mod.setAimbotEnabled then mod:setAimbotEnabled(active)end end}
+,{toggleId='CombatRagebotEnabled',keybindId='CombatRagebotKeybind',last=nil,
+setter=function(active)local mod=client.Modules.Combat if mod and mod.
+setRagebotEnabled then mod:setRagebotEnabled(active)end end},{toggleId=
+'PlayerFly',keybindId='PlayerFlyKeybind',last=nil,setter=function(active)local
+mod=client.Modules.Player if mod and mod.setFlyEnabled then mod:setFlyEnabled(
+active)end end},{toggleId='PlayerNoclip',keybindId='PlayerNoclipKeybind',last=
+nil,setter=function(active)local mod=client.Modules.Player if mod and mod.
+setNoclipEnabled then mod:setNoclipEnabled(active)end end},{toggleId=
+'PlayerWalkSpeedEnabled',keybindId='PlayerWalkSpeedKeybind',last=nil,setter=
+function(active)local mod=client.Modules.Player if mod and mod.
+setWalkSpeedEnabled then mod:setWalkSpeedEnabled(active)end end},{toggleId=
+'PlayerJumpPowerEnabled',keybindId='PlayerJumpPowerKeybind',last=nil,setter=
+function(active)local mod=client.Modules.Player if mod and mod.
+setJumpPowerEnabled then mod:setJumpPowerEnabled(active)end end},{toggleId=
+'SilentAimEnabled',keybindId='SilentAimKeybind',last=nil,setter=function(active)
+local mod=client.Modules.Combat if mod and mod.setSilentAimEnabled then mod:
+setSilentAimEnabled(active)end end}})local miscGroup=tabs.misc:AddLeftGroupbox(
+'Auto Load')miscGroup:AddToggle('TeleportQueue',{Text='Auto Load',Default=false,
+Tooltip='Auto-load Blossom after teleport.',Callback=function(enabled)client:
 setTeleportQueue(enabled)end})miscGroup:AddToggle('SilentMode',{Text=
 'Silent Mode',Default=false,Tooltip=
 'Mutes UI notifications and auto-opens silently.',Callback=function(enabled)
 setNotifyMuted(library,enabled)client:setSilent(enabled)end})end return MiscTab
-end function __DARKLUA_BUNDLE_MODULES.G()local v=__DARKLUA_BUNDLE_MODULES.cache.
-G if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.G=v end return v
+end function __DARKLUA_BUNDLE_MODULES.H()local v=__DARKLUA_BUNDLE_MODULES.cache.
+H if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.H=v end return v
 .c end end do local function __modImpl()local RunService=game:GetService(
 'RunService')local Stats=game:GetService('Stats')local Maid=(
-__DARKLUA_BUNDLE_MODULES.a())local CombatTab=__DARKLUA_BUNDLE_MODULES.D()local
-VisualsTab=__DARKLUA_BUNDLE_MODULES.E()local UiSettingsTab=
-__DARKLUA_BUNDLE_MODULES.F()local MiscTab=__DARKLUA_BUNDLE_MODULES.G()local
+__DARKLUA_BUNDLE_MODULES.a())local CombatTab=__DARKLUA_BUNDLE_MODULES.E()local
+VisualsTab=__DARKLUA_BUNDLE_MODULES.F()local UiSettingsTab=
+__DARKLUA_BUNDLE_MODULES.G()local MiscTab=__DARKLUA_BUNDLE_MODULES.H()local
 REPO_URL=[[https://raw.githubusercontent.com/violin-suzutsuki/LinoriaLib/main/]]
 local WATERMARK_TEMPLATE='Blossom | %d fps | %d ms'local
 WATERMARK_UPDATE_INTERVAL=1 local KEYBIND_LIST_UPDATE_INTERVAL=0.2 local
@@ -1676,22 +1759,22 @@ _syncUiVisibility()end function Interface.init(self,client)_state.client=client
 _state.logger=client.Logger _maid=Maid.new()_connect()_mount()end function
 Interface.Destroy(self)_maid:DoCleaning()if _state.library then _state.library:
 Unload()end _state.isMounted=false end return Interface end function
-__DARKLUA_BUNDLE_MODULES.H()local v=__DARKLUA_BUNDLE_MODULES.cache.H if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.H=v end return v.c end end
+__DARKLUA_BUNDLE_MODULES.I()local v=__DARKLUA_BUNDLE_MODULES.cache.I if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.I=v end return v.c end end
 do local function __modImpl()local ModuleRegistry={}ModuleRegistry.__index=
 ModuleRegistry local _maid=nil local _state={}local _signals={}function
 ModuleRegistry.getModules()return{{name='TeamUtils',loader=(
 __DARKLUA_BUNDLE_MODULES.e())},{name='Visuals',loader=(__DARKLUA_BUNDLE_MODULES.
 k())},{name='Player',loader=(__DARKLUA_BUNDLE_MODULES.r())},{name='Combat',
-loader=(__DARKLUA_BUNDLE_MODULES.C())},{name='Interface',loader=(
-__DARKLUA_BUNDLE_MODULES.H())}}end return ModuleRegistry end function
-__DARKLUA_BUNDLE_MODULES.I()local v=__DARKLUA_BUNDLE_MODULES.cache.I if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.I=v end return v.c end end
+loader=(__DARKLUA_BUNDLE_MODULES.D())},{name='Interface',loader=(
+__DARKLUA_BUNDLE_MODULES.I())}}end return ModuleRegistry end function
+__DARKLUA_BUNDLE_MODULES.J()local v=__DARKLUA_BUNDLE_MODULES.cache.J if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.J=v end return v.c end end
 end local ReplicatedFirst=game:GetService('ReplicatedFirst')local Players=game:
 GetService('Players')local RunService=game:GetService('RunService')local Logger=
 __DARKLUA_BUNDLE_MODULES.b()local Maid=__DARKLUA_BUNDLE_MODULES.a()local
 FastSignal=__DARKLUA_BUNDLE_MODULES.c()local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.d()local ModuleRegistry=__DARKLUA_BUNDLE_MODULES.I()
+__DARKLUA_BUNDLE_MODULES.d()local ModuleRegistry=__DARKLUA_BUNDLE_MODULES.J()
 local BUNDLE_URL=
 [[https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/build/loader.luau]]
 local CLIENT_MODULE_NAME='Client'local Client={}Client.__index=Client local

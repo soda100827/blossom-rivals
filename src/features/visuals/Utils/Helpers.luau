@@ -35,6 +35,10 @@ local function _setGroupVisible(group, isVisible: boolean)
   end
 end
 
+local function _lerpVector2(a: Vector2, b: Vector2, alpha: number): Vector2
+  return a:Lerp(b, alpha)
+end
+
 local function _updateSkeleton(skeletonLines, skeletonOutlineLines, character: Model)
   local camera = PlayerUtils.getCamera()
   local lineIndex = 1
@@ -89,6 +93,7 @@ function Helpers.clearDrawings(): ()
       end
     end
     State.drawings[player] = nil
+    State.smoothCache[player] = nil
   end
 end
 
@@ -98,6 +103,7 @@ function Helpers.clearHighlights(): ()
       (highlight :: Highlight):Destroy()
     end
     State.highlights[player] = nil
+    State.smoothCache[player] = nil
   end
 end
 
@@ -125,6 +131,7 @@ function Helpers.removePlayer(player: Player): ()
     (highlight :: Highlight):Destroy()
     State.highlights[player] = nil
   end
+  State.smoothCache[player] = nil
 end
 
 function Helpers.ensurePlayerDrawings(player: Player): any
@@ -309,16 +316,34 @@ function Helpers.render(): ()
     local boxPos = Vector2.new(rootPos.X - width / 2, rootPos.Y - height / 2)
     local boxSize = Vector2.new(width, height)
 
+    local smooth = State.smoothCache[player]
+    if not smooth then
+      smooth = {
+        rootPos = Vector2.new(rootPos.X, rootPos.Y),
+        boxPos = boxPos,
+        boxSize = boxSize,
+      }
+      State.smoothCache[player] = smooth
+    end
+    local alpha = Constants.ESP_SMOOTH_ALPHA
+    smooth.rootPos = _lerpVector2(smooth.rootPos, Vector2.new(rootPos.X, rootPos.Y), alpha)
+    smooth.boxPos = _lerpVector2(smooth.boxPos, boxPos, alpha)
+    smooth.boxSize = _lerpVector2(smooth.boxSize, boxSize, alpha)
+
+    local smoothedRootPos = smooth.rootPos
+    local smoothedBoxPos = smooth.boxPos
+    local smoothedBoxSize = smooth.boxSize
+
     if settings.shouldShowBoxes then
-      group.boxOutline.Size = boxSize
-      group.boxOutline.Position = boxPos
+      group.boxOutline.Size = smoothedBoxSize
+      group.boxOutline.Position = smoothedBoxPos
       group.boxOutline.Color = settings.boxOutlineColor
       group.boxOutline.Thickness = settings.boxThickness + 2
       group.boxOutline.Visible = true
       group.boxOutline.ZIndex = 1
 
-      group.box.Size = boxSize
-      group.box.Position = boxPos
+      group.box.Size = smoothedBoxSize
+      group.box.Position = smoothedBoxPos
       group.box.Color = settings.boxColor
       group.box.Thickness = settings.boxThickness
       group.box.Visible = true
@@ -330,16 +355,16 @@ function Helpers.render(): ()
 
     if settings.shouldShowHealthbar then
       local healthPerc = math.clamp(humanoid.Health / humanoid.MaxHealth, 0, 1)
-      local barHeight = height * healthPerc
-      group.healthbarOutline.Size = Vector2.new(4, height + 2)
-      group.healthbarOutline.Position = Vector2.new(boxPos.X - 6, boxPos.Y - 1)
+      local barHeight = smoothedBoxSize.Y * healthPerc
+      group.healthbarOutline.Size = Vector2.new(4, smoothedBoxSize.Y + 2)
+      group.healthbarOutline.Position = Vector2.new(smoothedBoxPos.X - 6, smoothedBoxPos.Y - 1)
       group.healthbarOutline.Color = settings.healthbarOutlineColor
       group.healthbarOutline.Filled = true
       group.healthbarOutline.Visible = true
       group.healthbarOutline.ZIndex = 1
 
       group.healthbar.Size = Vector2.new(2, barHeight)
-      group.healthbar.Position = Vector2.new(boxPos.X - 5, boxPos.Y + (height - barHeight))
+      group.healthbar.Position = Vector2.new(smoothedBoxPos.X - 5, smoothedBoxPos.Y + (smoothedBoxSize.Y - barHeight))
       group.healthbar.Color = settings.healthbarColor:Lerp(Color3.new(1, 0, 0), 1 - healthPerc)
       group.healthbar.Filled = true
       group.healthbar.Visible = true
@@ -357,7 +382,7 @@ function Helpers.render(): ()
         group.name.Color = settings.textColor
         group.name.Outline = settings.shouldOutline
         group.name.OutlineColor = settings.nameOutlineColor
-        group.name.Position = Vector2.new(rootPos.X, boxPos.Y - settings.textSize - 2)
+        group.name.Position = Vector2.new(smoothedRootPos.X, smoothedBoxPos.Y - settings.textSize - 2)
         group.name.Visible = true
       else
         group.name.Visible = false
@@ -371,7 +396,7 @@ function Helpers.render(): ()
           group.weapon.Color = settings.weaponColor
           group.weapon.Outline = settings.shouldOutline
           group.weapon.OutlineColor = settings.weaponOutlineColor
-          group.weapon.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
+          group.weapon.Position = Vector2.new(smoothedRootPos.X, smoothedBoxPos.Y + smoothedBoxSize.Y + 2 + textOffset)
           group.weapon.Visible = true
           textOffset += settings.textSize
         else
@@ -387,7 +412,7 @@ function Helpers.render(): ()
         group.distance.Color = settings.distanceColor
         group.distance.Outline = settings.shouldOutline
         group.distance.OutlineColor = settings.distanceOutlineColor
-        group.distance.Position = Vector2.new(rootPos.X, boxPos.Y + height + 2 + textOffset)
+        group.distance.Position = Vector2.new(smoothedRootPos.X, smoothedBoxPos.Y + smoothedBoxSize.Y + 2 + textOffset)
         group.distance.Visible = true
         textOffset += settings.textSize
       else

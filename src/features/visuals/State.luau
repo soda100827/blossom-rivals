@@ -19,6 +19,7 @@ local _state: Types.VisualsState = {
   isEnabled = false,
   drawings = {},
   highlights = {},
+  smoothCache = {},
   settings = table.clone(Constants.DEFAULT_SETTINGS),
   overrideCheck = nil,
   isEspPreviouslyEnabled = false,

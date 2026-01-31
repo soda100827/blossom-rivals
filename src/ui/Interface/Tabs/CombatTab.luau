@@ -272,6 +272,25 @@ function CombatTab.Build(tabs: any, context: BuildContext): ()
     end,
   })
 
+  local ragebotGroup = tabs.combat:AddRightGroupbox("Ragebot")
+  local ragebotToggle = ragebotGroup:AddToggle("CombatRagebotEnabled", {
+    Text = "Ragebot",
+    Default = false,
+    Tooltip = "Teleports to a duel target and auto fires on round start.",
+    Callback = function()
+      updateControlBindings()
+    end,
+  })
+  ragebotToggle:AddKeyPicker("CombatRagebotKeybind", {
+    Default = "X",
+    NoUI = false,
+    Text = "Ragebot",
+    SyncToggleState = false,
+    Callback = function()
+      updateControlBindings()
+    end,
+  })
+
   local gunModsGroup = tabs.combat:AddRightGroupbox("Gun Mods")
 
   gunModsGroup:AddToggle("GunModsNoRecoil", {

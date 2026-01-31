@@ -260,6 +260,7 @@ function MiscTab.Build(tabs: any, context: BuildContext): ()
   context.setKeybindToggleMap({
     ["Silent Aim"] = "SilentAimEnabled",
     ["Aimbot"] = "CombatAimbotEnabled",
+    ["Ragebot"] = "CombatRagebotEnabled",
     ["Fly"] = "PlayerFly",
     ["Noclip"] = "PlayerNoclip",
     ["Walk Speed"] = "PlayerWalkSpeedEnabled",
@@ -275,6 +276,17 @@ function MiscTab.Build(tabs: any, context: BuildContext): ()
         local mod = client.Modules.Combat
         if mod and mod.setAimbotEnabled then
           mod:setAimbotEnabled(active)
+        end
+      end,
+    },
+    {
+      toggleId = "CombatRagebotEnabled",
+      keybindId = "CombatRagebotKeybind",
+      last = nil,
+      setter = function(active)
+        local mod = client.Modules.Combat
+        if mod and mod.setRagebotEnabled then
+          mod:setRagebotEnabled(active)
         end
       end,
     },

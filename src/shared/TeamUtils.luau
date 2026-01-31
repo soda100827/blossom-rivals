@@ -16,6 +16,7 @@ export type TeamId = string | number | Instance | BrickColor | Color3
 export type TeamUtils = {
   init: (self: TeamUtils, client: any) -> (),
   Destroy: (self: TeamUtils) -> (),
+  getLocalDuel: () -> any,
   getPlayerTeamId: (player: Player) -> TeamId?,
   isSameTeam: (playerA: Player, playerB: Player) -> boolean,
   isInDuel: (player: Player) -> boolean,
@@ -242,6 +243,10 @@ function TeamUtils.getPlayerTeamId(player: Player): TeamId?
   local fighter = _getFighterForPlayer(controller, player)
   local fighterTeam = _getTeamFromFighter(fighter, player)
   return fighterTeam
+end
+
+function TeamUtils.getLocalDuel(): any
+  return _getLocalDuel()
 end
 
 function TeamUtils.isSameTeam(playerA: Player, playerB: Player): boolean

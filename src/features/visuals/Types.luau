@@ -43,6 +43,7 @@ export type VisualsState = {
   isEnabled: boolean,
   drawings: { [Player]: any },
   highlights: { [Player]: Highlight? },
+  smoothCache: { [Player]: any },
   settings: VisualsSettings,
   overrideCheck: (() -> boolean)?,
   isEspPreviouslyEnabled: boolean,

@@ -14,6 +14,7 @@ local Types = require("./Types")
 local SilentAim = require("./Mods/SilentAim") :: { setup: (maid: any) -> () }
 local GunMods = require("./Mods/GunMods") :: { setup: (maid: any) -> () }
 local MeleeMods = require("./Mods/MeleeMods") :: { setup: (maid: any) -> () }
+local Ragebot = require("./Mods/Ragebot") :: { setup: (maid: any) -> (), update: () -> () }
 local Visuals = require("./Systems/Visuals") :: Types.CombatVisuals
 
 --// Constants
@@ -38,6 +39,7 @@ local function _connect()
   SilentAim.setup(_maid)
   GunMods.setup(_maid)
   MeleeMods.setup(_maid)
+  Ragebot.setup(_maid)
 
   RunService:BindToRenderStep(
     Constants.AIMBOT_RENDER_STEP_NAME,
@@ -67,6 +69,10 @@ local function _connect()
         Targeting.resolveSilentTarget()
       else
         State.silentTarget = nil
+      end
+
+      if State.isRagebotEnabled then
+        Ragebot.update()
       end
     end
   )
@@ -239,6 +245,14 @@ end
 
 function Combat.setTeleportAuraEnabled(self: CombatFeature, isEnabled: boolean): ()
   State.isTeleportAuraEnabled = isEnabled
+end
+
+function Combat.setRagebotEnabled(self: CombatFeature, isEnabled: boolean): ()
+  State.isRagebotEnabled = isEnabled
+  if not isEnabled then
+    State.ragebotTarget = nil
+    State.ragebotHomeCFrame = nil
+  end
 end
 
 return Combat
