@@ -1259,25 +1259,33 @@ not checkcaller()and State.isNoSpreadEnabled and State.forcingAim then return
 true end return oldIsFullyAiming(self,...)end,State.logger,_maid)local
 oldStartShooting oldStartShooting=HookUtils.safeHook(gunMod,'StartShooting',
 function(self,...)if checkcaller()then return oldStartShooting(self,...)end
-local info=self.Info local infoStr=tostring(info)if not _state.oldShootCooldowns
-[infoStr..'_Shoot']then _state.oldShootCooldowns[infoStr..'_Shoot']=info.
-ShootCooldown end if not _state.oldShootCooldowns[infoStr..'_Burst']then _state.
-oldShootCooldowns[infoStr..'_Burst']=info.ShootBurstCooldown end if not _state.
-oldShootCooldowns[infoStr..'_Spread']then _state.oldShootCooldowns[infoStr..
-'_Spread']=info.ShootSpread end if not _state.oldShootCooldowns[infoStr..
-'_AimML']then _state.oldShootCooldowns[infoStr..'_AimML']=info.
-AimSpreadMultiplier end if not _state.oldShootCooldowns[infoStr..'_Quick']then
-_state.oldShootCooldowns[infoStr..'_Quick']=info.QuickShotSpread end local
-origShoot=_state.oldShootCooldowns[infoStr..'_Shoot']local origBurst=_state.
-oldShootCooldowns[infoStr..'_Burst']local origSpread=_state.oldShootCooldowns[
-infoStr..'_Spread']local origAimML=_state.oldShootCooldowns[infoStr..'_AimML']
-local origQuick=_state.oldShootCooldowns[infoStr..'_Quick']if State.
-isNoSpreadEnabled then info.ShootSpread=0 info.AimSpreadMultiplier=0 if info.
-QuickShotSpread then info.QuickShotSpread=0 end State.forcingAim=true end if
-State.attackCooldownMultiplier<100 then info.ShootCooldown=origShoot*(State.
+local selfAny=self local savedShootCooldown=selfAny._shoot_cooldown local
+savedReloadCooldown=selfAny._reload_cooldown local savedEquipCooldown=selfAny.
+_equip_cooldown local savedNoAmmoCooldown=selfAny._shoot_cooldown_no_ammo if
+State.isRagebotEnabled then selfAny._shoot_cooldown=0 selfAny._reload_cooldown=0
+selfAny._equip_cooldown=0 selfAny._shoot_cooldown_no_ammo=0 end local info=self.
+Info local infoStr=tostring(info)if not _state.oldShootCooldowns[infoStr..
+'_Shoot']then _state.oldShootCooldowns[infoStr..'_Shoot']=info.ShootCooldown end
+if not _state.oldShootCooldowns[infoStr..'_Burst']then _state.oldShootCooldowns[
+infoStr..'_Burst']=info.ShootBurstCooldown end if not _state.oldShootCooldowns[
+infoStr..'_Spread']then _state.oldShootCooldowns[infoStr..'_Spread']=info.
+ShootSpread end if not _state.oldShootCooldowns[infoStr..'_AimML']then _state.
+oldShootCooldowns[infoStr..'_AimML']=info.AimSpreadMultiplier end if not _state.
+oldShootCooldowns[infoStr..'_Quick']then _state.oldShootCooldowns[infoStr..
+'_Quick']=info.QuickShotSpread end local origShoot=_state.oldShootCooldowns[
+infoStr..'_Shoot']local origBurst=_state.oldShootCooldowns[infoStr..'_Burst']
+local origSpread=_state.oldShootCooldowns[infoStr..'_Spread']local origAimML=
+_state.oldShootCooldowns[infoStr..'_AimML']local origQuick=_state.
+oldShootCooldowns[infoStr..'_Quick']if State.isNoSpreadEnabled then info.
+ShootSpread=0 info.AimSpreadMultiplier=0 if info.QuickShotSpread then info.
+QuickShotSpread=0 end State.forcingAim=true end if State.
+attackCooldownMultiplier<100 then info.ShootCooldown=origShoot*(State.
 attackCooldownMultiplier/100)if info.ShootBurstCooldown then info.
 ShootBurstCooldown=origBurst*(State.attackCooldownMultiplier/100)end end local
-returns={oldStartShooting(self,...)}State.forcingAim=false info.ShootCooldown=
+returns={oldStartShooting(self,...)}State.forcingAim=false if State.
+isRagebotEnabled then selfAny._shoot_cooldown=savedShootCooldown selfAny.
+_reload_cooldown=savedReloadCooldown selfAny._equip_cooldown=savedEquipCooldown
+selfAny._shoot_cooldown_no_ammo=savedNoAmmoCooldown end info.ShootCooldown=
 origShoot if info.ShootBurstCooldown then info.ShootBurstCooldown=origBurst end
 info.ShootSpread=origSpread info.AimSpreadMultiplier=origAimML if info.
 QuickShotSpread then info.QuickShotSpread=origQuick end if State.
