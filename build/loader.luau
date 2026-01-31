@@ -1574,20 +1574,18 @@ for _,label in next,library.KeybindContainer:GetChildren()do if label:IsA(
 and name and modeText then label.Text=string.format('[%s] %s (%s)',key,name,
 modeText)end local isVisible=true if mode=='Active'then isVisible=label.
 TextColor3==library.AccentColor elseif mode=='Toggle'then if modeText then
-isVisible=modeText=='Toggle'else local mapName=name or label.Text local toggleId
-=_state.keybindToggleMap[mapName]local toggle=toggles and toggleId and toggles[
-toggleId]isVisible=toggle and toggle.Value==true or false end end label.Visible=
-isVisible if isVisible then ySize+=18 if label.TextBounds.X>xSize then xSize=
-label.TextBounds.X end end end end library.KeybindFrame.Size=UDim2.new(0,math.
-max(xSize+10,210),0,ySize+23)end local function _updateControlBindings()if not
-_state.controlBindings then return end local toggles,options=_getLinoriaGlobals(
-)if not toggles or not options then end for _,control in ipairs(_state.
-controlBindings)do local toggle=toggles and toggles[control.toggleId]local gate=
-toggle and toggle.Value==true local isActive=false if gate then local keybind=
-options and options[control.keybindId]if keybind and keybind.GetState then
-isActive=keybind:GetState()else isActive=false end end if control.last~=isActive
-then control.last=isActive control.setter(isActive)end end end local function
-_installSaveManagerExtensions(saveManager)if saveManager.
+isVisible=string.lower(modeText)=='toggle'else isVisible=true end end label.
+Visible=isVisible if isVisible then ySize+=18 if label.TextBounds.X>xSize then
+xSize=label.TextBounds.X end end end end library.KeybindFrame.Size=UDim2.new(0,
+math.max(xSize+10,210),0,ySize+23)end local function _updateControlBindings()if
+not _state.controlBindings then return end local toggles,options=
+_getLinoriaGlobals()if not toggles or not options then end for _,control in
+ipairs(_state.controlBindings)do local toggle=toggles and toggles[control.
+toggleId]local gate=toggle and toggle.Value==true local isActive=false if gate
+then local keybind=options and options[control.keybindId]if keybind and keybind.
+GetState then isActive=keybind:GetState()else isActive=false end end if control.
+last~=isActive then control.last=isActive control.setter(isActive)end end end
+local function _installSaveManagerExtensions(saveManager)if saveManager.
 _blossomBuildConfigSection then return end saveManager.
 _blossomBuildConfigSection=saveManager.BuildConfigSection saveManager.
 BuildConfigSection=function(self,tab)assert(self.Library,
