@@ -38,6 +38,7 @@ local _state = {
 	mouse1click = nil :: (() -> ())?,
 	ragebotSavedSilentAimFovRadius = nil :: number?,
 	lastWeaponSwapAt = 0,
+	isSwapReloadActive = false,
 }
 
 --// Private helpers
@@ -149,6 +150,34 @@ local function _isReloading(item: any): boolean
 	return false
 end
 
+local function _getAmmo(item: any): number?
+	if not item then
+		return nil
+	end
+	local ok, value = pcall(function()
+		if item.Get then
+			return item:Get("Ammo")
+		end
+		return nil
+	end)
+	if ok and type(value) == "number" then
+		return value
+	end
+	local ammoField = (item :: any).Ammo
+	if type(ammoField) == "number" then
+		return ammoField
+	end
+	return nil
+end
+
+local function _isOutOfAmmo(item: any): boolean
+	local ammo = _getAmmo(item)
+	if type(ammo) == "number" then
+		return ammo <= 0
+	end
+	return false
+end
+
 local function _isGunItem(equipped: any): boolean
 	if not equipped then
 		return false
@@ -189,6 +218,14 @@ local function _getDesiredWeaponSlot(): number
 	return 1
 end
 
+local function _getItemBySlot(localFighter: any, slot: number): any
+	local items = localFighter and localFighter.Items
+	if type(items) == "table" then
+		return items[slot]
+	end
+	return nil
+end
+
 local function _ensureDesiredWeapon(localFighter: any)
 	if not localFighter or not localFighter.EquipItem then
 		return
@@ -206,6 +243,18 @@ local function _ensureDesiredWeapon(localFighter: any)
 	end)
 end
 
+local function _tryStartReload(item: any)
+	if not item or not item.Input then
+		return
+	end
+	if _isReloading(item) then
+		return
+	end
+	pcall(function()
+		item:Input("StartReloading")
+	end)
+end
+
 local function _swapWeaponOnReload(localFighter: any)
 	if not State.isRagebotSwapWeaponOnReload then
 		return
@@ -214,18 +263,41 @@ local function _swapWeaponOnReload(localFighter: any)
 	if now - _state.lastWeaponSwapAt < SWAP_WEAPON_COOLDOWN then
 		return
 	end
-	_state.lastWeaponSwapAt = now
 
 	if not localFighter or not localFighter.EquipItem then
 		return
 	end
 
+	local mainSlot = _getDesiredWeaponSlot()
+	local offSlot = if mainSlot == 2 then 1 else 2
+	local mainItem = _getItemBySlot(localFighter, mainSlot)
+	local offItem = _getItemBySlot(localFighter, offSlot)
+	if not mainItem then
+		return
+	end
+
 	local equipped = localFighter.EquippedItem
-	local currentSlot = (equipped :: any) and (equipped :: any).Slot
-	local swapSlot = if currentSlot == 2 then 1 else 2
-	pcall(function()
-		localFighter:EquipItem(swapSlot)
-	end)
+	if _isOutOfAmmo(mainItem) then
+		_tryStartReload(mainItem)
+		if offItem and equipped ~= offItem then
+			_state.lastWeaponSwapAt = now
+			pcall(function()
+				localFighter:EquipItem(offSlot)
+			end)
+		end
+		_state.isSwapReloadActive = true
+		return
+	end
+
+	if _state.isSwapReloadActive then
+		if equipped ~= mainItem then
+			_state.lastWeaponSwapAt = now
+			pcall(function()
+				localFighter:EquipItem(mainSlot)
+			end)
+		end
+		_state.isSwapReloadActive = false
+	end
 end
 
 local function _refreshInputFunctions()
@@ -377,7 +449,9 @@ local function _connect()
 			return
 		end
 
-		_ensureDesiredWeapon(localFighter)
+		if not State.isRagebotSwapWeaponOnReload and not _state.isSwapReloadActive then
+			_ensureDesiredWeapon(localFighter)
+		end
 
 		_refreshTarget(localRoot)
 		local targetRoot = _state.cachedTargetRoot
@@ -386,8 +460,8 @@ local function _connect()
 		end
 
 		local equipped = _ensureGunEquipped(localFighter)
+		_swapWeaponOnReload(localFighter)
 		if equipped and _isReloading(equipped) then
-			_swapWeaponOnReload(localFighter)
 			if State.isRagebotOrbitEnabled then
 				_orbitTarget(localRoot, targetRoot)
 			end
