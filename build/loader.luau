@@ -1026,21 +1026,22 @@ MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
 _maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
 cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
 =nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
-,isInputHooked=false,isUseItemHooked=false,debugNextAt=0}local function
-_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
-localPlayer and localPlayer.Character return character and((character:
-FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
-local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
-false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
-=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
-Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
-end return true end local function _isTargetInvincible(targetRoot)if not
-targetRoot then return false end local character=targetRoot.Parent if not
-character or not character:IsA('Model')then return false end local entity=
-character:FindFirstChild('Entity')if entity and(entity).Get then local ok,inv=
-pcall((entity).Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true
-and State.logger then local now=os.clock()if now>=_state.debugNextAt then _state
-.debugNextAt=now+1 State.logger:info(
+,isInputHooked=false,isUseItemHooked=false,isUseItemHooked=false,debugNextAt=0,
+returnedToPrimary=false,lastReloadAttemptAt=0}local function _getLocalRoot()
+local localPlayer=PlayerUtils.getLocalPlayer()local character=localPlayer and
+localPlayer.Character return character and((character:FindFirstChild(
+'HumanoidRootPart')))or nil end local function _isRoundStarted()local
+localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return false end
+if not TeamUtils.isInDuel(localPlayer)then return false end local duel=TeamUtils
+.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.Get,duel,
+'Status')if isOk and status~=nil then return status=='RoundStarted'end end
+return true end local function _isTargetInvincible(targetRoot)if not targetRoot
+then return false end local character=targetRoot.Parent if not character or not
+character:IsA('Model')then return false end local entity=character:
+FindFirstChild('Entity')if entity and(entity).Get then local ok,inv=pcall((
+entity).Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true and State
+.logger then local now=os.clock()if now>=_state.debugNextAt then _state.
+debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
 inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
 type(isInvincible)=='boolean'then if isInvincible and State.logger then local
@@ -1101,30 +1102,38 @@ isRagebotSwapWeaponOnReload then return end local currentSlot=(equipped).Slot if
 currentSlot==desiredSlot then return end end pcall(function()localFighter:
 EquipItem(desiredSlot)end)end local function _tryStartReload(item)if not item or
 not item.Input then return end if _isReloading(item)then return end pcall(
-function()item:Input('StartReloading')end)end local function _swapWeaponOnReload
-(localFighter)if not State.isRagebotSwapWeaponOnReload then return end local now
-=os.clock()if now-_state.lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end
-if not localFighter or not localFighter.EquipItem then return end local equipped
-=localFighter.EquippedItem if not equipped or not _isGunItem(equipped)then
-return end if _isOutOfAmmo(equipped)then _tryStartReload(equipped)local
-currentSlot=(equipped).Slot local otherSlot=(currentSlot==1)and 2 or 1 local
-otherItem=_getItemBySlot(localFighter,otherSlot)if otherItem then _state.
-lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(otherSlot)end)end
-end end local function _refreshInputFunctions()if _state.mouse1press or _state.
-mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
-'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
-_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
-_safeCallInput(obj,inputName)if not obj or not obj.Input then return nil end
-local set_identity=ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.
-getGlobal('set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
-'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
-set_identity and get_identity then local old=get_identity()set_identity(2)local
-success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)
-if not success then if State.logger then State.logger:warn(
-'[Ragebot] SafeInput failed:',result)end return nil end return result else
-return obj:Input(inputName)end end local function _getShootCooldown(equipped)
-local info=equipped and equipped.Info local baseCooldown=(info and info.
-ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
+function()item:Input('StartReloading')_state.lastReloadAttemptAt=os.clock()end)
+end local function _swapWeaponOnReload(localFighter)if not State.
+isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
+lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
+localFighter.EquipItem then return end local equipped=localFighter.EquippedItem
+if not equipped or not _isGunItem(equipped)then return end if _isOutOfAmmo(
+equipped)then local currentSlot=(equipped).Slot local primarySlot=1 local
+secondarySlot=2 if currentSlot==primarySlot then if _state.returnedToPrimary
+then _tryStartReload(equipped)if now-_state.lastReloadAttemptAt>3 then _state.
+returnedToPrimary=false local otherItem=_getItemBySlot(localFighter,
+secondarySlot)if otherItem then _state.lastWeaponSwapAt=now pcall(function()
+localFighter:EquipItem(secondarySlot)end)end end else local otherItem=
+_getItemBySlot(localFighter,secondarySlot)if otherItem then _state.
+lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(secondarySlot)end)
+end end elseif currentSlot==secondarySlot then local otherItem=_getItemBySlot(
+localFighter,primarySlot)if otherItem then _state.returnedToPrimary=true _state.
+lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(primarySlot)end)end
+else _tryStartReload(equipped)end end end local function _refreshInputFunctions(
+)if _state.mouse1press or _state.mouse1click then return end _state.mouse1press=
+ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
+getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
+'mouse1click')end local function _safeCallInput(obj,inputName)if not obj or not
+obj.Input then return nil end local set_identity=ExecutorUtils.getGlobal(
+'setthreadidentity')or ExecutorUtils.getGlobal('set_thread_identity')local
+get_identity=ExecutorUtils.getGlobal('getthreadidentity')or ExecutorUtils.
+getGlobal('get_thread_identity')if set_identity and get_identity then local old=
+get_identity()set_identity(2)local success,result=pcall(function()return obj:
+Input(inputName)end)set_identity(old)if not success then if State.logger then
+State.logger:warn('[Ragebot] SafeInput failed:',result)end return nil end return
+result else return obj:Input(inputName)end end local function _getShootCooldown(
+equipped)local info=equipped and equipped.Info local baseCooldown=(info and info
+.ShootCooldown)or 0.1 local multiplier=State.attackCooldownMultiplier if type(
 multiplier)=='number'and multiplier>0 and multiplier<100 then baseCooldown=
 baseCooldown*(multiplier/100)end return math.max(baseCooldown,0.02)end
 local function _equippedItemInput(localFighter,equipped,inputName)if equipped
