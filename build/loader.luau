@@ -1578,23 +1578,25 @@ local WATERMARK_TEMPLATE='Blossom | %d fps | %d ms'local
 WATERMARK_UPDATE_INTERVAL=1 local KEYBIND_LIST_UPDATE_INTERVAL=0.2 local
 CONTROL_BINDINGS_UPDATE_INTERVAL=0.05 local Interface={}Interface.__index=
 Interface local _maid=nil local _state={client=nil,logger=nil,library=nil,
-themeManager=nil,saveManager=nil,isMounted=false,controlBindings=nil,watermark={
+themeManager=nil,saveManager=nil,isMounted=false,controlBindings=nil,
+cachedToggles=nil,cachedOptions=nil,keybindListMode='Active',watermark={
 lastSample=0,frameCount=0},lastKeybindListUpdate=0,lastControlBindingsUpdate=0,
 keybindToggleMap={}}local _signals={}local _env=((getfenv)(0))local _writefile=
 _env.writefile local _readfile=_env.readfile local _isfile=_env.isfile local
 _delfile=_env.delfile local function _getLinoriaGlobals()local getfenvAny=
 getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local toggles=(
 getgenvFunc and getgenvFunc().Toggles)or _G.Toggles local options=(getgenvFunc
-and getgenvFunc().Options)or _G.Options return toggles,options end
-local function _getPingMs()local pingMs=0 local pcallAny=pcall local success,
-value=pcallAny(function()local statsService=Stats local stat=statsService.
-Network.ServerStatsItem['Data Ping']return stat:GetValue()end)if success and
-type(value)=='number'then pingMs=math.floor(value+0.5)end return pingMs end
-local function _setKeybindListVisible(isVisible)local library=_state.library if
-not library then return end local keybindFrame=library.KeybindFrame if
-keybindFrame then keybindFrame.Visible=isVisible end end local function
-_setWatermarkVisible(isVisible)local library=_state.library if not library or
-not library.SetWatermarkVisibility then return end library:
+and getgenvFunc().Options)or _G.Options if toggles then _state.cachedToggles=
+toggles end if options then _state.cachedOptions=options end return _state.
+cachedToggles,_state.cachedOptions end local function _getPingMs()local pingMs=0
+local pcallAny=pcall local success,value=pcallAny(function()local statsService=
+Stats local stat=statsService.Network.ServerStatsItem['Data Ping']return stat:
+GetValue()end)if success and type(value)=='number'then pingMs=math.floor(value+
+0.5)end return pingMs end local function _setKeybindListVisible(isVisible)local
+library=_state.library if not library then return end local keybindFrame=library
+.KeybindFrame if keybindFrame then keybindFrame.Visible=isVisible end end
+local function _setWatermarkVisible(isVisible)local library=_state.library if
+not library or not library.SetWatermarkVisibility then return end library:
 SetWatermarkVisibility(isVisible)end local function _syncUiVisibility()local
 toggles=_getLinoriaGlobals()if not toggles then return end local keybindsToggle=
 toggles.UIShowKeybindList if keybindsToggle then _setKeybindListVisible(
@@ -1612,31 +1614,31 @@ watermark.frameCount/(now-watermark.lastSample))watermark.frameCount=0 watermark
 _getPingMs()))end local function _extractKeybindParts(text)local key,name,mode=
 text:match('^%[([^%]]+)%]%s*(.-)%s*%(([^%)]*)%)$')if key and name and mode then
 return key,name,mode end return nil,nil,nil end local function
-_getKeybindListMode()local _,options=_getLinoriaGlobals()if not options then
-return'All'end local option=options.UIKeybindListMode if option and option.Value
-then return option.Value end return'All'end local function _updateKeybindList()
-local library=_state.library if not library or not library.KeybindContainer or
-not library.KeybindFrame then return end local toggles=_getLinoriaGlobals()local
-mode=_getKeybindListMode()local ySize=0 local xSize=0 for _,label in next,
-library.KeybindContainer:GetChildren()do if label:IsA('TextLabel')then local key
-,name,modeText=_extractKeybindParts(label.Text)if key and name and modeText then
-label.Text=string.format('[%s] %s (%s)',key,name,modeText)end local isVisible=
-true if mode=='Active'then isVisible=label.TextColor3==library.AccentColor
-elseif mode=='Toggle'then local mapName=name or label.Text local toggleId=_state
-.keybindToggleMap[mapName]local toggle=toggles and toggleId and toggles[toggleId
-]isVisible=toggle and toggle.Value==true or false end label.Visible=isVisible if
-isVisible then ySize+=18 if label.TextBounds.X>xSize then xSize=label.TextBounds
-.X end end end end library.KeybindFrame.Size=UDim2.new(0,math.max(xSize+10,210),
-0,ySize+23)end local function _updateControlBindings()if not _state.
-controlBindings then return end local toggles,options=_getLinoriaGlobals()if not
-toggles or not options then end for _,control in ipairs(_state.controlBindings)
-do local toggle=toggles and toggles[control.toggleId]local gate=toggle and
-toggle.Value==true local isActive=false if gate then local keybind=options and
-options[control.keybindId]if keybind and keybind.GetState then isActive=keybind:
-GetState()else isActive=false end end if control.last~=isActive then control.
-last=isActive control.setter(isActive)end end end local function
-_installSaveManagerExtensions(saveManager)if saveManager.
-_blossomBuildConfigSection then return end saveManager.
+_getKeybindListMode()local _,options=_getLinoriaGlobals()if options then local
+option=options.UIKeybindListMode if option and option.Value then _state.
+keybindListMode=option.Value end end return _state.keybindListMode end
+local function _updateKeybindList()local library=_state.library if not library
+or not library.KeybindContainer or not library.KeybindFrame then return end
+local toggles=_getLinoriaGlobals()local mode=_getKeybindListMode()local ySize=0
+local xSize=0 for _,label in next,library.KeybindContainer:GetChildren()do if
+label:IsA('TextLabel')then local key,name,modeText=_extractKeybindParts(label.
+Text)if key and name and modeText then label.Text=string.format('[%s] %s (%s)',
+key,name,modeText)end local isVisible=true if mode=='Active'then isVisible=label
+.TextColor3==library.AccentColor elseif mode=='Toggle'then local mapName=name or
+label.Text local toggleId=_state.keybindToggleMap[mapName]local toggle=toggles
+and toggleId and toggles[toggleId]isVisible=toggle and toggle.Value==true or
+false end label.Visible=isVisible if isVisible then ySize+=18 if label.
+TextBounds.X>xSize then xSize=label.TextBounds.X end end end end library.
+KeybindFrame.Size=UDim2.new(0,math.max(xSize+10,210),0,ySize+23)end
+local function _updateControlBindings()if not _state.controlBindings then return
+end local toggles,options=_getLinoriaGlobals()if not toggles or not options then
+end for _,control in ipairs(_state.controlBindings)do local toggle=toggles and
+toggles[control.toggleId]local gate=toggle and toggle.Value==true local isActive
+=false if gate then local keybind=options and options[control.keybindId]if
+keybind and keybind.GetState then isActive=keybind:GetState()else isActive=false
+end end if control.last~=isActive then control.last=isActive control.setter(
+isActive)end end end local function _installSaveManagerExtensions(saveManager)if
+saveManager._blossomBuildConfigSection then return end saveManager.
 _blossomBuildConfigSection=saveManager.BuildConfigSection saveManager.
 BuildConfigSection=function(self,tab)assert(self.Library,
 'Must set SaveManager.Library')local section=tab:AddRightGroupbox(

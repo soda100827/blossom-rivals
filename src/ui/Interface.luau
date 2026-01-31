@@ -37,6 +37,9 @@ local _state = {
   saveManager = nil :: any,
   isMounted = false,
   controlBindings = nil :: any,
+  cachedToggles = nil :: any,
+  cachedOptions = nil :: any,
+  keybindListMode = "Active",
   watermark = {
     lastSample = 0,
     frameCount = 0,
@@ -59,7 +62,13 @@ local function _getLinoriaGlobals(): (any, any)
   local getgenvFunc = env.getgenv
   local toggles = (getgenvFunc and getgenvFunc().Toggles) or _G.Toggles
   local options = (getgenvFunc and getgenvFunc().Options) or _G.Options
-  return toggles, options
+  if toggles then
+    _state.cachedToggles = toggles
+  end
+  if options then
+    _state.cachedOptions = options
+  end
+  return _state.cachedToggles, _state.cachedOptions
 end
 
 local function _getPingMs(): number
@@ -154,14 +163,13 @@ end
 
 local function _getKeybindListMode(): string
   local _, options = _getLinoriaGlobals()
-  if not options then
-    return "All"
+  if options then
+    local option = options.UIKeybindListMode
+    if option and option.Value then
+      _state.keybindListMode = option.Value
+    end
   end
-  local option = options.UIKeybindListMode
-  if option and option.Value then
-    return option.Value
-  end
-  return "All"
+  return _state.keybindListMode
 end
 
 local function _updateKeybindList()
