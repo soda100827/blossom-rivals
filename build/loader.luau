@@ -1108,16 +1108,15 @@ if not localFighter or not localFighter.EquipItem then return end local equipped
 =localFighter.EquippedItem if not equipped or not _isGunItem(equipped)then
 return end if _isOutOfAmmo(equipped)then _tryStartReload(equipped)local
 currentSlot=(equipped).Slot local otherSlot=(currentSlot==1)and 2 or 1 local
-otherItem=_getItemBySlot(localFighter,otherSlot)if otherItem and not
-_isOutOfAmmo(otherItem)then _state.lastWeaponSwapAt=now pcall(function()
-localFighter:EquipItem(otherSlot)end)end end end local function
-_refreshInputFunctions()if _state.mouse1press or _state.mouse1click then return
-end _state.mouse1press=ExecutorUtils.getGlobal('mouse1press')_state.
-mouse1release=ExecutorUtils.getGlobal('mouse1release')_state.mouse1click=
-ExecutorUtils.getGlobal('mouse1click')end local function _safeCallInput(obj,
-inputName)if not obj or not obj.Input then return nil end local set_identity=
-ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.getGlobal(
-'set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
+otherItem=_getItemBySlot(localFighter,otherSlot)if otherItem then _state.
+lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(otherSlot)end)end
+end end local function _refreshInputFunctions()if _state.mouse1press or _state.
+mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
+'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
+_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
+_safeCallInput(obj,inputName)if not obj or not obj.Input then return nil end
+local set_identity=ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.
+getGlobal('set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
 'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
 set_identity and get_identity then local old=get_identity()set_identity(2)local
 success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)

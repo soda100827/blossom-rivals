@@ -360,8 +360,8 @@ local function _swapWeaponOnReload(localFighter: any)
 		local otherSlot = (currentSlot == 1) and 2 or 1
 		local otherItem = _getItemBySlot(localFighter, otherSlot)
 
-		-- Only swap if the other item exists and HAS AMMO (don't swap to an empty gun)
-		if otherItem and not _isOutOfAmmo(otherItem) then
+		-- Only swap if the other item exists (allow swapping even if empty to maintain cycle)
+		if otherItem then
 			_state.lastWeaponSwapAt = now
 			pcall(function()
 				localFighter:EquipItem(otherSlot)
