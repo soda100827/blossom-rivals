@@ -308,6 +308,11 @@ local function _ensureDesiredWeapon(localFighter: any)
 	local desiredSlot = _getDesiredWeaponSlot()
 	local equipped = localFighter.EquippedItem
 	if equipped and _isGunItem(equipped) then
+		-- If Swap On Reload is enabled, we basically allow any gun as long as it handles itself
+		if State.isRagebotSwapWeaponOnReload then
+			return
+		end
+
 		local currentSlot = (equipped :: any).Slot
 		if currentSlot == desiredSlot then
 			return
@@ -343,35 +348,25 @@ local function _swapWeaponOnReload(localFighter: any)
 		return
 	end
 
-	local mainSlot = _getDesiredWeaponSlot()
-	local offSlot = if mainSlot == 2 then 1 else 2
-	local mainItem = _getItemBySlot(localFighter, mainSlot)
-	local offItem = _getItemBySlot(localFighter, offSlot)
-	if not mainItem then
-		return
-	end
-
 	local equipped = localFighter.EquippedItem
-	if _isOutOfAmmo(mainItem) then
-		_tryStartReload(mainItem)
-		if offItem and equipped ~= offItem then
-			_state.lastWeaponSwapAt = now
-			pcall(function()
-				localFighter:EquipItem(offSlot)
-			end)
-		end
-		_state.isSwapReloadActive = true
+	if not equipped or not _isGunItem(equipped) then
 		return
 	end
 
-	if _state.isSwapReloadActive then
-		if equipped ~= mainItem then
+	if _isOutOfAmmo(equipped) then
+		_tryStartReload(equipped)
+
+		local currentSlot = (equipped :: any).Slot
+		local otherSlot = (currentSlot == 1) and 2 or 1
+		local otherItem = _getItemBySlot(localFighter, otherSlot)
+
+		-- Only swap if the other item exists and HAS AMMO (don't swap to an empty gun)
+		if otherItem and not _isOutOfAmmo(otherItem) then
 			_state.lastWeaponSwapAt = now
 			pcall(function()
-				localFighter:EquipItem(mainSlot)
+				localFighter:EquipItem(otherSlot)
 			end)
 		end
-		_state.isSwapReloadActive = false
 	end
 end
 

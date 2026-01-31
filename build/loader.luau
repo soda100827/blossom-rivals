@@ -1096,30 +1096,28 @@ local items=localFighter and localFighter.Items if type(items)=='table'then
 return items[slot]end return nil end local function _ensureDesiredWeapon(
 localFighter)if not localFighter or not localFighter.EquipItem then return end
 local desiredSlot=_getDesiredWeaponSlot()local equipped=localFighter.
-EquippedItem if equipped and _isGunItem(equipped)then local currentSlot=(
-equipped).Slot if currentSlot==desiredSlot then return end end pcall(function()
-localFighter:EquipItem(desiredSlot)end)end local function _tryStartReload(item)
-if not item or not item.Input then return end if _isReloading(item)then return
-end pcall(function()item:Input('StartReloading')end)end local function
-_swapWeaponOnReload(localFighter)if not State.isRagebotSwapWeaponOnReload then
-return end local now=os.clock()if now-_state.lastWeaponSwapAt<
-SWAP_WEAPON_COOLDOWN then return end if not localFighter or not localFighter.
-EquipItem then return end local mainSlot=_getDesiredWeaponSlot()local offSlot=if
-mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(localFighter,mainSlot)
-local offItem=_getItemBySlot(localFighter,offSlot)if not mainItem then return
-end local equipped=localFighter.EquippedItem if _isOutOfAmmo(mainItem)then
-_tryStartReload(mainItem)if offItem and equipped~=offItem then _state.
-lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(offSlot)end)end
-_state.isSwapReloadActive=true return end if _state.isSwapReloadActive then if
-equipped~=mainItem then _state.lastWeaponSwapAt=now pcall(function()localFighter
-:EquipItem(mainSlot)end)end _state.isSwapReloadActive=false end end
-local function _refreshInputFunctions()if _state.mouse1press or _state.
-mouse1click then return end _state.mouse1press=ExecutorUtils.getGlobal(
-'mouse1press')_state.mouse1release=ExecutorUtils.getGlobal('mouse1release')
-_state.mouse1click=ExecutorUtils.getGlobal('mouse1click')end local function
-_safeCallInput(obj,inputName)if not obj or not obj.Input then return nil end
-local set_identity=ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.
-getGlobal('set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
+EquippedItem if equipped and _isGunItem(equipped)then if State.
+isRagebotSwapWeaponOnReload then return end local currentSlot=(equipped).Slot if
+currentSlot==desiredSlot then return end end pcall(function()localFighter:
+EquipItem(desiredSlot)end)end local function _tryStartReload(item)if not item or
+not item.Input then return end if _isReloading(item)then return end pcall(
+function()item:Input('StartReloading')end)end local function _swapWeaponOnReload
+(localFighter)if not State.isRagebotSwapWeaponOnReload then return end local now
+=os.clock()if now-_state.lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end
+if not localFighter or not localFighter.EquipItem then return end local equipped
+=localFighter.EquippedItem if not equipped or not _isGunItem(equipped)then
+return end if _isOutOfAmmo(equipped)then _tryStartReload(equipped)local
+currentSlot=(equipped).Slot local otherSlot=(currentSlot==1)and 2 or 1 local
+otherItem=_getItemBySlot(localFighter,otherSlot)if otherItem and not
+_isOutOfAmmo(otherItem)then _state.lastWeaponSwapAt=now pcall(function()
+localFighter:EquipItem(otherSlot)end)end end end local function
+_refreshInputFunctions()if _state.mouse1press or _state.mouse1click then return
+end _state.mouse1press=ExecutorUtils.getGlobal('mouse1press')_state.
+mouse1release=ExecutorUtils.getGlobal('mouse1release')_state.mouse1click=
+ExecutorUtils.getGlobal('mouse1click')end local function _safeCallInput(obj,
+inputName)if not obj or not obj.Input then return nil end local set_identity=
+ExecutorUtils.getGlobal('setthreadidentity')or ExecutorUtils.getGlobal(
+'set_thread_identity')local get_identity=ExecutorUtils.getGlobal(
 'getthreadidentity')or ExecutorUtils.getGlobal('get_thread_identity')if
 set_identity and get_identity then local old=get_identity()set_identity(2)local
 success,result=pcall(function()return obj:Input(inputName)end)set_identity(old)
