@@ -305,7 +305,10 @@ function Targeting.getClosestSilentTarget(): BasePart?
 
     local bestPart, isAnyOnScreen, distSq =
       _getBestPartForCharacter(entity :: Model, camera, localPlayer.Character, mouseLocation)
-    if not isAnyOnScreen or not bestPart then
+    if not bestPart then
+      continue
+    end
+    if not isAnyOnScreen and not State.isRagebotEnabled then
       continue
     end
 
