@@ -28,6 +28,8 @@ local _state = {
   cachedLocalRoot = nil :: BasePart?,
   lastLocalCacheUpdate = 0,
   lastFighterFetch = 0,
+  hookedItems = {} :: { [any]: boolean },
+  checkcaller = nil :: any,
 }
 
 --// Private helpers
@@ -82,12 +84,40 @@ local function _getClosestEnemy(localPlayer: Player, localRoot: BasePart): (Play
   return closestPlayer, closestRoot
 end
 
+local function _hookMeleeStartShooting(itemMod: any)
+  if _state.hookedItems[itemMod] then
+    return
+  end
+  _state.hookedItems[itemMod] = true
+
+  local oldStartShooting
+  oldStartShooting = HookUtils.safeHook(itemMod, "StartShooting", function(self, ...)
+    local checkcaller = _state.checkcaller
+    if checkcaller and not checkcaller() then
+      local info = (self :: any).Info
+      local originalCooldown = info and info.AttackCooldown
+      if type(originalCooldown) == "number" then
+        info.AttackCooldown = originalCooldown * (State.meleeAttackCooldownMultiplier / 100)
+      end
+
+      local result = table.pack(oldStartShooting(self, ...))
+
+      if type(originalCooldown) == "number" then
+        info.AttackCooldown = originalCooldown
+      end
+      return table.unpack(result)
+    end
+    return oldStartShooting(self, ...)
+  end, State.logger, _maid)
+end
+
 --// Public API
 function MeleeMods.setup(maid: any): ()
   _maid = maid
   local checkcaller = ExecutorUtils.getGlobal("checkcaller") or function()
     return false
   end
+  _state.checkcaller = checkcaller
 
   local isRunning = true
   if _maid then
@@ -137,9 +167,23 @@ function MeleeMods.setup(maid: any): ()
       end, State.logger, _maid)
     end
 
-    -- Hook specific melee items for StartAiming (Skills)
+    -- Hook melee items for StartShooting (Attack Cooldown)
     local itemModules = Helpers.getItemModules()
     if itemModules then
+      for _, itemScript in ipairs(itemModules:GetChildren()) do
+        if itemScript:IsA("ModuleScript") then
+          pcall(function()
+            local dynamicRequire = require :: any
+            local itemMod = dynamicRequire(itemScript)
+            local info = itemMod and itemMod.Info
+            if itemMod and itemMod.StartShooting and info and info.AttackCooldown then
+              _hookMeleeStartShooting(itemMod)
+            end
+          end)
+        end
+      end
+
+      -- Hook specific melee items for StartAiming (Skills)
       local itemsToHook = { "Katana", "Scythe", "BowieKnife" }
       for _, itemName in ipairs(itemsToHook) do
         local itemScript = itemModules:FindFirstChild(itemName)
