@@ -705,101 +705,102 @@ __DARKLUA_BUNDLE_MODULES.t()local _maid=nil local _signals={}local _state={
 client=nil,logger=nil,isAimbotEnabled=false,isSilentAimEnabled=false,
 isRagebotEnabled=false,isFovEnabled=true,isSilentAimFovEnabled=true,
 isRagebotOrbitEnabled=true,isRagebotSwapWeaponOnReload=false,ragebotWeaponSlot=
-'Primary',ragebotOrbitRadius=100000,ragebotOrbitSpeed=12,fovRadius=100,
-silentAimFovRadius=100,fovColor=Constants.FOV_CIRCLE_COLOR,silentAimFovColor=
-Constants.FOV_CIRCLE_COLOR,fovTransparency=0,silentAimFovTransparency=0,
-silentHitChance=100,targetPart='Head',isManipulationEnabled=false,
-isAntiKatanaEnabled=false,isClosestPositionEnabled=true,closestPositionWhitelist
-={'Head','UpperTorso','LowerTorso','LeftUpperArm','RightUpperArm','LeftUpperLeg'
-,'RightUpperLeg','LowerTorso'},isWallCheckEnabled=false,smoothness=0,
-isNoRecoilEnabled=false,isNoSpreadEnabled=false,isNoMuzzleFlashEnabled=false,
-attackCooldownMultiplier=100,isMeleeAttackCooldownEnabled=false,
-meleeAttackCooldownMultiplier=100,isMeleeSkillCooldownEnabled=false,
-meleeSkillCooldownMultiplier=100,isMeleeAuraEnabled=false,isTeleportAuraEnabled=
-false,target=nil,silentTarget=nil,targetLostAt=nil,silentTargetLostAt=nil,
-fovCircle=nil,silentAimFovCircle=nil,cameraController=nil,fighterController=nil,
-isRemoteHooked=false,isUtilityHooked=false,isCameraShakerHooked=false,
-isGunModsHooked=false,isInputLocked=false,mouseBehavior=nil,
-mouseDeltaSensitivity=nil,ragebotSavedSilentAimEnabled=nil,
-ragebotSavedAttackCooldownMultiplier=nil}return _state end function
-__DARKLUA_BUNDLE_MODULES.u()local v=__DARKLUA_BUNDLE_MODULES.cache.u if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end
-do local function __modImpl()local Players=game:GetService('Players')local
-UserInputService=game:GetService('UserInputService')local ReplicatedStorage=game
-:GetService('ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()
-local State=__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES
-.t()local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}
-local _state={}function Helpers.getUtility()local modules=ReplicatedStorage:
-WaitForChild('Modules',5)if not modules then return nil end local utility=
-modules:WaitForChild('Utility',5)if not utility then return nil end local
-success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(utility)end)return success and result or nil end function Helpers
-.getGameplayUtility()local modules=ReplicatedStorage:WaitForChild('Modules',5)if
-not modules then return nil end local utility=modules:WaitForChild(
-'GameplayUtility',5)if not utility then return nil end local success,result=
-pcall(function()local dynamicRequire=require return dynamicRequire(utility)end)
-return success and result or nil end function Helpers.getCameraShaker()local
-localPlayer=Players.LocalPlayer if not localPlayer then return nil end local
-playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
-then return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
-modules then return nil end local cameraShaker=modules:WaitForChild(
-'CameraShaker',5)if not cameraShaker then return nil end local success,result=
-pcall(function()local dynamicRequire=require return dynamicRequire(cameraShaker)
-end)return success and result or nil end function Helpers.applyInputLock(
-isLocked)if isLocked and State.smoothness<Constants.MAX_SMOOTHNESS then return
-end if isLocked==State.isInputLocked then return end if isLocked then if State.
-mouseBehavior==nil then State.mouseBehavior=UserInputService.MouseBehavior end
-if State.mouseDeltaSensitivity==nil then State.mouseDeltaSensitivity=
-UserInputService.MouseDeltaSensitivity end UserInputService.MouseBehavior=Enum.
-MouseBehavior.LockCenter UserInputService.MouseDeltaSensitivity=0 else local
-restoreBehavior=State.mouseBehavior or Enum.MouseBehavior.Default local
-restoreSensitivity=State.mouseDeltaSensitivity or 1 UserInputService.
-MouseBehavior=restoreBehavior UserInputService.MouseDeltaSensitivity=
-restoreSensitivity State.mouseBehavior=nil State.mouseDeltaSensitivity=nil end
-State.isInputLocked=isLocked end function Helpers.isMaxSmoothness()return State.
-smoothness>=Constants.MAX_SMOOTHNESS end function Helpers.fetchCameraController(
-logger)if State.cameraController then return end local player=PlayerUtils.
-getLocalPlayer()if not player then return end local playerScripts=player:
-WaitForChild('PlayerScripts')if not playerScripts then return end local
-controllers=playerScripts:WaitForChild('Controllers')if not controllers then
-return end local camControllerScript=controllers:WaitForChild('CameraController'
-)if camControllerScript and camControllerScript:IsA('ModuleScript')then local
-success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(camControllerScript)end)if success then State.cameraController=
-result else if logger then logger:error('Failed CameraController',result)end end
-end end function Helpers.fetchFighterController(logger)if State.
-fighterController then return end local player=PlayerUtils.getLocalPlayer()if
-not player then return end local playerScripts=player:WaitForChild(
-'PlayerScripts',10)if not playerScripts then return end local controllers=
-playerScripts:WaitForChild('Controllers',10)if not controllers then return end
-local fighterControllerScript=controllers:WaitForChild('FighterController',5)if
-fighterControllerScript and fighterControllerScript:IsA('ModuleScript')then
+'Primary',ragebotOrbitRadius=100000,ragebotOrbitSpeed=12,ragebotOffset=Vector3.
+zero,fovRadius=100,silentAimFovRadius=100,fovColor=Constants.FOV_CIRCLE_COLOR,
+silentAimFovColor=Constants.FOV_CIRCLE_COLOR,fovTransparency=0,
+silentAimFovTransparency=0,silentHitChance=100,targetPart='Head',
+isManipulationEnabled=false,isAntiKatanaEnabled=false,isClosestPositionEnabled=
+true,closestPositionWhitelist={'Head','UpperTorso','LowerTorso','LeftUpperArm',
+'RightUpperArm','LeftUpperLeg','RightUpperLeg','LowerTorso'},isWallCheckEnabled=
+false,smoothness=0,isNoRecoilEnabled=false,isNoSpreadEnabled=false,
+isNoMuzzleFlashEnabled=false,attackCooldownMultiplier=100,
+isMeleeAttackCooldownEnabled=false,meleeAttackCooldownMultiplier=100,
+isMeleeSkillCooldownEnabled=false,meleeSkillCooldownMultiplier=100,
+isMeleeAuraEnabled=false,isTeleportAuraEnabled=false,target=nil,silentTarget=nil
+,targetLostAt=nil,silentTargetLostAt=nil,fovCircle=nil,silentAimFovCircle=nil,
+cameraController=nil,fighterController=nil,isRemoteHooked=false,isUtilityHooked=
+false,isCameraShakerHooked=false,isGunModsHooked=false,isInputLocked=false,
+mouseBehavior=nil,mouseDeltaSensitivity=nil,ragebotSavedSilentAimEnabled=nil,
+ragebotSavedAttackCooldownMultiplier=nil,ragebotSavedSilentAimFovRadius=nil}
+return _state end function __DARKLUA_BUNDLE_MODULES.u()local v=
+__DARKLUA_BUNDLE_MODULES.cache.u if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.u=v end return v.c end end do local function
+__modImpl()local Players=game:GetService('Players')local UserInputService=game:
+GetService('UserInputService')local ReplicatedStorage=game:GetService(
+'ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=
+__DARKLUA_BUNDLE_MODULES.u()local Constants=__DARKLUA_BUNDLE_MODULES.t()local
+Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}local _state=
+{}function Helpers.getUtility()local modules=ReplicatedStorage:WaitForChild(
+'Modules',5)if not modules then return nil end local utility=modules:
+WaitForChild('Utility',5)if not utility then return nil end local success,result
+=pcall(function()local dynamicRequire=require return dynamicRequire(utility)end)
+return success and result or nil end function Helpers.getGameplayUtility()local
+modules=ReplicatedStorage:WaitForChild('Modules',5)if not modules then return
+nil end local utility=modules:WaitForChild('GameplayUtility',5)if not utility
+then return nil end local success,result=pcall(function()local dynamicRequire=
+require return dynamicRequire(utility)end)return success and result or nil end
+function Helpers.getCameraShaker()local localPlayer=Players.LocalPlayer if not
+localPlayer then return nil end local playerScripts=localPlayer:WaitForChild(
+'PlayerScripts',5)if not playerScripts then return nil end local modules=
+playerScripts:WaitForChild('Modules',5)if not modules then return nil end local
+cameraShaker=modules:WaitForChild('CameraShaker',5)if not cameraShaker then
+return nil end local success,result=pcall(function()local dynamicRequire=require
+return dynamicRequire(cameraShaker)end)return success and result or nil end
+function Helpers.applyInputLock(isLocked)if isLocked and State.smoothness<
+Constants.MAX_SMOOTHNESS then return end if isLocked==State.isInputLocked then
+return end if isLocked then if State.mouseBehavior==nil then State.mouseBehavior
+=UserInputService.MouseBehavior end if State.mouseDeltaSensitivity==nil then
+State.mouseDeltaSensitivity=UserInputService.MouseDeltaSensitivity end
+UserInputService.MouseBehavior=Enum.MouseBehavior.LockCenter UserInputService.
+MouseDeltaSensitivity=0 else local restoreBehavior=State.mouseBehavior or Enum.
+MouseBehavior.Default local restoreSensitivity=State.mouseDeltaSensitivity or 1
+UserInputService.MouseBehavior=restoreBehavior UserInputService.
+MouseDeltaSensitivity=restoreSensitivity State.mouseBehavior=nil State.
+mouseDeltaSensitivity=nil end State.isInputLocked=isLocked end function Helpers.
+isMaxSmoothness()return State.smoothness>=Constants.MAX_SMOOTHNESS end function
+Helpers.fetchCameraController(logger)if State.cameraController then return end
+local player=PlayerUtils.getLocalPlayer()if not player then return end local
+playerScripts=player:WaitForChild('PlayerScripts')if not playerScripts then
+return end local controllers=playerScripts:WaitForChild('Controllers')if not
+controllers then return end local camControllerScript=controllers:WaitForChild(
+'CameraController')if camControllerScript and camControllerScript:IsA(
+'ModuleScript')then local success,result=pcall(function()local dynamicRequire=
+require return dynamicRequire(camControllerScript)end)if success then State.
+cameraController=result else if logger then logger:error(
+'Failed CameraController',result)end end end end function Helpers.
+fetchFighterController(logger)if State.fighterController then return end local
+player=PlayerUtils.getLocalPlayer()if not player then return end local
+playerScripts=player:WaitForChild('PlayerScripts',10)if not playerScripts then
+return end local controllers=playerScripts:WaitForChild('Controllers',10)if not
+controllers then return end local fighterControllerScript=controllers:
+WaitForChild('FighterController',5)if fighterControllerScript and
+fighterControllerScript:IsA('ModuleScript')then local success,result=pcall(
+function()local dynamicRequire=require return dynamicRequire(
+fighterControllerScript)end)if success then State.fighterController=result end
+end end function Helpers.getGunModule()local player=PlayerUtils.getLocalPlayer()
+if not player then return nil end local playerScripts=player:WaitForChild(
+'PlayerScripts',5)if not playerScripts then return nil end local modules=
+playerScripts:WaitForChild('Modules',5)if not modules then return nil end local
+itemTypes=modules:WaitForChild('ItemTypes',5)if not itemTypes then return nil
+end local gun=itemTypes:WaitForChild('Gun',5)if not gun then return nil end
 local success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(fighterControllerScript)end)if success then State.
-fighterController=result end end end function Helpers.getGunModule()local player
-=PlayerUtils.getLocalPlayer()if not player then return nil end local
-playerScripts=player:WaitForChild('PlayerScripts',5)if not playerScripts then
-return nil end local modules=playerScripts:WaitForChild('Modules',5)if not
-modules then return nil end local itemTypes=modules:WaitForChild('ItemTypes',5)
-if not itemTypes then return nil end local gun=itemTypes:WaitForChild('Gun',5)if
-not gun then return nil end local success,result=pcall(function()local
-dynamicRequire=require return dynamicRequire(gun)end)return success and result
-or nil end function Helpers.getClientItemModule()local player=PlayerUtils.
-getLocalPlayer()if not player then return nil end local playerScripts=player:
-WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
-modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
-end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
-,5)if not clientReplicatedClasses then return nil end local clientFighter=
-clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
-return nil end local clientItem=clientFighter:WaitForChild('ClientItem',5)if not
-clientItem then return nil end local success,result=pcall(function()local
-dynamicRequire=require return dynamicRequire(clientItem)end)return success and
-result or nil end function Helpers.getViewModelModule()local player=PlayerUtils.
-getLocalPlayer()if not player then return nil end local playerScripts=player:
-WaitForChild('PlayerScripts',5)if not playerScripts then return nil end local
-modules=playerScripts:WaitForChild('Modules',5)if not modules then return nil
-end local clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses'
-,5)if not clientReplicatedClasses then return nil end local clientFighter=
+dynamicRequire(gun)end)return success and result or nil end function Helpers.
+getClientItemModule()local player=PlayerUtils.getLocalPlayer()if not player then
+return nil end local playerScripts=player:WaitForChild('PlayerScripts',5)if not
+playerScripts then return nil end local modules=playerScripts:WaitForChild(
+'Modules',5)if not modules then return nil end local clientReplicatedClasses=
+modules:WaitForChild('ClientReplicatedClasses',5)if not clientReplicatedClasses
+then return nil end local clientFighter=clientReplicatedClasses:WaitForChild(
+'ClientFighter',5)if not clientFighter then return nil end local clientItem=
+clientFighter:WaitForChild('ClientItem',5)if not clientItem then return nil end
+local success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(clientItem)end)return success and result or nil end function
+Helpers.getViewModelModule()local player=PlayerUtils.getLocalPlayer()if not
+player then return nil end local playerScripts=player:WaitForChild(
+'PlayerScripts',5)if not playerScripts then return nil end local modules=
+playerScripts:WaitForChild('Modules',5)if not modules then return nil end local
+clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses',5)if not
+clientReplicatedClasses then return nil end local clientFighter=
 clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
 return nil end local clientItemScript=clientFighter:WaitForChild('ClientItem',5)
 if not clientItemScript then return nil end local viewModel=clientItemScript:
@@ -1022,68 +1023,67 @@ TARGET_REFRESH_INTERVAL=0.05 local TELEPORT_OFFSET=Vector3.new(0,0,2)local
 MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
 _maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
 cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
-=nil,mouse1click=nil,ragebotSavedSilentAimFovRadius=nil,lastWeaponSwapAt=0,
-isSwapReloadActive=false}local function _getLocalRoot()local localPlayer=
-PlayerUtils.getLocalPlayer()local character=localPlayer and localPlayer.
-Character return character and((character:FindFirstChild('HumanoidRootPart')))or
-nil end local function _isRoundStarted()local localPlayer=PlayerUtils.
-getLocalPlayer()if not localPlayer then return false end if not TeamUtils.
-isInDuel(localPlayer)then return false end local duel=TeamUtils.getLocalDuel()if
-duel and duel.Get then local isOk,status=pcall(duel.Get,duel,'Status')if isOk
-and status~=nil then return status=='RoundStarted'end end return true end
-local function _getBestTarget(localRoot)local localPlayer=PlayerUtils.
-getLocalPlayer()if not localPlayer then return nil,nil end if not TeamUtils.
-isInDuel(localPlayer)then return nil,nil end local bestPlayer=nil local bestRoot
-=nil local bestDist=math.huge for _,player in ipairs(Players:GetPlayers())do if
-player==localPlayer then continue end if TeamUtils.isSameTeam(player,localPlayer
-)then continue end if not TeamUtils.isInSameDuel(localPlayer,player)then
-continue end local character=player.Character if not character then continue end
-local root=(character:FindFirstChild('HumanoidRootPart'))local hum=character:
-FindFirstChildOfClass('Humanoid')if not root or not hum or hum.Health<=0 then
-continue end local dist=(localRoot.Position-root.Position).Magnitude if dist<
-bestDist then bestDist=dist bestPlayer=player bestRoot=root end end return
-bestPlayer,bestRoot end local function _getLocalFighter()local now=os.clock()if
-now-_state.lastFighterFetch>=0.25 then _state.lastFighterFetch=now Helpers.
-fetchFighterController(State.logger)end local fighter=State.fighterController
-and State.fighterController.LocalFighter if fighter and fighter.IsAlive and not
-fighter:IsAlive()then return nil end return fighter end local function
-_isReloading(item)if not item then return false end local isOk,value=pcall(
-function()if item.Get then return item:Get('IsReloading')end return nil end)if
-isOk and value~=nil then return value==true end local reloadCooldown=(item).
-_reload_cooldown if type(reloadCooldown)=='number'and reloadCooldown>tick()then
-return true end local isReloadingValue=(item)._is_reloading or(item).IsReloading
-if type(isReloadingValue)=='boolean'then return isReloadingValue end return
-false end local function _getAmmo(item)if not item then return nil end local ok,
-value=pcall(function()if item.Get then return item:Get('Ammo')end return nil end
-)if ok and type(value)=='number'then return value end local ammoField=(item).
-Ammo if type(ammoField)=='number'then return ammoField end return nil end
-local function _isOutOfAmmo(item)local ammo=_getAmmo(item)if type(ammo)==
-'number'then return ammo<=0 end return false end local function _isGunItem(
-equipped)if not equipped then return false end local info=equipped.Info if not
-info then return false end if info.Type=='Gun'then return true end if info.Class
-=='Primary'or info.Class=='Secondary'then return true end if info.ShootCooldown
-~=nil or info.AmmoType~=nil then return true end return false end local function
-_ensureGunEquipped(localFighter)if not localFighter then return nil end local
-equipped=localFighter.EquippedItem if _isGunItem(equipped)then return equipped
-end return nil end local function _getDesiredWeaponSlot()if State.
-ragebotWeaponSlot=='Secondary'then return 2 end return 1 end local function
-_getItemBySlot(localFighter,slot)local items=localFighter and localFighter.Items
-if type(items)=='table'then return items[slot]end return nil end local function
-_ensureDesiredWeapon(localFighter)if not localFighter or not localFighter.
-EquipItem then return end local desiredSlot=_getDesiredWeaponSlot()local
-equipped=localFighter.EquippedItem if equipped and _isGunItem(equipped)then
-local currentSlot=(equipped).Slot if currentSlot==desiredSlot then return end
-end pcall(function()localFighter:EquipItem(desiredSlot)end)end local function
-_tryStartReload(item)if not item or not item.Input then return end if
-_isReloading(item)then return end pcall(function()item:Input('StartReloading')
-end)end local function _swapWeaponOnReload(localFighter)if not State.
-isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
-lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
-localFighter.EquipItem then return end local mainSlot=_getDesiredWeaponSlot()
-local offSlot=if mainSlot==2 then 1 else 2 local mainItem=_getItemBySlot(
-localFighter,mainSlot)local offItem=_getItemBySlot(localFighter,offSlot)if not
-mainItem then return end local equipped=localFighter.EquippedItem if
-_isOutOfAmmo(mainItem)then _tryStartReload(mainItem)if offItem and equipped~=
+=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false}local function
+_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
+localPlayer and localPlayer.Character return character and((character:
+FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
+local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
+false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
+=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
+Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
+end return true end local function _getBestTarget(localRoot)local localPlayer=
+PlayerUtils.getLocalPlayer()if not localPlayer then return nil,nil end if not
+TeamUtils.isInDuel(localPlayer)then return nil,nil end local bestPlayer=nil
+local bestRoot=nil local bestDist=math.huge for _,player in ipairs(Players:
+GetPlayers())do if player==localPlayer then continue end if TeamUtils.
+isSameTeam(player,localPlayer)then continue end if not TeamUtils.isInSameDuel(
+localPlayer,player)then continue end local character=player.Character if not
+character then continue end local root=(character:FindFirstChild(
+'HumanoidRootPart'))local hum=character:FindFirstChildOfClass('Humanoid')if not
+root or not hum or hum.Health<=0 then continue end local dist=(localRoot.
+Position-root.Position).Magnitude if dist<bestDist then bestDist=dist bestPlayer
+=player bestRoot=root end end return bestPlayer,bestRoot end local function
+_getLocalFighter()local now=os.clock()if now-_state.lastFighterFetch>=0.25 then
+_state.lastFighterFetch=now Helpers.fetchFighterController(State.logger)end
+local fighter=State.fighterController and State.fighterController.LocalFighter
+if fighter and fighter.IsAlive and not fighter:IsAlive()then return nil end
+return fighter end local function _isReloading(item)if not item then return
+false end local isOk,value=pcall(function()if item.Get then return item:Get(
+'IsReloading')end return nil end)if isOk and value~=nil then return value==true
+end local reloadCooldown=(item)._reload_cooldown if type(reloadCooldown)==
+'number'and reloadCooldown>tick()then return true end local isReloadingValue=(
+item)._is_reloading or(item).IsReloading if type(isReloadingValue)=='boolean'
+then return isReloadingValue end return false end local function _getAmmo(item)
+if not item then return nil end local ok,value=pcall(function()if item.Get then
+return item:Get('Ammo')end return nil end)if ok and type(value)=='number'then
+return value end local ammoField=(item).Ammo if type(ammoField)=='number'then
+return ammoField end return nil end local function _isOutOfAmmo(item)local ammo=
+_getAmmo(item)if type(ammo)=='number'then return ammo<=0 end return false end
+local function _isGunItem(equipped)if not equipped then return false end local
+info=equipped.Info if not info then return false end if info.Type=='Gun'then
+return true end if info.Class=='Primary'or info.Class=='Secondary'then return
+true end if info.ShootCooldown~=nil or info.AmmoType~=nil then return true end
+return false end local function _ensureGunEquipped(localFighter)if not
+localFighter then return nil end local equipped=localFighter.EquippedItem if
+_isGunItem(equipped)then return equipped end return nil end local function
+_getDesiredWeaponSlot()if State.ragebotWeaponSlot=='Secondary'then return 2 end
+return 1 end local function _getItemBySlot(localFighter,slot)local items=
+localFighter and localFighter.Items if type(items)=='table'then return items[
+slot]end return nil end local function _ensureDesiredWeapon(localFighter)if not
+localFighter or not localFighter.EquipItem then return end local desiredSlot=
+_getDesiredWeaponSlot()local equipped=localFighter.EquippedItem if equipped and
+_isGunItem(equipped)then local currentSlot=(equipped).Slot if currentSlot==
+desiredSlot then return end end pcall(function()localFighter:EquipItem(
+desiredSlot)end)end local function _tryStartReload(item)if not item or not item.
+Input then return end if _isReloading(item)then return end pcall(function()item:
+Input('StartReloading')end)end local function _swapWeaponOnReload(localFighter)
+if not State.isRagebotSwapWeaponOnReload then return end local now=os.clock()if
+now-_state.lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not
+localFighter or not localFighter.EquipItem then return end local mainSlot=
+_getDesiredWeaponSlot()local offSlot=if mainSlot==2 then 1 else 2 local mainItem
+=_getItemBySlot(localFighter,mainSlot)local offItem=_getItemBySlot(localFighter,
+offSlot)if not mainItem then return end local equipped=localFighter.EquippedItem
+if _isOutOfAmmo(mainItem)then _tryStartReload(mainItem)if offItem and equipped~=
 offItem then _state.lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(
 offSlot)end)end _state.isSwapReloadActive=true return end if _state.
 isSwapReloadActive then if equipped~=mainItem then _state.lastWeaponSwapAt=now
@@ -1121,10 +1121,10 @@ return end _equippedItemInput(localFighter,equipped,'StartShooting')if equipped.
 Name~='Flamethrower'then task.delay(0.1,function()if localFighter.EquippedItem==
 equipped and equipped.Input then _equippedItemInput(localFighter,equipped,
 'FinishShooting')end end)end end local function _applyRagebotSilentAimOverride(
-isEnabled)if isEnabled then if _state.ragebotSavedSilentAimFovRadius==nil then
-_state.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
-silentAimFovRadius=math.huge else if _state.ragebotSavedSilentAimFovRadius~=nil
-then State.silentAimFovRadius=_state.ragebotSavedSilentAimFovRadius _state.
+isEnabled)if isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then
+State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
+silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
+then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
 localRoot,targetRoot)localRoot.CFrame=targetRoot.CFrame*CFrame.new(
 TELEPORT_OFFSET)end local function _orbitTarget(localRoot,targetRoot)local
@@ -1355,14 +1355,16 @@ isMaxSmoothness()State.smoothness=math.clamp(smoothness,0,Constants.
 MAX_SMOOTHNESS)if wasMaxSmoothness and not Helpers.isMaxSmoothness()then Helpers
 .applyInputLock(false)end end function Combat.setWallCheckEnabled(self,isEnabled
 )State.isWallCheckEnabled=isEnabled end function Combat.setSilentAimEnabled(self
-,isEnabled)State.isSilentAimEnabled=isEnabled if not isEnabled then State.
-silentTarget=nil State.silentTargetLostAt=nil end end function Combat.
-setRagebotEnabled(self,isEnabled)if State.isRagebotEnabled==isEnabled then
-return end State.isRagebotEnabled=isEnabled if isEnabled then if State.
-ragebotSavedSilentAimEnabled==nil then State.ragebotSavedSilentAimEnabled=State.
-isSilentAimEnabled end if State.ragebotSavedAttackCooldownMultiplier==nil then
-State.ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end
-State.isSilentAimEnabled=true State.attackCooldownMultiplier=1 else if State.
+,isEnabled)if State.isRagebotEnabled then State.ragebotSavedSilentAimEnabled=
+isEnabled State.isSilentAimEnabled=true else State.isSilentAimEnabled=isEnabled
+end if not isEnabled then State.silentTarget=nil State.silentTargetLostAt=nil
+end end function Combat.setRagebotEnabled(self,isEnabled)if State.
+isRagebotEnabled==isEnabled then return end State.isRagebotEnabled=isEnabled if
+isEnabled then if State.ragebotSavedSilentAimEnabled==nil then State.
+ragebotSavedSilentAimEnabled=State.isSilentAimEnabled end if State.
+ragebotSavedAttackCooldownMultiplier==nil then State.
+ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end State.
+isSilentAimEnabled=true State.attackCooldownMultiplier=1 else if State.
 ragebotSavedSilentAimEnabled~=nil then State.isSilentAimEnabled=State.
 ragebotSavedSilentAimEnabled State.ragebotSavedSilentAimEnabled=nil end if State
 .ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
@@ -1374,24 +1376,26 @@ isRagebotSwapWeaponOnReload=isEnabled end function Combat.setRagebotWeaponSlot(
 self,slotName)State.ragebotWeaponSlot=slotName end function Combat.
 setRagebotOrbitRadius(self,radius)State.ragebotOrbitRadius=radius end function
 Combat.setRagebotOrbitSpeed(self,speed)State.ragebotOrbitSpeed=speed end
+function Combat.setRagebotOffset(self,offset)State.ragebotOffset=offset end
 function Combat.setSilentAimFovEnabled(self,isEnabled)State.
 isSilentAimFovEnabled=isEnabled end function Combat.setSilentAimFovRadius(self,
-radius)State.silentAimFovRadius=radius end function Combat.setSilentAimFovColor(
-self,color)State.silentAimFovColor=color end function Combat.
-setSilentAimFovTransparency(self,transparency)State.silentAimFovTransparency=
-math.clamp(transparency,0,1)end function Combat.setSilentHitChance(self,chance)
-State.silentHitChance=math.clamp(chance,0,100)end function Combat.setTargetPart(
-self,part)State.targetPart=part end function Combat.setManipulationEnabled(self,
-enabled)State.isManipulationEnabled=enabled end function Combat.
-setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=enabled end function
-Combat.setClosestPositionEnabled(self,enabled)State.isClosestPositionEnabled=
-enabled end function Combat.setClosestPositionWhitelist(self,whitelist)State.
-closestPositionWhitelist=whitelist end function Combat.setNoRecoilEnabled(self,
-isEnabled)State.isNoRecoilEnabled=isEnabled end function Combat.
-setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end function
-Combat.setNoMuzzleFlashEnabled(self,isEnabled)State.isNoMuzzleFlashEnabled=
-isEnabled end function Combat.setAttackCooldownMultiplier(self,multiplier)State.
-attackCooldownMultiplier=multiplier end function Combat.
+radius)if State.isRagebotEnabled then State.ragebotSavedSilentAimFovRadius=
+radius else State.silentAimFovRadius=radius end end function Combat.
+setSilentAimFovColor(self,color)State.silentAimFovColor=color end function
+Combat.setSilentAimFovTransparency(self,transparency)State.
+silentAimFovTransparency=math.clamp(transparency,0,1)end function Combat.
+setSilentHitChance(self,chance)State.silentHitChance=math.clamp(chance,0,100)end
+function Combat.setTargetPart(self,part)State.targetPart=part end function
+Combat.setManipulationEnabled(self,enabled)State.isManipulationEnabled=enabled
+end function Combat.setAntiKatanaEnabled(self,enabled)State.isAntiKatanaEnabled=
+enabled end function Combat.setClosestPositionEnabled(self,enabled)State.
+isClosestPositionEnabled=enabled end function Combat.setClosestPositionWhitelist
+(self,whitelist)State.closestPositionWhitelist=whitelist end function Combat.
+setNoRecoilEnabled(self,isEnabled)State.isNoRecoilEnabled=isEnabled end function
+Combat.setNoSpreadEnabled(self,isEnabled)State.isNoSpreadEnabled=isEnabled end
+function Combat.setNoMuzzleFlashEnabled(self,isEnabled)State.
+isNoMuzzleFlashEnabled=isEnabled end function Combat.setAttackCooldownMultiplier
+(self,multiplier)State.attackCooldownMultiplier=multiplier end function Combat.
 setMeleeAttackCooldownEnabled(self,isEnabled)State.isMeleeAttackCooldownEnabled=
 isEnabled end function Combat.setMeleeAttackCooldownMultiplier(self,multiplier)
 State.meleeAttackCooldownMultiplier=multiplier end function Combat.

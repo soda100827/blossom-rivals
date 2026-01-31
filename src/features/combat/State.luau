@@ -26,6 +26,7 @@ local _state: Types.CombatState = {
 	ragebotWeaponSlot = "Primary",
 	ragebotOrbitRadius = 100000,
 	ragebotOrbitSpeed = 12,
+	ragebotOffset = Vector3.zero,
 	fovRadius = 100,
 	silentAimFovRadius = 100,
 	fovColor = Constants.FOV_CIRCLE_COLOR,

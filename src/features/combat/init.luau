@@ -216,6 +216,10 @@ function Combat.setRagebotOrbitSpeed(self: CombatFeature, speed: number): ()
 	State.ragebotOrbitSpeed = speed
 end
 
+function Combat.setRagebotOffset(self: CombatFeature, offset: Vector3): ()
+	State.ragebotOffset = offset
+end
+
 function Combat.setSilentAimFovEnabled(self: CombatFeature, isEnabled: boolean): ()
 	State.isSilentAimFovEnabled = isEnabled
 end
