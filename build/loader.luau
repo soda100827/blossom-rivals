@@ -1127,70 +1127,76 @@ localFighter,equipped,inputName)if equipped and equipped.Input then local ok=
 equipped:Input(inputName)if State.logger and State.isRagebotEnabled then local
 now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.
 logger:info('[Ragebot Debug] EquippedItem:Input',inputName,ok==true,
-_getItemDebugState(equipped))end end if ok==true then return end end if
+_getItemDebugState(equipped))end end if ok==true then return true end end if
 localFighter and localFighter.Input then local ok=localFighter:Input(inputName)
 if State.logger and State.isRagebotEnabled then local now=os.clock()if now>=
 _state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
-'[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end end end
-local function _shoot(localFighter)local equipped=_ensureGunEquipped(
+'[Ragebot Debug] LocalFighter:Input',inputName,ok==true)end end return ok==true
+end return false end local function _forceShootReady(equipped)if not equipped
+then return end if _isReloading(equipped)then return end local ammo=_getAmmo(
+equipped)if type(ammo)=='number'and ammo<=0 then return end if(equipped).
+_shoot_cooldown~=nil then(equipped)._shoot_cooldown=0 end if(equipped).
+_shoot_cooldown_no_ammo~=nil then(equipped)._shoot_cooldown_no_ammo=0 end if(
+equipped)._is_input_queueing~=nil then(equipped)._is_input_queueing=false end
+end local function _shoot(localFighter)local equipped=_ensureGunEquipped(
 localFighter)if not equipped or not equipped.Input then return end local now=os.
 clock()local cooldown=_getShootCooldown(equipped)if now-_state.lastShotAt<
-cooldown then return end _state.lastShotAt=now _equippedItemInput(localFighter,
-equipped,'StartShooting')if equipped.Name~='Flamethrower'then task.delay(0.1,
-function()if localFighter.EquippedItem==equipped and equipped.Input then
-_equippedItemInput(localFighter,equipped,'FinishShooting')end end)end end
-local function _hookClientItemInput()if _state.isInputHooked then return end
-local clientItemMod=Helpers.getClientItemModule()if not clientItemMod then
-return end _state.isInputHooked=true local checkcaller=ExecutorUtils.getGlobal(
-'checkcaller')or function()return false end local oldInput oldInput=HookUtils.
-safeHook(clientItemMod,'Input',function(self,inputName,...)if checkcaller()then
-return oldInput(self,inputName,...)end if not State.isRagebotEnabled then return
-oldInput(self,inputName,...)end local wasEquipped=self.IsEquipped if not
-wasEquipped and type(inputName)=='string'and string.sub(inputName,1,5)=='Start'
-then self.IsEquipped=true local result=oldInput(self,inputName,...)self.
-IsEquipped=wasEquipped return result end return oldInput(self,inputName,...)end,
-State.logger,_maid)end local function _hookClientFighterUseItem()if _state.
-isUseItemHooked then return end local localPlayer=PlayerUtils.getLocalPlayer()if
-not localPlayer then return end local playerScripts=localPlayer:WaitForChild(
-'PlayerScripts',5)if not playerScripts then return end local modules=
-playerScripts:WaitForChild('Modules',5)if not modules then return end local
-clientFighterModule=modules:WaitForChild('ClientReplicatedClasses',5)if not
-clientFighterModule then return end local clientFighter=clientFighterModule:
-WaitForChild('ClientFighter',5)if not clientFighter then return end local
-clientItem=clientFighter:WaitForChild('ClientItem',5)if not clientItem then
-return end local ok,clientItemMod=pcall(function()local dynamicRequire=require
-return dynamicRequire(clientItem)end)if not ok or not clientItemMod then return
-end _state.isUseItemHooked=true local checkcaller=ExecutorUtils.getGlobal(
-'checkcaller')or function()return false end local oldInput oldInput=HookUtils.
-safeHook(clientItemMod,'Input',function(self,inputName,...)if checkcaller()then
-return oldInput(self,inputName,...)end if not State.isRagebotEnabled then return
-oldInput(self,inputName,...)end if type(inputName)~='string'then return
-oldInput(self,inputName,...)end local wasEquipped=self.IsEquipped local wasLocal
-=self.ClientFighter and self.ClientFighter.Player==Players.LocalPlayer if not
-wasLocal then return oldInput(self,inputName,...)end if not wasEquipped and
-string.sub(inputName,1,5)=='Start'then self.IsEquipped=true end local result=
-oldInput(self,inputName,...)self.IsEquipped=wasEquipped return result end,State.
-logger,_maid)end local function _applyRagebotSilentAimOverride(isEnabled)if
-isEnabled then if State.ragebotSavedSilentAimFovRadius==nil then State.
-ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
-silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
-then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
-ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
-localRoot,targetRoot)local offset=State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
-localRoot.CFrame=targetRoot.CFrame*CFrame.new(offset)end local function
-_orbitTarget(localRoot,targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or
-DEFAULT_ORBIT_SPEED local orbitRadius=State.ragebotOrbitRadius or
-DEFAULT_ORBIT_RADIUS local angle=os.clock()*orbitSpeed local offset=Vector3.new(
-math.cos(angle),0,math.sin(angle))*orbitRadius local position=targetRoot.
-Position+offset localRoot.CFrame=CFrame.new(position,targetRoot.Position)end
-local function _refreshTarget(localRoot)local now=os.clock()if now-_state.
-lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
-lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
-_getBestTarget(localRoot)end local function _connect()if not _maid then return
-end local connection=RunService.Heartbeat:Connect(function()if not State.
-isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.isEngaged
-then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then
-State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
+cooldown then return end _state.lastShotAt=now _forceShootReady(equipped)local
+didShoot=_equippedItemInput(localFighter,equipped,'StartShooting')if didShoot
+and equipped.Name~='Flamethrower'then task.delay(0.1,function()if localFighter.
+EquippedItem==equipped and equipped.Input then _equippedItemInput(localFighter,
+equipped,'FinishShooting')end end)end end local function _hookClientItemInput()
+if _state.isInputHooked then return end local clientItemMod=Helpers.
+getClientItemModule()if not clientItemMod then return end _state.isInputHooked=
+true local checkcaller=ExecutorUtils.getGlobal('checkcaller')or function()return
+false end local oldInput oldInput=HookUtils.safeHook(clientItemMod,'Input',
+function(self,inputName,...)if checkcaller()then return oldInput(self,inputName,
+...)end if not State.isRagebotEnabled then return oldInput(self,inputName,...)
+end local wasEquipped=self.IsEquipped if not wasEquipped and type(inputName)==
+'string'and string.sub(inputName,1,5)=='Start'then self.IsEquipped=true local
+result=oldInput(self,inputName,...)self.IsEquipped=wasEquipped return result end
+return oldInput(self,inputName,...)end,State.logger,_maid)end local function
+_hookClientFighterUseItem()if _state.isUseItemHooked then return end local
+localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return end local
+playerScripts=localPlayer:WaitForChild('PlayerScripts',5)if not playerScripts
+then return end local modules=playerScripts:WaitForChild('Modules',5)if not
+modules then return end local clientFighterModule=modules:WaitForChild(
+'ClientReplicatedClasses',5)if not clientFighterModule then return end local
+clientFighter=clientFighterModule:WaitForChild('ClientFighter',5)if not
+clientFighter then return end local clientItem=clientFighter:WaitForChild(
+'ClientItem',5)if not clientItem then return end local ok,clientItemMod=pcall(
+function()local dynamicRequire=require return dynamicRequire(clientItem)end)if
+not ok or not clientItemMod then return end _state.isUseItemHooked=true local
+checkcaller=ExecutorUtils.getGlobal('checkcaller')or function()return false end
+local oldInput oldInput=HookUtils.safeHook(clientItemMod,'Input',function(self,
+inputName,...)if checkcaller()then return oldInput(self,inputName,...)end if not
+State.isRagebotEnabled then return oldInput(self,inputName,...)end if type(
+inputName)~='string'then return oldInput(self,inputName,...)end local
+wasEquipped=self.IsEquipped local wasLocal=self.ClientFighter and self.
+ClientFighter.Player==Players.LocalPlayer if not wasLocal then return oldInput(
+self,inputName,...)end if not wasEquipped and string.sub(inputName,1,5)=='Start'
+then self.IsEquipped=true end local result=oldInput(self,inputName,...)self.
+IsEquipped=wasEquipped return result end,State.logger,_maid)end local function
+_applyRagebotSilentAimOverride(isEnabled)if isEnabled then if State.
+ragebotSavedSilentAimFovRadius==nil then State.ragebotSavedSilentAimFovRadius=
+State.silentAimFovRadius end State.silentAimFovRadius=math.huge else if State.
+ragebotSavedSilentAimFovRadius~=nil then State.silentAimFovRadius=State.
+ragebotSavedSilentAimFovRadius State.ragebotSavedSilentAimFovRadius=nil end end
+end local function _teleportToTarget(localRoot,targetRoot)local offset=State.
+ragebotOffset or DEFAULT_RAGEBOT_OFFSET localRoot.CFrame=targetRoot.CFrame*
+CFrame.new(offset)end local function _orbitTarget(localRoot,targetRoot)local
+orbitSpeed=State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED local orbitRadius=
+State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS local angle=os.clock()*
+orbitSpeed local offset=Vector3.new(math.cos(angle),0,math.sin(angle))*
+orbitRadius local position=targetRoot.Position+offset localRoot.CFrame=CFrame.
+new(position,targetRoot.Position)end local function _refreshTarget(localRoot)
+local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
+return end _state.lastTargetRefresh=now _state.cachedTarget,_state.
+cachedTargetRoot=_getBestTarget(localRoot)end local function _connect()if not
+_maid then return end local connection=RunService.Heartbeat:Connect(function()if
+not State.isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.
+isEngaged then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil
+then State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
 ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.

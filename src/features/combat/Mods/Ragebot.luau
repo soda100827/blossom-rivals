@@ -435,7 +435,7 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 			end
 		end
 		if ok == true then
-			return
+			return true
 		end
 	end
 	if localFighter and localFighter.Input then
@@ -447,6 +447,31 @@ local function _equippedItemInput(localFighter: any, equipped: any, inputName: s
 				State.logger:info("[Ragebot Debug] LocalFighter:Input", inputName, ok == true)
 			end
 		end
+		return ok == true
+	end
+	return false
+end
+
+local function _forceShootReady(equipped: any)
+	if not equipped then
+		return
+	end
+	if _isReloading(equipped) then
+		return
+	end
+	local ammo = _getAmmo(equipped)
+	if type(ammo) == "number" and ammo <= 0 then
+		return
+	end
+
+	if (equipped :: any)._shoot_cooldown ~= nil then
+		(equipped :: any)._shoot_cooldown = 0
+	end
+	if (equipped :: any)._shoot_cooldown_no_ammo ~= nil then
+		(equipped :: any)._shoot_cooldown_no_ammo = 0
+	end
+	if (equipped :: any)._is_input_queueing ~= nil then
+		(equipped :: any)._is_input_queueing = false
 	end
 end
 
@@ -463,8 +488,9 @@ local function _shoot(localFighter: any)
 	end
 	_state.lastShotAt = now
 
-	_equippedItemInput(localFighter, equipped, "StartShooting")
-	if equipped.Name ~= "Flamethrower" then
+	_forceShootReady(equipped)
+	local didShoot = _equippedItemInput(localFighter, equipped, "StartShooting")
+	if didShoot and equipped.Name ~= "Flamethrower" then
 		task.delay(0.1, function()
 			if localFighter.EquippedItem == equipped and equipped.Input then
 				_equippedItemInput(localFighter, equipped, "FinishShooting")
