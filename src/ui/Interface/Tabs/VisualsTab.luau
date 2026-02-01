@@ -490,7 +490,7 @@ function VisualsTab.Build(tabs: any, context: BuildContext): ()
 	})
 
 	hitEffectsGroup:AddDropdown("HitSound", {
-		Values = { "Minecraft", "Gamesense", "Skeet", "Neverlose", "Rust", "Bameware" },
+		Values = { "Minecraft", "Gamesense", "Neverlose", "Osu" },
 		Default = 1,
 		Multi = false,
 		Text = "Hit Sound",

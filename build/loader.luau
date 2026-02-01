@@ -151,6 +151,14 @@ TeamUtils.Destroy(self)if _maid then _maid:DoCleaning()end _fighterController=
 nil _duelController=nil end return TeamUtils end function
 __DARKLUA_BUNDLE_MODULES.d()local v=__DARKLUA_BUNDLE_MODULES.cache.d if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.d=v end return v.c end end
+do local function __modImpl()local Players=game:GetService('Players')local
+Workspace=game:GetService('Workspace')local PlayerUtils={}PlayerUtils.__index=
+PlayerUtils local _maid=nil local _state={}local _signals={}function PlayerUtils
+.getLocalPlayer()return Players.LocalPlayer end function PlayerUtils.getCamera()
+local camera=Workspace.CurrentCamera if not camera then camera=(Workspace:
+WaitForChild('Camera'))end return camera end return PlayerUtils end function
+__DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES.cache.e if not v
+then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end return v.c end end
 do local function __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.a()
 local Module={}Module.__index=Module local _maid=nil local _state={}local
 _signals={}function Module.safeHook(targetTable,targetKey,replacement,_logger,
@@ -159,47 +167,39 @@ getGlobal('hookfunction')or ExecutorUtils.getGlobal('replaceclosure'))local
 newcclosure=(ExecutorUtils.getGlobal('newcclosure'))local wrapped=newcclosure(
 replacement)local old=hookfunction(targetFunc,wrapped)if maid then maid:
 GiveTask(function()hookfunction(targetFunc,old)end)end return old end return
-Module end function __DARKLUA_BUNDLE_MODULES.e()local v=__DARKLUA_BUNDLE_MODULES
-.cache.e if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.e=v end
-return v.c end end do local function __modImpl()local Players=game:GetService(
-'Players')local Workspace=game:GetService('Workspace')local PlayerUtils={}
-PlayerUtils.__index=PlayerUtils local _maid=nil local _state={}local _signals={}
-function PlayerUtils.getLocalPlayer()return Players.LocalPlayer end function
-PlayerUtils.getCamera()local camera=Workspace.CurrentCamera if not camera then
-camera=(Workspace:WaitForChild('Camera'))end return camera end return
-PlayerUtils end function __DARKLUA_BUNDLE_MODULES.f()local v=
-__DARKLUA_BUNDLE_MODULES.cache.f if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.f=v end return v.c end end do local function
-__modImpl()local ESP_RENDER_INTERVAL=1/60 local ESP_SKELETON_INTERVAL=1/60 local
-ESP_TEXT_INTERVAL=1/60 local ESP_SMOOTH_ALPHA=0.25 local Constants={
-DEFAULT_SETTINGS={isEspEnabled=false,shouldShowNames=true,shouldShowWeapon=false
-,shouldShowDistance=false,shouldShowBoxes=true,shouldShowSkeleton=false,
-shouldShowHealthbar=false,shouldShowHighlight=false,shouldShowTeammates=true,
-boxColor=Color3.new(1,1,1),textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,
-1,1),distanceColor=Color3.new(1,1,1),skeletonColor=Color3.new(1,1,1),
-healthbarColor=Color3.new(0,1,0),healthbarOutlineColor=Color3.new(0,0,0),
-nameOutlineColor=Color3.new(0,0,0),weaponOutlineColor=Color3.new(0,0,0),
-distanceOutlineColor=Color3.new(0,0,0),boxOutlineColor=Color3.new(0,0,0),
-skeletonOutlineColor=Color3.new(0,0,0),highlightFill=Color3.new(1,0,0),
-highlightOutline=Color3.new(1,1,1),boxThickness=1,skeletonThickness=1,textSize=
-12,shouldOutline=true,shouldPlayHitSound=false,hitSound='Minecraft',
-hitSoundVolume=0.5,shouldShowBulletTracers=false,shouldShowHitNotify=false,
-shouldShowKillNotify=false,shouldHideHitmarker=false,killNotifyLifetime=1,
-hitNotifyLifetime=1,tracerLifetime=1,tracerThickness=1},SOUNDS={Minecraft=
-'rbxassetid://83176333448979',Gamesense='rbxassetid://4817809188',Neverlose=
-'rbxassetid://97643101798871',Osu='rbxassetid://7147454322'},R15_JOINTS={{'Head'
-,'UpperTorso'},{'UpperTorso','LowerTorso'},{'LowerTorso','LeftUpperLeg'},{
-'LeftUpperLeg','LeftLowerLeg'},{'LeftLowerLeg','LeftFoot'},{'LowerTorso',
-'RightUpperLeg'},{'RightUpperLeg','RightLowerLeg'},{'RightLowerLeg','RightFoot'}
-,{'UpperTorso','LeftUpperArm'},{'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm',
-'LeftHand'},{'UpperTorso','RightUpperArm'},{'RightUpperArm','RightLowerArm'},{
-'RightLowerArm','RightHand'}},ESP_RENDER_INTERVAL=ESP_RENDER_INTERVAL,
-ESP_SKELETON_INTERVAL=ESP_SKELETON_INTERVAL,ESP_TEXT_INTERVAL=ESP_TEXT_INTERVAL,
-ESP_SMOOTH_ALPHA=ESP_SMOOTH_ALPHA}return Constants end function
-__DARKLUA_BUNDLE_MODULES.g()local v=__DARKLUA_BUNDLE_MODULES.cache.g if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end
-do local function __modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.h()
-local v=__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
+Module end function __DARKLUA_BUNDLE_MODULES.f()local v=__DARKLUA_BUNDLE_MODULES
+.cache.f if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.f=v end
+return v.c end end do local function __modImpl()local ESP_RENDER_INTERVAL=1/60
+local ESP_SKELETON_INTERVAL=1/60 local ESP_TEXT_INTERVAL=1/60 local
+ESP_SMOOTH_ALPHA=0.25 local Constants={DEFAULT_SETTINGS={isEspEnabled=false,
+shouldShowNames=true,shouldShowWeapon=false,shouldShowDistance=false,
+shouldShowBoxes=true,shouldShowSkeleton=false,shouldShowHealthbar=false,
+shouldShowHighlight=false,shouldShowTeammates=true,boxColor=Color3.new(1,1,1),
+textColor=Color3.new(1,1,1),weaponColor=Color3.new(1,1,1),distanceColor=Color3.
+new(1,1,1),skeletonColor=Color3.new(1,1,1),healthbarColor=Color3.new(0,1,0),
+healthbarOutlineColor=Color3.new(0,0,0),nameOutlineColor=Color3.new(0,0,0),
+weaponOutlineColor=Color3.new(0,0,0),distanceOutlineColor=Color3.new(0,0,0),
+boxOutlineColor=Color3.new(0,0,0),skeletonOutlineColor=Color3.new(0,0,0),
+highlightFill=Color3.new(1,0,0),highlightOutline=Color3.new(1,1,1),boxThickness=
+1,skeletonThickness=1,textSize=12,shouldOutline=true,shouldPlayHitSound=false,
+hitSound='Minecraft',hitSoundVolume=0.5,shouldShowBulletTracers=false,
+shouldShowHitNotify=false,shouldShowKillNotify=false,shouldHideHitmarker=false,
+killNotifyLifetime=1,hitNotifyLifetime=1,tracerLifetime=1,tracerThickness=1},
+SOUNDS={Minecraft='rbxassetid://83176333448979',Gamesense=
+'rbxassetid://4817809188',Neverlose='rbxassetid://97643101798871',Osu=
+'rbxassetid://7147454322'},R15_JOINTS={{'Head','UpperTorso'},{'UpperTorso',
+'LowerTorso'},{'LowerTorso','LeftUpperLeg'},{'LeftUpperLeg','LeftLowerLeg'},{
+'LeftLowerLeg','LeftFoot'},{'LowerTorso','RightUpperLeg'},{'RightUpperLeg',
+'RightLowerLeg'},{'RightLowerLeg','RightFoot'},{'UpperTorso','LeftUpperArm'},{
+'LeftUpperArm','LeftLowerArm'},{'LeftLowerArm','LeftHand'},{'UpperTorso',
+'RightUpperArm'},{'RightUpperArm','RightLowerArm'},{'RightLowerArm','RightHand'}
+},ESP_RENDER_INTERVAL=ESP_RENDER_INTERVAL,ESP_SKELETON_INTERVAL=
+ESP_SKELETON_INTERVAL,ESP_TEXT_INTERVAL=ESP_TEXT_INTERVAL,ESP_SMOOTH_ALPHA=
+ESP_SMOOTH_ALPHA}return Constants end function __DARKLUA_BUNDLE_MODULES.g()local
+v=__DARKLUA_BUNDLE_MODULES.cache.g if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.g=v end return v.c end end do local function
+__modImpl()return{}end function __DARKLUA_BUNDLE_MODULES.h()local v=
+__DARKLUA_BUNDLE_MODULES.cache.h if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.h=v end return v.c end end do local function
 __modImpl()local Constants=__DARKLUA_BUNDLE_MODULES.g()local Types=
 __DARKLUA_BUNDLE_MODULES.h()local _maid=nil local _signals={}local _state={
@@ -210,7 +210,7 @@ end function __DARKLUA_BUNDLE_MODULES.i()local v=__DARKLUA_BUNDLE_MODULES.cache.
 i if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.i=v end return v
 .c end end do local function __modImpl()local Players=game:GetService('Players')
 local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.a()local PlayerUtils=
-__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES.d()local
+__DARKLUA_BUNDLE_MODULES.e()local TeamUtils=__DARKLUA_BUNDLE_MODULES.d()local
 Constants=__DARKLUA_BUNDLE_MODULES.g()local State=__DARKLUA_BUNDLE_MODULES.i()
 local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}local
 _state={}local function _setGroupVisible(group,isVisible)for _,drawing in pairs(
@@ -378,12 +378,65 @@ end function __DARKLUA_BUNDLE_MODULES.j()local v=__DARKLUA_BUNDLE_MODULES.cache.
 j if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.j=v end return v
 .c end end do local function __modImpl()local Players=game:GetService('Players')
 local RunService=game:GetService('RunService')local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.a()local Maid=(__DARKLUA_BUNDLE_MODULES.b())local
-HookUtils=__DARKLUA_BUNDLE_MODULES.e()local Helpers=__DARKLUA_BUNDLE_MODULES.j()
-local State=__DARKLUA_BUNDLE_MODULES.i()local Types=__DARKLUA_BUNDLE_MODULES.h()
-local Constants=__DARKLUA_BUNDLE_MODULES.g()local ESP_RENDER_INTERVAL=Constants.
-ESP_RENDER_INTERVAL local Visuals={}Visuals.__index=Visuals local _maid=nil
-local _signals={}local _state={lastRender=0}local function _connect()_maid:
+__DARKLUA_BUNDLE_MODULES.a()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local
+Maid=(__DARKLUA_BUNDLE_MODULES.b())local HookUtils=__DARKLUA_BUNDLE_MODULES.f()
+local Helpers=__DARKLUA_BUNDLE_MODULES.j()local State=__DARKLUA_BUNDLE_MODULES.
+i()local Types=__DARKLUA_BUNDLE_MODULES.h()local Constants=
+__DARKLUA_BUNDLE_MODULES.g()local ESP_RENDER_INTERVAL=Constants.
+ESP_RENDER_INTERVAL local HIT_NOTIFY_COOLDOWN=0.05 local KILL_NOTIFY_COOLDOWN=
+0.1 local HIT_NOTIFY_OFFSET_Y=-40 local KILL_NOTIFY_OFFSET_Y=-20 local
+HIT_NOTIFY_SIZE=22 local KILL_NOTIFY_SIZE=24 local HIT_NOTIFY_COLOR=Color3.
+fromRGB(255,255,255)local KILL_NOTIFY_COLOR=Color3.fromRGB(255,80,80)local
+Visuals={}Visuals.__index=Visuals local _maid=nil local _signals={}local _state=
+{lastRender=0,hitNotify={drawing=nil,expiresAt=0,token=0,lastAt=0},killNotify={
+drawing=nil,expiresAt=0,token=0,lastAt=0}}local function _getNotifyDrawing(store
+)local lib=ExecutorUtils.getDrawingLib()if not lib then return nil end local
+drawing=store.drawing if not drawing then drawing=lib.new('Text')drawing.Center=
+true drawing.Outline=true drawing.OutlineColor=Color3.new(0,0,0)drawing.Visible=
+false store.drawing=drawing end return drawing end local function
+_getNotifyPosition(offsetY)local camera=PlayerUtils.getCamera()local size=camera
+.ViewportSize return Vector2.new(size.X/2,size.Y/2+offsetY)end local function
+_showNotify(store,text,color,lifetime,size,offsetY)local drawing=
+_getNotifyDrawing(store)if not drawing then return end local now=os.clock()store
+.token+=1 store.expiresAt=now+lifetime local token=store.token drawing.Text=text
+drawing.Color=color drawing.Size=size drawing.Position=_getNotifyPosition(
+offsetY)drawing.Visible=true task.delay(lifetime,function()if store.token~=token
+then return end if store.expiresAt>os.clock()then return end drawing.Visible=
+false end)end local function _clearNotify(store)local drawing=store.drawing if
+drawing then drawing:Remove()store.drawing=nil end store.token=0 store.expiresAt
+=0 store.lastAt=0 end local function _getDamageTargetName(damageInfo)if type(
+damageInfo)~='table'then return nil end local target=damageInfo.Target or
+damageInfo.target or damageInfo.Victim or damageInfo.victim or damageInfo.Player
+or damageInfo.player or damageInfo.Character or damageInfo.character if typeof(
+target)=='Instance'then if target:IsA('Player')then return target.DisplayName or
+target.Name end if target:IsA('Model')then local player=Players:
+GetPlayerFromCharacter(target)if player then return player.DisplayName or player
+.Name end return target.Name end end if type(target)=='string'then return target
+end return nil end local function _isKillDamageInfo(damageInfo)if type(
+damageInfo)~='table'then return false end local flag=damageInfo.IsKill or
+damageInfo.isKill or damageInfo.Kill or damageInfo.kill or damageInfo.Killed or
+damageInfo.killed or damageInfo.IsFatal or damageInfo.isFatal if flag~=nil then
+return flag==true end local health=damageInfo.Health or damageInfo.health or
+damageInfo.NewHealth or damageInfo.newHealth local damage=damageInfo.Damage or
+damageInfo.damage or damageInfo.Amount or damageInfo.amount if type(health)==
+'number'and type(damage)=='number'then return(health-damage)<=0 end local
+humanoid=damageInfo.Humanoid or damageInfo.humanoid or damageInfo.TargetHumanoid
+or damageInfo.targetHumanoid if typeof(humanoid)=='Instance'and humanoid:IsA(
+'Humanoid')then return humanoid.Health<=0 end return false end local function
+_tryShowHitNotify(damageInfo)if not State.settings.shouldShowHitNotify then
+return end local now=os.clock()if now-_state.hitNotify.lastAt<
+HIT_NOTIFY_COOLDOWN then return end _state.hitNotify.lastAt=now local name=
+_getDamageTargetName(damageInfo)local text=name and('Hit '..name)or'Hit'
+_showNotify(_state.hitNotify,text,HIT_NOTIFY_COLOR,State.settings.
+hitNotifyLifetime,HIT_NOTIFY_SIZE,HIT_NOTIFY_OFFSET_Y)end local function
+_tryShowKillNotify(damageInfo)if not State.settings.shouldShowKillNotify then
+return end if not _isKillDamageInfo(damageInfo)then return end local now=os.
+clock()if now-_state.killNotify.lastAt<KILL_NOTIFY_COOLDOWN then return end
+_state.killNotify.lastAt=now local name=_getDamageTargetName(damageInfo)local
+text=name and('Killed '..name)or'Kill'_showNotify(_state.killNotify,text,
+KILL_NOTIFY_COLOR,State.settings.killNotifyLifetime,KILL_NOTIFY_SIZE,
+KILL_NOTIFY_OFFSET_Y)end local function _clearNotifies()_clearNotify(_state.
+hitNotify)_clearNotify(_state.killNotify)end local function _connect()_maid:
 DoCleaning()local removeConn=Players.PlayerRemoving:Connect(function(player)
 Helpers.removePlayer(player)end)_maid:GiveTask(removeConn)local renderConn=
 RunService.RenderStepped:Connect(function()local now=os.clock()if now-_state.
@@ -391,25 +444,28 @@ lastRender<ESP_RENDER_INTERVAL then return end _state.lastRender=now Helpers.
 render()end)_maid:GiveTask(renderConn)local viewModelMod=Helpers.
 getViewModelModule()if viewModelMod then local oldPlayHitmarkerSound
 oldPlayHitmarkerSound=HookUtils.safeHook(viewModelMod,'PlayHitmarkerSound',
-function(self,isHeadshot,pitchModifier,...)if State.settings.shouldPlayHitSound
-then Visuals:onHit()return end return oldPlayHitmarkerSound(self,isHeadshot,
-pitchModifier,...)end,State.logger,_maid)end local hitmarkerMod=Helpers.
-getHitmarkerModule()if hitmarkerMod then local oldDamageEffect oldDamageEffect=
-HookUtils.safeHook(hitmarkerMod,'DamageEffect',function(self,damageInfo,...)if
-State.settings.shouldHideHitmarker then if State.settings.shouldPlayHitSound
-then Visuals:onHit()end return end return oldDamageEffect(self,damageInfo,...)
-end,State.logger,_maid)end end local function _enable()if not ExecutorUtils.
-getDrawingLib()then State.isEnabled=false return end _connect()end
-local function _disable()_maid:DoCleaning()Helpers.clearAll()end function
-Visuals.init(self,client)State.client=client State.logger=client.Logger _maid=
-Maid.new()end function Visuals.Destroy(self)State.isEnabled=false _disable()end
-function Visuals.toggle(self,isEnabled)if State.isEnabled==isEnabled then return
-end State.isEnabled=isEnabled if isEnabled then _enable()else _disable()end end
-function Visuals.setEspEnabled(self,isEnabled)State.settings.isEspEnabled=
-isEnabled if not isEnabled then Helpers.clearAll()end end function Visuals.
-setShowNames(self,shouldShow)State.settings.shouldShowNames=shouldShow end
-function Visuals.setShowWeapon(self,shouldShow)State.settings.shouldShowWeapon=
-shouldShow end function Visuals.setShowDistance(self,shouldShow)State.settings.
+function(self,isHeadshot,pitchModifier,...)_tryShowHitNotify(nil)if State.
+settings.shouldPlayHitSound then Visuals:onHit(nil)return end return
+oldPlayHitmarkerSound(self,isHeadshot,pitchModifier,...)end,State.logger,_maid)
+end local hitmarkerMod=Helpers.getHitmarkerModule()if hitmarkerMod then local
+oldDamageEffect oldDamageEffect=HookUtils.safeHook(hitmarkerMod,'DamageEffect',
+function(self,damageInfo,...)if State.settings.shouldHideHitmarker then if State
+.settings.shouldPlayHitSound then Visuals:onHit(damageInfo)end
+_tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return end
+_tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return
+oldDamageEffect(self,damageInfo,...)end,State.logger,_maid)end end
+local function _enable()if not ExecutorUtils.getDrawingLib()then State.isEnabled
+=false return end _connect()end local function _disable()_maid:DoCleaning()
+Helpers.clearAll()_clearNotifies()end function Visuals.init(self,client)State.
+client=client State.logger=client.Logger _maid=Maid.new()end function Visuals.
+Destroy(self)State.isEnabled=false _disable()end function Visuals.toggle(self,
+isEnabled)if State.isEnabled==isEnabled then return end State.isEnabled=
+isEnabled if isEnabled then _enable()else _disable()end end function Visuals.
+setEspEnabled(self,isEnabled)State.settings.isEspEnabled=isEnabled if not
+isEnabled then Helpers.clearAll()end end function Visuals.setShowNames(self,
+shouldShow)State.settings.shouldShowNames=shouldShow end function Visuals.
+setShowWeapon(self,shouldShow)State.settings.shouldShowWeapon=shouldShow end
+function Visuals.setShowDistance(self,shouldShow)State.settings.
 shouldShowDistance=shouldShow end function Visuals.setShowBoxes(self,shouldShow)
 State.settings.shouldShowBoxes=shouldShow end function Visuals.setShowSkeleton(
 self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end function
@@ -453,8 +509,8 @@ killNotifyLifetime=delay end function Visuals.setHitNotifyLifetime(self,delay)
 State.settings.hitNotifyLifetime=delay end function Visuals.setTracerLifetime(
 self,delay)State.settings.tracerLifetime=delay end function Visuals.
 setTracerThickness(self,thickness)State.settings.tracerThickness=thickness end
-function Visuals.onHit(self,position)if State.settings.shouldPlayHitSound then
-local soundName=State.settings.hitSound local volume=State.settings.
+function Visuals.onHit(self,_damageInfo)if State.settings.shouldPlayHitSound
+then local soundName=State.settings.hitSound local volume=State.settings.
 hitSoundVolume local soundId=Constants.SOUNDS[soundName]if soundId then local
 sound=Instance.new('Sound')sound.SoundId=soundId sound.Volume=volume sound.
 Parent=game:GetService('SoundService')sound:Play()game:GetService('Debris'):
@@ -483,7 +539,7 @@ isSpoofDeviceEnabled=false,isAntiFlashEnabled=false,isSoundSpammerEnabled=false,
 soundSpammerType='DoubleJump'}return _state end function
 __DARKLUA_BUNDLE_MODULES.n()local v=__DARKLUA_BUNDLE_MODULES.cache.n if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.n=v end return v.c end end
-do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
+do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local
 Constants=__DARKLUA_BUNDLE_MODULES.l()local State=__DARKLUA_BUNDLE_MODULES.n()
 local Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}local
 _state={cachedNoclipParts={}}function Helpers.resetInput()State.input={forward=0
@@ -588,7 +644,7 @@ WaitForChild('PlayMechanicsSound',5)end return Helpers end function
 __DARKLUA_BUNDLE_MODULES.o()local v=__DARKLUA_BUNDLE_MODULES.cache.o if not v
 then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.o=v end return v.c end end
 do local function __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.a()
-local HookUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES
+local HookUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES
 .n()local Helpers=__DARKLUA_BUNDLE_MODULES.o()local Module={}Module.__index=
 Module local _maid=nil local _signals={}local _state={lastSoundSpam=0}function
 Module.setup(maid)_maid=maid local checkcaller=(ExecutorUtils.getGlobal(
@@ -622,7 +678,7 @@ p if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.p=v end return v
 local RunService=game:GetService('RunService')local UserInputService=game:
 GetService('UserInputService')local Workspace=game:GetService('Workspace')local
 Maid=(__DARKLUA_BUNDLE_MODULES.b())local Helpers=__DARKLUA_BUNDLE_MODULES.o()
-local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=
+local PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local State=
 __DARKLUA_BUNDLE_MODULES.n()local Types=__DARKLUA_BUNDLE_MODULES.m()local
 PlayerMods=__DARKLUA_BUNDLE_MODULES.p()local NOCLIP_UPDATE_INTERVAL=0.1 local
 Player={}Player.__index=Player local _maid=nil local _signals={}local _state={
@@ -739,7 +795,7 @@ local v=__DARKLUA_BUNDLE_MODULES.cache.t if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.t=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local UserInputService=game:
 GetService('UserInputService')local ReplicatedStorage=game:GetService(
-'ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=
+'ReplicatedStorage')local PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local State=
 __DARKLUA_BUNDLE_MODULES.t()local Constants=__DARKLUA_BUNDLE_MODULES.s()local
 Helpers={}Helpers.__index=Helpers local _maid=nil local _signals={}local _state=
 {}function Helpers.getUtility()local modules=ReplicatedStorage:WaitForChild(
@@ -844,7 +900,7 @@ __modImpl()local CollectionService=game:GetService('CollectionService')local
 Players=game:GetService('Players')local UserInputService=game:GetService(
 'UserInputService')local Workspace=game:GetService('Workspace')local State=
 __DARKLUA_BUNDLE_MODULES.t()local Constants=__DARKLUA_BUNDLE_MODULES.s()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local TeamUtils=__DARKLUA_BUNDLE_MODULES
 .d()local Targeting={}Targeting.__index=Targeting local _maid=nil local _signals
 ={}local _state={raycastParams=RaycastParams.new(),raycastFilter=table.create(2)
 ,cachedMouseLocation=Vector2.zero,cachedCamera=nil,lastUpdate=0,debugNextAt=0}
@@ -956,7 +1012,7 @@ _state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
 function __DARKLUA_BUNDLE_MODULES.v()local v=__DARKLUA_BUNDLE_MODULES.cache.v if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.v=v end return v.c
 end end do local function __modImpl()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.
-f()local State=__DARKLUA_BUNDLE_MODULES.t()local Constants=
+e()local State=__DARKLUA_BUNDLE_MODULES.t()local Constants=
 __DARKLUA_BUNDLE_MODULES.s()local Helpers=__DARKLUA_BUNDLE_MODULES.u()local
 Aimbot={}Aimbot.__index=Aimbot local _maid=nil local _signals={}local _state={}
 function Aimbot.aimAt(target,bestPart,deltaTime)if not target.Character then
@@ -977,8 +1033,8 @@ else State.cameraController:SetRotation(targetRotation)end end return Aimbot end
 function __DARKLUA_BUNDLE_MODULES.w()local v=__DARKLUA_BUNDLE_MODULES.cache.w if
 not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.w=v end return v.c
 end end do local function __modImpl()local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.a()local HookUtils=__DARKLUA_BUNDLE_MODULES.e()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.t()
+__DARKLUA_BUNDLE_MODULES.a()local HookUtils=__DARKLUA_BUNDLE_MODULES.f()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.t()
 local Helpers=__DARKLUA_BUNDLE_MODULES.u()local Targeting=
 __DARKLUA_BUNDLE_MODULES.v()local Module={}Module.__index=Module local _maid=nil
 local _signals={}local _state={lastSilentTargetPos=nil,lastSilentOrigin=nil}
@@ -1023,7 +1079,7 @@ __DARKLUA_BUNDLE_MODULES.cache.x=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
 GetService('RunService')local UserInputService=game:GetService(
 'UserInputService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.a()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local TeamUtils=__DARKLUA_BUNDLE_MODULES
 .d()local State=__DARKLUA_BUNDLE_MODULES.t()local Helpers=
 __DARKLUA_BUNDLE_MODULES.u()local DEFAULT_ORBIT_RADIUS=100000 local
 DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
@@ -1279,7 +1335,7 @@ return Ragebot end function __DARKLUA_BUNDLE_MODULES.y()local v=
 __DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.a()local HookUtils=
-__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.t()local
+__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.t()local
 Helpers=__DARKLUA_BUNDLE_MODULES.u()local Module={}Module.__index=Module local
 _maid=nil local _signals={}local _state={oldShootCooldowns={}}function Module.
 setup(maid)_maid=maid local checkcaller=(ExecutorUtils.getGlobal('checkcaller'))
@@ -1309,8 +1365,8 @@ isGunModsHooked=true end)end return Module end function __DARKLUA_BUNDLE_MODULES
 .z()local v=__DARKLUA_BUNDLE_MODULES.cache.z if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local ExecutorUtils=
-__DARKLUA_BUNDLE_MODULES.a()local HookUtils=__DARKLUA_BUNDLE_MODULES.e()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local State=__DARKLUA_BUNDLE_MODULES.t()
+__DARKLUA_BUNDLE_MODULES.a()local HookUtils=__DARKLUA_BUNDLE_MODULES.f()local
+PlayerUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.t()
 local TeamUtils=__DARKLUA_BUNDLE_MODULES.d()local Helpers=
 __DARKLUA_BUNDLE_MODULES.u()local AURA_UPDATE_INTERVAL=0.03 local
 AURA_IDLE_INTERVAL=0.15 local Module={}Module.__index=Module local _maid=nil
@@ -1773,56 +1829,56 @@ AddSlider('HitSoundVolume',{Text='Volume',Default=0.5,Min=0,Max=1,Rounding=1,
 Tooltip='Volume of hit sound.',Compact=true,Callback=function(value)local mod=
 client.Modules.Visuals if mod and mod.setHitSoundVolume then mod:
 setHitSoundVolume(value)end end})hitEffectsGroup:AddDropdown('HitSound',{Values=
-{'Minecraft','Gamesense','Skeet','Neverlose','Rust','Bameware'},Default=1,Multi=
-false,Text='Hit Sound',Tooltip='Sound to play on hit.',Callback=function(value)
-local mod=client.Modules.Visuals if mod and mod.setHitSound then mod:
-setHitSound(value)end end})end return VisualsTab end function
-__DARKLUA_BUNDLE_MODULES.E()local v=__DARKLUA_BUNDLE_MODULES.cache.E if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end
-do local function __modImpl()local UiSettingsTab={}UiSettingsTab.__index=
-UiSettingsTab local _maid=nil local _state={}local _signals={}function
-UiSettingsTab.Build(tabs,context)local library=context.library local
-themeManager=context.themeManager local saveManager=context.saveManager local
-unloadAll=context.unloadAll local setKeybindListVisible=context.
-setKeybindListVisible local setWatermarkVisible=context.setWatermarkVisible
-local updateKeybindList=context.updateKeybindList local setKeybindListMode=
-context.setKeybindListMode local menuGroup=tabs.uiSettings:AddLeftGroupbox(
-'Menu')menuGroup:AddButton('Unload',function()unloadAll()end)menuGroup:AddLabel(
-'Menu bind'):AddKeyPicker('MenuKeybind',{Default='End',NoUI=true,Text=
-'Menu keybind'})menuGroup:AddDivider()menuGroup:AddToggle('UIShowKeybindList',{
-Text='Keybind List',Default=true,Tooltip='Shows the keybind list panel.',
-Callback=function(isVisible)setKeybindListVisible(isVisible)end})menuGroup:
-AddToggle('UIShowWatermark',{Text='Watermark',Default=true,Tooltip=
-'Shows the watermark display.',Callback=function(isVisible)setWatermarkVisible(
-isVisible)end})menuGroup:AddDropdown('UIKeybindListMode',{Values={'Active',
-'Toggle','All'},Default='Active',Multi=false,Text='Keybind Mode',Tooltip=
-'Filter for the keybind list.',Callback=function(value)setKeybindListMode(value)
-updateKeybindList()end})local getfenvAny=getfenv local env=(getfenvAny(0))local
-getgenvFunc=env.getgenv local GlobalOptions=(getgenvFunc and getgenvFunc().
-Options)or _G.Options if GlobalOptions and GlobalOptions.MenuKeybind then
-library.ToggleKeybind=GlobalOptions.MenuKeybind end themeManager:SetLibrary(
-library)saveManager:SetLibrary(library)saveManager:IgnoreThemeSettings()
-themeManager:SetFolder('Blossom')saveManager:SetFolder('Blossom')saveManager:
-BuildConfigSection(tabs.uiSettings)themeManager:ApplyToTab(tabs.uiSettings)end
-return UiSettingsTab end function __DARKLUA_BUNDLE_MODULES.F()local v=
-__DARKLUA_BUNDLE_MODULES.cache.F if not v then v={c=__modImpl()}
-__DARKLUA_BUNDLE_MODULES.cache.F=v end return v.c end end do local function
-__modImpl()local MiscTab={}MiscTab.__index=MiscTab local _maid=nil local _state=
-{}local _signals={}function MiscTab.Build(tabs,context)local client=context.
-client local library=context.library local updateControlBindings=context.
-updateControlBindings local setNotifyMuted=context.setNotifyMuted local
-playerGroup=tabs.misc:AddLeftGroupbox('Player')local exploitsGroup=tabs.misc:
-AddRightGroupbox('Exploits')local playerFlyToggle=playerGroup:AddToggle(
-'PlayerFly',{Text='Fly',Default=false,Tooltip='Toggle flight mode.',Callback=
-function(state)updateControlBindings()end})playerFlyToggle:AddKeyPicker(
-'PlayerFlyKeybind',{Default='F',NoUI=false,Text='Fly',SyncToggleState=false,
-Callback=function()updateControlBindings()end})playerGroup:AddSlider(
-'PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=200,Rounding=0,Tooltip=
-'Movement speed while flying.',Compact=true,Callback=function(value)local mod=
-client.Modules.Player if mod and mod.setFlySpeed then mod:setFlySpeed(value)end
-end})local playerNoclipToggle=playerGroup:AddToggle('PlayerNoclip',{Text=
-'Noclip',Default=false,Tooltip='Disable collisions for your character.',Callback
-=function(state)updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
+{'Minecraft','Gamesense','Neverlose','Osu'},Default=1,Multi=false,Text=
+'Hit Sound',Tooltip='Sound to play on hit.',Callback=function(value)local mod=
+client.Modules.Visuals if mod and mod.setHitSound then mod:setHitSound(value)end
+end})end return VisualsTab end function __DARKLUA_BUNDLE_MODULES.E()local v=
+__DARKLUA_BUNDLE_MODULES.cache.E if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.E=v end return v.c end end do local function
+__modImpl()local UiSettingsTab={}UiSettingsTab.__index=UiSettingsTab local _maid
+=nil local _state={}local _signals={}function UiSettingsTab.Build(tabs,context)
+local library=context.library local themeManager=context.themeManager local
+saveManager=context.saveManager local unloadAll=context.unloadAll local
+setKeybindListVisible=context.setKeybindListVisible local setWatermarkVisible=
+context.setWatermarkVisible local updateKeybindList=context.updateKeybindList
+local setKeybindListMode=context.setKeybindListMode local menuGroup=tabs.
+uiSettings:AddLeftGroupbox('Menu')menuGroup:AddButton('Unload',function()
+unloadAll()end)menuGroup:AddLabel('Menu bind'):AddKeyPicker('MenuKeybind',{
+Default='End',NoUI=true,Text='Menu keybind'})menuGroup:AddDivider()menuGroup:
+AddToggle('UIShowKeybindList',{Text='Keybind List',Default=true,Tooltip=
+'Shows the keybind list panel.',Callback=function(isVisible)
+setKeybindListVisible(isVisible)end})menuGroup:AddToggle('UIShowWatermark',{Text
+='Watermark',Default=true,Tooltip='Shows the watermark display.',Callback=
+function(isVisible)setWatermarkVisible(isVisible)end})menuGroup:AddDropdown(
+'UIKeybindListMode',{Values={'Active','Toggle','All'},Default='Active',Multi=
+false,Text='Keybind Mode',Tooltip='Filter for the keybind list.',Callback=
+function(value)setKeybindListMode(value)updateKeybindList()end})local getfenvAny
+=getfenv local env=(getfenvAny(0))local getgenvFunc=env.getgenv local
+GlobalOptions=(getgenvFunc and getgenvFunc().Options)or _G.Options if
+GlobalOptions and GlobalOptions.MenuKeybind then library.ToggleKeybind=
+GlobalOptions.MenuKeybind end themeManager:SetLibrary(library)saveManager:
+SetLibrary(library)saveManager:IgnoreThemeSettings()themeManager:SetFolder(
+'Blossom')saveManager:SetFolder('Blossom')saveManager:BuildConfigSection(tabs.
+uiSettings)themeManager:ApplyToTab(tabs.uiSettings)end return UiSettingsTab end
+function __DARKLUA_BUNDLE_MODULES.F()local v=__DARKLUA_BUNDLE_MODULES.cache.F if
+not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.F=v end return v.c
+end end do local function __modImpl()local MiscTab={}MiscTab.__index=MiscTab
+local _maid=nil local _state={}local _signals={}function MiscTab.Build(tabs,
+context)local client=context.client local library=context.library local
+updateControlBindings=context.updateControlBindings local setNotifyMuted=context
+.setNotifyMuted local playerGroup=tabs.misc:AddLeftGroupbox('Player')local
+exploitsGroup=tabs.misc:AddRightGroupbox('Exploits')local playerFlyToggle=
+playerGroup:AddToggle('PlayerFly',{Text='Fly',Default=false,Tooltip=
+'Toggle flight mode.',Callback=function(state)updateControlBindings()end})
+playerFlyToggle:AddKeyPicker('PlayerFlyKeybind',{Default='F',NoUI=false,Text=
+'Fly',SyncToggleState=false,Callback=function()updateControlBindings()end})
+playerGroup:AddSlider('PlayerFlySpeed',{Text='Fly Speed',Default=50,Min=5,Max=
+200,Rounding=0,Tooltip='Movement speed while flying.',Compact=true,Callback=
+function(value)local mod=client.Modules.Player if mod and mod.setFlySpeed then
+mod:setFlySpeed(value)end end})local playerNoclipToggle=playerGroup:AddToggle(
+'PlayerNoclip',{Text='Noclip',Default=false,Tooltip=
+'Disable collisions for your character.',Callback=function(state)
+updateControlBindings()end})playerNoclipToggle:AddKeyPicker(
 'PlayerNoclipKeybind',{Default='N',NoUI=false,Text='Noclip',SyncToggleState=
 false,Callback=function()updateControlBindings()end})local playerWalkSpeedToggle
 =playerGroup:AddToggle('PlayerWalkSpeedEnabled',{Text='Walk Speed',Default=false
