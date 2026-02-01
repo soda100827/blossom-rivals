@@ -474,4 +474,48 @@ function Helpers.getViewModelModule(): any
 	return success and result or nil
 end
 
+function Helpers.getHitmarkerModule(): any
+	local player = PlayerUtils.getLocalPlayer()
+	if not player then
+		return nil
+	end
+	local playerScripts = player:WaitForChild("PlayerScripts", 5)
+	if not playerScripts then
+		return nil
+	end
+	local modules = playerScripts:WaitForChild("Modules", 5)
+	if not modules then
+		return nil
+	end
+	local clientReplicatedClasses = modules:WaitForChild("ClientReplicatedClasses", 5)
+	if not clientReplicatedClasses then
+		return nil
+	end
+	local clientFighter = clientReplicatedClasses:WaitForChild("ClientFighter", 5)
+	if not clientFighter then
+		return nil
+	end
+	local clientItemScript = clientFighter:WaitForChild("ClientItem", 5)
+	if not clientItemScript then
+		return nil
+	end
+	local itemInterface = clientItemScript:WaitForChild("ItemInterface", 5)
+	if not itemInterface then
+		return nil
+	end
+	local mouse = itemInterface:WaitForChild("Mouse", 5)
+	if not mouse then
+		return nil
+	end
+	local hitmarker = mouse:WaitForChild("Hitmarker", 5)
+	if not hitmarker then
+		return nil
+	end
+	local success, result = pcall(function()
+		local dynamicRequire = require :: any
+		return dynamicRequire(hitmarker)
+	end)
+	return success and result or nil
+end
+
 return Helpers

@@ -359,7 +359,21 @@ return nil end local clientItemScript=clientFighter:WaitForChild('ClientItem',5)
 if not clientItemScript then return nil end local viewModel=clientItemScript:
 WaitForChild('ClientViewModel',5)if not viewModel then return nil end local
 success,result=pcall(function()local dynamicRequire=require return
-dynamicRequire(viewModel)end)return success and result or nil end return Helpers
+dynamicRequire(viewModel)end)return success and result or nil end function
+Helpers.getHitmarkerModule()local player=PlayerUtils.getLocalPlayer()if not
+player then return nil end local playerScripts=player:WaitForChild(
+'PlayerScripts',5)if not playerScripts then return nil end local modules=
+playerScripts:WaitForChild('Modules',5)if not modules then return nil end local
+clientReplicatedClasses=modules:WaitForChild('ClientReplicatedClasses',5)if not
+clientReplicatedClasses then return nil end local clientFighter=
+clientReplicatedClasses:WaitForChild('ClientFighter',5)if not clientFighter then
+return nil end local clientItemScript=clientFighter:WaitForChild('ClientItem',5)
+if not clientItemScript then return nil end local itemInterface=clientItemScript
+:WaitForChild('ItemInterface',5)if not itemInterface then return nil end local
+mouse=itemInterface:WaitForChild('Mouse',5)if not mouse then return nil end
+local hitmarker=mouse:WaitForChild('Hitmarker',5)if not hitmarker then return
+nil end local success,result=pcall(function()local dynamicRequire=require return
+dynamicRequire(hitmarker)end)return success and result or nil end return Helpers
 end function __DARKLUA_BUNDLE_MODULES.j()local v=__DARKLUA_BUNDLE_MODULES.cache.
 j if not v then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.j=v end return v
 .c end end do local function __modImpl()local Players=game:GetService('Players')
@@ -379,18 +393,13 @@ getViewModelModule()if viewModelMod then local oldPlayHitmarkerSound
 oldPlayHitmarkerSound=HookUtils.safeHook(viewModelMod,'PlayHitmarkerSound',
 function(self,isHeadshot,pitchModifier,...)if State.settings.shouldPlayHitSound
 then Visuals:onHit()return end return oldPlayHitmarkerSound(self,isHeadshot,
-pitchModifier,...)end,State.logger,_maid)end local localPlayer=Players.
-LocalPlayer if localPlayer then local playerGui=localPlayer:WaitForChild(
-'PlayerGui',5)if playerGui then local function onDescendantAdded(descendant)
-local isHitmarker=descendant.Name:match('^Hitmarker')or descendant.Name==
-'DamageIndicator'if isHitmarker then if State.settings.shouldHideHitmarker then(
-descendant).Visible=false end if descendant:IsA('GuiObject')then _maid:GiveTask(
-descendant:GetPropertyChangedSignal('Visible'):Connect(function()if(descendant).
-Visible and State.settings.shouldHideHitmarker then(descendant).Visible=false
-end end))end end end for _,descendant in ipairs(playerGui:GetDescendants())do
-onDescendantAdded(descendant)end _maid:GiveTask(playerGui.DescendantAdded:
-Connect(onDescendantAdded))end end end local function _enable()if not
-ExecutorUtils.getDrawingLib()then State.isEnabled=false return end _connect()end
+pitchModifier,...)end,State.logger,_maid)end local hitmarkerMod=Helpers.
+getHitmarkerModule()if hitmarkerMod then local oldDamageEffect oldDamageEffect=
+HookUtils.safeHook(hitmarkerMod,'DamageEffect',function(self,damageInfo,...)if
+State.settings.shouldHideHitmarker then if State.settings.shouldPlayHitSound
+then Visuals:onHit()end return end return oldDamageEffect(self,damageInfo,...)
+end,State.logger,_maid)end end local function _enable()if not ExecutorUtils.
+getDrawingLib()then State.isEnabled=false return end _connect()end
 local function _disable()_maid:DoCleaning()Helpers.clearAll()end function
 Visuals.init(self,client)State.client=client State.logger=client.Logger _maid=
 Maid.new()end function Visuals.Destroy(self)State.isEnabled=false _disable()end

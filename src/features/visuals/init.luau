@@ -68,33 +68,22 @@ local function _connect()
 		)
 	end
 
-	-- No Hitmarker Logic (Visual Only)
-	local localPlayer = Players.LocalPlayer
-	if localPlayer then
-		local playerGui = localPlayer:WaitForChild("PlayerGui", 5)
-		if playerGui then
-			local function onDescendantAdded(descendant: Instance)
-				local isHitmarker = descendant.Name:match("^Hitmarker") or descendant.Name == "DamageIndicator"
-				if isHitmarker then
-					if State.settings.shouldHideHitmarker then
-						(descendant :: any).Visible = false
-					end
-
-					if descendant:IsA("GuiObject") then
-						_maid:GiveTask(descendant:GetPropertyChangedSignal("Visible"):Connect(function()
-							if (descendant :: GuiObject).Visible and State.settings.shouldHideHitmarker then
-								(descendant :: GuiObject).Visible = false
-							end
-						end))
-					end
+	-- No Hitmarker Hook (Visuals)
+	local hitmarkerMod = Helpers.getHitmarkerModule()
+	if hitmarkerMod then
+		local oldDamageEffect
+		oldDamageEffect = HookUtils.safeHook(hitmarkerMod, "DamageEffect", function(self, damageInfo, ...)
+			if State.settings.shouldHideHitmarker then
+				-- Still trigger sound if needed, because sound is triggered inside DamageEffect
+				-- But we blocked it by returning early.
+				-- So we must manually check and play sound if enabled.
+				if State.settings.shouldPlayHitSound then
+					Visuals:onHit()
 				end
+				return -- Block visual effect
 			end
-
-			for _, descendant in ipairs(playerGui:GetDescendants()) do
-				onDescendantAdded(descendant)
-			end
-			_maid:GiveTask(playerGui.DescendantAdded:Connect(onDescendantAdded))
-		end
+			return oldDamageEffect(self, damageInfo, ...)
+		end, State.logger, _maid)
 	end
 end
 
