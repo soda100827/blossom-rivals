@@ -46,20 +46,43 @@ local function _connect()
 	end)
 	_maid:GiveTask(renderConn)
 
-	-- Hitmarker Sound Listener
+	-- Hit Detection (Hitmarker / DamageIndicator)
 	local localPlayer = Players.LocalPlayer
 	if localPlayer then
 		local playerGui = localPlayer:WaitForChild("PlayerGui", 5)
 		if playerGui then
-			_maid:GiveTask(playerGui.DescendantAdded:Connect(function(descendant)
-				if descendant.Name:match("^Hitmarker") or descendant.Name == "DamageIndicator" then
+			-- Function to handle hitmarker
+			local function onDescendantAdded(descendant: Instance)
+				local isHitmarker = descendant.Name:match("^Hitmarker") or descendant.Name == "DamageIndicator"
+				if isHitmarker then
+					-- Play sound on spawn (for games that create new markers)
 					Visuals:onHit()
+
 					if State.settings.shouldHideHitmarker then
-						-- Hide the game hitmarker if requested
 						(descendant :: any).Visible = false
 					end
+
+					-- Monitor visibility (for games that reuse markers)
+					if descendant:IsA("GuiObject") then
+						_maid:GiveTask(descendant:GetPropertyChangedSignal("Visible"):Connect(function()
+							if (descendant :: GuiObject).Visible then
+								Visuals:onHit()
+								if State.settings.shouldHideHitmarker then
+									(descendant :: GuiObject).Visible = false
+								end
+							end
+						end))
+					end
 				end
-			end))
+			end
+
+			-- Scan existing
+			for _, descendant in ipairs(playerGui:GetDescendants()) do
+				onDescendantAdded(descendant)
+			end
+
+			-- Listen for new
+			_maid:GiveTask(playerGui.DescendantAdded:Connect(onDescendantAdded))
 		end
 	end
 end
