@@ -125,6 +125,9 @@ local function _getDamageTargetName(damageInfo: any): string?
 		return nil
 	end
 
+	-- Debug: Check damageInfo structure
+	-- print("DamageInfo Keys:", table.concat(table.keys(damageInfo), ", "))
+
 	local target = damageInfo.Target
 		or damageInfo.target
 		or damageInfo.Victim
@@ -133,6 +136,27 @@ local function _getDamageTargetName(damageInfo: any): string?
 		or damageInfo.player
 		or damageInfo.Character
 		or damageInfo.character
+		or damageInfo.Entity
+		or damageInfo.entity
+	-- Rivals specific:
+	-- DamageEffect is called with p8 where p8[utf8.char(1)] isHeadshot
+	-- The structure seems obfuscated or uses specific indices.
+	-- Try to heuristically find a Player/Model in the table if standard keys fail.
+
+	if not target then
+		for _, v in pairs(damageInfo) do
+			if typeof(v) == "Instance" and (v:IsA("Player") or v:IsA("Model")) then
+				-- Validate it's likely a player character
+				if v:IsA("Model") and v:FindFirstChild("Humanoid") then
+					target = v
+					break
+				elseif v:IsA("Player") then
+					target = v
+					break
+				end
+			end
+		end
+	end
 
 	if typeof(target) == "Instance" then
 		if target:IsA("Player") then
