@@ -424,80 +424,80 @@ lastRender<ESP_RENDER_INTERVAL then return end _state.lastRender=now Helpers.
 render()end)_maid:GiveTask(renderConn)local viewModelMod=Helpers.
 getViewModelModule()if viewModelMod then local oldPlayHitmarkerSound
 oldPlayHitmarkerSound=HookUtils.safeHook(viewModelMod,'PlayHitmarkerSound',
-function(self,isHeadshot,pitchModifier,...)Visuals:onHit()return
-oldPlayHitmarkerSound(self,isHeadshot,pitchModifier,...)end,State.logger,_maid)
-end local localPlayer=Players.LocalPlayer if localPlayer then local playerGui=
-localPlayer:WaitForChild('PlayerGui',5)if playerGui then local function
-onDescendantAdded(descendant)local isHitmarker=descendant.Name:match(
-'^Hitmarker')or descendant.Name=='DamageIndicator'if isHitmarker then if State.
-settings.shouldHideHitmarker then(descendant).Visible=false end if descendant:
-IsA('GuiObject')then _maid:GiveTask(descendant:GetPropertyChangedSignal(
-'Visible'):Connect(function()if(descendant).Visible and State.settings.
-shouldHideHitmarker then(descendant).Visible=false end end))end end end for _,
-descendant in ipairs(playerGui:GetDescendants())do onDescendantAdded(descendant)
-end _maid:GiveTask(playerGui.DescendantAdded:Connect(onDescendantAdded))end end
-end local function _enable()if not ExecutorUtils.getDrawingLib()then State.
-isEnabled=false return end _connect()end local function _disable()_maid:
-DoCleaning()Helpers.clearAll()end function Visuals.init(self,client)State.client
-=client State.logger=client.Logger _maid=Maid.new()end function Visuals.Destroy(
-self)State.isEnabled=false _disable()end function Visuals.toggle(self,isEnabled)
-if State.isEnabled==isEnabled then return end State.isEnabled=isEnabled if
-isEnabled then _enable()else _disable()end end function Visuals.setEspEnabled(
-self,isEnabled)State.settings.isEspEnabled=isEnabled if not isEnabled then
-Helpers.clearAll()end end function Visuals.setShowNames(self,shouldShow)State.
-settings.shouldShowNames=shouldShow end function Visuals.setShowWeapon(self,
-shouldShow)State.settings.shouldShowWeapon=shouldShow end function Visuals.
-setShowDistance(self,shouldShow)State.settings.shouldShowDistance=shouldShow end
-function Visuals.setShowBoxes(self,shouldShow)State.settings.shouldShowBoxes=
-shouldShow end function Visuals.setShowSkeleton(self,shouldShow)State.settings.
-shouldShowSkeleton=shouldShow end function Visuals.setShowHealthbar(self,
-shouldShow)State.settings.shouldShowHealthbar=shouldShow end function Visuals.
-setShowHighlight(self,shouldShow)State.settings.shouldShowHighlight=shouldShow
-if not shouldShow then Helpers.clearHighlights()end end function Visuals.
-setShowTeammates(self,shouldShow)State.settings.shouldShowTeammates=shouldShow
-end function Visuals.setBoxColor(self,color)State.settings.boxColor=color end
-function Visuals.setTextColor(self,color)State.settings.textColor=color end
-function Visuals.setWeaponColor(self,color)State.settings.weaponColor=color end
-function Visuals.setDistanceColor(self,color)State.settings.distanceColor=color
-end function Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=
-color end function Visuals.setHealthbarColor(self,color)State.settings.
-healthbarColor=color end function Visuals.setHealthbarOutlineColor(self,color)
-State.settings.healthbarOutlineColor=color end function Visuals.
-setNameOutlineColor(self,color)State.settings.nameOutlineColor=color end
-function Visuals.setWeaponOutlineColor(self,color)State.settings.
-weaponOutlineColor=color end function Visuals.setDistanceOutlineColor(self,color
-)State.settings.distanceOutlineColor=color end function Visuals.
-setBoxOutlineColor(self,color)State.settings.boxOutlineColor=color end function
-Visuals.setSkeletonOutlineColor(self,color)State.settings.skeletonOutlineColor=
-color end function Visuals.setHighlightFill(self,color)State.settings.
-highlightFill=color end function Visuals.setHighlightOutline(self,color)State.
-settings.highlightOutline=color end function Visuals.setBoxThickness(self,value)
-State.settings.boxThickness=value end function Visuals.setSkeletonThickness(self
-,value)State.settings.skeletonThickness=value end function Visuals.setTextSize(
-self,value)State.settings.textSize=value end function Visuals.setOutline(self,
-isEnabled)State.settings.shouldOutline=isEnabled end function Visuals.
-setOverrideCheck(self,check)State.overrideCheck=check end function Visuals.
-setHitSoundEnabled(self,isEnabled)State.settings.shouldPlayHitSound=isEnabled
-end function Visuals.setHitSound(self,sound)State.settings.hitSound=sound end
-function Visuals.setHitSoundVolume(self,volume)State.settings.hitSoundVolume=
-volume end function Visuals.setBulletTracersEnabled(self,isEnabled)State.
-settings.shouldShowBulletTracers=isEnabled end function Visuals.
-setHitNotifyEnabled(self,isEnabled)State.settings.shouldShowHitNotify=isEnabled
-end function Visuals.setKillNotifyEnabled(self,isEnabled)State.settings.
-shouldShowKillNotify=isEnabled end function Visuals.setHideHitmarkerEnabled(self
-,isEnabled)State.settings.shouldHideHitmarker=isEnabled end function Visuals.
-setKillNotifyLifetime(self,delay)State.settings.killNotifyLifetime=delay end
-function Visuals.setHitNotifyLifetime(self,delay)State.settings.
-hitNotifyLifetime=delay end function Visuals.setTracerLifetime(self,delay)State.
-settings.tracerLifetime=delay end function Visuals.setTracerThickness(self,
-thickness)State.settings.tracerThickness=thickness end function Visuals.onHit(
-self,position)if State.settings.shouldPlayHitSound then local soundName=State.
-settings.hitSound local volume=State.settings.hitSoundVolume local soundId=
-Constants.SOUNDS[soundName]if soundId then local sound=Instance.new('Sound')
-sound.SoundId=soundId sound.Volume=volume sound.Parent=game:GetService(
-'SoundService')sound:Play()game:GetService('Debris'):AddItem(sound,3)end end end
-return Visuals end function __DARKLUA_BUNDLE_MODULES.l()local v=
-__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
+function(self,isHeadshot,pitchModifier,...)if State.settings.shouldPlayHitSound
+then Visuals:onHit()return end return oldPlayHitmarkerSound(self,isHeadshot,
+pitchModifier,...)end,State.logger,_maid)end local localPlayer=Players.
+LocalPlayer if localPlayer then local playerGui=localPlayer:WaitForChild(
+'PlayerGui',5)if playerGui then local function onDescendantAdded(descendant)
+local isHitmarker=descendant.Name:match('^Hitmarker')or descendant.Name==
+'DamageIndicator'if isHitmarker then if State.settings.shouldHideHitmarker then(
+descendant).Visible=false end if descendant:IsA('GuiObject')then _maid:GiveTask(
+descendant:GetPropertyChangedSignal('Visible'):Connect(function()if(descendant).
+Visible and State.settings.shouldHideHitmarker then(descendant).Visible=false
+end end))end end end for _,descendant in ipairs(playerGui:GetDescendants())do
+onDescendantAdded(descendant)end _maid:GiveTask(playerGui.DescendantAdded:
+Connect(onDescendantAdded))end end end local function _enable()if not
+ExecutorUtils.getDrawingLib()then State.isEnabled=false return end _connect()end
+local function _disable()_maid:DoCleaning()Helpers.clearAll()end function
+Visuals.init(self,client)State.client=client State.logger=client.Logger _maid=
+Maid.new()end function Visuals.Destroy(self)State.isEnabled=false _disable()end
+function Visuals.toggle(self,isEnabled)if State.isEnabled==isEnabled then return
+end State.isEnabled=isEnabled if isEnabled then _enable()else _disable()end end
+function Visuals.setEspEnabled(self,isEnabled)State.settings.isEspEnabled=
+isEnabled if not isEnabled then Helpers.clearAll()end end function Visuals.
+setShowNames(self,shouldShow)State.settings.shouldShowNames=shouldShow end
+function Visuals.setShowWeapon(self,shouldShow)State.settings.shouldShowWeapon=
+shouldShow end function Visuals.setShowDistance(self,shouldShow)State.settings.
+shouldShowDistance=shouldShow end function Visuals.setShowBoxes(self,shouldShow)
+State.settings.shouldShowBoxes=shouldShow end function Visuals.setShowSkeleton(
+self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end function
+Visuals.setShowHealthbar(self,shouldShow)State.settings.shouldShowHealthbar=
+shouldShow end function Visuals.setShowHighlight(self,shouldShow)State.settings.
+shouldShowHighlight=shouldShow if not shouldShow then Helpers.clearHighlights()
+end end function Visuals.setShowTeammates(self,shouldShow)State.settings.
+shouldShowTeammates=shouldShow end function Visuals.setBoxColor(self,color)State
+.settings.boxColor=color end function Visuals.setTextColor(self,color)State.
+settings.textColor=color end function Visuals.setWeaponColor(self,color)State.
+settings.weaponColor=color end function Visuals.setDistanceColor(self,color)
+State.settings.distanceColor=color end function Visuals.setSkeletonColor(self,
+color)State.settings.skeletonColor=color end function Visuals.setHealthbarColor(
+self,color)State.settings.healthbarColor=color end function Visuals.
+setHealthbarOutlineColor(self,color)State.settings.healthbarOutlineColor=color
+end function Visuals.setNameOutlineColor(self,color)State.settings.
+nameOutlineColor=color end function Visuals.setWeaponOutlineColor(self,color)
+State.settings.weaponOutlineColor=color end function Visuals.
+setDistanceOutlineColor(self,color)State.settings.distanceOutlineColor=color end
+function Visuals.setBoxOutlineColor(self,color)State.settings.boxOutlineColor=
+color end function Visuals.setSkeletonOutlineColor(self,color)State.settings.
+skeletonOutlineColor=color end function Visuals.setHighlightFill(self,color)
+State.settings.highlightFill=color end function Visuals.setHighlightOutline(self
+,color)State.settings.highlightOutline=color end function Visuals.
+setBoxThickness(self,value)State.settings.boxThickness=value end function
+Visuals.setSkeletonThickness(self,value)State.settings.skeletonThickness=value
+end function Visuals.setTextSize(self,value)State.settings.textSize=value end
+function Visuals.setOutline(self,isEnabled)State.settings.shouldOutline=
+isEnabled end function Visuals.setOverrideCheck(self,check)State.overrideCheck=
+check end function Visuals.setHitSoundEnabled(self,isEnabled)State.settings.
+shouldPlayHitSound=isEnabled end function Visuals.setHitSound(self,sound)State.
+settings.hitSound=sound end function Visuals.setHitSoundVolume(self,volume)State
+.settings.hitSoundVolume=volume end function Visuals.setBulletTracersEnabled(
+self,isEnabled)State.settings.shouldShowBulletTracers=isEnabled end function
+Visuals.setHitNotifyEnabled(self,isEnabled)State.settings.shouldShowHitNotify=
+isEnabled end function Visuals.setKillNotifyEnabled(self,isEnabled)State.
+settings.shouldShowKillNotify=isEnabled end function Visuals.
+setHideHitmarkerEnabled(self,isEnabled)State.settings.shouldHideHitmarker=
+isEnabled end function Visuals.setKillNotifyLifetime(self,delay)State.settings.
+killNotifyLifetime=delay end function Visuals.setHitNotifyLifetime(self,delay)
+State.settings.hitNotifyLifetime=delay end function Visuals.setTracerLifetime(
+self,delay)State.settings.tracerLifetime=delay end function Visuals.
+setTracerThickness(self,thickness)State.settings.tracerThickness=thickness end
+function Visuals.onHit(self,position)if State.settings.shouldPlayHitSound then
+local soundName=State.settings.hitSound local volume=State.settings.
+hitSoundVolume local soundId=Constants.SOUNDS[soundName]if soundId then local
+sound=Instance.new('Sound')sound.SoundId=soundId sound.Volume=volume sound.
+Parent=game:GetService('SoundService')sound:Play()game:GetService('Debris'):
+AddItem(sound,3)end end end return Visuals end function __DARKLUA_BUNDLE_MODULES
+.l()local v=__DARKLUA_BUNDLE_MODULES.cache.l if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.l=v end return v.c end end do local function
 __modImpl()local Constants={DEFAULT_FLY_SPEED=50,INPUT_MAP={[Enum.KeyCode.W]=
 'forward',[Enum.KeyCode.S]='back',[Enum.KeyCode.A]='left',[Enum.KeyCode.D]=

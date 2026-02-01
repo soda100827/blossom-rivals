@@ -55,8 +55,11 @@ local function _connect()
 			viewModelMod,
 			"PlayHitmarkerSound",
 			function(self, isHeadshot, pitchModifier, ...)
-				-- Play our custom sound
-				Visuals:onHit()
+				-- If custom hit sound is enabled, play it and suppress the default one
+				if State.settings.shouldPlayHitSound then
+					Visuals:onHit()
+					return
+				end
 
 				return oldPlayHitmarkerSound(self, isHeadshot, pitchModifier, ...)
 			end,
