@@ -1097,27 +1097,37 @@ local function _getDesiredWeaponSlot()if State.ragebotWeaponSlot=='Secondary'
 then return 2 end return 1 end local function _getItemBySlot(localFighter,slot)
 local items=localFighter and localFighter.Items if type(items)=='table'then
 return items[slot]end return nil end local function _ensureDesiredWeapon(
-localFighter)if not localFighter or not localFighter.EquipItem then return end
-local desiredSlot=_getDesiredWeaponSlot()local equipped=localFighter.
-EquippedItem if equipped and _isGunItem(equipped)then if State.
+localFighter,isSwapActive)if not localFighter or not localFighter.EquipItem then
+return end local desiredSlot=_getDesiredWeaponSlot()local equipped=localFighter.
+EquippedItem if equipped and _isGunItem(equipped)then if isSwapActive and State.
 isRagebotSwapWeaponOnReload then return end local currentSlot=(equipped).Slot if
 currentSlot==desiredSlot then return end end pcall(function()localFighter:
 EquipItem(desiredSlot)end)end local function _tryStartReload(item)if not item or
 not item.Input then return end if _isReloading(item)then return end pcall(
 function()item:Input('StartReloading')_state.lastReloadAttemptAt=os.clock()if
 State.logger then State.logger:info('[Ragebot] Started Reloading:',item.Name)end
-end)end local function _swapWeaponOnReload(localFighter)if not State.
+end)end local function _getEquippedSlot(equipped)if not equipped then return nil
+end local slot=(equipped).Slot if type(slot)=='number'then return slot end
+return nil end local function _swapWeaponOnReload(localFighter)if not State.
 isRagebotSwapWeaponOnReload then return end local now=os.clock()if now-_state.
 lastWeaponSwapAt<SWAP_WEAPON_COOLDOWN then return end if not localFighter or not
 localFighter.EquipItem then return end local equipped=localFighter.EquippedItem
-if not equipped or not _isGunItem(equipped)then return end if _isOutOfAmmo(
-equipped)or _isReloading(equipped)then _tryStartReload(equipped)local
-currentSlot=(equipped).Slot local otherSlot=(currentSlot==1)and 2 or 1 if State.
-logger then State.logger:info('[Ragebot Swap] Mag Empty. Swapping to slot:',
-otherSlot)end local otherItem=_getItemBySlot(localFighter,otherSlot)if otherItem
-then _state.lastWeaponSwapAt=now pcall(function()localFighter:EquipItem(
-otherSlot)end)end end end local function _refreshInputFunctions()if _state.
-mouse1press or _state.mouse1click then return end _state.mouse1press=
+if not equipped or not _isGunItem(equipped)then return end local equippedSlot=
+_getEquippedSlot(equipped)if not equippedSlot then return end local desiredSlot=
+_getDesiredWeaponSlot()local otherSlot=(desiredSlot==1)and 2 or 1 if
+_isOutOfAmmo(equipped)or _isReloading(equipped)then if equippedSlot==desiredSlot
+then _tryStartReload(equipped)if State.logger then State.logger:info(
+'[Ragebot Swap] Mag Empty. Swapping to slot:',otherSlot)end local otherItem=
+_getItemBySlot(localFighter,otherSlot)if otherItem then _state.lastWeaponSwapAt=
+now _state.isSwapReloadActive=true pcall(function()localFighter:EquipItem(
+otherSlot)end)end else if State.logger then State.logger:info(
+'[Ragebot Swap] Other Mag Empty. Returning to slot:',desiredSlot)end local
+desiredItem=_getItemBySlot(localFighter,desiredSlot)if desiredItem then _state.
+lastWeaponSwapAt=now _state.isSwapReloadActive=false pcall(function()
+localFighter:EquipItem(desiredSlot)end)_tryStartReload(desiredItem)end end else
+if equippedSlot==desiredSlot and _state.isSwapReloadActive then _state.
+isSwapReloadActive=false end end end local function _refreshInputFunctions()if
+_state.mouse1press or _state.mouse1click then return end _state.mouse1press=
 ExecutorUtils.getGlobal('mouse1press')_state.mouse1release=ExecutorUtils.
 getGlobal('mouse1release')_state.mouse1click=ExecutorUtils.getGlobal(
 'mouse1click')end local function _safeCallInput(obj,inputName)if not obj or not
@@ -1204,10 +1214,9 @@ _applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
 not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
 localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
-_getLocalFighter()if not localFighter then return end if not State.
-isRagebotSwapWeaponOnReload and not _state.isSwapReloadActive then
-_ensureDesiredWeapon(localFighter)end _refreshTarget(localRoot)local targetRoot=
-_state.cachedTargetRoot if not targetRoot then if _state.isEngaged then _state.
+_getLocalFighter()if not localFighter then return end _ensureDesiredWeapon(
+localFighter,_state.isSwapReloadActive)_refreshTarget(localRoot)local targetRoot
+=_state.cachedTargetRoot if not targetRoot then if _state.isEngaged then _state.
 isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then State.
 isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
 ragebotSavedSilentAimEnabled=nil end if State.

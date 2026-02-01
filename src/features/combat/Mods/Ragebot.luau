@@ -311,15 +311,15 @@ local function _getItemBySlot(localFighter: any, slot: number): any
 	return nil
 end
 
-local function _ensureDesiredWeapon(localFighter: any)
+local function _ensureDesiredWeapon(localFighter: any, isSwapActive: boolean)
 	if not localFighter or not localFighter.EquipItem then
 		return
 	end
 	local desiredSlot = _getDesiredWeaponSlot()
 	local equipped = localFighter.EquippedItem
 	if equipped and _isGunItem(equipped) then
-		-- If Swap On Reload is enabled, we basically allow any gun as long as it handles itself
-		if State.isRagebotSwapWeaponOnReload then
+		-- Allow any gun while swap-on-reload flow is active
+		if isSwapActive and State.isRagebotSwapWeaponOnReload then
 			return
 		end
 
@@ -349,6 +349,17 @@ local function _tryStartReload(item: any)
 	end)
 end
 
+local function _getEquippedSlot(equipped: any): number?
+	if not equipped then
+		return nil
+	end
+	local slot = (equipped :: any).Slot
+	if type(slot) == "number" then
+		return slot
+	end
+	return nil
+end
+
 local function _swapWeaponOnReload(localFighter: any)
 	if not State.isRagebotSwapWeaponOnReload then
 		return
@@ -366,25 +377,47 @@ local function _swapWeaponOnReload(localFighter: any)
 	if not equipped or not _isGunItem(equipped) then
 		return
 	end
+	local equippedSlot = _getEquippedSlot(equipped)
+	if not equippedSlot then
+		return
+	end
+	local desiredSlot = _getDesiredWeaponSlot()
+	local otherSlot = (desiredSlot == 1) and 2 or 1
 
 	-- Check for Low Ammo OR Reloading state to force swap
 	if _isOutOfAmmo(equipped) or _isReloading(equipped) then
-		-- CRITICAL: Start reload on CURRENT weapon FIRST, so it reloads in background while we use the other gun
-		_tryStartReload(equipped)
-
-		local currentSlot = (equipped :: any).Slot
-		local otherSlot = (currentSlot == 1) and 2 or 1
-
-		if State.logger then
-			State.logger:info("[Ragebot Swap] Mag Empty. Swapping to slot:", otherSlot)
+		if equippedSlot == desiredSlot then
+			-- Start reload on ragebot weapon, then swap to the other gun
+			_tryStartReload(equipped)
+			if State.logger then
+				State.logger:info("[Ragebot Swap] Mag Empty. Swapping to slot:", otherSlot)
+			end
+			local otherItem = _getItemBySlot(localFighter, otherSlot)
+			if otherItem then
+				_state.lastWeaponSwapAt = now
+				_state.isSwapReloadActive = true
+				pcall(function()
+					localFighter:EquipItem(otherSlot)
+				end)
+			end
+		else
+			-- Other gun empty: return to ragebot weapon and reload it
+			if State.logger then
+				State.logger:info("[Ragebot Swap] Other Mag Empty. Returning to slot:", desiredSlot)
+			end
+			local desiredItem = _getItemBySlot(localFighter, desiredSlot)
+			if desiredItem then
+				_state.lastWeaponSwapAt = now
+				_state.isSwapReloadActive = false
+				pcall(function()
+					localFighter:EquipItem(desiredSlot)
+				end)
+				_tryStartReload(desiredItem)
+			end
 		end
-
-		local otherItem = _getItemBySlot(localFighter, otherSlot)
-		if otherItem then
-			_state.lastWeaponSwapAt = now
-			pcall(function()
-				localFighter:EquipItem(otherSlot)
-			end)
+	else
+		if equippedSlot == desiredSlot and _state.isSwapReloadActive then
+			_state.isSwapReloadActive = false
 		end
 	end
 end
@@ -670,9 +703,7 @@ local function _connect()
 			return
 		end
 
-		if not State.isRagebotSwapWeaponOnReload and not _state.isSwapReloadActive then
-			_ensureDesiredWeapon(localFighter)
-		end
+		_ensureDesiredWeapon(localFighter, _state.isSwapReloadActive)
 
 		_refreshTarget(localRoot)
 		local targetRoot = _state.cachedTargetRoot
