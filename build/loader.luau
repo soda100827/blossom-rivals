@@ -447,49 +447,50 @@ local now=os.clock()if now-_state.lastRender<ESP_RENDER_INTERVAL then return end
 _state.lastRender=now Helpers.render()end)_maid:GiveTask(renderConn)local
 viewModelMod=Helpers.getViewModelModule()if viewModelMod then local
 oldPlayHitmarkerSound oldPlayHitmarkerSound=HookUtils.safeHook(viewModelMod,
-'PlayHitmarkerSound',function(self,isHeadshot,pitchModifier,...)
-_tryShowHitNotify(nil)if State.settings.shouldPlayHitSound then Visuals:onHit(
-nil)return end return oldPlayHitmarkerSound(self,isHeadshot,pitchModifier,...)
-end,State.logger,_maid)end local hitmarkerMod=Helpers.getHitmarkerModule()if
-hitmarkerMod then local oldDamageEffect oldDamageEffect=HookUtils.safeHook(
-hitmarkerMod,'DamageEffect',function(self,damageInfo,...)if State.settings.
-shouldHideHitmarker then if State.settings.shouldPlayHitSound then Visuals:
-onHit(damageInfo)else if self.Mouse and self.Mouse.ItemInterface and self.Mouse.
-ItemInterface.ClientItem and self.Mouse.ItemInterface.ClientItem.ViewModel then
-local isHeadshot=damageInfo['\1']self.Mouse.ItemInterface.ClientItem.ViewModel:
-PlayHitmarkerSound(isHeadshot,...)end end _tryShowHitNotify(damageInfo)
-_tryShowKillNotify(damageInfo)return end _tryShowHitNotify(damageInfo)
-_tryShowKillNotify(damageInfo)return oldDamageEffect(self,damageInfo,...)end,
-State.logger,_maid)end end local function _enable()if not ExecutorUtils.
-getDrawingLib()then State.isEnabled=false return end _connect()end
-local function _disable()_maid:DoCleaning()Helpers.clearAll()_clearNotifies()end
-function Visuals.init(self,client)State.client=client State.logger=client.Logger
-_maid=Maid.new()end function Visuals.Destroy(self)State.isEnabled=false
-_disable()end function Visuals.toggle(self,isEnabled)if State.isEnabled==
-isEnabled then return end State.isEnabled=isEnabled if isEnabled then _enable()
-else _disable()end end function Visuals.setEspEnabled(self,isEnabled)State.
-settings.isEspEnabled=isEnabled if not isEnabled then Helpers.clearAll()end end
-function Visuals.setShowNames(self,shouldShow)State.settings.shouldShowNames=
-shouldShow end function Visuals.setShowWeapon(self,shouldShow)State.settings.
-shouldShowWeapon=shouldShow end function Visuals.setShowDistance(self,shouldShow
-)State.settings.shouldShowDistance=shouldShow end function Visuals.setShowBoxes(
-self,shouldShow)State.settings.shouldShowBoxes=shouldShow end function Visuals.
-setShowSkeleton(self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end
-function Visuals.setShowHealthbar(self,shouldShow)State.settings.
-shouldShowHealthbar=shouldShow end function Visuals.setShowHighlight(self,
-shouldShow)State.settings.shouldShowHighlight=shouldShow if not shouldShow then
-Helpers.clearHighlights()end end function Visuals.setShowTeammates(self,
-shouldShow)State.settings.shouldShowTeammates=shouldShow end function Visuals.
-setBoxColor(self,color)State.settings.boxColor=color end function Visuals.
-setTextColor(self,color)State.settings.textColor=color end function Visuals.
-setWeaponColor(self,color)State.settings.weaponColor=color end function Visuals.
-setDistanceColor(self,color)State.settings.distanceColor=color end function
-Visuals.setSkeletonColor(self,color)State.settings.skeletonColor=color end
-function Visuals.setHealthbarColor(self,color)State.settings.healthbarColor=
-color end function Visuals.setHealthbarOutlineColor(self,color)State.settings.
-healthbarOutlineColor=color end function Visuals.setNameOutlineColor(self,color)
-State.settings.nameOutlineColor=color end function Visuals.setWeaponOutlineColor
-(self,color)State.settings.weaponOutlineColor=color end function Visuals.
+'PlayHitmarkerSound',function(self,isHeadshot,pitchModifier,...)local damageInfo
+={}_tryShowHitNotify(damageInfo)if State.settings.shouldPlayHitSound then
+Visuals:onHit(nil)return end return oldPlayHitmarkerSound(self,isHeadshot,
+pitchModifier,...)end,State.logger,_maid)end local hitmarkerMod=Helpers.
+getHitmarkerModule()if hitmarkerMod then local oldDamageEffect oldDamageEffect=
+HookUtils.safeHook(hitmarkerMod,'DamageEffect',function(self,damageInfo,...)if
+State.settings.shouldHideHitmarker then if State.settings.shouldPlayHitSound
+then Visuals:onHit(damageInfo)else if self.Mouse and self.Mouse.ItemInterface
+and self.Mouse.ItemInterface.ClientItem and self.Mouse.ItemInterface.ClientItem.
+ViewModel then local isHeadshot=damageInfo['\1']self.Mouse.ItemInterface.
+ClientItem.ViewModel:PlayHitmarkerSound(isHeadshot,...)end end
+_tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return end
+_tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return
+oldDamageEffect(self,damageInfo,...)end,State.logger,_maid)end end
+local function _enable()if not ExecutorUtils.getDrawingLib()then State.isEnabled
+=false return end _connect()end local function _disable()_maid:DoCleaning()
+Helpers.clearAll()_clearNotifies()end function Visuals.init(self,client)State.
+client=client State.logger=client.Logger _maid=Maid.new()end function Visuals.
+Destroy(self)State.isEnabled=false _disable()end function Visuals.toggle(self,
+isEnabled)if State.isEnabled==isEnabled then return end State.isEnabled=
+isEnabled if isEnabled then _enable()else _disable()end end function Visuals.
+setEspEnabled(self,isEnabled)State.settings.isEspEnabled=isEnabled if not
+isEnabled then Helpers.clearAll()end end function Visuals.setShowNames(self,
+shouldShow)State.settings.shouldShowNames=shouldShow end function Visuals.
+setShowWeapon(self,shouldShow)State.settings.shouldShowWeapon=shouldShow end
+function Visuals.setShowDistance(self,shouldShow)State.settings.
+shouldShowDistance=shouldShow end function Visuals.setShowBoxes(self,shouldShow)
+State.settings.shouldShowBoxes=shouldShow end function Visuals.setShowSkeleton(
+self,shouldShow)State.settings.shouldShowSkeleton=shouldShow end function
+Visuals.setShowHealthbar(self,shouldShow)State.settings.shouldShowHealthbar=
+shouldShow end function Visuals.setShowHighlight(self,shouldShow)State.settings.
+shouldShowHighlight=shouldShow if not shouldShow then Helpers.clearHighlights()
+end end function Visuals.setShowTeammates(self,shouldShow)State.settings.
+shouldShowTeammates=shouldShow end function Visuals.setBoxColor(self,color)State
+.settings.boxColor=color end function Visuals.setTextColor(self,color)State.
+settings.textColor=color end function Visuals.setWeaponColor(self,color)State.
+settings.weaponColor=color end function Visuals.setDistanceColor(self,color)
+State.settings.distanceColor=color end function Visuals.setSkeletonColor(self,
+color)State.settings.skeletonColor=color end function Visuals.setHealthbarColor(
+self,color)State.settings.healthbarColor=color end function Visuals.
+setHealthbarOutlineColor(self,color)State.settings.healthbarOutlineColor=color
+end function Visuals.setNameOutlineColor(self,color)State.settings.
+nameOutlineColor=color end function Visuals.setWeaponOutlineColor(self,color)
+State.settings.weaponOutlineColor=color end function Visuals.
 setDistanceOutlineColor(self,color)State.settings.distanceOutlineColor=color end
 function Visuals.setBoxOutlineColor(self,color)State.settings.boxOutlineColor=
 color end function Visuals.setSkeletonOutlineColor(self,color)State.settings.

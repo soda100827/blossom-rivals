@@ -98,6 +98,8 @@ local function _showNotify(
 	drawing.Position = _getNotifyPosition(offsetY)
 	drawing.Visible = true
 
+	-- print("DEBUG: Showing notify", text, drawing.Position)
+
 	task.delay(lifetime, function()
 		if store.token ~= token then
 			return
@@ -216,6 +218,10 @@ local function _tryShowHitNotify(damageInfo: any)
 	if not State.settings.shouldShowHitNotify then
 		return
 	end
+
+	-- Debug
+	-- print("Hit Notify Triggered. Params:", damageInfo)
+
 	local now = os.clock()
 	if now - _state.hitNotify.lastAt < HIT_NOTIFY_COOLDOWN then
 		return
@@ -237,6 +243,10 @@ local function _tryShowKillNotify(damageInfo: any)
 	if not State.settings.shouldShowKillNotify then
 		return
 	end
+
+	-- Debug
+	-- print("Kill Notify Triggered. Params:", damageInfo)
+
 	if not _isKillDamageInfo(damageInfo) then
 		return
 	end
@@ -286,7 +296,8 @@ local function _connect()
 			viewModelMod,
 			"PlayHitmarkerSound",
 			function(self, isHeadshot, pitchModifier, ...)
-				_tryShowHitNotify(nil)
+				local damageInfo = {} -- Rivals doesn't pass damage info here, so we might just say "Hit"
+				_tryShowHitNotify(damageInfo)
 				if State.settings.shouldPlayHitSound then
 					Visuals:onHit(nil)
 					return
