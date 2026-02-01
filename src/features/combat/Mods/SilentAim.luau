@@ -9,6 +9,7 @@ local PlayerUtils = require("../../../shared/PlayerUtils")
 local State = require("../State")
 local Helpers = require("../Utils/Helpers")
 local Targeting = require("../Systems/Targeting")
+local VisualsFeature = require("../../visuals")
 
 --// Constants
 
@@ -106,6 +107,14 @@ function SilentAim.setup(maid: any): ()
 						_state.lastSilentTargetPos = targetPart.Position
 						_state.lastSilentOrigin = newOrigin
 						-- For non-magic bullet silent aim, we just hit the target directly
+
+						-- Trigger Hit Effects (Sound)
+						if VisualsFeature.onHit then
+							task.spawn(function()
+								VisualsFeature:onHit(targetPart.Position)
+							end)
+						end
+
 						return oldRaycast(self, newOrigin, targetPart.Position, distance, filter, ...)
 					end
 				end
