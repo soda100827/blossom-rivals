@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 --// Dependencies (require)
 local ExecutorUtils = require("../../shared/ExecutorUtils")
 local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid") :: any
+local HookUtils = require("../../shared/HookUtils")
 local Helpers = require("./Utils/Helpers")
 local State = require("./State")
 local Types = require("./Types")
@@ -46,42 +47,49 @@ local function _connect()
 	end)
 	_maid:GiveTask(renderConn)
 
-	-- Hit Detection (Hitmarker / DamageIndicator)
+	-- Hit Detection Hook
+	local viewModelMod = Helpers.getViewModelModule()
+	if viewModelMod then
+		local oldPlayHitmarkerSound
+		oldPlayHitmarkerSound = HookUtils.safeHook(
+			viewModelMod,
+			"PlayHitmarkerSound",
+			function(self, isHeadshot, pitchModifier, ...)
+				-- Play our custom sound
+				Visuals:onHit()
+
+				return oldPlayHitmarkerSound(self, isHeadshot, pitchModifier, ...)
+			end,
+			State.logger,
+			_maid
+		)
+	end
+
+	-- No Hitmarker Logic (Visual Only)
 	local localPlayer = Players.LocalPlayer
 	if localPlayer then
 		local playerGui = localPlayer:WaitForChild("PlayerGui", 5)
 		if playerGui then
-			-- Function to handle hitmarker
 			local function onDescendantAdded(descendant: Instance)
 				local isHitmarker = descendant.Name:match("^Hitmarker") or descendant.Name == "DamageIndicator"
 				if isHitmarker then
-					-- Play sound on spawn (for games that create new markers)
-					Visuals:onHit()
-
 					if State.settings.shouldHideHitmarker then
 						(descendant :: any).Visible = false
 					end
 
-					-- Monitor visibility (for games that reuse markers)
 					if descendant:IsA("GuiObject") then
 						_maid:GiveTask(descendant:GetPropertyChangedSignal("Visible"):Connect(function()
-							if (descendant :: GuiObject).Visible then
-								Visuals:onHit()
-								if State.settings.shouldHideHitmarker then
-									(descendant :: GuiObject).Visible = false
-								end
+							if (descendant :: GuiObject).Visible and State.settings.shouldHideHitmarker then
+								(descendant :: GuiObject).Visible = false
 							end
 						end))
 					end
 				end
 			end
 
-			-- Scan existing
 			for _, descendant in ipairs(playerGui:GetDescendants()) do
 				onDescendantAdded(descendant)
 			end
-
-			-- Listen for new
 			_maid:GiveTask(playerGui.DescendantAdded:Connect(onDescendantAdded))
 		end
 	end
