@@ -45,6 +45,23 @@ local function _connect()
 		Helpers.render()
 	end)
 	_maid:GiveTask(renderConn)
+
+	-- Hitmarker Sound Listener
+	local localPlayer = Players.LocalPlayer
+	if localPlayer then
+		local playerGui = localPlayer:WaitForChild("PlayerGui", 5)
+		if playerGui then
+			_maid:GiveTask(playerGui.DescendantAdded:Connect(function(descendant)
+				if descendant.Name:match("^Hitmarker") or descendant.Name == "DamageIndicator" then
+					Visuals:onHit()
+					if State.settings.shouldHideHitmarker then
+						-- Hide the game hitmarker if requested
+						(descendant :: any).Visible = false
+					end
+				end
+			end))
+		end
+	end
 end
 
 local function _enable()
