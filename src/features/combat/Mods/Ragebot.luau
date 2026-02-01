@@ -3,6 +3,7 @@
 --// Services
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 local UserInputService = game:GetService("UserInputService")
 
 --// Dependencies (require)
@@ -19,6 +20,10 @@ local SWAP_WEAPON_COOLDOWN = 0.2
 local TARGET_REFRESH_INTERVAL = 0.05
 local DEFAULT_RAGEBOT_OFFSET = Vector3.zero
 local MOUSE_SHOT_RELEASE_DELAY = 0.03
+local TELEPORT_SOUND_ID = "rbxassetid://105163025117598"
+local KILL_SOUND_ID = "rbxassetid://80830976255721"
+local TELEPORT_SOUND_COOLDOWN = 0.6
+local KILL_SOUND_COOLDOWN = 0.15
 
 --// Types
 
@@ -46,9 +51,72 @@ local _state = {
 	debugNextAt = 0,
 	returnedToPrimary = false,
 	lastReloadAttemptAt = 0,
+	lastTeleportSoundAt = 0,
+	lastKillSoundAt = 0,
+	lastTeleportTargetUserId = nil :: number?,
+	isEliminationHooked = false,
+	utility = nil :: any,
 }
 
 --// Private helpers
+local function _getUtility(): any
+	if _state.utility then
+		return _state.utility
+	end
+	local utility = Helpers.getUtility()
+	_state.utility = utility
+	return utility
+end
+
+local function _playLocalSound(soundId: string, volume: number): ()
+	local utility = _getUtility()
+	if utility and utility.CreateSound then
+		pcall(function()
+			utility:CreateSound(soundId, volume, 1, "script", true, 3)
+		end)
+		return
+	end
+
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume
+	sound.PlaybackSpeed = 1
+	sound.Parent = SoundService
+	sound:Play()
+	task.delay(3, function()
+		if sound.Parent then
+			sound:Destroy()
+		end
+	end)
+end
+
+local function _maybePlayTeleportSound(targetPlayer: Player?)
+	if not targetPlayer then
+		return
+	end
+	if _state.lastTeleportTargetUserId == targetPlayer.UserId then
+		return
+	end
+	local now = os.clock()
+	if now - _state.lastTeleportSoundAt < TELEPORT_SOUND_COOLDOWN then
+		return
+	end
+	_state.lastTeleportSoundAt = now
+	_state.lastTeleportTargetUserId = targetPlayer.UserId
+	_playLocalSound(TELEPORT_SOUND_ID, 1)
+end
+
+local function _maybePlayKillSound(isAssist: boolean?)
+	if isAssist == true then
+		return
+	end
+	local now = os.clock()
+	if now - _state.lastKillSoundAt < KILL_SOUND_COOLDOWN then
+		return
+	end
+	_state.lastKillSoundAt = now
+	_playLocalSound(KILL_SOUND_ID, 1)
+end
 local function _getLocalRoot(): BasePart?
 	local localPlayer = PlayerUtils.getLocalPlayer()
 	local character = localPlayer and localPlayer.Character
@@ -636,9 +704,10 @@ local function _applyRagebotSilentAimOverride(isEnabled: boolean)
 	end
 end
 
-local function _teleportToTarget(localRoot: BasePart, targetRoot: BasePart)
+local function _teleportToTarget(localRoot: BasePart, targetRoot: BasePart, targetPlayer: Player?)
 	local offset = State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
 	localRoot.CFrame = targetRoot.CFrame * CFrame.new(offset)
+	_maybePlayTeleportSound(targetPlayer)
 end
 
 local function _orbitTarget(localRoot: BasePart, targetRoot: BasePart)
@@ -657,6 +726,22 @@ local function _refreshTarget(localRoot: BasePart)
 	end
 	_state.lastTargetRefresh = now
 	_state.cachedTarget, _state.cachedTargetRoot = _getBestTarget(localRoot)
+end
+
+local function _hookEliminationSound(localFighter: any)
+	if _state.isEliminationHooked then
+		return
+	end
+	if not localFighter or not localFighter.Eliminated then
+		return
+	end
+	_state.isEliminationHooked = true
+	local connection = localFighter.Eliminated:Connect(function(_, isAssist)
+		_maybePlayKillSound(isAssist)
+	end)
+	if _maid then
+		_maid:GiveTask(connection)
+	end
 end
 
 local function _connect()
@@ -702,14 +787,17 @@ local function _connect()
 		if not localFighter then
 			return
 		end
+		_hookEliminationSound(localFighter)
 
 		_ensureDesiredWeapon(localFighter, _state.isSwapReloadActive)
 
 		_refreshTarget(localRoot)
+		local targetPlayer = _state.cachedTarget
 		local targetRoot = _state.cachedTargetRoot
 		if not targetRoot then
 			if _state.isEngaged then
 				_state.isEngaged = false
+				_state.lastTeleportTargetUserId = nil
 				if State.ragebotSavedSilentAimEnabled ~= nil then
 					State.isSilentAimEnabled = State.ragebotSavedSilentAimEnabled
 					State.ragebotSavedSilentAimEnabled = nil
@@ -746,7 +834,7 @@ local function _connect()
 			return
 		end
 
-		_teleportToTarget(localRoot, targetRoot)
+		_teleportToTarget(localRoot, targetRoot, targetPlayer)
 		if equipped then
 			_shoot(localFighter)
 		end

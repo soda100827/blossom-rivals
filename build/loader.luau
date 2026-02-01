@@ -1015,33 +1015,52 @@ end)end end end end)end return SilentAim end function __DARKLUA_BUNDLE_MODULES.y
 ()local v=__DARKLUA_BUNDLE_MODULES.cache.y if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.y=v end return v.c end end do local function
 __modImpl()local Players=game:GetService('Players')local RunService=game:
-GetService('RunService')local UserInputService=game:GetService(
-'UserInputService')local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local
-PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local TeamUtils=__DARKLUA_BUNDLE_MODULES
-.e()local State=__DARKLUA_BUNDLE_MODULES.u()local Helpers=
-__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000 local
-DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
+GetService('RunService')local SoundService=game:GetService('SoundService')local
+UserInputService=game:GetService('UserInputService')local ExecutorUtils=
+__DARKLUA_BUNDLE_MODULES.d()local PlayerUtils=__DARKLUA_BUNDLE_MODULES.f()local
+TeamUtils=__DARKLUA_BUNDLE_MODULES.e()local State=__DARKLUA_BUNDLE_MODULES.u()
+local Helpers=__DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000
+local DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
 TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
-MOUSE_SHOT_RELEASE_DELAY=0.03 local Ragebot={}Ragebot.__index=Ragebot local
-_maid=nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
-cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
-=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
-,isInputHooked=false,isUseItemHooked=false,isUseItemHooked=false,debugNextAt=0,
-returnedToPrimary=false,lastReloadAttemptAt=0}local function _getLocalRoot()
-local localPlayer=PlayerUtils.getLocalPlayer()local character=localPlayer and
-localPlayer.Character return character and((character:FindFirstChild(
-'HumanoidRootPart')))or nil end local function _isRoundStarted()local
-localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return false end
-if not TeamUtils.isInDuel(localPlayer)then return false end local duel=TeamUtils
-.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.Get,duel,
-'Status')if isOk and status~=nil then return status=='RoundStarted'end end
-return true end local function _isTargetInvincible(targetRoot)if not targetRoot
-then return false end local character=targetRoot.Parent if not character or not
-character:IsA('Model')then return false end local entity=character:
-FindFirstChild('Entity')if entity and(entity).Get then local ok,inv=pcall((
-entity).Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true and State
-.logger then local now=os.clock()if now>=_state.debugNextAt then _state.
-debugNextAt=now+1 State.logger:info(
+MOUSE_SHOT_RELEASE_DELAY=0.03 local TELEPORT_SOUND_ID=
+'rbxassetid://105163025117598'local KILL_SOUND_ID='rbxassetid://80830976255721'
+local TELEPORT_SOUND_COOLDOWN=0.6 local KILL_SOUND_COOLDOWN=0.15 local Ragebot={
+}Ragebot.__index=Ragebot local _maid=nil local _signals={}local _state={
+lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,
+lastShotAt=0,mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=
+0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false,isUseItemHooked=
+false,isUseItemHooked=false,debugNextAt=0,returnedToPrimary=false,
+lastReloadAttemptAt=0,lastTeleportSoundAt=0,lastKillSoundAt=0,
+lastTeleportTargetUserId=nil,isEliminationHooked=false,utility=nil}
+local function _getUtility()if _state.utility then return _state.utility end
+local utility=Helpers.getUtility()_state.utility=utility return utility end
+local function _playLocalSound(soundId,volume)local utility=_getUtility()if
+utility and utility.CreateSound then pcall(function()utility:CreateSound(soundId
+,volume,1,'script',true,3)end)return end local sound=Instance.new('Sound')sound.
+SoundId=soundId sound.Volume=volume sound.PlaybackSpeed=1 sound.Parent=
+SoundService sound:Play()task.delay(3,function()if sound.Parent then sound:
+Destroy()end end)end local function _maybePlayTeleportSound(targetPlayer)if not
+targetPlayer then return end if _state.lastTeleportTargetUserId==targetPlayer.
+UserId then return end local now=os.clock()if now-_state.lastTeleportSoundAt<
+TELEPORT_SOUND_COOLDOWN then return end _state.lastTeleportSoundAt=now _state.
+lastTeleportTargetUserId=targetPlayer.UserId _playLocalSound(TELEPORT_SOUND_ID,1
+)end local function _maybePlayKillSound(isAssist)if isAssist==true then return
+end local now=os.clock()if now-_state.lastKillSoundAt<KILL_SOUND_COOLDOWN then
+return end _state.lastKillSoundAt=now _playLocalSound(KILL_SOUND_ID,1)end
+local function _getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()
+local character=localPlayer and localPlayer.Character return character and((
+character:FindFirstChild('HumanoidRootPart')))or nil end local function
+_isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if not
+localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
+return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
+local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
+return status=='RoundStarted'end end return true end local function
+_isTargetInvincible(targetRoot)if not targetRoot then return false end local
+character=targetRoot.Parent if not character or not character:IsA('Model')then
+return false end local entity=character:FindFirstChild('Entity')if entity and(
+entity).Get then local ok,inv=pcall((entity).Get,entity,'IsInvincible')if ok and
+inv~=nil then if inv==true and State.logger then local now=os.clock()if now>=
+_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
 inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
 type(isInvincible)=='boolean'then if isInvincible and State.logger then local
@@ -1191,17 +1210,22 @@ State.ragebotSavedSilentAimFovRadius=State.silentAimFovRadius end State.
 silentAimFovRadius=math.huge else if State.ragebotSavedSilentAimFovRadius~=nil
 then State.silentAimFovRadius=State.ragebotSavedSilentAimFovRadius State.
 ragebotSavedSilentAimFovRadius=nil end end end local function _teleportToTarget(
-localRoot,targetRoot)local offset=State.ragebotOffset or DEFAULT_RAGEBOT_OFFSET
-localRoot.CFrame=targetRoot.CFrame*CFrame.new(offset)end local function
-_orbitTarget(localRoot,targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or
-DEFAULT_ORBIT_SPEED local orbitRadius=State.ragebotOrbitRadius or
-DEFAULT_ORBIT_RADIUS local angle=os.clock()*orbitSpeed local offset=Vector3.new(
-math.cos(angle),0,math.sin(angle))*orbitRadius local position=targetRoot.
-Position+offset localRoot.CFrame=CFrame.new(position,targetRoot.Position)end
-local function _refreshTarget(localRoot)local now=os.clock()if now-_state.
-lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end _state.
-lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
-_getBestTarget(localRoot)end local function _connect()if not _maid then return
+localRoot,targetRoot,targetPlayer)local offset=State.ragebotOffset or
+DEFAULT_RAGEBOT_OFFSET localRoot.CFrame=targetRoot.CFrame*CFrame.new(offset)
+_maybePlayTeleportSound(targetPlayer)end local function _orbitTarget(localRoot,
+targetRoot)local orbitSpeed=State.ragebotOrbitSpeed or DEFAULT_ORBIT_SPEED local
+orbitRadius=State.ragebotOrbitRadius or DEFAULT_ORBIT_RADIUS local angle=os.
+clock()*orbitSpeed local offset=Vector3.new(math.cos(angle),0,math.sin(angle))*
+orbitRadius local position=targetRoot.Position+offset localRoot.CFrame=CFrame.
+new(position,targetRoot.Position)end local function _refreshTarget(localRoot)
+local now=os.clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then
+return end _state.lastTargetRefresh=now _state.cachedTarget,_state.
+cachedTargetRoot=_getBestTarget(localRoot)end local function
+_hookEliminationSound(localFighter)if _state.isEliminationHooked then return end
+if not localFighter or not localFighter.Eliminated then return end _state.
+isEliminationHooked=true local connection=localFighter.Eliminated:Connect(
+function(_,isAssist)_maybePlayKillSound(isAssist)end)if _maid then _maid:
+GiveTask(connection)end end local function _connect()if not _maid then return
 end local connection=RunService.Heartbeat:Connect(function()if not State.
 isRagebotEnabled then _applyRagebotSilentAimOverride(false)if _state.isEngaged
 then _state.isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then
@@ -1214,13 +1238,14 @@ _applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
 not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
 localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
-_getLocalFighter()if not localFighter then return end _ensureDesiredWeapon(
-localFighter,_state.isSwapReloadActive)_refreshTarget(localRoot)local targetRoot
+_getLocalFighter()if not localFighter then return end _hookEliminationSound(
+localFighter)_ensureDesiredWeapon(localFighter,_state.isSwapReloadActive)
+_refreshTarget(localRoot)local targetPlayer=_state.cachedTarget local targetRoot
 =_state.cachedTargetRoot if not targetRoot then if _state.isEngaged then _state.
-isEngaged=false if State.ragebotSavedSilentAimEnabled~=nil then State.
-isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
-ragebotSavedSilentAimEnabled=nil end if State.
-ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
+isEngaged=false _state.lastTeleportTargetUserId=nil if State.
+ragebotSavedSilentAimEnabled~=nil then State.isSilentAimEnabled=State.
+ragebotSavedSilentAimEnabled State.ragebotSavedSilentAimEnabled=nil end if State
+.ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end if
 _isTargetInvincible(targetRoot)then return end if not _state.isEngaged then
@@ -1231,36 +1256,37 @@ ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end State.
 isSilentAimEnabled=true State.attackCooldownMultiplier=1 end local equipped=
 _ensureGunEquipped(localFighter)_swapWeaponOnReload(localFighter)if equipped and
 _isReloading(equipped)then if State.isRagebotOrbitEnabled then _orbitTarget(
-localRoot,targetRoot)end return end _teleportToTarget(localRoot,targetRoot)if
-equipped then _shoot(localFighter)end end)_maid:GiveTask(connection)end function
-Ragebot.setup(maid)_maid=maid _connect()end return Ragebot end function
-__DARKLUA_BUNDLE_MODULES.z()local v=__DARKLUA_BUNDLE_MODULES.cache.z if not v
-then v={c=__modImpl()}__DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end
-do local function __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()
-local HookUtils=__DARKLUA_BUNDLE_MODULES.p()local State=__DARKLUA_BUNDLE_MODULES
-.u()local Helpers=__DARKLUA_BUNDLE_MODULES.v()local GunMods={}GunMods.__index=
-GunMods local _maid=nil local _signals={}local _state={oldShootCooldowns={}}
-function GunMods.setup(maid)_maid=maid local checkcaller=ExecutorUtils.
-getGlobal('checkcaller')or function()return false end local isRunning=true if
-_maid then _maid:GiveTask(function()isRunning=false end)end task.spawn(function(
-)if not isRunning then return end local clientItemMod=Helpers.
-getClientItemModule()if clientItemMod and not State.isGunModsHooked then local
-oldRecoil oldRecoil=HookUtils.safeHook(clientItemMod,'_Recoil',function(self,
-multiplier)if not checkcaller()and State.isNoRecoilEnabled then return end
-return oldRecoil(self,multiplier)end,State.logger,_maid)end local
-gameplayUtility=Helpers.getGameplayUtility()if gameplayUtility then local
-oldGetSpread oldGetSpread=HookUtils.safeHook(gameplayUtility,'GetSpread',
-function(self,...)if not checkcaller()and State.isNoSpreadEnabled then return
-CFrame.identity end return oldGetSpread(self,...)end,State.logger,_maid)end
-local viewModelMod=Helpers.getViewModelModule()if viewModelMod then local
-oldMuzzleFlash oldMuzzleFlash=HookUtils.safeHook(viewModelMod,'MuzzleFlash',
-function(self,...)if not checkcaller()and State.isNoMuzzleFlashEnabled then
-return end return oldMuzzleFlash(self,...)end,State.logger,_maid)end local
-replicatedClassMod=Helpers.getReplicatedClassModule()if replicatedClassMod then
-local oldGet oldGet=HookUtils.safeHook(replicatedClassMod,'Get',function(self,
-key)if not checkcaller()and State.isNoSpreadEnabled and key=='IsAiming'and State
-.forcingAim then return true end return oldGet(self,key)end,State.logger,_maid)
-end local gunMod=Helpers.getGunModule()if gunMod then local oldIsFullyAiming
+localRoot,targetRoot)end return end _teleportToTarget(localRoot,targetRoot,
+targetPlayer)if equipped then _shoot(localFighter)end end)_maid:GiveTask(
+connection)end function Ragebot.setup(maid)_maid=maid _connect()end return
+Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
+__DARKLUA_BUNDLE_MODULES.cache.z if not v then v={c=__modImpl()}
+__DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end do local function
+__modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=
+__DARKLUA_BUNDLE_MODULES.p()local State=__DARKLUA_BUNDLE_MODULES.u()local
+Helpers=__DARKLUA_BUNDLE_MODULES.v()local GunMods={}GunMods.__index=GunMods
+local _maid=nil local _signals={}local _state={oldShootCooldowns={}}function
+GunMods.setup(maid)_maid=maid local checkcaller=ExecutorUtils.getGlobal(
+'checkcaller')or function()return false end local isRunning=true if _maid then
+_maid:GiveTask(function()isRunning=false end)end task.spawn(function()if not
+isRunning then return end local clientItemMod=Helpers.getClientItemModule()if
+clientItemMod and not State.isGunModsHooked then local oldRecoil oldRecoil=
+HookUtils.safeHook(clientItemMod,'_Recoil',function(self,multiplier)if not
+checkcaller()and State.isNoRecoilEnabled then return end return oldRecoil(self,
+multiplier)end,State.logger,_maid)end local gameplayUtility=Helpers.
+getGameplayUtility()if gameplayUtility then local oldGetSpread oldGetSpread=
+HookUtils.safeHook(gameplayUtility,'GetSpread',function(self,...)if not
+checkcaller()and State.isNoSpreadEnabled then return CFrame.identity end return
+oldGetSpread(self,...)end,State.logger,_maid)end local viewModelMod=Helpers.
+getViewModelModule()if viewModelMod then local oldMuzzleFlash oldMuzzleFlash=
+HookUtils.safeHook(viewModelMod,'MuzzleFlash',function(self,...)if not
+checkcaller()and State.isNoMuzzleFlashEnabled then return end return
+oldMuzzleFlash(self,...)end,State.logger,_maid)end local replicatedClassMod=
+Helpers.getReplicatedClassModule()if replicatedClassMod then local oldGet oldGet
+=HookUtils.safeHook(replicatedClassMod,'Get',function(self,key)if not
+checkcaller()and State.isNoSpreadEnabled and key=='IsAiming'and State.forcingAim
+then return true end return oldGet(self,key)end,State.logger,_maid)end local
+gunMod=Helpers.getGunModule()if gunMod then local oldIsFullyAiming
 oldIsFullyAiming=HookUtils.safeHook(gunMod,'IsFullyAiming',function(self,...)if
 not checkcaller()and State.isNoSpreadEnabled and State.forcingAim then return
 true end return oldIsFullyAiming(self,...)end,State.logger,_maid)end State.
