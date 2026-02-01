@@ -1024,43 +1024,44 @@ local DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
 TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
 MOUSE_SHOT_RELEASE_DELAY=0.03 local TELEPORT_SOUND_ID=
 'rbxassetid://105163025117598'local KILL_SOUND_ID='rbxassetid://80830976255721'
-local TELEPORT_SOUND_COOLDOWN=0.6 local KILL_SOUND_COOLDOWN=0.15 local Ragebot={
-}Ragebot.__index=Ragebot local _maid=nil local _signals={}local _state={
-lastTargetRefresh=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,
-lastShotAt=0,mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=
-0,isSwapReloadActive=false,isEngaged=false,isInputHooked=false,isUseItemHooked=
-false,isUseItemHooked=false,debugNextAt=0,returnedToPrimary=false,
-lastReloadAttemptAt=0,lastTeleportSoundAt=0,lastKillSoundAt=0,
-lastTeleportTargetUserId=nil,isEliminationHooked=false,utility=nil}
-local function _getUtility()if _state.utility then return _state.utility end
-local utility=Helpers.getUtility()_state.utility=utility return utility end
-local function _playLocalSound(soundId,volume)local utility=_getUtility()if
-utility and utility.CreateSound then pcall(function()utility:CreateSound(soundId
-,volume,1,'script',true,3)end)return end local sound=Instance.new('Sound')sound.
-SoundId=soundId sound.Volume=volume sound.PlaybackSpeed=1 sound.Parent=
-SoundService sound:Play()task.delay(3,function()if sound.Parent then sound:
-Destroy()end end)end local function _maybePlayTeleportSound(targetPlayer)if not
-targetPlayer then return end if _state.lastTeleportTargetUserId==targetPlayer.
-UserId then return end local now=os.clock()if now-_state.lastTeleportSoundAt<
-TELEPORT_SOUND_COOLDOWN then return end _state.lastTeleportSoundAt=now _state.
-lastTeleportTargetUserId=targetPlayer.UserId _playLocalSound(TELEPORT_SOUND_ID,1
-)end local function _maybePlayKillSound(isAssist)if isAssist==true then return
-end local now=os.clock()if now-_state.lastKillSoundAt<KILL_SOUND_COOLDOWN then
-return end _state.lastKillSoundAt=now _playLocalSound(KILL_SOUND_ID,1)end
-local function _getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()
-local character=localPlayer and localPlayer.Character return character and((
-character:FindFirstChild('HumanoidRootPart')))or nil end local function
-_isRoundStarted()local localPlayer=PlayerUtils.getLocalPlayer()if not
-localPlayer then return false end if not TeamUtils.isInDuel(localPlayer)then
-return false end local duel=TeamUtils.getLocalDuel()if duel and duel.Get then
-local isOk,status=pcall(duel.Get,duel,'Status')if isOk and status~=nil then
-return status=='RoundStarted'end end return true end local function
-_isTargetInvincible(targetRoot)if not targetRoot then return false end local
-character=targetRoot.Parent if not character or not character:IsA('Model')then
-return false end local entity=character:FindFirstChild('Entity')if entity and(
-entity).Get then local ok,inv=pcall((entity).Get,entity,'IsInvincible')if ok and
-inv~=nil then if inv==true and State.logger then local now=os.clock()if now>=
-_state.debugNextAt then _state.debugNextAt=now+1 State.logger:info(
+local TELEPORT_SOUND_COOLDOWN=0.6 local KILL_SOUND_COOLDOWN=0.15 local
+ROUND_START_SHOOT_DELAY=1.5 local Ragebot={}Ragebot.__index=Ragebot local _maid=
+nil local _signals={}local _state={lastTargetRefresh=0,lastFighterFetch=0,
+cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,mouse1press=nil,mouse1release
+=nil,mouse1click=nil,lastWeaponSwapAt=0,isSwapReloadActive=false,isEngaged=false
+,isInputHooked=false,isUseItemHooked=false,isUseItemHooked=false,debugNextAt=0,
+returnedToPrimary=false,lastReloadAttemptAt=0,lastTeleportSoundAt=0,
+lastKillSoundAt=0,lastTeleportTargetUserId=nil,isEliminationHooked=false,utility
+=nil,roundStartedAt=0,isRoundActive=false}local function _getUtility()if _state.
+utility then return _state.utility end local utility=Helpers.getUtility()_state.
+utility=utility return utility end local function _playLocalSound(soundId,volume
+)local utility=_getUtility()if utility and utility.CreateSound then pcall(
+function()utility:CreateSound(soundId,volume,1,'script',true,3)end)return end
+local sound=Instance.new('Sound')sound.SoundId=soundId sound.Volume=volume sound
+.PlaybackSpeed=1 sound.Parent=SoundService sound:Play()task.delay(3,function()if
+sound.Parent then sound:Destroy()end end)end local function
+_maybePlayTeleportSound(targetPlayer)if not targetPlayer then return end if
+_state.lastTeleportTargetUserId==targetPlayer.UserId then return end local now=
+os.clock()if now-_state.lastTeleportSoundAt<TELEPORT_SOUND_COOLDOWN then return
+end _state.lastTeleportSoundAt=now _state.lastTeleportTargetUserId=targetPlayer.
+UserId _playLocalSound(TELEPORT_SOUND_ID,1)end local function
+_maybePlayKillSound(isAssist)if isAssist==true then return end local now=os.
+clock()if now-_state.lastKillSoundAt<KILL_SOUND_COOLDOWN then return end _state.
+lastKillSoundAt=now _playLocalSound(KILL_SOUND_ID,1)end local function
+_getLocalRoot()local localPlayer=PlayerUtils.getLocalPlayer()local character=
+localPlayer and localPlayer.Character return character and((character:
+FindFirstChild('HumanoidRootPart')))or nil end local function _isRoundStarted()
+local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return
+false end if not TeamUtils.isInDuel(localPlayer)then return false end local duel
+=TeamUtils.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.
+Get,duel,'Status')if isOk and status~=nil then return status=='RoundStarted'end
+end return true end local function _isTargetInvincible(targetRoot)if not
+targetRoot then return false end local character=targetRoot.Parent if not
+character or not character:IsA('Model')then return false end local entity=
+character:FindFirstChild('Entity')if entity and(entity).Get then local ok,inv=
+pcall((entity).Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true
+and State.logger then local now=os.clock()if now>=_state.debugNextAt then _state
+.debugNextAt=now+1 State.logger:info(
 '[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
 inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
 type(isInvincible)=='boolean'then if isInvincible and State.logger then local
@@ -1234,8 +1235,10 @@ ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end
-_applyRagebotSilentAimOverride(true)if not _isRoundStarted()then return end if
-not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
+_applyRagebotSilentAimOverride(true)local isRoundStarted=_isRoundStarted()if not
+isRoundStarted then _state.isRoundActive=false return end if not _state.
+isRoundActive then _state.isRoundActive=true _state.roundStartedAt=os.clock()end
+if not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
 localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
 _getLocalFighter()if not localFighter then return end _hookEliminationSound(
@@ -1257,9 +1260,10 @@ isSilentAimEnabled=true State.attackCooldownMultiplier=1 end local equipped=
 _ensureGunEquipped(localFighter)_swapWeaponOnReload(localFighter)if equipped and
 _isReloading(equipped)then if State.isRagebotOrbitEnabled then _orbitTarget(
 localRoot,targetRoot)end return end _teleportToTarget(localRoot,targetRoot,
-targetPlayer)if equipped then _shoot(localFighter)end end)_maid:GiveTask(
-connection)end function Ragebot.setup(maid)_maid=maid _connect()end return
-Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
+targetPlayer)if equipped then if os.clock()-_state.roundStartedAt<
+ROUND_START_SHOOT_DELAY then return end _shoot(localFighter)end end)_maid:
+GiveTask(connection)end function Ragebot.setup(maid)_maid=maid _connect()end
+return Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
 __DARKLUA_BUNDLE_MODULES.cache.z if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end do local function
 __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=

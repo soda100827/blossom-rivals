@@ -24,6 +24,7 @@ local TELEPORT_SOUND_ID = "rbxassetid://105163025117598"
 local KILL_SOUND_ID = "rbxassetid://80830976255721"
 local TELEPORT_SOUND_COOLDOWN = 0.6
 local KILL_SOUND_COOLDOWN = 0.15
+local ROUND_START_SHOOT_DELAY = 1.5
 
 --// Types
 
@@ -56,6 +57,8 @@ local _state = {
 	lastTeleportTargetUserId = nil :: number?,
 	isEliminationHooked = false,
 	utility = nil :: any,
+	roundStartedAt = 0,
+	isRoundActive = false,
 }
 
 --// Private helpers
@@ -767,8 +770,14 @@ local function _connect()
 		end
 		_applyRagebotSilentAimOverride(true)
 
-		if not _isRoundStarted() then
+		local isRoundStarted = _isRoundStarted()
+		if not isRoundStarted then
+			_state.isRoundActive = false
 			return
+		end
+		if not _state.isRoundActive then
+			_state.isRoundActive = true
+			_state.roundStartedAt = os.clock()
 		end
 
 		if not State.isSilentAimEnabled then
@@ -836,6 +845,9 @@ local function _connect()
 
 		_teleportToTarget(localRoot, targetRoot, targetPlayer)
 		if equipped then
+			if os.clock() - _state.roundStartedAt < ROUND_START_SHOOT_DELAY then
+				return
+			end
 			_shoot(localFighter)
 		end
 	end)
