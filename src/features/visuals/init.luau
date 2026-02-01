@@ -177,7 +177,10 @@ local function _isKillDamageInfo(damageInfo: any): boolean
 		return (health - damage) <= 0
 	end
 
-	local humanoid = damageInfo.Humanoid or damageInfo.humanoid or damageInfo.TargetHumanoid or damageInfo.targetHumanoid
+	local humanoid = damageInfo.Humanoid
+		or damageInfo.humanoid
+		or damageInfo.TargetHumanoid
+		or damageInfo.targetHumanoid
 	if typeof(humanoid) == "Instance" and humanoid:IsA("Humanoid") then
 		return humanoid.Health <= 0
 	end
@@ -196,7 +199,14 @@ local function _tryShowHitNotify(damageInfo: any)
 	_state.hitNotify.lastAt = now
 	local name = _getDamageTargetName(damageInfo)
 	local text = name and ("Hit " .. name) or "Hit"
-	_showNotify(_state.hitNotify, text, HIT_NOTIFY_COLOR, State.settings.hitNotifyLifetime, HIT_NOTIFY_SIZE, HIT_NOTIFY_OFFSET_Y)
+	_showNotify(
+		_state.hitNotify,
+		text,
+		HIT_NOTIFY_COLOR,
+		State.settings.hitNotifyLifetime,
+		HIT_NOTIFY_SIZE,
+		HIT_NOTIFY_OFFSET_Y
+	)
 end
 
 local function _tryShowKillNotify(damageInfo: any)
@@ -273,6 +283,17 @@ local function _connect()
 			if State.settings.shouldHideHitmarker then
 				if State.settings.shouldPlayHitSound then
 					Visuals:onHit(damageInfo)
+				else
+					-- Fix: Play default sound manually since we block the original function
+					if
+						self.Mouse
+						and self.Mouse.ItemInterface
+						and self.Mouse.ItemInterface.ClientItem
+						and self.Mouse.ItemInterface.ClientItem.ViewModel
+					then
+						local isHeadshot = damageInfo["\1"]
+						self.Mouse.ItemInterface.ClientItem.ViewModel:PlayHitmarkerSound(isHeadshot, ...)
+					end
 				end
 				_tryShowHitNotify(damageInfo)
 				_tryShowKillNotify(damageInfo)

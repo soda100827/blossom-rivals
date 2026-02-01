@@ -450,8 +450,11 @@ oldPlayHitmarkerSound(self,isHeadshot,pitchModifier,...)end,State.logger,_maid)
 end local hitmarkerMod=Helpers.getHitmarkerModule()if hitmarkerMod then local
 oldDamageEffect oldDamageEffect=HookUtils.safeHook(hitmarkerMod,'DamageEffect',
 function(self,damageInfo,...)if State.settings.shouldHideHitmarker then if State
-.settings.shouldPlayHitSound then Visuals:onHit(damageInfo)end
-_tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return end
+.settings.shouldPlayHitSound then Visuals:onHit(damageInfo)else if self.Mouse
+and self.Mouse.ItemInterface and self.Mouse.ItemInterface.ClientItem and self.
+Mouse.ItemInterface.ClientItem.ViewModel then local isHeadshot=damageInfo['\1']
+self.Mouse.ItemInterface.ClientItem.ViewModel:PlayHitmarkerSound(isHeadshot,...)
+end end _tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return end
 _tryShowHitNotify(damageInfo)_tryShowKillNotify(damageInfo)return
 oldDamageEffect(self,damageInfo,...)end,State.logger,_maid)end end
 local function _enable()if not ExecutorUtils.getDrawingLib()then State.isEnabled
