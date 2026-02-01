@@ -20,7 +20,7 @@ local TARGET_REFRESH_INTERVAL = 0.05
 local DEFAULT_RAGEBOT_OFFSET = Vector3.zero
 local MOUSE_SHOT_RELEASE_DELAY = 0.03
 local ROUND_START_SHOOT_DELAY = 1.5
-local RAGEBOT_CAMERA_RENDER_STEP = "RagebotCameraOverride"
+local RAGEBOT_VISUAL_ANCHOR_NAME = "RagebotVisualAnchor"
 
 --// Types
 
@@ -51,10 +51,11 @@ local _state = {
 	lastTeleportTargetUserId = nil :: number?,
 	roundStartedAt = 0,
 	isRoundActive = false,
-	returnCFrame = nil :: CFrame?,
-	isReturnPending = false,
-	desiredCameraCFrame = nil :: CFrame?,
-	isCameraOverrideActive = false,
+	visualAnchor = nil :: BasePart?,
+	visualPosition = nil :: Vector3?,
+	savedCameraSubject = nil :: Instance?,
+	savedCameraType = nil :: Enum.CameraType?,
+	isVisualAnchorActive = false,
 }
 
 --// Private helpers
@@ -671,21 +672,87 @@ local function _refreshTarget(localRoot: BasePart)
 	_state.cachedTarget, _state.cachedTargetRoot = _getBestTarget(localRoot)
 end
 
+local function _ensureVisualAnchor(localRoot: BasePart, humanoid: Humanoid?)
+	if _state.isVisualAnchorActive then
+		return
+	end
+	local camera = PlayerUtils.getCamera()
+	if not camera then
+		return
+	end
+	local anchor = Instance.new("Part")
+	anchor.Name = RAGEBOT_VISUAL_ANCHOR_NAME
+	anchor.Anchored = true
+	anchor.CanCollide = false
+	anchor.CanTouch = false
+	anchor.CanQuery = false
+	anchor.Transparency = 1
+	anchor.Size = Vector3.new(1, 1, 1)
+	anchor.CFrame = localRoot.CFrame
+	anchor.Parent = workspace
+
+	_state.visualAnchor = anchor
+	_state.visualPosition = localRoot.Position
+	_state.savedCameraSubject = camera.CameraSubject
+	_state.savedCameraType = camera.CameraType
+	camera.CameraSubject = anchor
+	if humanoid then
+		camera.CameraType = Enum.CameraType.Custom
+	end
+	_state.isVisualAnchorActive = true
+end
+
+local function _updateVisualAnchor(deltaTime: number, humanoid: Humanoid?)
+	if not _state.isVisualAnchorActive then
+		return
+	end
+	local anchor = _state.visualAnchor
+	local position = _state.visualPosition
+	if not anchor or not position then
+		return
+	end
+	if humanoid then
+		local moveDir = humanoid.MoveDirection
+		local walkSpeed = humanoid.WalkSpeed
+		local delta = Vector3.new(moveDir.X, 0, moveDir.Z) * walkSpeed * deltaTime
+		position = Vector3.new(position.X + delta.X, position.Y, position.Z + delta.Z)
+	end
+	_state.visualPosition = position
+	anchor.CFrame = CFrame.new(position)
+end
+
+local function _clearVisualAnchor(localRoot: BasePart?)
+	if not _state.isVisualAnchorActive then
+		return
+	end
+	local camera = PlayerUtils.getCamera()
+	if camera then
+		camera.CameraSubject = _state.savedCameraSubject
+		if _state.savedCameraType then
+			camera.CameraType = _state.savedCameraType
+		end
+	end
+	if localRoot and _state.visualPosition then
+		localRoot.CFrame = CFrame.new(_state.visualPosition)
+	end
+	if _state.visualAnchor then
+		_state.visualAnchor:Destroy()
+	end
+	_state.visualAnchor = nil
+	_state.visualPosition = nil
+	_state.savedCameraSubject = nil
+	_state.savedCameraType = nil
+	_state.isVisualAnchorActive = false
+end
+
 local function _connect()
 	if not _maid then
 		return
 	end
 
-	local connection = RunService.Heartbeat:Connect(function()
+	local connection = RunService.Heartbeat:Connect(function(deltaTime)
 		if not State.isRagebotEnabled then
-			local localRoot = _getLocalRoot()
-			if _state.isReturnPending and _state.returnCFrame and localRoot then
-				localRoot.CFrame = _state.returnCFrame
-				_state.returnCFrame = nil
-				_state.isReturnPending = false
-			end
-			_state.isCameraOverrideActive = false
-			_state.desiredCameraCFrame = nil
+			_clearVisualAnchor(_getLocalRoot())
 			_applyRagebotSilentAimOverride(false)
 			if _state.isEngaged then
 				_state.isEngaged = false
@@ -723,6 +790,9 @@ local function _connect()
 		if not localRoot then
 			return
 		end
+		local character = localRoot.Parent
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		_updateVisualAnchor(deltaTime, humanoid)
 
 		local localFighter = _getLocalFighter()
 		if not localFighter then
@@ -738,8 +808,6 @@ local function _connect()
 			if _state.isEngaged then
 				_state.isEngaged = false
 				_state.lastTeleportTargetUserId = nil
-				_state.isCameraOverrideActive = false
-				_state.desiredCameraCFrame = nil
 				if State.ragebotSavedSilentAimEnabled ~= nil then
 					State.isSilentAimEnabled = State.ragebotSavedSilentAimEnabled
 					State.ragebotSavedSilentAimEnabled = nil
@@ -757,10 +825,7 @@ local function _connect()
 
 		if not _state.isEngaged then
 			_state.isEngaged = true
-			if not _state.returnCFrame then
-				_state.returnCFrame = localRoot.CFrame
-			end
-			_state.isReturnPending = true
+			_ensureVisualAnchor(localRoot, humanoid)
 			if State.ragebotSavedSilentAimEnabled == nil then
 				State.ragebotSavedSilentAimEnabled = State.isSilentAimEnabled
 			end
@@ -780,11 +845,6 @@ local function _connect()
 			return
 		end
 
-		local camera = PlayerUtils.getCamera()
-		if camera then
-			_state.desiredCameraCFrame = camera.CFrame
-			_state.isCameraOverrideActive = true
-		end
 		_teleportToTarget(localRoot, targetRoot, targetPlayer)
 		if equipped then
 			if os.clock() - _state.roundStartedAt < ROUND_START_SHOOT_DELAY then
@@ -794,27 +854,6 @@ local function _connect()
 		end
 	end)
 	_maid:GiveTask(connection)
-
-	RunService:BindToRenderStep(
-		RAGEBOT_CAMERA_RENDER_STEP,
-		Enum.RenderPriority.Camera.Value + 2,
-		function()
-			if not _state.isCameraOverrideActive then
-				return
-			end
-			local camera = PlayerUtils.getCamera()
-			if not camera then
-				return
-			end
-			local desired = _state.desiredCameraCFrame
-			if desired then
-				camera.CFrame = desired
-			end
-		end
-	)
-	_maid:GiveTask(function()
-		RunService:UnbindFromRenderStep(RAGEBOT_CAMERA_RENDER_STEP)
-	end)
 end
 
 --// Public API

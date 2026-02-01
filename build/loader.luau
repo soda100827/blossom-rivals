@@ -1023,38 +1023,38 @@ __DARKLUA_BUNDLE_MODULES.v()local DEFAULT_ORBIT_RADIUS=100000 local
 DEFAULT_ORBIT_SPEED=12 local SWAP_WEAPON_COOLDOWN=0.2 local
 TARGET_REFRESH_INTERVAL=0.05 local DEFAULT_RAGEBOT_OFFSET=Vector3.zero local
 MOUSE_SHOT_RELEASE_DELAY=0.03 local ROUND_START_SHOOT_DELAY=1.5 local
-RAGEBOT_CAMERA_RENDER_STEP='RagebotCameraOverride'local Ragebot={}Ragebot.
-__index=Ragebot local _maid=nil local _signals={}local _state={lastTargetRefresh
-=0,lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,
+RAGEBOT_VISUAL_ANCHOR_NAME='RagebotVisualAnchor'local Ragebot={}Ragebot.__index=
+Ragebot local _maid=nil local _signals={}local _state={lastTargetRefresh=0,
+lastFighterFetch=0,cachedTarget=nil,cachedTargetRoot=nil,lastShotAt=0,
 mouse1press=nil,mouse1release=nil,mouse1click=nil,lastWeaponSwapAt=0,
 isSwapReloadActive=false,isEngaged=false,isInputHooked=false,isUseItemHooked=
 false,isUseItemHooked=false,debugNextAt=0,returnedToPrimary=false,
 lastReloadAttemptAt=0,lastTeleportTargetUserId=nil,roundStartedAt=0,
-isRoundActive=false,returnCFrame=nil,isReturnPending=false,desiredCameraCFrame=
-nil,isCameraOverrideActive=false}local function _getLocalRoot()local localPlayer
-=PlayerUtils.getLocalPlayer()local character=localPlayer and localPlayer.
-Character return character and((character:FindFirstChild('HumanoidRootPart')))or
-nil end local function _isRoundStarted()local localPlayer=PlayerUtils.
-getLocalPlayer()if not localPlayer then return false end if not TeamUtils.
-isInDuel(localPlayer)then return false end local duel=TeamUtils.getLocalDuel()if
-duel and duel.Get then local isOk,status=pcall(duel.Get,duel,'Status')if isOk
-and status~=nil then return status=='RoundStarted'end end return true end
-local function _isTargetInvincible(targetRoot)if not targetRoot then return
-false end local character=targetRoot.Parent if not character or not character:
-IsA('Model')then return false end local entity=character:FindFirstChild('Entity'
-)if entity and(entity).Get then local ok,inv=pcall((entity).Get,entity,
-'IsInvincible')if ok and inv~=nil then if inv==true and State.logger then local
-now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.
-logger:info('[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end
-end return inv==true end end local isInvincible=character:GetAttribute(
-'IsInvincible')if type(isInvincible)=='boolean'then if isInvincible and State.
-logger then local now=os.clock()if now>=_state.debugNextAt then _state.
+isRoundActive=false,visualAnchor=nil,visualPosition=nil,savedCameraSubject=nil,
+savedCameraType=nil,isVisualAnchorActive=false}local function _getLocalRoot()
+local localPlayer=PlayerUtils.getLocalPlayer()local character=localPlayer and
+localPlayer.Character return character and((character:FindFirstChild(
+'HumanoidRootPart')))or nil end local function _isRoundStarted()local
+localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return false end
+if not TeamUtils.isInDuel(localPlayer)then return false end local duel=TeamUtils
+.getLocalDuel()if duel and duel.Get then local isOk,status=pcall(duel.Get,duel,
+'Status')if isOk and status~=nil then return status=='RoundStarted'end end
+return true end local function _isTargetInvincible(targetRoot)if not targetRoot
+then return false end local character=targetRoot.Parent if not character or not
+character:IsA('Model')then return false end local entity=character:
+FindFirstChild('Entity')if entity and(entity).Get then local ok,inv=pcall((
+entity).Get,entity,'IsInvincible')if ok and inv~=nil then if inv==true and State
+.logger then local now=os.clock()if now>=_state.debugNextAt then _state.
 debugNextAt=now+1 State.logger:info(
-'[Ragebot Debug] Target invincible (Attribute)',character.Name)end end return
-isInvincible end return false end local function _getBestTarget(localRoot)local
-localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then return nil,nil
-end if not TeamUtils.isInDuel(localPlayer)then return nil,nil end local
-bestPlayer=nil local bestRoot=nil local bestDist=math.huge for _,player in
+'[Ragebot Debug] Target invincible (Entity:Get)',character.Name)end end return
+inv==true end end local isInvincible=character:GetAttribute('IsInvincible')if
+type(isInvincible)=='boolean'then if isInvincible and State.logger then local
+now=os.clock()if now>=_state.debugNextAt then _state.debugNextAt=now+1 State.
+logger:info('[Ragebot Debug] Target invincible (Attribute)',character.Name)end
+end return isInvincible end return false end local function _getBestTarget(
+localRoot)local localPlayer=PlayerUtils.getLocalPlayer()if not localPlayer then
+return nil,nil end if not TeamUtils.isInDuel(localPlayer)then return nil,nil end
+local bestPlayer=nil local bestRoot=nil local bestDist=math.huge for _,player in
 ipairs(Players:GetPlayers())do if player==localPlayer then continue end if
 TeamUtils.isSameTeam(player,localPlayer)then continue end if not TeamUtils.
 isInSameDuel(localPlayer,player)then continue end local character=player.
@@ -1206,56 +1206,70 @@ position=targetRoot.Position+offset localRoot.CFrame=CFrame.new(position,
 targetRoot.Position)end local function _refreshTarget(localRoot)local now=os.
 clock()if now-_state.lastTargetRefresh<TARGET_REFRESH_INTERVAL then return end
 _state.lastTargetRefresh=now _state.cachedTarget,_state.cachedTargetRoot=
-_getBestTarget(localRoot)end local function _connect()if not _maid then return
-end local connection=RunService.Heartbeat:Connect(function()if not State.
-isRagebotEnabled then local localRoot=_getLocalRoot()if _state.isReturnPending
-and _state.returnCFrame and localRoot then localRoot.CFrame=_state.returnCFrame
-_state.returnCFrame=nil _state.isReturnPending=false end _state.
-isCameraOverrideActive=false _state.desiredCameraCFrame=nil
-_applyRagebotSilentAimOverride(false)if _state.isEngaged then _state.isEngaged=
-false if State.ragebotSavedSilentAimEnabled~=nil then State.isSilentAimEnabled=
-State.ragebotSavedSilentAimEnabled State.ragebotSavedSilentAimEnabled=nil end if
-State.ragebotSavedAttackCooldownMultiplier~=nil then State.
-attackCooldownMultiplier=State.ragebotSavedAttackCooldownMultiplier State.
+_getBestTarget(localRoot)end local function _ensureVisualAnchor(localRoot,
+humanoid)if _state.isVisualAnchorActive then return end local camera=PlayerUtils
+.getCamera()if not camera then return end local anchor=Instance.new('Part')
+anchor.Name=RAGEBOT_VISUAL_ANCHOR_NAME anchor.Anchored=true anchor.CanCollide=
+false anchor.CanTouch=false anchor.CanQuery=false anchor.Transparency=1 anchor.
+Size=Vector3.new(1,1,1)anchor.CFrame=localRoot.CFrame anchor.Parent=workspace
+_state.visualAnchor=anchor _state.visualPosition=localRoot.Position _state.
+savedCameraSubject=camera.CameraSubject _state.savedCameraType=camera.CameraType
+camera.CameraSubject=anchor if humanoid then camera.CameraType=Enum.CameraType.
+Custom end _state.isVisualAnchorActive=true end local function
+_updateVisualAnchor(deltaTime,humanoid)if not _state.isVisualAnchorActive then
+return end local anchor=_state.visualAnchor local position=_state.visualPosition
+if not anchor or not position then return end if humanoid then local moveDir=
+humanoid.MoveDirection local walkSpeed=humanoid.WalkSpeed local delta=Vector3.
+new(moveDir.X,0,moveDir.Z)*walkSpeed*deltaTime position=Vector3.new(position.X+
+delta.X,position.Y,position.Z+delta.Z)end _state.visualPosition=position anchor.
+CFrame=CFrame.new(position)end local function _clearVisualAnchor(localRoot)if
+not _state.isVisualAnchorActive then return end local camera=PlayerUtils.
+getCamera()if camera then camera.CameraSubject=_state.savedCameraSubject if
+_state.savedCameraType then camera.CameraType=_state.savedCameraType end end if
+localRoot and _state.visualPosition then localRoot.CFrame=CFrame.new(_state.
+visualPosition)end if _state.visualAnchor then _state.visualAnchor:Destroy()end
+_state.visualAnchor=nil _state.visualPosition=nil _state.savedCameraSubject=nil
+_state.savedCameraType=nil _state.isVisualAnchorActive=false end local function
+_connect()if not _maid then return end local connection=RunService.Heartbeat:
+Connect(function(deltaTime)if not State.isRagebotEnabled then
+_clearVisualAnchor(_getLocalRoot())_applyRagebotSilentAimOverride(false)if
+_state.isEngaged then _state.isEngaged=false if State.
+ragebotSavedSilentAimEnabled~=nil then State.isSilentAimEnabled=State.
+ragebotSavedSilentAimEnabled State.ragebotSavedSilentAimEnabled=nil end if State
+.ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
+State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end
 _applyRagebotSilentAimOverride(true)local isRoundStarted=_isRoundStarted()if not
 isRoundStarted then _state.isRoundActive=false return end if not _state.
 isRoundActive then _state.isRoundActive=true _state.roundStartedAt=os.clock()end
 if not State.isSilentAimEnabled then State.isSilentAimEnabled=true end if State.
 attackCooldownMultiplier>1 then State.attackCooldownMultiplier=1 end local
-localRoot=_getLocalRoot()if not localRoot then return end local localFighter=
+localRoot=_getLocalRoot()if not localRoot then return end local character=
+localRoot.Parent local humanoid=character and character:FindFirstChildOfClass(
+'Humanoid')_updateVisualAnchor(deltaTime,humanoid)local localFighter=
 _getLocalFighter()if not localFighter then return end _ensureDesiredWeapon(
 localFighter,_state.isSwapReloadActive)_refreshTarget(localRoot)local
 targetPlayer=_state.cachedTarget local targetRoot=_state.cachedTargetRoot if not
 targetRoot then if _state.isEngaged then _state.isEngaged=false _state.
-lastTeleportTargetUserId=nil _state.isCameraOverrideActive=false _state.
-desiredCameraCFrame=nil if State.ragebotSavedSilentAimEnabled~=nil then State.
-isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
+lastTeleportTargetUserId=nil if State.ragebotSavedSilentAimEnabled~=nil then
+State.isSilentAimEnabled=State.ragebotSavedSilentAimEnabled State.
 ragebotSavedSilentAimEnabled=nil end if State.
 ragebotSavedAttackCooldownMultiplier~=nil then State.attackCooldownMultiplier=
 State.ragebotSavedAttackCooldownMultiplier State.
 ragebotSavedAttackCooldownMultiplier=nil end end return end if
 _isTargetInvincible(targetRoot)then return end if not _state.isEngaged then
-_state.isEngaged=true if not _state.returnCFrame then _state.returnCFrame=
-localRoot.CFrame end _state.isReturnPending=true if State.
+_state.isEngaged=true _ensureVisualAnchor(localRoot,humanoid)if State.
 ragebotSavedSilentAimEnabled==nil then State.ragebotSavedSilentAimEnabled=State.
 isSilentAimEnabled end if State.ragebotSavedAttackCooldownMultiplier==nil then
 State.ragebotSavedAttackCooldownMultiplier=State.attackCooldownMultiplier end
 State.isSilentAimEnabled=true State.attackCooldownMultiplier=1 end local
 equipped=_ensureGunEquipped(localFighter)_swapWeaponOnReload(localFighter)if
 equipped and _isReloading(equipped)then if State.isRagebotOrbitEnabled then
-_orbitTarget(localRoot,targetRoot)end return end local camera=PlayerUtils.
-getCamera()if camera then _state.desiredCameraCFrame=camera.CFrame _state.
-isCameraOverrideActive=true end _teleportToTarget(localRoot,targetRoot,
-targetPlayer)if equipped then if os.clock()-_state.roundStartedAt<
+_orbitTarget(localRoot,targetRoot)end return end _teleportToTarget(localRoot,
+targetRoot,targetPlayer)if equipped then if os.clock()-_state.roundStartedAt<
 ROUND_START_SHOOT_DELAY then return end _shoot(localFighter)end end)_maid:
-GiveTask(connection)RunService:BindToRenderStep(RAGEBOT_CAMERA_RENDER_STEP,Enum.
-RenderPriority.Camera.Value+2,function()if not _state.isCameraOverrideActive
-then return end local camera=PlayerUtils.getCamera()if not camera then return
-end local desired=_state.desiredCameraCFrame if desired then camera.CFrame=
-desired end end)_maid:GiveTask(function()RunService:UnbindFromRenderStep(
-RAGEBOT_CAMERA_RENDER_STEP)end)end function Ragebot.setup(maid)_maid=maid
-_connect()end return Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
+GiveTask(connection)end function Ragebot.setup(maid)_maid=maid _connect()end
+return Ragebot end function __DARKLUA_BUNDLE_MODULES.z()local v=
 __DARKLUA_BUNDLE_MODULES.cache.z if not v then v={c=__modImpl()}
 __DARKLUA_BUNDLE_MODULES.cache.z=v end return v.c end end do local function
 __modImpl()local ExecutorUtils=__DARKLUA_BUNDLE_MODULES.d()local HookUtils=
