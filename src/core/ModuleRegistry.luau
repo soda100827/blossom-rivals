@@ -1,43 +1,48 @@
 --!strict
 
---// Services
+-- Services
 
---// Dependencies (require)
+-- Dependencies (require)
+local TeamUtils = require("src/shared/TeamUtils")
+local Visuals = require("src/features/visuals/Init")
+local Player = require("src/features/player/Init")
+local Combat = require("src/features/combat/Init")
+local Interface = require("src/ui/Interface")
 
---// Constants
+-- Constants
 
---// Types
+-- Types
 export type Module = {
-	init: ((self: Module, client: any) -> ())?,
-	Init: ((self: Module, client: any) -> ())?,
-	Destroy: ((self: Module) -> ())?,
-	[string]: unknown,
+  init: ((self: Module, client: unknown) -> ())?,
+  Init: ((self: Module, client: unknown) -> ())?,
+  Destroy: ((self: Module) -> ())?,
+  [string]: unknown,
 }
 
 export type ModuleEntry = {
-	name: string,
-	loader: Module,
+  name: string,
+  loader: Module,
 }
 
---// Private state
+-- Private state
 local ModuleRegistry = {}
 ModuleRegistry.__index = ModuleRegistry
 
-local _maid = nil :: any
+local _maid = nil :: unknown
 local _state = {}
 local _signals = {}
 
---// Private helpers
+-- Private helpers
 
---// Public API
+-- Public API
 function ModuleRegistry.getModules(): { ModuleEntry }
-	return {
-		{ name = "TeamUtils", loader = require("src/shared/TeamUtils") :: Module },
-		{ name = "Visuals", loader = require("src/features/visuals/Init") :: Module },
-		{ name = "Player", loader = require("src/features/player/Init") :: Module },
-		{ name = "Combat", loader = require("src/features/combat/Init") :: Module },
-		{ name = "Interface", loader = require("src/ui/Interface") :: Module },
-	}
+  return {
+    { name = "TeamUtils", loader = TeamUtils :: Module },
+    { name = "Visuals", loader = Visuals :: Module },
+    { name = "Player", loader = Player :: Module },
+    { name = "Combat", loader = Combat :: Module },
+    { name = "Interface", loader = Interface :: Module },
+  }
 end
 
 return ModuleRegistry

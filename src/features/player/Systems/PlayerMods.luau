@@ -1,20 +1,21 @@
 --!strict
 
---// Services
+-- Services
 
---// Dependencies (require)
-local ExecutorUtils = require("../../../shared/ExecutorUtils")
-local HookUtils = require("../../../shared/HookUtils")
-local State = require("../State")
-local Helpers = require("../Utils/Helpers")
+-- Dependencies (require)
+local ExecutorUtils = require("src/shared/ExecutorUtils")
+local HookUtils = require("src/shared/HookUtils")
+local State = require("src/features/player/State")
+local Helpers = require("src/features/player/Utils/Helpers")
 
---// Constants
+-- Constants
 
---// Types
+-- Types
+type CheckCaller = () -> boolean
 
---// Private state
-local PlayerMods = {}
-PlayerMods.__index = PlayerMods
+-- Private state
+local Module = {}
+Module.__index = Module
 
 local _maid = nil :: any
 local _signals = {}
@@ -22,14 +23,12 @@ local _state = {
   lastSoundSpam = 0,
 }
 
---// Private helpers
+-- Private helpers
 
---// Public API
-function PlayerMods.setup(maid: any): ()
+-- Public API
+function Module.setup(maid: any): ()
   _maid = maid
-  local checkcaller = ExecutorUtils.getGlobal("checkcaller") or function()
-    return false
-  end
+  local checkcaller = ExecutorUtils.getGlobal("checkcaller") :: CheckCaller
 
   local isRunning = true
   if _maid then
@@ -63,14 +62,12 @@ function PlayerMods.setup(maid: any): ()
       oldSetControls = HookUtils.safeHook(controlsController, "SetControls", function(self, device)
         if not checkcaller() and State.isSpoofDeviceEnabled and State.spoofDevice ~= "None" then
           device = State.spoofDevice
-          -- If the game is trying to set a real device, we override and send our spoofed one
           setControlsRemote:FireServer(device)
         end
         return oldSetControls(self, device)
       end, State.logger, _maid)
     end
 
-    -- Sound Spammer using Remote Event
     task.spawn(function()
       local playSoundRemote = Helpers.getPlayMechanicsSoundRemote()
       while isRunning do
@@ -108,4 +105,4 @@ function PlayerMods.setup(maid: any): ()
   end)
 end
 
-return PlayerMods
+return Module

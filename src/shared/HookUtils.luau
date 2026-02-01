@@ -1,85 +1,64 @@
 --!strict
 
---// Services
+-- Services
 
---// Dependencies (require)
-local ExecutorUtils = require("./ExecutorUtils")
+-- Dependencies (require)
+local ExecutorUtils = require("src/shared/ExecutorUtils")
 
---// Constants
+-- Constants
 
---// Types
-export type HookUtils = {
-  safeHook: (targetTable: any, targetKey: string, replacement: any, logger: any, maid: any) -> any,
+-- Types
+type HookFunction = (target: (...unknown) -> ...unknown, hook: (...unknown) -> ...unknown) -> (...unknown) -> ...unknown
+type NewCClosure = (func: (...unknown) -> ...unknown) -> (...unknown) -> ...unknown
+
+type LoggerInstance = {
+  warn: (self: LoggerInstance, ...unknown) -> (),
+  warnUnsupported: ((self: LoggerInstance, name: string) -> ())?,
 }
 
---// Private state
-local HookUtils = {}
-HookUtils.__index = HookUtils
+type Maid = {
+  GiveTask: (self: Maid, task: unknown) -> (),
+}
 
-local _maid = nil :: any
-local _state = {}
-local _signals = {}
+export type HookUtils = {
+  safeHook: (
+    targetTable: { [string]: unknown },
+    targetKey: string,
+    replacement: (...unknown) -> ...unknown,
+    logger: LoggerInstance?,
+    maid: Maid?
+  ) -> (...unknown) -> ...unknown,
+}
 
---// Private helpers
+-- Private state
+local Module = {}
+Module.__index = Module
 
---// Public API
-function HookUtils.safeHook(targetTable: any, targetKey: string, replacement: any, logger: any, maid: any): any
-  local targetFunc = targetTable[targetKey]
-  if not targetFunc or type(targetFunc) ~= "function" then
-    return nil
-  end
+local _maid: Maid? = nil
+local _state: { [string]: unknown } = {}
+local _signals: { [string]: unknown } = {}
 
-  local hookfunction = ExecutorUtils.getGlobal("hookfunction") or ExecutorUtils.getGlobal("replaceclosure")
-  local newcclosure = ExecutorUtils.getGlobal("newcclosure") or function(f)
-    return f
-  end
+-- Private helpers
 
-  -- Ensure replacement is wrapped
+-- Public API
+function Module.safeHook(
+  targetTable: { [string]: unknown },
+  targetKey: string,
+  replacement: (...unknown) -> ...unknown,
+  _logger: LoggerInstance?,
+  maid: Maid?
+): (...unknown) -> ...unknown
+  local targetFunc = targetTable[targetKey] :: (...unknown) -> ...unknown
+  local hookfunction = (ExecutorUtils.getGlobal("hookfunction") or ExecutorUtils.getGlobal("replaceclosure")) :: HookFunction
+  local newcclosure = ExecutorUtils.getGlobal("newcclosure") :: NewCClosure
   local wrapped = newcclosure(replacement)
-
-  if hookfunction then
-    local success, old = pcall(function()
-      return hookfunction(targetFunc, wrapped)
-    end)
-    if success then
-      if maid then
-        maid:GiveTask(function()
-          local restoreHook = ExecutorUtils.getGlobal("hookfunction")
-            or ExecutorUtils.getGlobal("replaceclosure")
-          if restoreHook then
-            pcall(function()
-              restoreHook(targetFunc, old)
-            end)
-          else
-            targetTable[targetKey] = old
-          end
-        end)
-      end
-      return old
-    end
-    if logger and logger.warnUnsupported then
-      logger:warnUnsupported("hookfunction")
-    elseif logger then
-      logger:warn("This executor does not support 'hookfunction'. Some features may not work as expected.")
-    end
-  else
-    if logger and logger.warnUnsupported then
-      logger:warnUnsupported("hookfunction")
-    elseif logger then
-      logger:warn("This executor does not support 'hookfunction'. Some features may not work as expected.")
-    end
-  end
-
-  -- Fallback
-  targetTable[targetKey] = wrapped
+  local old = hookfunction(targetFunc, wrapped)
   if maid then
     maid:GiveTask(function()
-      if targetTable[targetKey] == wrapped then
-        targetTable[targetKey] = targetFunc
-      end
+      hookfunction(targetFunc, old)
     end)
   end
-  return targetFunc
+  return old
 end
 
-return HookUtils
+return Module

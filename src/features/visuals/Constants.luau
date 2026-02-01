@@ -1,19 +1,9 @@
---!strict
-
---// Services
-
---// Dependencies (require)
-
---// Constants
 local ESP_RENDER_INTERVAL = 1 / 60
 local ESP_SKELETON_INTERVAL = 1 / 60
 
 local ESP_TEXT_INTERVAL = 1 / 60
 local ESP_SMOOTH_ALPHA = 0.25
 
---// Types
-
---// Private state
 local Constants = {
 	DEFAULT_SETTINGS = {
 		isEspEnabled = false,
@@ -45,7 +35,6 @@ local Constants = {
 
 		shouldOutline = true,
 
-		-- Hit Effects
 		shouldPlayHitSound = false,
 		hitSound = "Minecraft",
 		hitSoundVolume = 0.5,
@@ -59,12 +48,10 @@ local Constants = {
 		tracerThickness = 1,
 	},
 	SOUNDS = {
-		Minecraft = "rbxassetid://4809574295",
-		Gamesense = "rbxassetid://4809574295",
-		Skeet = "rbxassetid://6607204501",
-		Neverlose = "rbxassetid://6534575058",
-		Rust = "rbxassetid://3744371342",
-		Bameware = "rbxassetid://3124331820",
+		Minecraft = "rbxassetid://83176333448979",
+		Gamesense = "rbxassetid://4817809188",
+		Neverlose = "rbxassetid://97643101798871",
+		Osu = "rbxassetid://7147454322",
 	},
 	R15_JOINTS = {
 		{ "Head", "UpperTorso" },
@@ -88,7 +75,4 @@ local Constants = {
 	ESP_SMOOTH_ALPHA = ESP_SMOOTH_ALPHA,
 }
 
---// Private helpers
-
---// Public API
 return Constants

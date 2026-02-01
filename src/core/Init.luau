@@ -1,22 +1,23 @@
 --!strict
 
---// Services
+-- Services
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
---// Dependencies (require)
-local Logger = require("../shared/Logger")
-local Maid = require("../../Packages/_Index/soda100827_maid@0.4.0/maid")
-local FastSignal = require("../../Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
-local ExecutorUtils = require("../shared/ExecutorUtils")
-local ModuleRegistry = require("./ModuleRegistry")
+-- Dependencies (require)
+local ExecutorUtils = require("src/shared/ExecutorUtils")
+local Logger = require("src/shared/Logger")
+local ModuleRegistry = require("src/core/ModuleRegistry")
+local FastSignal = require("Packages/_Index/lucasmzreal_fastsignal@10.4.0/fastsignal/Deferred")
+local Maid = require("Packages/_Index/soda100827_maid@0.4.0/maid")
 
---// Constants
+-- Constants
 local BUNDLE_URL = "https://raw.githubusercontent.com/soda100827/blossom-rivals/refs/heads/main/build/loader.luau"
 local CLIENT_MODULE_NAME = "Client"
+local VERSION = "5.2.3"
 
---// Types
+-- Types
 export type FastSignal = {
 	Fire: (self: FastSignal, ...unknown) -> (),
 }
@@ -47,73 +48,98 @@ export type BlossomClient = {
 	Version: string,
 	Logger: LoggerInstance,
 	Modules: { [string]: Module },
-	Started: FastSignal,
-	Stopped: FastSignal,
 	IsSilent: boolean,
 	loadModule: (self: BlossomClient, name: string, moduleOrPath: ModuleOrPath) -> (),
 	setTeleportQueue: (self: BlossomClient, shouldEnable: boolean) -> (),
 	setSilent: (self: BlossomClient, isSilent: boolean) -> (),
 	start: (self: BlossomClient) -> (),
 	destroy: (self: BlossomClient) -> (),
+	getStarted: (self: BlossomClient) -> FastSignal,
+	getStopped: (self: BlossomClient) -> FastSignal,
+	Init: (self: BlossomClient) -> (),
+	Destroy: (self: BlossomClient) -> (),
 }
 
---// Private state
-local Client = {}
-Client.__index = Client
-
-local _maid = Maid.new()
-local _loggerModule = (Logger :: any) :: LoggerModule
-local _initialLogger = _loggerModule.new("Blossom")
-local _state: {
+type State = {
 	isRunning: boolean,
 	shouldTeleportQueue: boolean,
 	isSilent: boolean,
 	logger: LoggerInstance,
-} = {
+}
+
+type Signals = {
+	Started: FastSignal,
+	Stopped: FastSignal,
+}
+
+type QueueOnTeleport = (code: string) -> ()
+type ClearTeleportQueue = () -> ()
+type HookFunction = (target: (...unknown) -> ...unknown, hook: (...unknown) -> ...unknown) -> (...unknown) -> ...unknown
+type NewCClosure = (func: (...unknown) -> ...unknown) -> (...unknown) -> ...unknown
+type CheckCaller = () -> boolean
+type GetGenv = () -> { [string]: unknown }
+type GetLoadedModules = () -> { ModuleScript }?
+type Syn = { queue_on_teleport: QueueOnTeleport?, clear_teleport_queue: ClearTeleportQueue? }
+type ModuleEntry = { name: string, loader: Module }
+
+-- Private state
+local Module = {}
+
+local _maid = Maid.new()
+local _loggerModule = Logger :: LoggerModule
+local _initialLogger = _loggerModule.new("Blossom")
+local _state: State = {
 	isRunning = false,
 	shouldTeleportQueue = false,
-	isSilent = ExecutorUtils.getGlobal("BlossomSilent") or false,
+	isSilent = (ExecutorUtils.getGlobal("BlossomSilent") :: boolean?) or false,
 	logger = _initialLogger,
 }
-local _signals: { started: FastSignal, stopped: FastSignal } = {
-	started = FastSignal.new(),
-	stopped = FastSignal.new(),
+local _signals: Signals = {
+	Started = FastSignal.new(),
+	Stopped = FastSignal.new(),
 }
 local _modules: { [string]: Module } = {}
-local _syn = ExecutorUtils.getGlobal("syn")
-local _queueOnTeleport = ExecutorUtils.getGlobal("queue_on_teleport")
-	or ExecutorUtils.getGlobal("queueonteleport")
+local _syn = ExecutorUtils.getGlobal("syn") :: Syn?
+local _queueOnTeleport = (ExecutorUtils.getGlobal("queue_on_teleport") :: QueueOnTeleport?)
+	or (ExecutorUtils.getGlobal("queueonteleport") :: QueueOnTeleport?)
 	or (_syn and _syn.queue_on_teleport)
-local _clearTeleportQueue = ExecutorUtils.getGlobal("clear_teleport_queue")
-	or ExecutorUtils.getGlobal("clearteleportqueue")
+local _clearTeleportQueue = (ExecutorUtils.getGlobal("clear_teleport_queue") :: ClearTeleportQueue?)
+	or (ExecutorUtils.getGlobal("clearteleportqueue") :: ClearTeleportQueue?)
 	or (_syn and _syn.clear_teleport_queue)
-local _rawGetLoadedModules = ExecutorUtils.getGlobal("getloadedmodules")
-local _getLoadedModules = _rawGetLoadedModules or function()
+local _rawGetLoadedModules = ExecutorUtils.getGlobal("getloadedmodules") :: GetLoadedModules?
+local _hookfunction = (ExecutorUtils.getGlobal("hookfunction") :: HookFunction?)
+	or ExecutorUtils.getGlobal("replaceclosure") :: HookFunction?
+local _newcclosure = ExecutorUtils.getGlobal("newcclosure") :: NewCClosure?
+local _checkcaller = ExecutorUtils.getGlobal("checkcaller") :: CheckCaller?
+local _getgenvFunc = ExecutorUtils.getGlobal("getgenv") :: GetGenv?
+local _moduleEntries: { ModuleEntry } = ModuleRegistry.getModules()
+
+-- Private helpers
+local function _getLoadedModules(): { ModuleScript }?
+	if _rawGetLoadedModules then
+		return _rawGetLoadedModules()
+	end
+
 	return nil
 end
-local _hookfunction = ExecutorUtils.getGlobal("hookfunction") or ExecutorUtils.getGlobal("replaceclosure")
-local _newcclosure = ExecutorUtils.getGlobal("newcclosure")
-local _checkcaller = ExecutorUtils.getGlobal("checkcaller")
-local _getgenvFunc = ExecutorUtils.getGlobal("getgenv")
 
-local MODULES: { { name: string, loader: Module } } = ModuleRegistry.getModules()
+local function _initSignals(): ()
+	_signals.Started = FastSignal.new()
+	_signals.Stopped = FastSignal.new()
+end
 
---// Private helpers
-local function _disableAnalyticsPipeline(logger: LoggerInstance)
+local function _connect(): () end
+
+local function _disableAnalyticsPipeline(): ()
 	pcall(function()
 		local controller = ReplicatedFirst:FindFirstChild("AnalyticsPipelineController")
 		if not controller then
 			controller = ReplicatedFirst:WaitForChild("AnalyticsPipelineController", 10)
 		end
 		if controller and controller:IsA("LocalScript") then
-			(controller :: any).Disabled = true
+			(controller :: LocalScript).Disabled = true
 		end
 	end)
-
-	local hookfunction = _hookfunction
-	if not hookfunction then
-		return
-	end
 
 	pcall(function()
 		local controller = ReplicatedFirst:FindFirstChild("AnalyticsPipelineController")
@@ -123,48 +149,57 @@ local function _disableAnalyticsPipeline(logger: LoggerInstance)
 		if not controller then
 			return
 		end
+
 		local pipeline = controller:FindFirstChild("AnalyticsPipeline")
 		if not (pipeline and pipeline:IsA("ModuleScript")) then
 			return
 		end
 
-		local originalRequire
-		local pipelineModule = pipeline :: any
-		originalRequire = hookfunction(require, function(module, ...)
-			if (module :: any) == pipelineModule then
+		local originalRequire: ((...unknown) -> ...unknown)?
+		local pipelineModule = pipeline :: ModuleScript
+		originalRequire = _hookfunction(require, function(module, ...)
+			if module == pipelineModule then
 				return function() end
 			end
-			return (originalRequire :: any)(module, ...)
+			return (originalRequire :: (...unknown) -> ...unknown)(module, ...)
 		end)
 	end)
 end
 
-local function _checkExecutorSupport(logger: LoggerInstance)
-	local missing = {}
+local function _checkExecutorSupport(logger: LoggerInstance): boolean
+	local missing = {} :: { string }
+
+	local function _markMissing(name: string): ()
+		table.insert(missing, name)
+	end
 
 	if not _queueOnTeleport then
-		missing.queue_on_teleport = true
+		_markMissing("queue_on_teleport")
 	end
 	if not _clearTeleportQueue then
-		missing.clear_teleport_queue = true
+		_markMissing("clear_teleport_queue")
 	end
 	if not _hookfunction then
-		missing.hookfunction = true
+		_markMissing("hookfunction")
 	end
 	if not _newcclosure then
-		missing.newcclosure = true
+		_markMissing("newcclosure")
 	end
 	if not _checkcaller then
-		missing.checkcaller = true
+		_markMissing("checkcaller")
 	end
 	if not _getgenvFunc then
-		missing.getgenv = true
+		_markMissing("getgenv")
 	end
 	if not _rawGetLoadedModules then
-		missing.getloadedmodules = true
+		_markMissing("getloadedmodules")
 	end
 
-	for name in pairs(missing) do
+	if #missing == 0 then
+		return true
+	end
+
+	for _, name in ipairs(missing) do
 		if logger.warnUnsupported then
 			logger:warnUnsupported(name)
 		else
@@ -173,9 +208,16 @@ local function _checkExecutorSupport(logger: LoggerInstance)
 			)
 		end
 	end
+
+	local localPlayer = Players.LocalPlayer
+	if not localPlayer then
+		localPlayer = Players.PlayerAdded:Wait()
+	end
+	localPlayer:Kick(string.format("Required executor APIs are missing: %s", table.concat(missing, ", ")))
+	return false
 end
 
-local function _handleTeleportQueue(shouldEnable: boolean)
+local function _handleTeleportQueue(shouldEnable: boolean): ()
 	if shouldEnable then
 		if _clearTeleportQueue then
 			_clearTeleportQueue()
@@ -190,21 +232,16 @@ local function _handleTeleportQueue(shouldEnable: boolean)
 				)
 			)
 		end
-	else
-		if _clearTeleportQueue then
-			_clearTeleportQueue()
-		end
+
+		return
+	end
+
+	if _clearTeleportQueue then
+		_clearTeleportQueue()
 	end
 end
 
-local function _connect()
-	_maid:DoCleaning()
-	if _state.shouldTeleportQueue then
-		_handleTeleportQueue(true)
-	end
-end
-
-local function _waitForClientLoaded()
+local function _waitForClientLoaded(): ()
 	local localPlayer = Players.LocalPlayer
 	while not localPlayer do
 		RunService.Heartbeat:Wait()
@@ -236,11 +273,13 @@ local function _waitForClientLoaded()
 		local loaded = _getLoadedModules()
 		local loadedSet = {} :: { [ModuleScript]: boolean }
 		local hasLoaded = loaded ~= nil
+
 		if loaded then
 			for _, mod in ipairs(loaded) do
 				loadedSet[mod] = true
 			end
 		end
+
 		local function _isLoaded(mod: ModuleScript): boolean
 			if not hasLoaded then
 				return true
@@ -268,15 +307,15 @@ local function _waitForClientLoaded()
 	end
 end
 
---// Public API
-function Client.loadModule(self: BlossomClient, name: string, moduleOrPath: ModuleOrPath): ()
+-- Public API
+function Module.loadModule(self: BlossomClient, name: string, moduleOrPath: ModuleOrPath): ()
 	if _modules[name] then
 		return
 	end
 
-	local loader = function()
+	local loader = function(): Module
 		if type(moduleOrPath) == "string" then
-			local dynamicRequire = require :: any
+			local dynamicRequire = require :: (string) -> Module
 			return dynamicRequire(moduleOrPath)
 		end
 		return moduleOrPath
@@ -289,57 +328,79 @@ function Client.loadModule(self: BlossomClient, name: string, moduleOrPath: Modu
 		local initFn = moduleResult.init or moduleResult.Init
 		if initFn then
 			task.spawn(function()
-				(initFn :: any)(moduleResult, self)
+				(initFn :: (Module, BlossomClient) -> ())(moduleResult, self)
 			end)
 		end
-	else
-		_state.logger:warn("Failed to load module:", name, result)
+		return
 	end
+
+	_state.logger:warn("Failed to load module:", name, result)
 end
 
-function Client.setTeleportQueue(self: BlossomClient, shouldEnable: boolean): ()
+function Module.setTeleportQueue(self: BlossomClient, shouldEnable: boolean): ()
 	_state.shouldTeleportQueue = shouldEnable
 	if _state.isRunning then
 		_handleTeleportQueue(shouldEnable)
 	end
 end
 
-function Client.setSilent(self: BlossomClient, isSilent: boolean): ()
+function Module.setSilent(self: BlossomClient, isSilent: boolean): ()
 	if _state.isSilent == isSilent then
 		return
 	end
+
 	_state.isSilent = isSilent
+	self.IsSilent = _state.isSilent
+
 	if _state.shouldTeleportQueue and _state.isRunning then
 		_handleTeleportQueue(true)
 	end
 end
 
-function Client.start(self: BlossomClient): ()
+function Module.getStarted(self: BlossomClient): FastSignal
+	return _signals.Started
+end
+
+function Module.getStopped(self: BlossomClient): FastSignal
+	return _signals.Stopped
+end
+
+function Module.start(self: BlossomClient): ()
 	if _state.isRunning then
 		return
 	end
 	_state.isRunning = true
 
-	_checkExecutorSupport(_state.logger)
-	_disableAnalyticsPipeline(_state.logger)
+	self:Init()
+
+	if not _checkExecutorSupport(_state.logger) then
+		_state.isRunning = false
+		return
+	end
+	_disableAnalyticsPipeline()
+
 	local startTime = os.clock()
 	_waitForClientLoaded()
 
-	for _, entry in ipairs(MODULES) do
+	for _, entry in ipairs(_moduleEntries) do
 		self:loadModule(entry.name, entry.loader)
 	end
 
-	_connect()
-	_signals.started:Fire()
+	if _state.shouldTeleportQueue then
+		_handleTeleportQueue(true)
+	end
+
+	_signals.Started:Fire()
 	_state.logger:info(string.format("Blossom loaded in %.2f seconds.", os.clock() - startTime))
 end
 
-function Client.destroy(self: BlossomClient): ()
+function Module.destroy(self: BlossomClient): ()
 	if not _state.isRunning then
 		return
 	end
 	_state.isRunning = false
-	_signals.stopped:Fire()
+
+	_signals.Stopped:Fire()
 	_maid:DoCleaning()
 
 	for _, moduleResult in pairs(_modules) do
@@ -354,14 +415,22 @@ function Client.destroy(self: BlossomClient): ()
 	end
 end
 
-local client = (setmetatable({}, Client) :: any) :: BlossomClient
-client.Version = "1.0.0"
-client.Logger = _initialLogger
-client.Modules = _modules
-client.Started = _signals.started
-client.Stopped = _signals.stopped
-client.IsSilent = _state.isSilent
+function Module.Init(self: BlossomClient): ()
+	_initSignals()
+	_connect()
+end
 
-_state.logger = client.Logger
+function Module.Destroy(self: BlossomClient): ()
+	self:destroy()
+end
 
-return client:start()
+Module.Version = VERSION
+Module.Logger = _initialLogger
+Module.Modules = _modules
+Module.IsSilent = _state.isSilent
+
+_state.logger = Module.Logger
+
+Module:start()
+
+return Module

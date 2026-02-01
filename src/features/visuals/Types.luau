@@ -1,12 +1,3 @@
---!strict
-
---// Services
-
---// Dependencies (require)
-
---// Constants
-
---// Types
 export type VisualsSettings = {
 	isEspEnabled: boolean,
 	shouldShowNames: boolean,
@@ -97,7 +88,6 @@ export type VisualsFeature = {
 	setOutline: (self: VisualsFeature, isEnabled: boolean) -> (),
 	setOverrideCheck: (self: VisualsFeature, check: () -> boolean) -> (),
 
-	-- Hit Effects Setters
 	setHitSoundEnabled: (self: VisualsFeature, isEnabled: boolean) -> (),
 	setHitSound: (self: VisualsFeature, sound: string) -> (),
 	setHitSoundVolume: (self: VisualsFeature, volume: number) -> (),
@@ -111,9 +101,4 @@ export type VisualsFeature = {
 	setTracerThickness: (self: VisualsFeature, thickness: number) -> (),
 }
 
---// Private state
-
---// Private helpers
-
---// Public API
 return {}
