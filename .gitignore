@@ -1,0 +1,24 @@
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.log
+
+# Pesde / Dependencies
+.pesde/
+/*_packages/
+/Packages/
+
+# Roblox
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Build / Generated
+dist.lua
+roblox.d.luau
+.meta/sourcemap.json
+/dist/
+/build/
+/out/
